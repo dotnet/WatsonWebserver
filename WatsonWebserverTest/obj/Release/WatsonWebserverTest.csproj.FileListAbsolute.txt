@@ -1,0 +1,8 @@
+d:\code\watson\WatsonWebserver\WatsonWebserverTest\bin\Release\Test.exe.config
+d:\code\watson\WatsonWebserver\WatsonWebserverTest\bin\Release\Test.exe
+d:\code\watson\WatsonWebserver\WatsonWebserverTest\bin\Release\Test.pdb
+d:\code\watson\WatsonWebserver\WatsonWebserverTest\bin\Release\Watson.dll
+d:\code\watson\WatsonWebserver\WatsonWebserverTest\bin\Release\Watson.pdb
+d:\code\watson\WatsonWebserver\WatsonWebserverTest\obj\Release\WatsonWebserverTest.csprojResolveAssemblyReference.cache
+d:\code\watson\WatsonWebserver\WatsonWebserverTest\obj\Release\Test.exe
+d:\code\watson\WatsonWebserver\WatsonWebserverTest\obj\Release\Test.pdb
