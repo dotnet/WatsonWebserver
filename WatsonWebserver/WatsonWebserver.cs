@@ -69,7 +69,7 @@ namespace WatsonWebserver
             DebugRestRequests = true;
             DebugRestResponses = true;
 
-            DisplayLogo();
+            DisplaySmallLogo();
             Console.WriteLine("Watson Webserver :: v" + System.Reflection.Assembly.GetEntryAssembly().GetName().Version.ToString());
             Task.Run(() => StartServer());
         }
@@ -82,29 +82,98 @@ namespace WatsonWebserver
 
         #region Private-Methods
 
-        private void DisplayLogo()
+        private void DisplaySmallLogo()
         {
             //
             // taken from http://www.heartnsoul.com/ascii_art/dogs.txt
             //
 
-            Console.WriteLine(@"                                       ");
-            Console.WriteLine(@"                            ,--.       ");
-            Console.WriteLine(@"                          _/ <`-'      ");
-            Console.WriteLine(@"                      ,-.' \--\_       ");
-            Console.WriteLine(@"                     ((`-.__\   )      ");
-            Console.WriteLine(@"                      \`'    @ (_      ");
-            Console.WriteLine(@"                      (        (_)     ");
-            Console.WriteLine(@"                     ,'`-._(`-._/      ");
-            Console.WriteLine(@"                  ,-'    )&&) ))       ");
-            Console.WriteLine(@"               ,-'      /&&&%-'        ");
-            Console.WriteLine(@"             ,' __  ,- {&&&&/          ");
-            Console.WriteLine(@"            / ,'  \|   |\&&'\          ");
-            Console.WriteLine(@"           (       |   |' \  `--.      ");
-            Console.WriteLine(@"       (%--'\   ,--.\   `-.`-._)))     "); 
-            Console.WriteLine(@"        `---'`-/__)))`-._)))       hjw ");
+            if (Console.IsOutputRedirected) return;
+            
+            Console.WriteLine(@"                                  ");
+            Console.WriteLine(@"                       ,--.       ");
+            Console.WriteLine(@"                     _/ <`-'      ");
+            Console.WriteLine(@"                 ,-.' \--\_       ");
+            Console.WriteLine(@"                ((`-.__\   )      ");
+            Console.WriteLine(@"                 \`'    @ (_      ");
+            Console.WriteLine(@"                 (        (_)     ");
+            Console.WriteLine(@"                ,'`-._(`-._/      ");
+            Console.WriteLine(@"             ,-'    )&&) ))       ");
+            Console.WriteLine(@"          ,-'      /&&&%-'        ");
+            Console.WriteLine(@"        ,' __  ,- {&&&&/          ");
+            Console.WriteLine(@"       / ,'  \|   |\&&'\          ");
+            Console.WriteLine(@"      (       |   |' \  `--.      ");
+            Console.WriteLine(@"  (%--'\   ,--.\   `-.`-._)))     ");
+            Console.WriteLine(@"   `---'`-/__)))`-._)))       hjw ");
             Console.WriteLine("");
             Console.WriteLine("");
+
+            return;
+        }
+
+        private void DisplayLargeLogo()
+        {
+            if (Console.IsOutputRedirected) return;
+
+            Console.WriteLine("");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMmddhhhhdddNMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMNds+++++ooo/:--+yNMMMMMMMMMMMMMMMMMMMMMMmhysyhdmNMMMMMMMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMmssso+ssssyyy+-....:/+osyyhhhhdhhyhdmo/::/+++++////+ymMMMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMdyyyhso+osyyyo:--................````.``./ssooooo+++//+yMMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMNyhhhhs+oosso:----...``.......`````````````:ossso++++/+sshNMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMNmmmm+:/++:-----..```````.....```  ````````-:/oooo++oymdhhNMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMNyo+:::::---``  ````.....`` ```````````.::////::NMMNdhNMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMm+::::::/:..``....--.--.```...``.`....-:///+smMMMMMNNMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMs//+yyyyo/:---...---::-..-::/:-......-:/ssmMMMMMMMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMy++hdhddhs+/:-..--..:/:::/oyyyy+-..---:hNMMMMMMMMMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMN++yhhddyso/:-...----/++oshyhyyy/--:://MMMMMMMMMMMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMN:/oyyyyo+::--...``..-:+/osysss+:-:://yMMMMMMMMMMMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMy-/+oos+/-------.``````--::///:-....:+hMMMMMMMMMMMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMo://+o/----:::::/:..````...--:-.````-oyMMMMMMMMMMMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMh:://:--/+ooosooooo/-.` ```.--.`````.+mMMMMMMMMMMMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMN//::--/yhdhyyysyysyo:`   ``..``````-+yNMMMMMMMMMMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMy//:-:+hddmdyyhmdhyo/.  `` ``..```.:o+odmmNNMMMMMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMs/--:+yhddddhyhhys/-``````````...-/s+////++ohMMMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMNo::/+syhddddddys+:.`````````..---+s//:+o++odMMMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMh::/+oyyhhdhhhys+:.` ``.`  ``.--:os//:odyyydMMMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMd/:/osyhyhhhhyys+:.`````..`.-:::+oo++/smddhdMMMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMh+oshyysssyyyyyy+-.``.://:::::/+ooo+/ydddddMMMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMNoosoooo+oossssss+/:/o+/:::::/+oo++//yhddddMMMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMMoooo++++++++ooo+-..--:---:::/oo++//yhyhdddMMMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMm/+oo+++o++++++oo/-...-::::::+soo/+odhhhhhmMMMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMm+/ooso++++++++///++:--:::////oso+shshhddyymMMMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMNo//oysys+++//+++++++/::::////+ss+sdo/hhhhhyodMMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMmMMMMMMMMMMMNo/+++yhysoo+///////::::::://++oso+ohyhhhhhho+omMMMMMMM");
+            Console.WriteLine(@"MMMMMMMyydMMMMMMMMMMy+++++oyhysso+////////::::/+oo+osyyshdhhhyhy+++sMMMMMMM");
+            Console.WriteLine(@"MMMMMNsoyhMMMMMMMMMMo+++o++oyhdysso+++++++o///+oooydhshddhdhhhs++++omMMMMMM");
+            Console.WriteLine(@"MMMMMh+sydMMMMMMMMMm+++oooooosydddyoooooosys++shddmmdyddddhys++++++oyMMMMMM");
+            Console.WriteLine(@"MMMMm++oshNMMMMMMMMd+o+ooooooosyhdmdhyyyyyhyyymmmmmmdddhyso++++++++ooNMMMMM");
+            Console.WriteLine(@"MMMMMy/+ooshdmmmmddy+ooooooosssyyyhdmdhhhddoyhmddddhhysoo++++++++++oomMMMMM");
+            Console.WriteLine(@"MMMMMMds+++++++ooooooooo++oosssyyyyyhhdhyhhhyyhyyyyysssooo++++++++ooodMMMMM");
+            Console.WriteLine(@"MMMMMMMMNdyoooooosss+oo+++oosssyyyysohhsssyyyhhhyyyyssssooo+++/++ooosmMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMNNNNNNNNyoo++ooossssssyyyssssyhhydddsoosssoooooo++oooossmMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMNysoooooossssssssoooshddyss+/++oooososoooosssyssMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMdsyssssssoooooooo+ydhso++///+oooossssssssyyssoMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMM+oysssssssoosysooosoooooooosyyyhhhyyyyyssssssMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMyosssssyyyhddddhhhyyyyhyhhhhdNNNMMNhhhyyyyyymMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMd+syyyyhhhhNMMMMMMMMMMMMMMMMMMMMMMMNdhyyyyyhMMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMs++syyyhhhhNMMMMMMMMMMMMMMMMMMMMMMMMMhyyyyydMMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMM/o+oyyyyyhhMMMMMMMMMMMMMMMMMMMMMMMMMMhyyyyyhMMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMso:+yoyyyhhdMMMMMMMMMMMMMMMMMMMMMMMMNhhhhyyyNMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMNhoyyssyhhhhNMMMMMMMMMMMMMMMMMMMMMMMNyyyyyyshMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMMMNNNsosyhhhdMMMMMMMMMMMMMMMMMMMMMMMMhyyyssssNMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMMMMMN+ossyyydMMMMMMMMMMMMMMMMMMMMMMMMdossooosmMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMMMMMm+oossyydMMMMMMMMMMMMMMMMMMMMMMMMdoyooo+yNMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMMMMMm+/+ssyshMMMMMMMMMMMMMMMMMMMMMMMMNhds+sodMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMMMMMMh++soyyyMMMMMMMMMMMMMMMMMMMMMMMMMNMdyydMMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMMMMMMm++yosdmMMMMMMMMMMMMMMMMMMMMMMMMMMMMMmMMMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMMMMMMMmydymMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMNNNMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM");
+            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM");
+            Console.WriteLine("");
+
+            return;
         }
 
         private void StartServer()

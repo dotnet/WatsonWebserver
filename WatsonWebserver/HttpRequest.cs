@@ -369,13 +369,19 @@ namespace WatsonWebserver
         public override string ToString()
         {
             string ret = "";
+            int contentLength = 0;
+            if (Data != null)
+            {
+                contentLength = Data.Length;
+            }
+
             ret += "--- HTTP Request ---" + Environment.NewLine;
             ret += TimestampUtc.ToString("MM/dd/yyyy HH:mm:ss") + " " + SourceIp + ":" + SourcePort + " to " + DestIp + ":" + DestPort + "  " + Method + " " + RawUrlWithoutQuery + Environment.NewLine;
             ret += "  Full URL    : " + FullUrl + Environment.NewLine;
             ret += "  Raw URL     : " + RawUrlWithoutQuery + Environment.NewLine;
             ret += "  Querystring : " + Querystring + Environment.NewLine;
             ret += "  Useragent   : " + Useragent + " (Keepalive " + Keepalive + ")" + Environment.NewLine;
-            ret += "  Content     : " + ContentLength + " bytes, " + ContentType + Environment.NewLine;
+            ret += "  Content     : " + ContentType + " (" + contentLength + " bytes)" + Environment.NewLine;
 
             if (Headers != null && Headers.Count > 0)
             {

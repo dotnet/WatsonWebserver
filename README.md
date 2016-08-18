@@ -1,4 +1,10 @@
 # Watson Webserver
+
+[![][nuget-img]][nuget]
+
+[nuget]:     https://www.nuget.org/packages/Watson/
+[nuget-img]: https://badge.fury.io/nu/Object.svg
+
 A simple C# async web server for handling incoming RESTful HTTP/HTTPS requests. 
 
 ## Test App
