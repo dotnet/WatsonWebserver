@@ -1,5 +1,4 @@
-d:\code\watson\WatsonWebserver\WatsonWebserver\bin\Debug\Watson.dll
-d:\code\watson\WatsonWebserver\WatsonWebserver\bin\Debug\Watson.pdb
-d:\code\watson\WatsonWebserver\WatsonWebserver\obj\Debug\Watson.dll
-d:\code\watson\WatsonWebserver\WatsonWebserver\obj\Debug\Watson.pdb
-D:\Code\Watson\WatsonWebserver\WatsonWebserver\obj\Debug\WatsonWebserver.csprojResolveAssemblyReference.cache
+D:\Code\Watson\WatsonWebserver\WatsonWebserver\bin\Debug\Watson.dll
+D:\Code\Watson\WatsonWebserver\WatsonWebserver\bin\Debug\Watson.pdb
+D:\Code\Watson\WatsonWebserver\WatsonWebserver\obj\Debug\Watson.dll
+D:\Code\Watson\WatsonWebserver\WatsonWebserver\obj\Debug\Watson.pdb

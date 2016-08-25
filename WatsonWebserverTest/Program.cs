@@ -20,7 +20,20 @@ namespace WatsonWebserverTest
         static HttpResponse RequestReceived(HttpRequest req)
         {
             Console.WriteLine(req.ToString());
-            HttpResponse resp = new HttpResponse(req, true, 200, null, "text/plain", "Watson says hello!", true);
+            HttpResponse resp = null;
+
+            //
+            // for an encapsulated JSON response:
+            // {"success":true,"md5":"BE3DB22E4FDF3021162C013320CEED09","data":"Watson says hello!"}
+            //
+            // resp = new HttpResponse(req, true, 200, null, "text/plain", "Watson says hello!", false);
+
+            //
+            // for a response containing only the string data...
+            // Watson says hello!
+            //
+            resp = new HttpResponse(req, true, 200, null, "text/plain", "Watson says hello!", true);
+
             return resp;
         }
     }

@@ -1,4 +1,4 @@
-d:\code\watson\WatsonWebserver\WatsonWebserver\bin\Release\Watson.dll
-d:\code\watson\WatsonWebserver\WatsonWebserver\bin\Release\Watson.pdb
-d:\code\watson\WatsonWebserver\WatsonWebserver\obj\Release\Watson.dll
-d:\code\watson\WatsonWebserver\WatsonWebserver\obj\Release\Watson.pdb
+D:\Code\Watson\WatsonWebserver\WatsonWebserver\bin\Release\Watson.dll
+D:\Code\Watson\WatsonWebserver\WatsonWebserver\bin\Release\Watson.pdb
+D:\Code\Watson\WatsonWebserver\WatsonWebserver\obj\Release\Watson.dll
+D:\Code\Watson\WatsonWebserver\WatsonWebserver\obj\Release\Watson.pdb

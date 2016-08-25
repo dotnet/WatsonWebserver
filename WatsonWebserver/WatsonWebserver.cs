@@ -303,7 +303,7 @@ namespace WatsonWebserver
             if (ret == null)
             {
                 Log("Null HttpResponse received from call to RequestReceived, sending 500");
-                ret = new HttpResponse(request, false, 500, null, "application/json", Encoding.UTF8.GetBytes("Unable to generate response"), false);
+                ret = new HttpResponse(request, false, 500, null, "application/json", "Unable to generate response", false);
                 return ret;
             }
 

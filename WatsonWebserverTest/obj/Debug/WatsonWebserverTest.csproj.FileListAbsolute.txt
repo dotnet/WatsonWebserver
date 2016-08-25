@@ -1,8 +1,8 @@
-d:\code\watson\WatsonWebserver\WatsonWebserverTest\bin\Debug\Test.exe.config
-d:\code\watson\WatsonWebserver\WatsonWebserverTest\bin\Debug\Test.exe
-d:\code\watson\WatsonWebserver\WatsonWebserverTest\bin\Debug\Test.pdb
-d:\code\watson\WatsonWebserver\WatsonWebserverTest\bin\Debug\Watson.dll
-d:\code\watson\WatsonWebserver\WatsonWebserverTest\bin\Debug\Watson.pdb
-d:\code\watson\WatsonWebserver\WatsonWebserverTest\obj\Debug\WatsonWebserverTest.csprojResolveAssemblyReference.cache
-d:\code\watson\WatsonWebserver\WatsonWebserverTest\obj\Debug\Test.exe
-d:\code\watson\WatsonWebserver\WatsonWebserverTest\obj\Debug\Test.pdb
+D:\Code\Watson\WatsonWebserver\WatsonWebserverTest\bin\Debug\Test.exe.config
+D:\Code\Watson\WatsonWebserver\WatsonWebserverTest\bin\Debug\Test.exe
+D:\Code\Watson\WatsonWebserver\WatsonWebserverTest\bin\Debug\Test.pdb
+D:\Code\Watson\WatsonWebserver\WatsonWebserverTest\bin\Debug\Watson.dll
+D:\Code\Watson\WatsonWebserver\WatsonWebserverTest\bin\Debug\Watson.pdb
+D:\Code\Watson\WatsonWebserver\WatsonWebserverTest\obj\Debug\WatsonWebserverTest.csprojResolveAssemblyReference.cache
+D:\Code\Watson\WatsonWebserver\WatsonWebserverTest\obj\Debug\Test.exe
+D:\Code\Watson\WatsonWebserver\WatsonWebserverTest\obj\Debug\Test.pdb
