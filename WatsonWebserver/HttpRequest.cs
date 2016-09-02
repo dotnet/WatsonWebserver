@@ -438,6 +438,24 @@ namespace WatsonWebserver
             return null;
         }
 
+        /// <summary>
+        /// Retrieve the integer value of the last raw URL element, if found.
+        /// </summary>
+        /// <returns>A nullable integer.</returns>
+        public int? RetrieveIdValue()
+        {
+            if (RawUrlEntries == null || RawUrlEntries.Count < 1) return null;
+            string[] entries = RawUrlEntries.ToArray();
+            int len = entries.Length;
+            string entry = entries[(len - 1)];
+            int ret = -1;
+            if (Int32.TryParse(entry, out ret))
+            {
+                return ret;
+            }
+            return null;
+        }
+
         #endregion
 
         #region Private-Methods
