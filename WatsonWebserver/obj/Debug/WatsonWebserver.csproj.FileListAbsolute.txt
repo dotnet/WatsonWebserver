@@ -1,4 +1,6 @@
 D:\Code\Watson\WatsonWebserver\WatsonWebserver\bin\Debug\Watson.dll
 D:\Code\Watson\WatsonWebserver\WatsonWebserver\bin\Debug\Watson.pdb
+D:\Code\Watson\WatsonWebserver\WatsonWebserver\bin\Debug\Newtonsoft.Json.dll
+D:\Code\Watson\WatsonWebserver\WatsonWebserver\bin\Debug\Newtonsoft.Json.xml
 D:\Code\Watson\WatsonWebserver\WatsonWebserver\obj\Debug\Watson.dll
 D:\Code\Watson\WatsonWebserver\WatsonWebserver\obj\Debug\Watson.pdb

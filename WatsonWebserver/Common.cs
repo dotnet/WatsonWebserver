@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Script.Serialization;
+using Newtonsoft.Json;
 
 namespace WatsonWebserver
 {
@@ -38,30 +39,111 @@ namespace WatsonWebserver
         #region Public-Methods
 
         /// <summary>
-        /// Serialize an object to a JSON string.
+        /// Serialize object to JSON using the built-in JSON serializer (JavaScriptSerializer).
         /// </summary>
-        /// <param name="obj"></param>
-        /// <returns></returns>
-        public static string SerializeJson(object obj)
+        /// <param name="obj">The object to serialize.</param>
+        /// <returns>JSON string.</returns>
+        public static string SerializeJsonBuiltIn(object obj)
         {
             if (obj == null) return null;
+
             JavaScriptSerializer ser = new JavaScriptSerializer();
             ser.MaxJsonLength = Int32.MaxValue;
             return ser.Serialize(obj);
         }
 
         /// <summary>
-        /// Deserialize a JSON string to an object of type T.
+        /// Serialize object to JSON using Newtonsoft JSON.NET.
         /// </summary>
-        /// <typeparam name="T">The type of object to which the JSON string should be deserialized.</typeparam>
-        /// <param name="json">The JSON string.</param>
-        /// <returns>An instance of type T with members populated by contents of the JSON string.</returns>
+        /// <param name="obj">The object to serialize.</param>
+        /// <returns>JSON string.</returns>
+        public static string SerializeJson(object obj)
+        {
+            if (obj == null) return null;
+            string json = JsonConvert.SerializeObject(
+                obj,
+                Newtonsoft.Json.Formatting.Indented,
+                new JsonSerializerSettings
+                {
+                    NullValueHandling = NullValueHandling.Ignore,
+                    DateTimeZoneHandling = DateTimeZoneHandling.Utc
+                });
+
+            return json;
+        }
+
+        /// <summary>
+        /// Deserialize JSON string to an object using the built-in serializer (JavaScriptSerializer).
+        /// </summary>
+        /// <typeparam name="T">The type of object.</typeparam>
+        /// <param name="json">JSON string.</param>
+        /// <returns>An object of the specified type.</returns>
+        public static T DeserializeJsonBuiltIn<T>(string json)
+        {
+            if (String.IsNullOrEmpty(json)) throw new ArgumentNullException(nameof(json));
+
+            try
+            {
+                JavaScriptSerializer ser = new JavaScriptSerializer();
+                ser.MaxJsonLength = Int32.MaxValue;
+                return ser.Deserialize<T>(json);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("");
+                Console.WriteLine("Exception while deserializing:");
+                Console.WriteLine(json);
+                Console.WriteLine("");
+                throw e;
+            }
+        }
+
+        /// <summary>
+        /// Deserialize JSON string to an object using the built-in serializer (JavaScriptSerializer).
+        /// </summary>
+        /// <typeparam name="T">The type of object.</typeparam>
+        /// <param name="data">Byte array containing the JSON string.</param>
+        /// <returns>An object of the specified type.</returns>
+        public static T DeserializeJsonBuiltIn<T>(byte[] data)
+        {
+            if (data == null || data.Length < 1) throw new ArgumentNullException(nameof(data));
+            return DeserializeJsonBuiltIn<T>(Encoding.UTF8.GetString(data));
+        }
+
+        /// <summary>
+        /// Deserialize JSON string to an object using Newtonsoft JSON.NET.
+        /// </summary>
+        /// <typeparam name="T">The type of object.</typeparam>
+        /// <param name="json">JSON string.</param>
+        /// <returns>An object of the specified type.</returns>
         public static T DeserializeJson<T>(string json)
         {
-            if (String.IsNullOrEmpty(json)) throw new ArgumentNullException("json");
-            JavaScriptSerializer ser = new JavaScriptSerializer();
-            ser.MaxJsonLength = Int32.MaxValue;
-            return ser.Deserialize<T>(json);
+            if (String.IsNullOrEmpty(json)) throw new ArgumentNullException(nameof(json));
+
+            try
+            {
+                return JsonConvert.DeserializeObject<T>(json);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("");
+                Console.WriteLine("Exception while deserializing:");
+                Console.WriteLine(json);
+                Console.WriteLine("");
+                throw e;
+            }
+        }
+
+        /// <summary>
+        /// Deserialize JSON string to an object using Newtonsoft JSON.NET.
+        /// </summary>
+        /// <typeparam name="T">The type of object.</typeparam>
+        /// <param name="data">Byte array containing the JSON string.</param>
+        /// <returns>An object of the specified type.</returns>
+        public static T DeserializeJson<T>(byte[] data)
+        {
+            if (data == null || data.Length < 1) throw new ArgumentNullException(nameof(data));
+            return DeserializeJson<T>(Encoding.UTF8.GetString(data));
         }
         
         /// <summary>

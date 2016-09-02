@@ -2,7 +2,9 @@ D:\Code\Watson\WatsonWebserver\WatsonWebserverTest\bin\Release\Test.exe.config
 D:\Code\Watson\WatsonWebserver\WatsonWebserverTest\bin\Release\Test.exe
 D:\Code\Watson\WatsonWebserver\WatsonWebserverTest\bin\Release\Test.pdb
 D:\Code\Watson\WatsonWebserver\WatsonWebserverTest\bin\Release\Watson.dll
+D:\Code\Watson\WatsonWebserver\WatsonWebserverTest\bin\Release\Newtonsoft.Json.dll
 D:\Code\Watson\WatsonWebserver\WatsonWebserverTest\bin\Release\Watson.pdb
+D:\Code\Watson\WatsonWebserver\WatsonWebserverTest\bin\Release\Newtonsoft.Json.xml
 D:\Code\Watson\WatsonWebserver\WatsonWebserverTest\obj\Release\WatsonWebserverTest.csprojResolveAssemblyReference.cache
 D:\Code\Watson\WatsonWebserver\WatsonWebserverTest\obj\Release\Test.exe
 D:\Code\Watson\WatsonWebserver\WatsonWebserverTest\obj\Release\Test.pdb

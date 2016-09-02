@@ -1,4 +1,7 @@
 D:\Code\Watson\WatsonWebserver\WatsonWebserver\bin\Release\Watson.dll
 D:\Code\Watson\WatsonWebserver\WatsonWebserver\bin\Release\Watson.pdb
+D:\Code\Watson\WatsonWebserver\WatsonWebserver\bin\Release\Newtonsoft.Json.dll
+D:\Code\Watson\WatsonWebserver\WatsonWebserver\bin\Release\Newtonsoft.Json.xml
+D:\Code\Watson\WatsonWebserver\WatsonWebserver\obj\Release\WatsonWebserver.csprojResolveAssemblyReference.cache
 D:\Code\Watson\WatsonWebserver\WatsonWebserver\obj\Release\Watson.dll
 D:\Code\Watson\WatsonWebserver\WatsonWebserver\obj\Release\Watson.pdb

@@ -141,23 +141,6 @@ namespace WatsonWebserver
             if (String.IsNullOrEmpty(ContentType)) ContentType = "application/json";
             StatusCode = status;
             RawResponse = rawResponse;
-
-            if (data != null)
-            {
-                if (data is byte[])
-                {
-                    // do nothing
-                }
-                else if (data is string)
-                {
-                    // do nothing
-                }
-                else
-                {
-                    throw new ArgumentException("Supplied data must be either a byte[] or string.");
-                }
-            }
-
             Data = data;
             
             switch (status)
