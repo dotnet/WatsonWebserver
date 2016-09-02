@@ -74,6 +74,33 @@ namespace WatsonWebserver
             Task.Run(() => StartServer());
         }
 
+        /// <summary>
+        /// Creates a new instance of the Watson Webserver.
+        /// </summary>
+        /// <param name="ip">IP address on which to listen.</param>
+        /// <param name="port">TCP port on which to listen.</param>
+        /// <param name="ssl">Specify whether or not SSL should be used (HTTPS).</param>
+        /// <param name="requestReceived">Callback function used when a request is received.</param>
+        /// <param name="skipLogo">Set to true to not display Watson ASCII art.</param>
+        public Server(string ip, int port, bool ssl, Func<HttpRequest, HttpResponse> requestReceived, bool skipLogo)
+        {
+            if (String.IsNullOrEmpty(ip)) throw new ArgumentNullException(nameof(ip));
+            if (port < 1) throw new ArgumentOutOfRangeException(nameof(port));
+            if (requestReceived == null) throw new ArgumentNullException(nameof(requestReceived));
+
+            ListenerIp = ip;
+            ListenerPort = port;
+            ListenerSsl = ssl;
+            RequestReceived = requestReceived;
+            ConsoleLogging = true;
+            DebugRestRequests = true;
+            DebugRestResponses = true;
+
+            if (!skipLogo) DisplaySmallLogo();
+            Console.WriteLine("Watson Webserver :: v" + System.Reflection.Assembly.GetEntryAssembly().GetName().Version.ToString());
+            Task.Run(() => StartServer());
+        }
+
         #endregion
 
         #region Public-Methods
