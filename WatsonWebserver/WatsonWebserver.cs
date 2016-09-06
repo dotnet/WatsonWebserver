@@ -308,6 +308,7 @@ namespace WatsonWebserver
                         catch (Exception e)
                         {
                             LogException("StartServer", e);
+                            throw;
                         }
                         finally
                         {
@@ -315,6 +316,11 @@ namespace WatsonWebserver
                         }
                     }, http.GetContext());
                 }
+            }
+            catch (Exception eOuter)
+            {
+                LogException("AcceptConnections", eOuter);
+                throw;
             }
             finally
             {
