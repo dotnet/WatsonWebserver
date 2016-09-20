@@ -286,10 +286,10 @@ namespace WatsonWebserver
             ret.Add("success", Success);
             if (Data != null)
             {
-                ret.Add("md5", Common.CalculateMd5(Data.ToString()));
+                ret.Add("md5", WatsonCommon.CalculateMd5(Data.ToString()));
                 ret.Add("data", Data);
             }
-            return Common.SerializeJson(ret);
+            return WatsonCommon.SerializeJson(ret);
         }
 
         /// <summary>

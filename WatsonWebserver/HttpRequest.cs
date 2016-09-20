@@ -337,7 +337,7 @@ namespace WatsonWebserver
                             Data = new byte[ContentLength];
                             Stream bodyStream = ctx.Request.InputStream;
 
-                            Data = Common.StreamToBytes(bodyStream);
+                            Data = WatsonCommon.StreamToBytes(bodyStream);
                         }
                     }
                     catch (Exception)

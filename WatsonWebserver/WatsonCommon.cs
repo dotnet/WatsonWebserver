@@ -14,7 +14,7 @@ namespace WatsonWebserver
     /// <summary>
     /// Commonly used static methods.
     /// </summary>
-    public class Common
+    public class WatsonCommon
     {
         #region Public-Members
 

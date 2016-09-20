@@ -239,7 +239,7 @@ namespace WatsonWebserver
                                     context,
                                     currRequest,
                                     BuildErrorResponse(500, "Unable to parse your request.", null),
-                                    Common.AddToDict("content-type", "application/json", null),
+                                    WatsonCommon.AddToDict("content-type", "application/json", null),
                                     400);
                                 return;
                             }
@@ -273,7 +273,7 @@ namespace WatsonWebserver
                                         context,
                                         currRequest,
                                         BuildErrorResponse(500, "Unable to generate response", null),
-                                        Common.AddToDict("content-type", "application/json", null),
+                                        WatsonCommon.AddToDict("content-type", "application/json", null),
                                         400);
                                     return;
                                 }
@@ -286,7 +286,7 @@ namespace WatsonWebserver
                                             context,
                                             currRequest,
                                             currResponse.Data,
-                                            Common.AddToDict("content-type", currResponse.ContentType, null),
+                                            WatsonCommon.AddToDict("content-type", currResponse.ContentType, null),
                                             currResponse.StatusCode);
                                         return;
                                     }
@@ -296,7 +296,7 @@ namespace WatsonWebserver
                                             context,
                                             currRequest,
                                             currResponse.ToJsonBytes(),
-                                            Common.AddToDict("content-type", currResponse.ContentType, null),
+                                            WatsonCommon.AddToDict("content-type", currResponse.ContentType, null),
                                             currResponse.StatusCode);
                                         return;
                                     }
@@ -417,7 +417,7 @@ namespace WatsonWebserver
             }
 
             ret.Add("text", text);
-            string json = Common.SerializeJson(ret);
+            string json = WatsonCommon.SerializeJson(ret);
             return Encoding.UTF8.GetBytes(json);
         }
 
@@ -493,7 +493,7 @@ namespace WatsonWebserver
                     break;
             }
             
-            string json = Common.SerializeJson(ret);
+            string json = WatsonCommon.SerializeJson(ret);
             return Encoding.UTF8.GetBytes(json);
         }
 
@@ -744,7 +744,7 @@ namespace WatsonWebserver
                 {
                     if (req.TimestampUtc != null)
                     {
-                        Log("Thread " + req.ThreadId + " sending " + responseLen + "B status " + status + " " + req.SourceIp + ":" + req.SourcePort + " for " + req.Method + " " + req.RawUrlWithoutQuery + " (" + Common.TotalMsFrom(req.TimestampUtc) + "ms)");
+                        Log("Thread " + req.ThreadId + " sending " + responseLen + "B status " + status + " " + req.SourceIp + ":" + req.SourcePort + " for " + req.Method + " " + req.RawUrlWithoutQuery + " (" + WatsonCommon.TotalMsFrom(req.TimestampUtc) + "ms)");
                     }
                 }
 
