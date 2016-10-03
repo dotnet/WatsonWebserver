@@ -70,7 +70,7 @@ namespace WatsonWebserver
             DebugRestResponses = true;
 
             DisplaySmallLogo();
-            Console.WriteLine("Watson Webserver :: v" + System.Reflection.Assembly.GetEntryAssembly().GetName().Version.ToString());
+            Console.WriteLine("Starting Watson Webserver");
             Task.Run(() => StartServer());
         }
 
@@ -97,7 +97,7 @@ namespace WatsonWebserver
             DebugRestResponses = true;
 
             if (!skipLogo) DisplaySmallLogo();
-            Console.WriteLine("Watson Webserver :: v" + System.Reflection.Assembly.GetEntryAssembly().GetName().Version.ToString());
+            Console.WriteLine("Starting Watson Webserver");
             Task.Run(() => StartServer());
         }
 
