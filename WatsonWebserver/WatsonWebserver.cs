@@ -92,9 +92,9 @@ namespace WatsonWebserver
             ListenerPort = port;
             ListenerSsl = ssl;
             RequestReceived = requestReceived;
-            ConsoleLogging = true;
-            DebugRestRequests = true;
-            DebugRestResponses = true;
+            ConsoleLogging = false;
+            DebugRestRequests = false;
+            DebugRestResponses = false;
 
             if (!skipLogo) DisplaySmallLogo();
             Console.WriteLine("Starting Watson Webserver");
@@ -218,9 +218,7 @@ namespace WatsonWebserver
                 else ListenerPrefix = "http://" + ListenerIp + ":" + ListenerPort + "/";
                 http.Prefixes.Add(ListenerPrefix);
                 http.Start();
-
-                Log("Listener started on " + ListenerPrefix);
-
+                
                 while (http.IsListening)
                 {
                     ThreadPool.QueueUserWorkItem((c) =>
