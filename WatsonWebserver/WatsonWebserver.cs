@@ -278,13 +278,28 @@ namespace WatsonWebserver
                                 else
                                 {
                                     if (DebugRestResponses) Log(currResponse.ToString());
+
+                                    Dictionary<string, string> headers = new Dictionary<string, string>();
+                                    if (!String.IsNullOrEmpty(currResponse.ContentType))
+                                    {
+                                        headers.Add("content-type", currResponse.ContentType);
+                                    }
+
+                                    if (currResponse.Headers != null && currResponse.Headers.Count > 0)
+                                    {
+                                        foreach (KeyValuePair<string, string> curr in currResponse.Headers)
+                                        {
+                                            headers = WatsonCommon.AddToDict(curr.Key, curr.Value, headers);
+                                        }
+                                    }
+
                                     if (currResponse.RawResponse)
                                     {
                                         SendResponse(
                                             context,
                                             currRequest,
                                             currResponse.Data,
-                                            WatsonCommon.AddToDict("content-type", currResponse.ContentType, null),
+                                            headers,
                                             currResponse.StatusCode);
                                         return;
                                     }
@@ -294,7 +309,7 @@ namespace WatsonWebserver
                                             context,
                                             currRequest,
                                             currResponse.ToJsonBytes(),
-                                            WatsonCommon.AddToDict("content-type", currResponse.ContentType, null),
+                                            headers,
                                             currResponse.StatusCode);
                                         return;
                                     }
