@@ -15,22 +15,7 @@ namespace WatsonWebserver
     public class Server
     {
         #region Public-Members
-
-        /// <summary>
-        /// Specify whether or not Watson should log to the console at all.
-        /// </summary>
-        public bool ConsoleLogging;
-
-        /// <summary>
-        /// Specify whether or not incoming REST requests should be displayed on the console (requires ConsoleLogging == true).
-        /// </summary>
-        public bool DebugRestRequests;
-
-        /// <summary>
-        /// Specify whether or not outgoing REST responses should be displayed on the console (requires ConsoleLogging == true).
-        /// </summary>
-        public bool DebugRestResponses;
-
+        
         #endregion
 
         #region Private-Members
@@ -41,7 +26,10 @@ namespace WatsonWebserver
         private int ListenerPort;
         private bool ListenerSsl;
         private string ListenerPrefix;
-
+        private LoggingManager Logging;
+        private bool DebugRestRequests;
+        private bool DebugRestResponses;
+        private RouteManager Routes;
         private Func<HttpRequest, HttpResponse> RequestReceived;
 
         #endregion
@@ -54,154 +42,62 @@ namespace WatsonWebserver
         /// <param name="ip">IP address on which to listen.</param>
         /// <param name="port">TCP port on which to listen.</param>
         /// <param name="ssl">Specify whether or not SSL should be used (HTTPS).</param>
-        /// <param name="requestReceived">Callback function used when a request is received.</param>
-        public Server(string ip, int port, bool ssl, Func<HttpRequest, HttpResponse> requestReceived)
+        /// <param name="defaultRequestHandler">Method used when a request is received and no routes are defined.  Commonly used as the 404 handler when routes are used.</param>
+        public Server(string ip, int port, bool ssl, Func<HttpRequest, HttpResponse> defaultRequestHandler, bool debug)
         {
             if (String.IsNullOrEmpty(ip)) throw new ArgumentNullException(nameof(ip));
             if (port < 1) throw new ArgumentOutOfRangeException(nameof(port));
-            if (requestReceived == null) throw new ArgumentNullException(nameof(requestReceived));
+            if (defaultRequestHandler == null) throw new ArgumentNullException(nameof(defaultRequestHandler));
 
             ListenerIp = ip;
             ListenerPort = port;
             ListenerSsl = ssl;
-            RequestReceived = requestReceived;
-            ConsoleLogging = true;
-            DebugRestRequests = true;
-            DebugRestResponses = true;
+            Logging = new LoggingManager(debug);
+            if (debug)
+            {
+                DebugRestRequests = true;
+                DebugRestResponses = true;
+            }
 
-            DisplaySmallLogo();
+            Routes = new RouteManager(Logging);
+            RequestReceived = defaultRequestHandler;
+             
             Console.WriteLine("Starting Watson Webserver");
             Task.Run(() => StartServer());
         }
-
-        /// <summary>
-        /// Creates a new instance of the Watson Webserver.
-        /// </summary>
-        /// <param name="ip">IP address on which to listen.</param>
-        /// <param name="port">TCP port on which to listen.</param>
-        /// <param name="ssl">Specify whether or not SSL should be used (HTTPS).</param>
-        /// <param name="requestReceived">Callback function used when a request is received.</param>
-        /// <param name="skipLogo">Set to true to not display Watson ASCII art.</param>
-        public Server(string ip, int port, bool ssl, Func<HttpRequest, HttpResponse> requestReceived, bool skipLogo)
-        {
-            if (String.IsNullOrEmpty(ip)) throw new ArgumentNullException(nameof(ip));
-            if (port < 1) throw new ArgumentOutOfRangeException(nameof(port));
-            if (requestReceived == null) throw new ArgumentNullException(nameof(requestReceived));
-
-            ListenerIp = ip;
-            ListenerPort = port;
-            ListenerSsl = ssl;
-            RequestReceived = requestReceived;
-            ConsoleLogging = false;
-            DebugRestRequests = false;
-            DebugRestResponses = false;
-
-            if (!skipLogo) DisplaySmallLogo();
-            Console.WriteLine("Starting Watson Webserver");
-            Task.Run(() => StartServer());
-        }
-
+        
         #endregion
 
         #region Public-Methods
 
+        public void AddRoute(string verb, string path, Func<HttpRequest, HttpResponse> handler)
+        {
+            if (String.IsNullOrEmpty(verb)) throw new ArgumentNullException(nameof(verb));
+            if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
+            if (handler == null) throw new ArgumentNullException(nameof(handler));
+
+            Routes.Add(verb, path, handler);
+        }
+
+        public void RemoveRoute(string verb, string path)
+        {
+            if (String.IsNullOrEmpty(verb)) throw new ArgumentNullException(nameof(verb));
+            if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
+
+            Routes.Remove(verb, path);
+        }
+
+        public bool RouteExists(string verb, string path)
+        {
+            if (String.IsNullOrEmpty(verb)) throw new ArgumentNullException(nameof(verb));
+            if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
+
+            return Routes.Exists(verb, path);
+        }
+
         #endregion
 
         #region Private-Methods
-
-        private void DisplaySmallLogo()
-        {
-            //
-            // taken from http://www.heartnsoul.com/ascii_art/dogs.txt
-            //
-
-            if (Console.IsOutputRedirected) return;
-            
-            Console.WriteLine(@"                                  ");
-            Console.WriteLine(@"                       ,--.       ");
-            Console.WriteLine(@"                     _/ <`-'      ");
-            Console.WriteLine(@"                 ,-.' \--\_       ");
-            Console.WriteLine(@"                ((`-.__\   )      ");
-            Console.WriteLine(@"                 \`'    @ (_      ");
-            Console.WriteLine(@"                 (        (_)     ");
-            Console.WriteLine(@"                ,'`-._(`-._/      ");
-            Console.WriteLine(@"             ,-'    )&&) ))       ");
-            Console.WriteLine(@"          ,-'      /&&&%-'        ");
-            Console.WriteLine(@"        ,' __  ,- {&&&&/          ");
-            Console.WriteLine(@"       / ,'  \|   |\&&'\          ");
-            Console.WriteLine(@"      (       |   |' \  `--.      ");
-            Console.WriteLine(@"  (%--'\   ,--.\   `-.`-._)))     ");
-            Console.WriteLine(@"   `---'`-/__)))`-._)))       hjw ");
-            Console.WriteLine("");
-            Console.WriteLine("");
-
-            return;
-        }
-
-        private void DisplayLargeLogo()
-        {
-            if (Console.IsOutputRedirected) return;
-
-            Console.WriteLine("");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMmddhhhhdddNMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMNds+++++ooo/:--+yNMMMMMMMMMMMMMMMMMMMMMMmhysyhdmNMMMMMMMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMmssso+ssssyyy+-....:/+osyyhhhhdhhyhdmo/::/+++++////+ymMMMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMdyyyhso+osyyyo:--................````.``./ssooooo+++//+yMMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMNyhhhhs+oosso:----...``.......`````````````:ossso++++/+sshNMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMNmmmm+:/++:-----..```````.....```  ````````-:/oooo++oymdhhNMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMNyo+:::::---``  ````.....`` ```````````.::////::NMMNdhNMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMm+::::::/:..``....--.--.```...``.`....-:///+smMMMMMNNMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMs//+yyyyo/:---...---::-..-::/:-......-:/ssmMMMMMMMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMy++hdhddhs+/:-..--..:/:::/oyyyy+-..---:hNMMMMMMMMMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMN++yhhddyso/:-...----/++oshyhyyy/--:://MMMMMMMMMMMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMN:/oyyyyo+::--...``..-:+/osysss+:-:://yMMMMMMMMMMMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMy-/+oos+/-------.``````--::///:-....:+hMMMMMMMMMMMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMo://+o/----:::::/:..````...--:-.````-oyMMMMMMMMMMMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMh:://:--/+ooosooooo/-.` ```.--.`````.+mMMMMMMMMMMMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMN//::--/yhdhyyysyysyo:`   ``..``````-+yNMMMMMMMMMMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMy//:-:+hddmdyyhmdhyo/.  `` ``..```.:o+odmmNNMMMMMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMs/--:+yhddddhyhhys/-``````````...-/s+////++ohMMMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMNo::/+syhddddddys+:.`````````..---+s//:+o++odMMMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMh::/+oyyhhdhhhys+:.` ``.`  ``.--:os//:odyyydMMMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMd/:/osyhyhhhhyys+:.`````..`.-:::+oo++/smddhdMMMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMh+oshyysssyyyyyy+-.``.://:::::/+ooo+/ydddddMMMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMNoosoooo+oossssss+/:/o+/:::::/+oo++//yhddddMMMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMMoooo++++++++ooo+-..--:---:::/oo++//yhyhdddMMMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMm/+oo+++o++++++oo/-...-::::::+soo/+odhhhhhmMMMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMm+/ooso++++++++///++:--:::////oso+shshhddyymMMMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMNo//oysys+++//+++++++/::::////+ss+sdo/hhhhhyodMMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMmMMMMMMMMMMMNo/+++yhysoo+///////::::::://++oso+ohyhhhhhho+omMMMMMMM");
-            Console.WriteLine(@"MMMMMMMyydMMMMMMMMMMy+++++oyhysso+////////::::/+oo+osyyshdhhhyhy+++sMMMMMMM");
-            Console.WriteLine(@"MMMMMNsoyhMMMMMMMMMMo+++o++oyhdysso+++++++o///+oooydhshddhdhhhs++++omMMMMMM");
-            Console.WriteLine(@"MMMMMh+sydMMMMMMMMMm+++oooooosydddyoooooosys++shddmmdyddddhys++++++oyMMMMMM");
-            Console.WriteLine(@"MMMMm++oshNMMMMMMMMd+o+ooooooosyhdmdhyyyyyhyyymmmmmmdddhyso++++++++ooNMMMMM");
-            Console.WriteLine(@"MMMMMy/+ooshdmmmmddy+ooooooosssyyyhdmdhhhddoyhmddddhhysoo++++++++++oomMMMMM");
-            Console.WriteLine(@"MMMMMMds+++++++ooooooooo++oosssyyyyyhhdhyhhhyyhyyyyysssooo++++++++ooodMMMMM");
-            Console.WriteLine(@"MMMMMMMMNdyoooooosss+oo+++oosssyyyysohhsssyyyhhhyyyyssssooo+++/++ooosmMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMNNNNNNNNyoo++ooossssssyyyssssyhhydddsoosssoooooo++oooossmMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMNysoooooossssssssoooshddyss+/++oooososoooosssyssMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMdsyssssssoooooooo+ydhso++///+oooossssssssyyssoMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMM+oysssssssoosysooosoooooooosyyyhhhyyyyyssssssMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMyosssssyyyhddddhhhyyyyhyhhhhdNNNMMNhhhyyyyyymMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMd+syyyyhhhhNMMMMMMMMMMMMMMMMMMMMMMMNdhyyyyyhMMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMs++syyyhhhhNMMMMMMMMMMMMMMMMMMMMMMMMMhyyyyydMMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMM/o+oyyyyyhhMMMMMMMMMMMMMMMMMMMMMMMMMMhyyyyyhMMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMso:+yoyyyhhdMMMMMMMMMMMMMMMMMMMMMMMMNhhhhyyyNMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMNhoyyssyhhhhNMMMMMMMMMMMMMMMMMMMMMMMNyyyyyyshMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMMMNNNsosyhhhdMMMMMMMMMMMMMMMMMMMMMMMMhyyyssssNMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMMMMMN+ossyyydMMMMMMMMMMMMMMMMMMMMMMMMdossooosmMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMMMMMm+oossyydMMMMMMMMMMMMMMMMMMMMMMMMdoyooo+yNMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMMMMMm+/+ssyshMMMMMMMMMMMMMMMMMMMMMMMMNhds+sodMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMMMMMMh++soyyyMMMMMMMMMMMMMMMMMMMMMMMMMNMdyydMMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMMMMMMm++yosdmMMMMMMMMMMMMMMMMMMMMMMMMMMMMMmMMMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMMMMMMMmydymMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMNNNMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM");
-            Console.WriteLine(@"MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM");
-            Console.WriteLine("");
-
-            return;
-        }
 
         private void StartServer()
         {
@@ -232,7 +128,7 @@ namespace WatsonWebserver
                             HttpRequest currRequest = new HttpRequest(context);
                             if (currRequest == null)
                             {
-                                Log("Unable to populate HTTP request object on thread ID " + Thread.CurrentThread.ManagedThreadId + ", returning 400");
+                                Logging.Log("Unable to populate HTTP request object on thread ID " + Thread.CurrentThread.ManagedThreadId + ", returning 400");
                                 SendResponse(
                                     context,
                                     currRequest,
@@ -242,7 +138,7 @@ namespace WatsonWebserver
                                 return;
                             }
 
-                            Log("Thread " + currRequest.ThreadId + " " + currRequest.SourceIp + ":" + currRequest.SourcePort + " " + currRequest.Method + " " + currRequest.RawUrlWithoutQuery);
+                            Logging.Log("Thread " + currRequest.ThreadId + " " + currRequest.SourceIp + ":" + currRequest.SourcePort + " " + currRequest.Method + " " + currRequest.RawUrlWithoutQuery);
 
                             #endregion
 
@@ -250,7 +146,7 @@ namespace WatsonWebserver
 
                             if (currRequest.Method.ToLower().Trim().Contains("option"))
                             {
-                                Log("Thread " + Thread.CurrentThread.ManagedThreadId + " OPTIONS request received");
+                                Logging.Log("Thread " + Thread.CurrentThread.ManagedThreadId + " OPTIONS request received");
                                 OptionsHandler(context, currRequest);
                                 return;
                             }
@@ -259,25 +155,36 @@ namespace WatsonWebserver
 
                             #region Send-to-API-Handler
 
-                            if (DebugRestRequests) Log(currRequest.ToString());
+                            if (DebugRestRequests) Logging.Log(currRequest.ToString());
 
                             Task.Run(() =>
                             {
-                                HttpResponse currResponse = Process(context, currRequest);
+                                HttpResponse currResponse;
+
+                                Route currRoute = Routes.Get(currRequest.Method, currRequest.RawUrlWithoutQuery);
+                                if (currRoute != null && currRoute != default(Route))
+                                {
+                                    currResponse = currRoute.Handler(currRequest);
+                                }
+                                else
+                                {
+                                    currResponse = Process(context, currRequest);
+                                }
+
                                 if (currResponse == null)
                                 {
-                                    Log("Null response from API handler for request from " + currRequest.SourceIp + ":" + currRequest.SourcePort + " " + currRequest.Method + " " + currRequest.RawUrlWithoutQuery);
+                                    Logging.Log("Null response from handler for " + currRequest.SourceIp + ":" + currRequest.SourcePort + " " + currRequest.Method + " " + currRequest.RawUrlWithoutQuery);
                                     SendResponse(
                                         context,
                                         currRequest,
                                         BuildErrorResponse(500, "Unable to generate response", null),
                                         WatsonCommon.AddToDict("content-type", "application/json", null),
-                                        400);
+                                        500);
                                     return;
                                 }
                                 else
                                 {
-                                    if (DebugRestResponses) Log(currResponse.ToString());
+                                    if (DebugRestResponses) Logging.Log(currResponse.ToString());
 
                                     Dictionary<string, string> headers = new Dictionary<string, string>();
                                     if (!String.IsNullOrEmpty(currResponse.ContentType))
@@ -320,7 +227,7 @@ namespace WatsonWebserver
                         }
                         catch (Exception e)
                         {
-                            LogException("StartServer", e);
+                            Logging.LogException("StartServer", e);
                             throw;
                         }
                         finally
@@ -332,12 +239,12 @@ namespace WatsonWebserver
             }
             catch (Exception eOuter)
             {
-                LogException("AcceptConnections", eOuter);
+                Logging.LogException("AcceptConnections", eOuter);
                 throw;
             }
             finally
             {
-                Log("Exiting");
+                Logging.Log("Exiting");
             }
         }
 
@@ -348,7 +255,7 @@ namespace WatsonWebserver
             HttpResponse ret = RequestReceived(request);
             if (ret == null)
             {
-                Log("Null HttpResponse received from call to RequestReceived, sending 500");
+                Logging.Log("Null HttpResponse received from call to RequestReceived, sending 500");
                 ret = new HttpResponse(request, false, 500, null, "application/json", "Unable to generate response", false);
                 return ret;
             }
@@ -425,7 +332,7 @@ namespace WatsonWebserver
                     break;
 
                 default:
-                    Log("Unknown http status code " + status);
+                    Logging.Log("Unknown http status code " + status);
                     break;
             }
 
@@ -502,17 +409,12 @@ namespace WatsonWebserver
                     break;
 
                 default:
-                    Log("Unknown http status code " + status);
+                    Logging.Log("Unknown http status code " + status);
                     break;
             }
             
             string json = WatsonCommon.SerializeJson(ret);
             return Encoding.UTF8.GetBytes(json);
-        }
-
-        private void Log(string msg)
-        {
-            if (ConsoleLogging) Console.WriteLine(msg);
         }
 
         private void SendResponse(
@@ -550,7 +452,7 @@ namespace WatsonWebserver
                     }
                     else
                     {
-                        Log("Unknown object type for response body (must be either byte[] or string)");
+                        Logging.Log("Unknown object type for response body (must be either byte[] or string)");
                         return;
                     }
                 }
@@ -621,7 +523,7 @@ namespace WatsonWebserver
                         break;
 
                     default:
-                        Log("Unknown http status code " + status);
+                        Logging.Log("Unknown http status code " + status);
                         return;
                 }
 
@@ -702,7 +604,7 @@ namespace WatsonWebserver
                         {
                             #region unknown
 
-                            Log("Unknown object type for response body");
+                            Logging.Log("Unknown object type for response body");
                             response.ContentLength64 = 0;
                             output.Flush();
                             output.Close();
@@ -725,7 +627,7 @@ namespace WatsonWebserver
                 }
                 catch (HttpListenerException)
                 {
-                    Log("Remote endpoint " + req.SourceIp + ":" + req.SourcePort + " appears to have disconnected");
+                    Logging.Log("Remote endpoint " + req.SourceIp + ":" + req.SourcePort + " appears to have disconnected");
                 }
                 finally
                 {
@@ -738,17 +640,17 @@ namespace WatsonWebserver
             }
             catch (IOException)
             {
-                Log("Remote endpoint " + req.SourceIp + ":" + req.SourcePort + " appears to have terminated connection prematurely (outer IOException)");
+                Logging.Log("Remote endpoint " + req.SourceIp + ":" + req.SourcePort + " appears to have terminated connection prematurely (outer IOException)");
                 return;
             }
             catch (HttpListenerException)
             {
-                Log("Remote endpoint " + req.SourceIp + ":" + req.SourcePort + " appears to have terminated connection prematurely (outer HttpListenerException)");
+                Logging.Log("Remote endpoint " + req.SourceIp + ":" + req.SourcePort + " appears to have terminated connection prematurely (outer HttpListenerException)");
                 return;
             }
             catch (Exception e)
             {
-                LogException("SendResponse", e);
+                Logging.LogException("SendResponse", e);
                 return;
             }
             finally
@@ -757,7 +659,7 @@ namespace WatsonWebserver
                 {
                     if (req.TimestampUtc != null)
                     {
-                        Log("Thread " + req.ThreadId + " sending " + responseLen + "B status " + status + " " + req.SourceIp + ":" + req.SourcePort + " for " + req.Method + " " + req.RawUrlWithoutQuery + " (" + WatsonCommon.TotalMsFrom(req.TimestampUtc) + "ms)");
+                        Logging.Log("Thread " + req.ThreadId + " sending " + responseLen + "B status " + status + " " + req.SourceIp + ":" + req.SourcePort + " for " + req.Method + " " + req.RawUrlWithoutQuery + " (" + WatsonCommon.TotalMsFrom(req.TimestampUtc) + "ms)");
                     }
                 }
 
@@ -770,7 +672,7 @@ namespace WatsonWebserver
         
         private void OptionsHandler(HttpListenerContext context, HttpRequest req)
         {
-            Log("Thread " + Thread.CurrentThread.ManagedThreadId + " processing OPTIONS request");
+            Logging.Log("Thread " + Thread.CurrentThread.ManagedThreadId + " processing OPTIONS request");
 
             HttpListenerResponse response = context.Response;
             response.StatusCode = 200;
@@ -812,57 +714,8 @@ namespace WatsonWebserver
             response.ContentLength64 = 0;
             response.Close();
 
-            Log("Thread " + Thread.CurrentThread.ManagedThreadId + " sent OPTIONS response");
+            Logging.Log("Thread " + Thread.CurrentThread.ManagedThreadId + " sent OPTIONS response");
             return;
-        }
-
-        public void LogException(string method, Exception e)
-        {
-            if (e == null) throw new ArgumentNullException(nameof(e));
-            var st = new StackTrace(e, true);
-            var frame = st.GetFrame(0);
-            int fileLine = frame.GetFileLineNumber();
-            string filename = frame.GetFileName();
-
-            string message =
-                Environment.NewLine +
-                "---" + Environment.NewLine +
-                "An exception was encountered which triggered this message" + Environment.NewLine +
-                "  Method     : " + method + Environment.NewLine +
-                "  Type       : " + e.GetType().ToString() + Environment.NewLine +
-                "  Data       : " + e.Data + Environment.NewLine +
-                "  Inner      : " + e.InnerException + Environment.NewLine +
-                "  Message    : " + e.Message + Environment.NewLine +
-                "  Source     : " + e.Source + Environment.NewLine +
-                "  StackTrace : " + e.StackTrace + Environment.NewLine +
-                "  Stack      : " + StackToString() + Environment.NewLine +
-                "  Line       : " + fileLine + Environment.NewLine +
-                "  File       : " + filename + Environment.NewLine +
-                "  ToString   : " + e.ToString() + Environment.NewLine +
-                "  Servername : " + Dns.GetHostName() + Environment.NewLine +
-                "---";
-
-            Log(message);
-        }
-
-        private string StackToString()
-        {
-            string ret = "";
-
-            StackTrace t = new StackTrace();
-            for (int i = 0; i < t.FrameCount; i++)
-            {
-                if (i == 0)
-                {
-                    ret += t.GetFrame(i).GetMethod().Name;
-                }
-                else
-                {
-                    ret += " <= " + t.GetFrame(i).GetMethod().Name;
-                }
-            }
-
-            return ret;
         }
 
         #endregion

@@ -245,7 +245,7 @@ namespace WatsonWebserver
             if (String.IsNullOrEmpty(url2)) throw new ArgumentNullException(nameof(url2));
 
             string currString = "";
-            int currStringInt = 0;
+            int currStringInt;
             List<string> url1Tokens = new List<string>();
             List<string> url2Tokens = new List<string>();
             string[] url1TokensArray;

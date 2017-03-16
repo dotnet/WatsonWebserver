@@ -7,16 +7,51 @@
 
 A simple C# async web server for handling incoming RESTful HTTP/HTTPS requests. 
 
+## New in v1.1.0
+- Added support for routes.  The default handler can be used for cases where a matching route isn't available, for instance, to build a custom 404 response.
+
 ## Test App
 A test project is included which will help you exercise the class library.
 
-## Example
+## Example using Routes
 ```
 using WatsonWebserver;
 
 static void Main(string[] args)
 {
-   Server s = new Server("127.0.0.1", 9000, false, RequestReceived);
+   Server s = new Server("127.0.0.1", 9000, false, DefaultRoute, false);
+   s.AddRoute("get", "/hello/", GetHelloRoute);
+   s.AddRoute("get", "/world/", GetWorldRoute);
+   Console.WriteLine("Press ENTER to exit");
+   Console.ReadLine();
+}
+
+static HttpResponse GetHelloRoute(HttpRequest req)
+{
+   HttpResponse resp = new HttpResponse(req, true, 200, null, "text/plain", "Hello from the GET /hello/ route!", true);
+   return resp;
+}
+
+static HttpResponse GetWorldRoute(HttpRequest req)
+{
+   HttpResponse resp = new HttpResponse(req, true, 200, null, "text/plain", "Hello from the GET /world/ route!", true);
+   return resp;
+}
+
+static HttpResponse DefaultRoute(HttpRequest req)
+{
+   HttpResponse resp = new HttpResponse(req, true, 200, null, "text/plain", "Hello from the default route!", true);
+   return resp;
+}
+```
+
+## Example using Default Route
+```
+using WatsonWebserver;
+
+static void Main(string[] args)
+{
+   Server s = new Server("127.0.0.1", 9000, false, RequestReceived, false);
    Console.WriteLine("Press ENTER to exit");
    Console.ReadLine();
 }

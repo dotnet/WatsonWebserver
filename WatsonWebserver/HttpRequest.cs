@@ -448,7 +448,7 @@ namespace WatsonWebserver
             string[] entries = RawUrlEntries.ToArray();
             int len = entries.Length;
             string entry = entries[(len - 1)];
-            int ret = -1;
+            int ret;
             if (Int32.TryParse(entry, out ret))
             {
                 return ret;

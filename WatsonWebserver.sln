@@ -5,7 +5,9 @@ VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WatsonWebserver", "WatsonWebserver\WatsonWebserver.csproj", "{63F6B9F6-FF80-4764-BD45-109D549BF459}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WatsonWebserverTest", "WatsonWebserverTest\WatsonWebserverTest.csproj", "{1AA3B2D4-3481-42CA-AD82-6DD3945D3509}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestDefault", "TestDefault\TestDefault.csproj", "{1AA3B2D4-3481-42CA-AD82-6DD3945D3509}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestRoutes", "TestRoutes\TestRoutes.csproj", "{1CC4254C-ED82-4020-8554-4BFA34BC22A9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{1AA3B2D4-3481-42CA-AD82-6DD3945D3509}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1AA3B2D4-3481-42CA-AD82-6DD3945D3509}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1AA3B2D4-3481-42CA-AD82-6DD3945D3509}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1CC4254C-ED82-4020-8554-4BFA34BC22A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1CC4254C-ED82-4020-8554-4BFA34BC22A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1CC4254C-ED82-4020-8554-4BFA34BC22A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1CC4254C-ED82-4020-8554-4BFA34BC22A9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
