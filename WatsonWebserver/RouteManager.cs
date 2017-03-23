@@ -53,8 +53,7 @@ namespace WatsonWebserver
 
             Route r = Get(verb, path);
             if (r == null || r == default(Route))
-            {
-                Logging.Log("Route " + verb + " " + path + " does not exist");
+            { 
                 return;
             }
             else
@@ -63,8 +62,7 @@ namespace WatsonWebserver
                 {
                     Routes.Remove(r);
                 }
-
-                Logging.Log("Route " + verb + " " + path + " removed");
+                 
                 return;
             }
         }
@@ -83,13 +81,11 @@ namespace WatsonWebserver
             {
                 Route curr = Routes.FirstOrDefault(i => i.Verb == verb && i.Path == path);
                 if (curr == null || curr == default(Route))
-                {
-                    Logging.Log("Route " + verb + " " + path + " does not exist");
+                { 
                     return null;
                 } 
                 else
-                {
-                    Logging.Log("Route " + verb + " " + path + " exists, returning");
+                { 
                     return curr;
                 }
             }
@@ -109,13 +105,11 @@ namespace WatsonWebserver
             {
                 Route curr = Routes.FirstOrDefault(i => i.Verb == verb && i.Path == path);
                 if (curr == null || curr == default(Route))
-                {
-                    Logging.Log("Route " + verb + " " + path + " does not exist");
+                { 
                     return false;
                 }
             }
-
-            Logging.Log("Route " + verb + " " + path + " exists");
+             
             return true;
         }
 
@@ -133,15 +127,13 @@ namespace WatsonWebserver
             if (!route.Path.EndsWith("/")) route.Path = route.Path + "/";
 
             if (Exists(route.Verb, route.Path))
-            {
-                Logging.Log("*** Route already exists for " + route.Verb + " " + route.Path);
+            { 
                 return;
             }
 
             lock (RouteLock)
             {
-                Routes.Add(route);
-                Logging.Log("Added route for " + route.Verb + " " + route.Path);
+                Routes.Add(route); 
             }
         }
 
@@ -153,8 +145,7 @@ namespace WatsonWebserver
             {
                 Routes.Remove(route);
             }
-
-            Logging.Log("Route " + route.Verb + " " + route.Path + " removed");
+             
             return;
         }
 
