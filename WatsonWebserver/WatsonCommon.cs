@@ -191,6 +191,8 @@ namespace WatsonWebserver
         /// <returns>The existing dictionary with a new key and value, or, a new dictionary with the new key value pair.</returns>
         public static Dictionary<string, string> AddToDict(string key, string val, Dictionary<string, string> existing)
         {
+            if (String.IsNullOrEmpty(key)) return existing;
+
             Dictionary<string, string> ret = new Dictionary<string, string>();
 
             if (existing == null)
@@ -206,6 +208,14 @@ namespace WatsonWebserver
                     tempVal += "," + val;
                     existing.Remove(key);
                     existing.Add(key, tempVal);
+                    return existing;
+                }
+                else if (existing.ContainsKey(key.ToLower()))
+                {
+                    string tempVal = existing[key.ToLower()];
+                    tempVal += "," + val;
+                    existing.Remove(key.ToLower());
+                    existing.Add(key.ToLower(), tempVal);
                     return existing;
                 }
                 else

@@ -277,8 +277,8 @@ namespace WatsonWebserver
                                 inVal = 0;
 
                                 if (!String.IsNullOrEmpty(tempVal)) tempVal = HttpUtility.UrlDecode(tempVal);
-                                QuerystringEntries.Add(tempKey, tempVal);
-
+                                QuerystringEntries = WatsonCommon.AddToDict(tempKey, tempVal, QuerystringEntries);
+                                
                                 tempKey = "";
                                 tempVal = "";
                                 position++;
@@ -290,7 +290,7 @@ namespace WatsonWebserver
                     if (inVal == 1)
                     {
                         if (!String.IsNullOrEmpty(tempVal)) tempVal = HttpUtility.UrlDecode(tempVal);
-                        QuerystringEntries.Add(tempKey, tempVal);
+                        QuerystringEntries = WatsonCommon.AddToDict(tempKey, tempVal, QuerystringEntries);
                     }
                 }
 
@@ -315,7 +315,7 @@ namespace WatsonWebserver
             {
                 string key = String.Copy(ctx.Request.Headers.GetKey(i));
                 string val = String.Copy(ctx.Request.Headers.Get(i));
-                Headers.Add(key, val);
+                Headers = WatsonCommon.AddToDict(key, val, Headers);
             }
 
             #endregion
