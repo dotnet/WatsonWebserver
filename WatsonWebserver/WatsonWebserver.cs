@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace WatsonWebserver
 {
-    public class Server
+    public class Server : IDisposable
     {
         #region Public-Members
         
@@ -31,6 +31,9 @@ namespace WatsonWebserver
         private bool DebugRestResponses;
         private RouteManager Routes;
         private Func<HttpRequest, HttpResponse> RequestReceived;
+
+        private CancellationTokenSource TokenSource;
+        private CancellationToken Token;
 
         #endregion
 
@@ -63,13 +66,29 @@ namespace WatsonWebserver
             RequestReceived = defaultRequestHandler;
              
             Console.WriteLine("Starting Watson Webserver");
-            Task.Run(() => StartServer());
+            TokenSource = new CancellationTokenSource();
+            Token = TokenSource.Token;
+            Task.Run(() => StartServer(), Token);
         }
-        
+
         #endregion
 
         #region Public-Methods
 
+        /// <summary>
+        /// Tear down the server and dispose of background workers.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+
+        /// <summary>
+        /// Add a route to the server.
+        /// </summary>
+        /// <param name="verb">The HTTP method, i.e. GET, PUT, POST, DELETE.</param>
+        /// <param name="path">The raw URL to match, i.e. /foo/bar.</param>
+        /// <param name="handler">The method to which control should be passed.</param>
         public void AddRoute(string verb, string path, Func<HttpRequest, HttpResponse> handler)
         {
             if (String.IsNullOrEmpty(verb)) throw new ArgumentNullException(nameof(verb));
@@ -79,6 +98,11 @@ namespace WatsonWebserver
             Routes.Add(verb, path, handler);
         }
 
+        /// <summary>
+        /// Remove a route from the server.
+        /// </summary>
+        /// <param name="verb">The HTTP method, i.e. GET, PUT, POST, DELETE.</param>
+        /// <param name="path">The raw URL to match, i.e. /foo/bar.</param>
         public void RemoveRoute(string verb, string path)
         {
             if (String.IsNullOrEmpty(verb)) throw new ArgumentNullException(nameof(verb));
@@ -87,6 +111,12 @@ namespace WatsonWebserver
             Routes.Remove(verb, path);
         }
 
+        /// <summary>
+        /// Check if a route exists.
+        /// </summary>
+        /// <param name="verb">The HTTP method, i.e. GET, PUT, POST, DELETE.</param>
+        /// <param name="path">The raw URL to match, i.e. /foo/bar.</param>
+        /// <returns>True if a route exists.</returns>
         public bool RouteExists(string verb, string path)
         {
             if (String.IsNullOrEmpty(verb)) throw new ArgumentNullException(nameof(verb));
@@ -98,6 +128,14 @@ namespace WatsonWebserver
         #endregion
 
         #region Private-Methods
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                TokenSource.Cancel();
+            }
+        }
 
         private void StartServer()
         {
