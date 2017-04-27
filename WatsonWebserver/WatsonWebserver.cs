@@ -33,7 +33,7 @@ namespace WatsonWebserver
 
         private DynamicRouteManager DynamicRoutes;
         private StaticRouteManager StaticRoutes;
-        private Func<HttpRequest, HttpResponse> RequestReceived;
+        private Func<HttpRequest, HttpResponse> DefaultRoute;
 
         private CancellationTokenSource TokenSource;
         private CancellationToken Token;
@@ -67,7 +67,7 @@ namespace WatsonWebserver
 
             DynamicRoutes = new DynamicRouteManager(Logging, debug);
             StaticRoutes = new StaticRouteManager(Logging, debug);
-            RequestReceived = defaultRequestHandler;
+            DefaultRoute = defaultRequestHandler;
              
             Console.Write("Starting Watson Webserver at ");
             if (ListenerSsl) Console.WriteLine("https://" + ListenerIp + ":" + ListenerPort);
@@ -269,7 +269,7 @@ namespace WatsonWebserver
                                     else
                                     {
                                         // process using default route
-                                        currResponse = Process(context, currRequest);
+                                        currResponse = DefaultRouteProcessor(context, currRequest);
                                     }
                                 }
 
@@ -356,11 +356,11 @@ namespace WatsonWebserver
             }
         }
 
-        private HttpResponse Process(HttpListenerContext context, HttpRequest request)
+        private HttpResponse DefaultRouteProcessor(HttpListenerContext context, HttpRequest request)
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
             if (request == null) throw new ArgumentNullException(nameof(request));
-            HttpResponse ret = RequestReceived(request);
+            HttpResponse ret = DefaultRoute(request);
             if (ret == null)
             {
                 Logging.Log("Null HttpResponse received from call to RequestReceived, sending 500");

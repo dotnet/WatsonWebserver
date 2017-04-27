@@ -30,3 +30,5 @@ D:\Code\Watson\WatsonWebserverDynRouting\TestDefault\obj\Release\TestDefault.exe
 D:\Code\Watson\WatsonWebserverDynRouting\TestDefault\obj\Release\TestDefault.pdb
 D:\Code\Watson\WatsonWebserverDynRouting\TestDefault\bin\Release\RegexMatcher.dll
 D:\Code\Watson\WatsonWebserverDynRouting\TestDefault\bin\Release\RegexMatcher.pdb
+D:\Code\Watson\WatsonWebserver\TestDefault\bin\Release\RegexMatcher.dll
+D:\Code\Watson\WatsonWebserver\TestDefault\bin\Release\RegexMatcher.pdb

@@ -14,3 +14,5 @@ D:\Code\Watson\WatsonWebserverDynRouting\WatsonWebserver\bin\Debug\RegexMatcher.
 D:\Code\Watson\WatsonWebserverDynRouting\WatsonWebserver\obj\Debug\WatsonWebserver.csprojResolveAssemblyReference.cache
 D:\Code\Watson\WatsonWebserverDynRouting\WatsonWebserver\obj\Debug\Watson.dll
 D:\Code\Watson\WatsonWebserverDynRouting\WatsonWebserver\obj\Debug\Watson.pdb
+D:\Code\Watson\WatsonWebserver\WatsonWebserver\bin\Debug\RegexMatcher.dll
+D:\Code\Watson\WatsonWebserver\WatsonWebserver\bin\Debug\RegexMatcher.pdb

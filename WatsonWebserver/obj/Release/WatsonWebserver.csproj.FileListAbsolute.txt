@@ -14,3 +14,5 @@ D:\Code\Watson\WatsonWebserverDynRouting\WatsonWebserver\obj\Release\Watson.dll
 D:\Code\Watson\WatsonWebserverDynRouting\WatsonWebserver\obj\Release\Watson.pdb
 D:\Code\Watson\WatsonWebserverDynRouting\WatsonWebserver\bin\Release\RegexMatcher.dll
 D:\Code\Watson\WatsonWebserverDynRouting\WatsonWebserver\bin\Release\RegexMatcher.pdb
+D:\Code\Watson\WatsonWebserver\WatsonWebserver\bin\Release\RegexMatcher.dll
+D:\Code\Watson\WatsonWebserver\WatsonWebserver\bin\Release\RegexMatcher.pdb

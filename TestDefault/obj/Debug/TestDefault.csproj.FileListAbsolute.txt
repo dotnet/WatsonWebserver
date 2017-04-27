@@ -20,3 +20,5 @@ D:\Code\Watson\WatsonWebserverDynRouting\TestDefault\bin\Debug\Newtonsoft.Json.x
 D:\Code\Watson\WatsonWebserverDynRouting\TestDefault\obj\Debug\TestDefault.csprojResolveAssemblyReference.cache
 D:\Code\Watson\WatsonWebserverDynRouting\TestDefault\obj\Debug\TestDefault.exe
 D:\Code\Watson\WatsonWebserverDynRouting\TestDefault\obj\Debug\TestDefault.pdb
+D:\Code\Watson\WatsonWebserver\TestDefault\bin\Debug\RegexMatcher.dll
+D:\Code\Watson\WatsonWebserver\TestDefault\bin\Debug\RegexMatcher.pdb
