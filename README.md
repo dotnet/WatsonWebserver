@@ -31,7 +31,7 @@ static void Main(string[] args)
 
    // add dynamic routes
    s.AddDynamicRoute("get", new Regex("^/foo/\\d+$"), GetFooWithId);
-   s.AddDynamicRoute("get", new Regex("^/foo/(.*?)/(.*?)/?$"), GetFooTwoChildren);
+   s.AddDynamicRoute("get", new Regex("^/foo/(.*?)/(.*?)/?$"), GetFooMultipleChildren);
    s.AddDynamicRoute("get", new Regex("^/foo/(.*?)/?$"), GetFooOneChild);
    s.AddDynamicRoute("get", new Regex("^/foo/?$"), GetFoo); 
 
@@ -54,7 +54,7 @@ static HttpResponse GetFooWithId(HttpRequest req)
    return ResponseBuilder(req, "Watson says hello from the GET /foo with ID dynamic route!");
 }
 
-static HttpResponse GetFooTwoChildren(HttpRequest req)
+static HttpResponse GetFooMultipleChildren(HttpRequest req)
 { 
    return ResponseBuilder(req, "Watson says hello from the GET /foo with multiple children dynamic route!");
 }
@@ -79,7 +79,7 @@ static HttpResponse DefaultRoute(HttpRequest req)
 Notes from previous versions are shown below (summarized to minor build)
 
 v1.1.0
-- Added support for routes.  The default handler can be used for cases where a matching route isn't available, for instance, to build a custom 404 response.
+- Added support for static routes.  The default handler can be used for cases where a matching route isn't available, for instance, to build a custom 404 response.
 
 v1.0.0
 - Initial release.
