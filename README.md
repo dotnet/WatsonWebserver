@@ -8,7 +8,7 @@
 A simple C# async web server for handling incoming RESTful HTTP/HTTPS requests. 
 
 ## New in v1.2.0
-- Dynamic route support using C#/.NET regular expressions (see RegexMatcher library)
+- Dynamic route support using C#/.NET regular expressions (see RegexMatcher library https://github.com/jchristn/RegexMatcher).
 
 ## Test App
 A test project is included which will help you exercise the class library.
