@@ -51,22 +51,22 @@ static HttpResponse GetWorldRoute(HttpRequest req)
 
 static HttpResponse GetFooWithId(HttpRequest req)
 {
-   return new HttpResponse(req, true, 200, null, "text/plain", "Watson says hello from the GET /foo with ID dynamic route!", true);
+   return new HttpResponse(req, true, 200, null, "text/plain", "Hello from the GET /foo with ID dynamic route!", true);
 }
 
 static HttpResponse GetFooMultipleChildren(HttpRequest req)
 { 
-   return new HttpResponse(req, true, 200, null, "text/plain", "Watson says hello from the GET /foo with multiple children dynamic route!", true);
+   return new HttpResponse(req, true, 200, null, "text/plain", "Hello from the GET /foo with multiple children dynamic route!", true);
 }
 
 static HttpResponse GetFooOneChild(HttpRequest req)
 { 
-   return new HttpResponse(req, true, 200, null, "text/plain", "Watson says hello from the GET /foo with one child dynamic route!", true);
+   return new HttpResponse(req, true, 200, null, "text/plain", "Hello from the GET /foo with one child dynamic route!", true);
 }
 
 static HttpResponse GetFoo(HttpRequest req)
 { 
-   return new HttpResponse(req, true, 200, null, "text/plain", "Watson says hello from the GET /foo dynamic route!", true);
+   return new HttpResponse(req, true, 200, null, "text/plain", "Hello from the GET /foo dynamic route!", true);
 }
 
 static HttpResponse DefaultRoute(HttpRequest req)
