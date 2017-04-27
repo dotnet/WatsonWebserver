@@ -8,3 +8,15 @@ D:\code\watson\WatsonWebserver\TestDefault\bin\Debug\Newtonsoft.Json.xml
 D:\code\watson\WatsonWebserver\TestDefault\obj\Debug\TestDefault.csprojResolveAssemblyReference.cache
 D:\code\watson\WatsonWebserver\TestDefault\obj\Debug\TestDefault.exe
 D:\code\watson\WatsonWebserver\TestDefault\obj\Debug\TestDefault.pdb
+D:\Code\Watson\WatsonWebserverDynRouting\TestDefault\bin\Debug\TestDefault.exe.config
+D:\Code\Watson\WatsonWebserverDynRouting\TestDefault\bin\Debug\TestDefault.exe
+D:\Code\Watson\WatsonWebserverDynRouting\TestDefault\bin\Debug\TestDefault.pdb
+D:\Code\Watson\WatsonWebserverDynRouting\TestDefault\bin\Debug\Watson.dll
+D:\Code\Watson\WatsonWebserverDynRouting\TestDefault\bin\Debug\RegexMatcher.dll
+D:\Code\Watson\WatsonWebserverDynRouting\TestDefault\bin\Debug\Newtonsoft.Json.dll
+D:\Code\Watson\WatsonWebserverDynRouting\TestDefault\bin\Debug\Watson.pdb
+D:\Code\Watson\WatsonWebserverDynRouting\TestDefault\bin\Debug\RegexMatcher.pdb
+D:\Code\Watson\WatsonWebserverDynRouting\TestDefault\bin\Debug\Newtonsoft.Json.xml
+D:\Code\Watson\WatsonWebserverDynRouting\TestDefault\obj\Debug\TestDefault.csprojResolveAssemblyReference.cache
+D:\Code\Watson\WatsonWebserverDynRouting\TestDefault\obj\Debug\TestDefault.exe
+D:\Code\Watson\WatsonWebserverDynRouting\TestDefault\obj\Debug\TestDefault.pdb

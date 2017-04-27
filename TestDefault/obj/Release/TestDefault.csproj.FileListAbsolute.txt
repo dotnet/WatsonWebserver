@@ -18,3 +18,15 @@ D:\code\watson\WatsonWebserver\TestDefault\bin\Release\Newtonsoft.Json.xml
 D:\code\watson\WatsonWebserver\TestDefault\obj\Release\TestDefault.csprojResolveAssemblyReference.cache
 D:\code\watson\WatsonWebserver\TestDefault\obj\Release\TestDefault.exe
 D:\code\watson\WatsonWebserver\TestDefault\obj\Release\TestDefault.pdb
+D:\Code\Watson\WatsonWebserverDynRouting\TestDefault\bin\Release\TestDefault.exe.config
+D:\Code\Watson\WatsonWebserverDynRouting\TestDefault\bin\Release\TestDefault.exe
+D:\Code\Watson\WatsonWebserverDynRouting\TestDefault\bin\Release\TestDefault.pdb
+D:\Code\Watson\WatsonWebserverDynRouting\TestDefault\bin\Release\Watson.dll
+D:\Code\Watson\WatsonWebserverDynRouting\TestDefault\bin\Release\Newtonsoft.Json.dll
+D:\Code\Watson\WatsonWebserverDynRouting\TestDefault\bin\Release\Watson.pdb
+D:\Code\Watson\WatsonWebserverDynRouting\TestDefault\bin\Release\Newtonsoft.Json.xml
+D:\Code\Watson\WatsonWebserverDynRouting\TestDefault\obj\Release\TestDefault.csprojResolveAssemblyReference.cache
+D:\Code\Watson\WatsonWebserverDynRouting\TestDefault\obj\Release\TestDefault.exe
+D:\Code\Watson\WatsonWebserverDynRouting\TestDefault\obj\Release\TestDefault.pdb
+D:\Code\Watson\WatsonWebserverDynRouting\TestDefault\bin\Release\RegexMatcher.dll
+D:\Code\Watson\WatsonWebserverDynRouting\TestDefault\bin\Release\RegexMatcher.pdb
