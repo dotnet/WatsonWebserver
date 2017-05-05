@@ -33,6 +33,8 @@ namespace WatsonWebserver
 
         private DynamicRouteManager DynamicRoutes;
         private StaticRouteManager StaticRoutes;
+        private ContentRouteManager ContentRoutes;
+        private ContentRouteProcessor ContentProcessor;
         private Func<HttpRequest, HttpResponse> DefaultRoute;
 
         private CancellationTokenSource TokenSource;
@@ -67,6 +69,8 @@ namespace WatsonWebserver
 
             DynamicRoutes = new DynamicRouteManager(Logging, debug);
             StaticRoutes = new StaticRouteManager(Logging, debug);
+            ContentRoutes = new ContentRouteManager(Logging, debug);
+            ContentProcessor = new ContentRouteProcessor(Logging, debug, ContentRoutes);
             DefaultRoute = defaultRequestHandler;
              
             Console.Write("Starting Watson Webserver at ");
@@ -88,6 +92,18 @@ namespace WatsonWebserver
         public void Dispose()
         {
             Dispose(true);
+        }
+
+        /// <summary>
+        /// Add a content route to the server.
+        /// </summary>
+        /// <param name="path">The raw URL to match, i.e. /foo/bar.</param>
+        /// <param name="isDirectory">Indicates if the path represents a directory.</param>
+        public void AddContentRoute(string path, bool isDirectory)
+        { 
+            if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
+
+            ContentRoutes.Add(path, isDirectory);
         }
 
         /// <summary>
@@ -118,6 +134,17 @@ namespace WatsonWebserver
             if (handler == null) throw new ArgumentNullException(nameof(handler));
 
             DynamicRoutes.Add(verb, path, handler); 
+        }
+
+        /// <summary>
+        /// Remove a static route from the server.
+        /// </summary>
+        /// <param name="path">The raw URL to match, i.e. /foo/bar.</param>
+        public void RemoveContentRoute(string path)
+        { 
+            if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
+
+            ContentRoutes.Remove(path);
         }
 
         /// <summary>
@@ -246,30 +273,42 @@ namespace WatsonWebserver
 
                             Task.Run(() =>
                             {
-                                HttpResponse currResponse;
-                                Func<HttpRequest, HttpResponse> handler;
+                                HttpResponse currResponse = null;
+                                Func<HttpRequest, HttpResponse> handler = null;
 
                                 #region Find-Route
                                 
-                                handler = StaticRoutes.Match(currRequest.Method, currRequest.RawUrlWithoutQuery);
-                                if (handler != null)
-                                {
-                                    // static route found
-                                    currResponse = handler(currRequest);
+                                if (currRequest.Method.ToLower().Equals("get") || currRequest.Method.ToLower().Equals("head"))
+                                { 
+                                    if (ContentRoutes.Exists(currRequest.RawUrlWithoutQuery))
+                                    {
+                                        // content route found
+                                        currResponse = ContentProcessor.Process(currRequest);
+                                    }
                                 }
-                                else
+
+                                if (currResponse == null)
                                 {
-                                    // no static route, check for dynamic route
-                                    handler = DynamicRoutes.Match(currRequest.Method, currRequest.RawUrlWithoutQuery);
+                                    handler = StaticRoutes.Match(currRequest.Method, currRequest.RawUrlWithoutQuery);
                                     if (handler != null)
                                     {
-                                        // dynamic route found
+                                        // static route found
                                         currResponse = handler(currRequest);
                                     }
                                     else
                                     {
-                                        // process using default route
-                                        currResponse = DefaultRouteProcessor(context, currRequest);
+                                        // no static route, check for dynamic route
+                                        handler = DynamicRoutes.Match(currRequest.Method, currRequest.RawUrlWithoutQuery);
+                                        if (handler != null)
+                                        {
+                                            // dynamic route found
+                                            currResponse = handler(currRequest);
+                                        }
+                                        else
+                                        {
+                                            // process using default route
+                                            currResponse = DefaultRouteProcessor(context, currRequest);
+                                        }
                                     }
                                 }
 

@@ -53,10 +53,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ContentRoute.cs" />
+    <Compile Include="ContentRouteProcessor.cs" />
     <Compile Include="LoggingManager.cs" />
     <Compile Include="DynamicRoute.cs" />
+    <Compile Include="MimeTypes.cs" />
     <Compile Include="StaticRoute.cs" />
     <Compile Include="DynamicRouteManager.cs" />
+    <Compile Include="ContentRouteManager.cs" />
     <Compile Include="StaticRouteManager.cs" />
     <Compile Include="WatsonCommon.cs" />
     <Compile Include="HttpRequest.cs" />

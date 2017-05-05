@@ -7,16 +7,23 @@
 
 A simple C# async web server for handling incoming RESTful HTTP/HTTPS requests. 
 
-## New in v1.2.0
-- Dynamic route support using C#/.NET regular expressions (see RegexMatcher library https://github.com/jchristn/RegexMatcher).
+## New in v1.2.1
+- Added content routes for serving static files.
 
 ## Test App
 A test project is included which will help you exercise the class library.
 
 ## Important Notes
-- Watson Webserver will always check for static routes, then dynamic (regex) routes, then the default route.  
+- Watson Webserver will always check routes in the following order:
+  - If the request is GET or HEAD, content routes will first be checked
+  - Then static routes will be evaluated
+  - Then dynamic (regex) routes will be evaluated
+  - Then the default route
 - When defining dynamic routes (regular expressions), be sure to add the most specific routes first.  Dynamic routes are evaluated in-order and the first match is used.
-
+- If a matching content route exists:
+  - And the content does not exist, a standard 404 is sent
+  - And the content cannot be read, a standard 500 is sent
+  
 ## Example using Routes
 ```
 using WatsonWebserver;
@@ -24,6 +31,10 @@ using WatsonWebserver;
 static void Main(string[] args)
 {
    Server s = new Server("127.0.0.1", 9000, false, DefaultRoute, true);
+
+   // add content routes
+   s.AddContentRoute("/html/", true);
+   s.AddContentRoute("/img/watson.jpg", false);
 
    // add static routes
    s.AddStaticRoute("get", "/hello/", GetHelloRoute);
@@ -77,6 +88,9 @@ static HttpResponse DefaultRoute(HttpRequest req)
 
 ## Version History
 Notes from previous versions are shown below (summarized to minor build)
+
+v1.2.0
+- Dynamic route support using C#/.NET regular expressions (see RegexMatcher library https://github.com/jchristn/RegexMatcher).
 
 v1.1.0
 - Added support for static routes.  The default handler can be used for cases where a matching route isn't available, for instance, to build a custom 404 response.

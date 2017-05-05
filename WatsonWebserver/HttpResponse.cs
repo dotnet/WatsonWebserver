@@ -153,6 +153,10 @@ namespace WatsonWebserver
                     StatusDescription = "Created";
                     break;
 
+                case 204:
+                    StatusDescription = "No Content";
+                    break;
+
                 case 301:
                     StatusDescription = "Moved Permanently";
                     break;
