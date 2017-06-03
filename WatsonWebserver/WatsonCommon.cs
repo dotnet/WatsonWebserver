@@ -35,9 +35,7 @@ namespace WatsonWebserver
         #endregion
 
         #region Public-Methods
-
-        
-
+         
         /// <summary>
         /// Serialize object to JSON using Newtonsoft JSON.NET.
         /// </summary>
@@ -57,9 +55,7 @@ namespace WatsonWebserver
 
             return json;
         }
-
-
-
+         
         /// <summary>
         /// Deserialize JSON string to an object using Newtonsoft JSON.NET.
         /// </summary>
