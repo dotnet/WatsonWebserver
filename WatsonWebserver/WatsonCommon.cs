@@ -5,8 +5,6 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using System.Web;
-using System.Web.Script.Serialization;
 using Newtonsoft.Json;
 
 namespace WatsonWebserver
@@ -38,19 +36,7 @@ namespace WatsonWebserver
 
         #region Public-Methods
 
-        /// <summary>
-        /// Serialize object to JSON using the built-in JSON serializer (JavaScriptSerializer).
-        /// </summary>
-        /// <param name="obj">The object to serialize.</param>
-        /// <returns>JSON string.</returns>
-        public static string SerializeJsonBuiltIn(object obj)
-        {
-            if (obj == null) return null;
-
-            JavaScriptSerializer ser = new JavaScriptSerializer();
-            ser.MaxJsonLength = Int32.MaxValue;
-            return ser.Serialize(obj);
-        }
+        
 
         /// <summary>
         /// Serialize object to JSON using Newtonsoft JSON.NET.
@@ -72,43 +58,7 @@ namespace WatsonWebserver
             return json;
         }
 
-        /// <summary>
-        /// Deserialize JSON string to an object using the built-in serializer (JavaScriptSerializer).
-        /// </summary>
-        /// <typeparam name="T">The type of object.</typeparam>
-        /// <param name="json">JSON string.</param>
-        /// <returns>An object of the specified type.</returns>
-        public static T DeserializeJsonBuiltIn<T>(string json)
-        {
-            if (String.IsNullOrEmpty(json)) throw new ArgumentNullException(nameof(json));
 
-            try
-            {
-                JavaScriptSerializer ser = new JavaScriptSerializer();
-                ser.MaxJsonLength = Int32.MaxValue;
-                return ser.Deserialize<T>(json);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("");
-                Console.WriteLine("Exception while deserializing:");
-                Console.WriteLine(json);
-                Console.WriteLine("");
-                throw e;
-            }
-        }
-
-        /// <summary>
-        /// Deserialize JSON string to an object using the built-in serializer (JavaScriptSerializer).
-        /// </summary>
-        /// <typeparam name="T">The type of object.</typeparam>
-        /// <param name="data">Byte array containing the JSON string.</param>
-        /// <returns>An object of the specified type.</returns>
-        public static T DeserializeJsonBuiltIn<T>(byte[] data)
-        {
-            if (data == null || data.Length < 1) throw new ArgumentNullException(nameof(data));
-            return DeserializeJsonBuiltIn<T>(Encoding.UTF8.GetString(data));
-        }
 
         /// <summary>
         /// Deserialize JSON string to an object using Newtonsoft JSON.NET.

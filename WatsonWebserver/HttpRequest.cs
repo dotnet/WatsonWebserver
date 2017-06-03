@@ -8,7 +8,6 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Web;
 
 namespace WatsonWebserver
 {
@@ -276,7 +275,7 @@ namespace WatsonWebserver
                                 inKey = 1;
                                 inVal = 0;
 
-                                if (!String.IsNullOrEmpty(tempVal)) tempVal = HttpUtility.UrlDecode(tempVal);
+                                if (!String.IsNullOrEmpty(tempVal)) tempVal = System.Uri.EscapeUriString(tempVal);
                                 QuerystringEntries = WatsonCommon.AddToDict(tempKey, tempVal, QuerystringEntries);
                                 
                                 tempKey = "";
@@ -289,7 +288,7 @@ namespace WatsonWebserver
 
                     if (inVal == 1)
                     {
-                        if (!String.IsNullOrEmpty(tempVal)) tempVal = HttpUtility.UrlDecode(tempVal);
+                        if (!String.IsNullOrEmpty(tempVal)) tempVal = System.Uri.EscapeUriString(tempVal);
                         QuerystringEntries = WatsonCommon.AddToDict(tempKey, tempVal, QuerystringEntries);
                     }
                 }
