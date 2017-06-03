@@ -96,7 +96,7 @@ v1.2.x
 v1.1.x
 - Added support for static routes.  The default handler can be used for cases where a matching route isn't available, for instance, to build a custom 404 response.
 
-v1.0.0
+v1.0.x
 - Initial release.
 
 ## Running under Mono
