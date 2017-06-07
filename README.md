@@ -7,8 +7,8 @@
 
 A simple C# async web server for handling incoming RESTful HTTP/HTTPS requests. 
 
-## New in v1.2.2
-- Fix for Xamarin IOS and Android (thank you @Tutch!)
+## New in v1.2.3
+- Fix for content routes (thank you @KKoustas!)
 
 ## Test App
 A test project is included which will help you exercise the class library.
@@ -90,6 +90,7 @@ static HttpResponse DefaultRoute(HttpRequest req)
 Notes from previous versions are shown below (summarized to minor build)
 
 v1.2.x
+- Fix for Xamarin IOS and Android (thank you @Tutch!)
 - Added content routes for serving static files.
 - Dynamic route support using C#/.NET regular expressions (see RegexMatcher library https://github.com/jchristn/RegexMatcher).
 
