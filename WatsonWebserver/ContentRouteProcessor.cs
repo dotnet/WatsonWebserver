@@ -43,6 +43,7 @@ namespace WatsonWebserver
 
             string filePath = req.RawUrlWithoutQuery;
             if (!String.IsNullOrEmpty(filePath) && filePath.StartsWith("/")) filePath = filePath.Substring(1);
+            filePath = AppDomain.CurrentDomain.BaseDirectory + filePath;
 
             string contentType = GetContentType(filePath);
 
