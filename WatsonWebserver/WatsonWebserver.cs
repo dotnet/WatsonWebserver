@@ -499,12 +499,64 @@ namespace WatsonWebserver
 
             switch (status)
             {
+                // see https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
+
+                #region Official
+
+                case 100:
+                    ret.Add("http_text", "Continue");
+                    break;
+
+                case 101:
+                    ret.Add("http_text", "Switching Protocols");
+                    break;
+
+                case 102:
+                    ret.Add("http_text", "Processing");
+                    break;
+
                 case 200:
                     ret.Add("http_text", "OK");
                     break;
 
                 case 201:
                     ret.Add("http_text", "Created");
+                    break;
+
+                case 202:
+                    ret.Add("http_text", "Accepted");
+                    break;
+
+                case 203:
+                    ret.Add("http_text", "Non-Authoritative Information");
+                    break;
+
+                case 204:
+                    ret.Add("http_text", "No Content");
+                    break;
+
+                case 205:
+                    ret.Add("http_text", "Reset Content");
+                    break;
+
+                case 206:
+                    ret.Add("http_text", "Partial Content");
+                    break;
+
+                case 207:
+                    ret.Add("http_text", "Multi-Status");
+                    break;
+
+                case 208:
+                    ret.Add("http_text", "Already Reported");
+                    break;
+
+                case 226:
+                    ret.Add("http_text", "IM Used");
+                    break;
+
+                case 300:
+                    ret.Add("http_text", "Multiple Choices");
                     break;
 
                 case 301:
@@ -515,8 +567,28 @@ namespace WatsonWebserver
                     ret.Add("http_text", "Moved Temporarily");
                     break;
 
+                case 303:
+                    ret.Add("http_text", "See Other");
+                    break;
+
                 case 304:
                     ret.Add("http_text", "Not Modified");
+                    break;
+
+                case 305:
+                    ret.Add("http_text", "Use Proxy");
+                    break;
+
+                case 306:
+                    ret.Add("http_text", "Switch Proxy");
+                    break;
+
+                case 307:
+                    ret.Add("http_text", "Temporary Redirect");
+                    break;
+
+                case 308:
+                    ret.Add("http_text", "Permanent Redirect");
                     break;
 
                 case 400:
@@ -525,6 +597,10 @@ namespace WatsonWebserver
 
                 case 401:
                     ret.Add("http_text", "Unauthorized");
+                    break;
+
+                case 402:
+                    ret.Add("http_text", "Payment Required");
                     break;
 
                 case 403:
@@ -539,8 +615,92 @@ namespace WatsonWebserver
                     ret.Add("http_text", "Method Not Allowed");
                     break;
 
+                case 406:
+                    ret.Add("http_text", "Not Acceptable");
+                    break;
+
+                case 407:
+                    ret.Add("http_text", "Proxy Authentication Required");
+                    break;
+
+                case 408:
+                    ret.Add("http_text", "Request Timeout");
+                    break;
+
+                case 409:
+                    ret.Add("http_text", "Conflict");
+                    break;
+
+                case 410:
+                    ret.Add("http_text", "Gone");
+                    break;
+
+                case 411:
+                    ret.Add("http_text", "Length Required");
+                    break;
+
+                case 412:
+                    ret.Add("http_text", "Precondition Failed");
+                    break;
+
+                case 413:
+                    ret.Add("http_text", "Payload Too Large");
+                    break;
+
+                case 414:
+                    ret.Add("http_text", "URI Too Long");
+                    break;
+
+                case 415:
+                    ret.Add("http_text", "Unsupported Media Type");
+                    break;
+
+                case 416:
+                    ret.Add("http_text", "Range Not Satisfiable");
+                    break;
+
+                case 417:
+                    ret.Add("http_text", "Expectation Failed");
+                    break;
+
+                case 418:
+                    ret.Add("http_text", "I'm a Teapot :)");
+                    break;
+
+                case 421:
+                    ret.Add("http_text", "Misdirected Request");
+                    break;
+
+                case 422:
+                    ret.Add("http_text", "Unprocessable Entity");
+                    break;
+
+                case 423:
+                    ret.Add("http_text", "Locked");
+                    break;
+
+                case 424:
+                    ret.Add("http_text", "Failed Dependency");
+                    break;
+
+                case 426:
+                    ret.Add("http_text", "Upgrade Required");
+                    break;
+
+                case 428:
+                    ret.Add("http_text", "Precondition Required");
+                    break;
+
                 case 429:
                     ret.Add("http_text", "Too Many Requests");
+                    break;
+
+                case 431:
+                    ret.Add("http_text", "Request Header Fields Too Large");
+                    break;
+
+                case 451:
+                    ret.Add("http_text", "Unavailable for Legal Reasons");
                     break;
 
                 case 500:
@@ -551,9 +711,151 @@ namespace WatsonWebserver
                     ret.Add("http_text", "Not Implemented");
                     break;
 
+                case 502:
+                    ret.Add("http_text", "Bad Gateway");
+                    break;
+
                 case 503:
                     ret.Add("http_text", "Service Unavailable");
                     break;
+
+                case 504:
+                    ret.Add("http_text", "Gateway Timeout");
+                    break;
+
+                case 505:
+                    ret.Add("http_text", "HTTP Version Not Supported");
+                    break;
+
+                case 506:
+                    ret.Add("http_text", "Variant Also Negotiates");
+                    break;
+
+                case 507:
+                    ret.Add("http_text", "Insufficient Storage");
+                    break;
+
+                case 508:
+                    ret.Add("http_text", "Loop Detected");
+                    break;
+
+                case 510:
+                    ret.Add("http_text", "Not Extended");
+                    break;
+
+                case 511:
+                    ret.Add("http_text", "Network Authentication Required");
+                    break;
+
+                #endregion
+
+                #region Unofficial
+
+                case 103:
+                    ret.Add("http_text", "Checkpoint or Early Hints");
+                    break;
+
+                case 420:
+                    ret.Add("http_text", "Method Failure or Enhance Your Calm");
+                    break;
+
+                case 450:
+                    ret.Add("http_text", "Blocked By Parental Controls");
+                    break;
+
+                case 498:
+                    ret.Add("http_text", "Invalid Token");
+                    break;
+
+                case 499:
+                    ret.Add("http_text", "Token Required or Client Closed Request");
+                    break;
+
+                case 509:
+                    ret.Add("http_text", "Bandwidth Limit Exceeded");
+                    break;
+
+                case 530:
+                    ret.Add("http_text", "Site Is Frozen");
+                    break;
+
+                case 598:
+                    ret.Add("http_text", "Network Read Timeout Error");
+                    break;
+
+                case 599:
+                    ret.Add("http_text", "Network Connect Timeout Error");
+                    break;
+
+                #endregion
+
+                #region IIS
+
+                case 440:
+                    ret.Add("http_text", "Login Timeout");
+                    break;
+
+                case 449:
+                    ret.Add("http_text", "Retry With");
+                    break;
+
+                #endregion
+
+                #region nginx
+
+                case 444:
+                    ret.Add("http_text", "No Response");
+                    break;
+
+                case 495:
+                    ret.Add("http_text", "SSL Certificate Error");
+                    break;
+
+                case 496:
+                    ret.Add("http_text", "SSL Certificate Required");
+                    break;
+
+                case 497:
+                    ret.Add("http_text", "HTTP Request Sent To HTTPS Port");
+                    break;
+
+                #endregion
+
+                #region Cloudflare
+
+                case 520:
+                    ret.Add("http_text", "Unknown Error");
+                    break;
+
+                case 521:
+                    ret.Add("http_text", "Web Server Is Down");
+                    break;
+
+                case 522:
+                    ret.Add("http_text", "Connection Timed Out");
+                    break;
+
+                case 523:
+                    ret.Add("http_text", "Origin Is Unreachable");
+                    break;
+
+                case 524:
+                    ret.Add("http_text", "A Timeout Occurred");
+                    break;
+
+                case 525:
+                    ret.Add("http_text", "SSL Handshake Failed");
+                    break;
+
+                case 526:
+                    ret.Add("http_text", "Invalid SSL Certificate");
+                    break;
+
+                case 527:
+                    ret.Add("http_text", "Railgun Error");
+                    break;
+
+                #endregion
 
                 default:
                     Logging.Log("Unknown http status code " + status);
