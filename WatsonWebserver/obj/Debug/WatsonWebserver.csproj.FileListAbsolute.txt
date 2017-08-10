@@ -13,6 +13,5 @@ D:\Code\Watson\WatsonWebserver\WatsonWebserver\bin\Debug\Newtonsoft.Json.dll
 D:\Code\Watson\WatsonWebserver\WatsonWebserver\bin\Debug\RegexMatcher.dll
 D:\Code\Watson\WatsonWebserver\WatsonWebserver\bin\Debug\Newtonsoft.Json.xml
 D:\Code\Watson\WatsonWebserver\WatsonWebserver\bin\Debug\RegexMatcher.pdb
-D:\Code\Watson\WatsonWebserver\WatsonWebserver\obj\Debug\WatsonWebserver.csprojResolveAssemblyReference.cache
 D:\Code\Watson\WatsonWebserver\WatsonWebserver\obj\Debug\Watson.dll
 D:\Code\Watson\WatsonWebserver\WatsonWebserver\obj\Debug\Watson.pdb

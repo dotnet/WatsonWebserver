@@ -11,9 +11,41 @@ namespace TestDefault
     {
         static void Main()
         {
-            new Server("127.0.0.1", 9000, false, RequestReceived, true);
-            Console.WriteLine("Press ENTER to exit");
-            Console.ReadLine();
+            Server server = new Server("127.0.0.1", 9000, false, RequestReceived, true);
+
+            bool runForever = true;
+            while (runForever)
+            {
+                string userInput = WatsonCommon.InputString("Command [? for help] >", null, false);
+                switch (userInput.ToLower())
+                {
+                    case "?":
+                        Menu();
+                        break;
+
+                    case "q":
+                        runForever = false;
+                        break;
+
+                    case "c":
+                    case "cls":
+                        Console.Clear();
+                        break;
+
+                    case "dispose":
+                        server.Dispose();
+                        break;
+                }
+            } 
+        }
+
+        static void Menu()
+        {
+            Console.WriteLine("---");
+            Console.WriteLine("  ?        help, this menu");
+            Console.WriteLine("  q        quit the application");
+            Console.WriteLine("  cls      clear the screen");
+            Console.WriteLine("  dispose  dispose the server object");
         }
 
         static HttpResponse RequestReceived(HttpRequest req)

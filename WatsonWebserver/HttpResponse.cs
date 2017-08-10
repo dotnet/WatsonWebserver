@@ -32,6 +32,11 @@ namespace WatsonWebserver
         public DateTime TimestampUtc;
 
         /// <summary>
+        /// The protocol and version.
+        /// </summary>
+        public string ProtocolVersion;
+
+        /// <summary>
         /// IP address of the requestor (client).
         /// </summary>
         public string SourceIp;
@@ -91,6 +96,11 @@ namespace WatsonWebserver
         public string ContentType;
 
         /// <summary>
+        /// The length of the supplied response data.
+        /// </summary>
+        public long ContentLength;
+
+        /// <summary>
         /// The data to return to the requestor in the response body.  This must be either a byte[] or string.
         /// </summary>
         public object Data;
@@ -114,6 +124,15 @@ namespace WatsonWebserver
         #region Constructor
 
         /// <summary>
+        /// Create an uninitialized HttpResponse object.
+        /// </summary>
+        public HttpResponse()
+        {
+            TimestampUtc = DateTime.Now.ToUniversalTime();
+            Headers = new Dictionary<string, string>();
+        }
+
+        /// <summary>
         /// Create a new HttpResponse object.
         /// </summary>
         /// <param name="req">The HttpRequest object for which this request is being created.</param>
@@ -126,6 +145,9 @@ namespace WatsonWebserver
         public HttpResponse(HttpRequest req, bool success, int status, Dictionary<string, string> headers, string contentType, object data, bool rawResponse)
         {
             if (req == null) throw new ArgumentNullException(nameof(req));
+
+            #region Set-Base-Variables
+
             TimestampUtc = req.TimestampUtc;
             SourceIp = req.SourceIp;
             SourcePort = req.SourcePort;
@@ -141,7 +163,11 @@ namespace WatsonWebserver
             StatusCode = status;
             RawResponse = rawResponse;
             Data = data;
-            
+
+            #endregion
+
+            #region Set-Status
+
             switch (status)
             {
                 case 200:
@@ -208,6 +234,32 @@ namespace WatsonWebserver
                     StatusDescription = "Unknown";
                     return;
             }
+
+            #endregion
+
+            #region Check-Data
+
+            if (Data != null)
+            {
+                if (Data is byte[])
+                {
+                    ContentLength = ((byte[])Data).Length;
+                }
+                else if (Data is string)
+                {
+                    ContentLength = ((string)Data).Length;
+                }
+                else
+                {
+                    throw new ArgumentException("Data must be either a byte array or string.");
+                } 
+            }
+            else
+            {
+                ContentLength = 0;
+            }
+
+            #endregion
         }
 
         #endregion
@@ -282,7 +334,7 @@ namespace WatsonWebserver
         /// <summary>
         /// Creates a JSON string of the response and data including fields indicating success and data MD5.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>String containing JSON representation of the HTTP response.</returns>
         public string ToJson()
         {
             Dictionary<string, object> ret = new Dictionary<string, object>();
@@ -298,15 +350,72 @@ namespace WatsonWebserver
         /// <summary>
         /// Creates a byte array containing a JSON string of the response and data including fields indicatng success and data MD5.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Byte array containing the JSON representation of the HTTP response.</returns>
         public byte[] ToJsonBytes()
         {
             return Encoding.UTF8.GetBytes(ToJson());
         }
 
+        /// <summary>
+        /// Creates a byte array containing the HTTP response (useful for sockets apps what want to transmit the response directly).
+        /// </summary>
+        /// <returns></returns>
+        public byte[] ToHttpBytes()
+        { 
+            byte[] ret = null;
+
+            string statusLine = ProtocolVersion + " " + StatusCode + " " + StatusDescription + "\r\n";
+            ret = AppendBytes(ret, Encoding.UTF8.GetBytes(statusLine));
+
+            if (!String.IsNullOrEmpty(ContentType))
+            {
+                string contentTypeLine = "Content-Type: " + ContentType + "\r\n";
+                ret = AppendBytes(ret, Encoding.UTF8.GetBytes(contentTypeLine));
+            }
+
+            if (Headers != null && Headers.Count > 0)
+            {
+                foreach (KeyValuePair<string, string> currHeader in Headers)
+                {
+                    if (String.IsNullOrEmpty(currHeader.Key)) continue;
+                    if (currHeader.Key.ToLower().Trim().Equals("content-type")) continue;
+
+                    string headerLine = currHeader.Key + ": " + currHeader.Value + "\r\n";
+                    ret = AppendBytes(ret, Encoding.UTF8.GetBytes(headerLine));
+                }
+            }
+
+            ret = AppendBytes(ret, Encoding.UTF8.GetBytes("\r\n"));
+
+            if (Data != null)
+            {
+                if (Data is byte[])
+                {
+                    ret = AppendBytes(ret, (byte[])Data);
+                }
+                else if (Data is string)
+                {
+                    ret = AppendBytes(ret, Encoding.UTF8.GetBytes((string)Data));
+                }
+            }
+
+            return ret;
+        }
+
         #endregion
 
         #region Private-Methods
+
+        private byte[] AppendBytes(byte[] orig, byte[] append)
+        {
+            if (append == null) return orig;
+            if (orig == null) return append;
+
+            byte[] ret = new byte[orig.Length + append.Length];
+            Buffer.BlockCopy(orig, 0, ret, 0, orig.Length);
+            Buffer.BlockCopy(append, 0, ret, orig.Length, append.Length);
+            return ret;
+        }
 
         #endregion
     }

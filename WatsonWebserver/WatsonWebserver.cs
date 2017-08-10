@@ -23,6 +23,7 @@ namespace WatsonWebserver
 
         private readonly EventWaitHandle Terminator = new EventWaitHandle(false, EventResetMode.ManualReset, "UserIntervention");
 
+        private HttpListener Http;
         private string ListenerIp;
         private int ListenerPort;
         private bool ListenerSsl;
@@ -57,6 +58,7 @@ namespace WatsonWebserver
             if (port < 1) throw new ArgumentOutOfRangeException(nameof(port));
             if (defaultRequestHandler == null) throw new ArgumentNullException(nameof(defaultRequestHandler));
 
+            Http = new HttpListener();
             ListenerIp = ip;
             ListenerPort = port;
             ListenerSsl = ssl;
@@ -79,7 +81,7 @@ namespace WatsonWebserver
 
             TokenSource = new CancellationTokenSource();
             Token = TokenSource.Token;
-            Task.Run(() => StartServer(), Token);
+            Task.Run(() => StartServer(Token), Token);
         }
 
         #endregion
@@ -209,32 +211,39 @@ namespace WatsonWebserver
         {
             if (disposing)
             {
+                if (Http != null)
+                {
+                    if (Http.IsListening) Http.Stop();
+                    Http.Close();
+                }
+                
                 TokenSource.Cancel();
             }
         }
 
-        private void StartServer()
+        private void StartServer(CancellationToken token)
         {
-            Task.Run(() => AcceptConnections());
+            Task.Run(() => AcceptConnections(token), token);
             Terminator.WaitOne();
         }
 
-        private void AcceptConnections()
+        private void AcceptConnections(CancellationToken token)
         {
             try
             {
-                HttpListener http = new HttpListener();
                 if (ListenerSsl) ListenerPrefix = "https://" + ListenerIp + ":" + ListenerPort + "/";
                 else ListenerPrefix = "http://" + ListenerIp + ":" + ListenerPort + "/";
-                http.Prefixes.Add(ListenerPrefix);
-                http.Start();
+                Http.Prefixes.Add(ListenerPrefix);
+                Http.Start();
                 
-                while (http.IsListening)
+                while (Http.IsListening)
                 {
                     ThreadPool.QueueUserWorkItem((c) =>
-                    {
-                        var context = c as HttpListenerContext;
+                    { 
+                        if (token.IsCancellationRequested) throw new OperationCanceledException();
 
+                        var context = c as HttpListenerContext;
+                         
                         try
                         {
                             #region Populate-Http-Request-Object
@@ -372,17 +381,22 @@ namespace WatsonWebserver
 
                             #endregion
                         }
-                        catch (Exception e)
-                        {
-                            Logging.LogException("StartServer", e);
-                            throw;
+                        catch (Exception)
+                        { 
+                            
                         }
                         finally
                         {
 
                         }
-                    }, http.GetContext());
+                    }, Http.GetContext());
                 }
+            }
+            catch (HttpListenerException)
+            {
+            }
+            catch (OperationCanceledException)
+            { 
             }
             catch (Exception eOuter)
             {
