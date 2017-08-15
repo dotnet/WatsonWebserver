@@ -17,6 +17,14 @@ namespace WatsonWebserver
     {
         #region Public-Members
         
+        /// <summary>
+        /// Indicates whether or not the server is listening.
+        /// </summary>
+        public bool IsListening
+        {
+            get { return (Http != null) ? Http.IsListening : false; }
+        }
+
         #endregion
 
         #region Private-Members
@@ -95,7 +103,7 @@ namespace WatsonWebserver
         {
             Dispose(true);
         }
-
+        
         /// <summary>
         /// Add a content route to the server.
         /// </summary>

@@ -32,6 +32,10 @@ namespace TestDefault
                         Console.Clear();
                         break;
 
+                    case "state":
+                        Console.WriteLine("Listening: " + server.IsListening);
+                        break;
+
                     case "dispose":
                         server.Dispose();
                         break;
@@ -45,6 +49,7 @@ namespace TestDefault
             Console.WriteLine("  ?        help, this menu");
             Console.WriteLine("  q        quit the application");
             Console.WriteLine("  cls      clear the screen");
+            Console.WriteLine("  state    indicate whether or not the server is listening");
             Console.WriteLine("  dispose  dispose the server object");
         }
 
