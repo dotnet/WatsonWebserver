@@ -501,7 +501,7 @@ namespace WatsonWebserver
                     break;
 
                 default:
-                    Logging.Log("Unknown http status code " + status);
+                    ret.Add("http_text", "Unknown Status");
                     break;
             }
 
@@ -880,7 +880,7 @@ namespace WatsonWebserver
                 #endregion
 
                 default:
-                    Logging.Log("Unknown http status code " + status);
+                    ret.Add("http_text", "Unknown Status");
                     break;
             }
             
@@ -994,7 +994,7 @@ namespace WatsonWebserver
                         break;
 
                     default:
-                        Logging.Log("Unknown http status code " + status);
+                        response.StatusDescription = "Unknown Status";
                         return;
                 }
 
