@@ -62,7 +62,7 @@ namespace WatsonWebserver
         /// <param name="defaultRequestHandler">Method used when a request is received and no routes are defined.  Commonly used as the 404 handler when routes are used.</param>
         public Server(string ip, int port, bool ssl, Func<HttpRequest, HttpResponse> defaultRequestHandler, bool debug)
         {
-            if (String.IsNullOrEmpty(ip)) throw new ArgumentNullException(nameof(ip));
+            if (String.IsNullOrEmpty(ip)) ip = "*";
             if (port < 1) throw new ArgumentOutOfRangeException(nameof(port));
             if (defaultRequestHandler == null) throw new ArgumentNullException(nameof(defaultRequestHandler));
 

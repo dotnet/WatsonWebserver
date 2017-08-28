@@ -11,7 +11,7 @@ namespace TestDefault
     {
         static void Main()
         {
-            Server server = new Server("127.0.0.1", 9000, false, RequestReceived, true);
+            Server server = new Server(null, 9000, false, RequestReceived, true);
 
             bool runForever = true;
             while (runForever)
