@@ -995,7 +995,7 @@ namespace WatsonWebserver
 
                     default:
                         response.StatusDescription = "Unknown Status";
-                        return;
+                        break;
                 }
 
                 #endregion
