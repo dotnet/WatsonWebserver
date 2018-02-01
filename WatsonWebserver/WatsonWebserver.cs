@@ -25,6 +25,8 @@ namespace WatsonWebserver
             get { return (Http != null) ? Http.IsListening : false; }
         }
 
+        public Func<HttpRequest, HttpResponse> OptionsRoute = null;
+
         #endregion
 
         #region Private-Members
@@ -45,7 +47,7 @@ namespace WatsonWebserver
         private ContentRouteManager ContentRoutes;
         private ContentRouteProcessor ContentProcessor;
         private Func<HttpRequest, HttpResponse> DefaultRoute;
-
+        
         private CancellationTokenSource TokenSource;
         private CancellationToken Token;
 
@@ -82,6 +84,7 @@ namespace WatsonWebserver
             ContentRoutes = new ContentRouteManager(Logging, debug);
             ContentProcessor = new ContentRouteProcessor(Logging, debug, ContentRoutes);
             DefaultRoute = defaultRequestHandler;
+            OptionsRoute = null;
              
             Console.Write("Starting Watson Webserver at ");
             if (ListenerSsl) Console.WriteLine("https://" + ListenerIp + ":" + ListenerPort);
@@ -275,10 +278,11 @@ namespace WatsonWebserver
 
                             #region Process-OPTIONS-Request
 
-                            if (currRequest.Method.ToLower().Trim().Contains("option"))
+                            if (currRequest.Method.ToLower().Trim().Contains("option")
+                                && OptionsRoute != null)
                             {
                                 Logging.Log("Thread " + Thread.CurrentThread.ManagedThreadId + " OPTIONS request received");
-                                OptionsHandler(context, currRequest);
+                                OptionsProcessor(context, currRequest);
                                 return;
                             }
 
@@ -399,13 +403,7 @@ namespace WatsonWebserver
                         }
                     }, Http.GetContext());
                 }
-            }
-            catch (HttpListenerException)
-            {
-            }
-            catch (OperationCanceledException)
-            { 
-            }
+            } 
             catch (Exception eOuter)
             {
                 Logging.LogException("AcceptConnections", eOuter);
@@ -1141,7 +1139,7 @@ namespace WatsonWebserver
             }
         }
         
-        private void OptionsHandler(HttpListenerContext context, HttpRequest req)
+        private void OptionsProcessor(HttpListenerContext context, HttpRequest req)
         {
             Logging.Log("Thread " + Thread.CurrentThread.ManagedThreadId + " processing OPTIONS request");
 
@@ -1163,13 +1161,17 @@ namespace WatsonWebserver
                 }
             }
 
-            string headers = "x-email, x-password, x-api-key, x-token";
+            string headers = "";
 
             if (requestedHeaders != null)
             {
+                int addedCount = 0;
                 foreach (string curr in requestedHeaders)
                 {
+                    if (String.IsNullOrEmpty(curr)) continue;
+                    if (addedCount > 0) headers += ", ";
                     headers += ", " + curr;
+                    addedCount++;
                 }
             }
 

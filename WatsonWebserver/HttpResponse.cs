@@ -251,7 +251,7 @@ namespace WatsonWebserver
                 }
                 else
                 {
-                    throw new ArgumentException("Data must be either a byte array or string.");
+                    ContentLength = (WatsonCommon.SerializeJson(Data)).Length;
                 } 
             }
             else
@@ -285,7 +285,8 @@ namespace WatsonWebserver
             if (Data != null)
             {
                 if (Data is byte[]) contentLength = ((byte[])Data).Length;
-                else contentLength = Data.ToString().Length;
+                else if (Data is string) contentLength = Data.ToString().Length;
+                else contentLength = (WatsonCommon.SerializeJson(Data)).Length;
             }
             string contentType = "text/plain";
             if (!String.IsNullOrEmpty(ContentType)) contentType = ContentType;
@@ -320,7 +321,7 @@ namespace WatsonWebserver
                 }
                 else
                 {
-                    ret += "  [unknown data type]" + Environment.NewLine;
+                    ret += WatsonCommon.SerializeJson(Data) + Environment.NewLine;
                 }
             }
             else
@@ -396,6 +397,10 @@ namespace WatsonWebserver
                 else if (Data is string)
                 {
                     ret = AppendBytes(ret, Encoding.UTF8.GetBytes((string)Data));
+                }
+                else
+                {
+                    ret = AppendBytes(ret, Encoding.UTF8.GetBytes(WatsonCommon.SerializeJson(Data)));
                 }
             }
 
