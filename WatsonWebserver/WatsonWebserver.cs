@@ -921,8 +921,7 @@ namespace WatsonWebserver
                     }
                     else
                     {
-                        Logging.Log("Unknown object type for response body (must be either byte[] or string)");
-                        return;
+                        responseLen = (WatsonCommon.SerializeJson(data)).Length;
                     }
                 }
                 
@@ -1073,9 +1072,8 @@ namespace WatsonWebserver
                         {
                             #region unknown
 
-                            Logging.Log("Unknown object type for response body");
-                            response.ContentLength64 = 0;
-                            output.Flush();
+                            response.ContentLength64 = responseLen;
+                            output.Write(Encoding.UTF8.GetBytes(WatsonCommon.SerializeJson(data)), 0, responseLen); 
                             output.Close();
 
                             #endregion
