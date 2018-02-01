@@ -7,8 +7,9 @@
 
 A simple C# async web server for handling incoming RESTful HTTP/HTTPS requests. 
 
-## New in v1.2.6
-- IsListening property
+## New in v1.2.10
+- Support for passing an object as Data to HttpResponse (will be JSON serialized)
+- Support for implementing your own OPTIONS handler (for CORS and other use cases)
 
 ## Test App
 A test project is included which will help you exercise the class library.
@@ -99,6 +100,7 @@ v1.2.x
 - Fix for Xamarin IOS and Android (thank you @Tutch!)
 - Added content routes for serving static files.
 - Dynamic route support using C#/.NET regular expressions (see RegexMatcher library https://github.com/jchristn/RegexMatcher).
+- IsListening property
 
 v1.1.x
 - Added support for static routes.  The default handler can be used for cases where a matching route isn't available, for instance, to build a custom 404 response.
