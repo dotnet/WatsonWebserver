@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("TestStaticRoutes")]
 [assembly: AssemblyDescription("A simple test app showing how to use Watson using multiple static routes.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Marauder Software Inc.")]
+[assembly: AssemblyCompany("Joel Christner")]
 [assembly: AssemblyProduct("TestStaticRoutes")]
-[assembly: AssemblyCopyright("(c) 2017 Marauder Software Inc.")]
+[assembly: AssemblyCopyright("(c)2018 Joel Christner")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.2.10.1")]
-[assembly: AssemblyFileVersion("1.2.10.1")]
+[assembly: AssemblyVersion("1.2.11.1")]
+[assembly: AssemblyFileVersion("1.2.11.1")]

@@ -1070,7 +1070,7 @@ namespace WatsonWebserver
                         }
                         else
                         {
-                            #region unknown
+                            #region other
 
                             response.ContentLength64 = responseLen;
                             output.Write(Encoding.UTF8.GetBytes(WatsonCommon.SerializeJson(data)), 0, responseLen); 

@@ -160,6 +160,7 @@ namespace WatsonWebserver
             Headers = headers;
             ContentType = contentType;
             if (String.IsNullOrEmpty(ContentType)) ContentType = "application/json";
+
             StatusCode = status;
             RawResponse = rawResponse;
             Data = data;
@@ -252,6 +253,7 @@ namespace WatsonWebserver
                 else
                 {
                     ContentLength = (WatsonCommon.SerializeJson(Data)).Length;
+                    Data = WatsonCommon.SerializeJson(Data);
                 } 
             }
             else
@@ -281,20 +283,11 @@ namespace WatsonWebserver
         public override string ToString()
         {
             string ret = "";
-            int contentLength = 0;
-            if (Data != null)
-            {
-                if (Data is byte[]) contentLength = ((byte[])Data).Length;
-                else if (Data is string) contentLength = Data.ToString().Length;
-                else contentLength = (WatsonCommon.SerializeJson(Data)).Length;
-            }
-            string contentType = "text/plain";
-            if (!String.IsNullOrEmpty(ContentType)) contentType = ContentType;
-
+  
             ret += "--- HTTP Response ---" + Environment.NewLine;
             ret += TimestampUtc.ToString("MM/dd/yyyy HH:mm:ss") + " " + SourceIp + ":" + SourcePort + " to " + DestIp + ":" + DestPort + "  " + Method + " " + RawUrlWithoutQuery + Environment.NewLine;
             ret += "  Success : " + Success + Environment.NewLine;
-            ret += "  Content : " + ContentType + " (" + contentLength + " bytes)" + Environment.NewLine;
+            ret += "  Content : " + ContentType + " (" + ContentLength + " bytes)" + Environment.NewLine;
             if (Headers != null && Headers.Count > 0)
             {
                 ret += "  Headers : " + Environment.NewLine;

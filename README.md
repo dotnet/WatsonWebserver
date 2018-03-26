@@ -7,9 +7,8 @@
 
 A simple C# async web server for handling incoming RESTful HTTP/HTTPS requests. 
 
-## New in v1.2.10
-- Support for passing an object as Data to HttpResponse (will be JSON serialized)
-- Support for implementing your own OPTIONS handler (for CORS and other use cases)
+## New in v1.2.11
+- Bugfix for content routes that have spaces or ```+``` (thanks @Linqx)
 
 ## Test App
 A test project is included which will help you exercise the class library.
@@ -91,6 +90,8 @@ static HttpResponse DefaultRoute(HttpRequest req)
 Notes from previous versions are shown below (summarized to minor build)
 
 v1.2.x
+- Support for passing an object as Data to HttpResponse (will be JSON serialized)
+- Support for implementing your own OPTIONS handler (for CORS and other use cases)
 - Bugfix for dispose (thank you @AChmieletzki)
 - Static methods for building HttpRequest from various sources and conversion
 - Static input methods
