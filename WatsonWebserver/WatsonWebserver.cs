@@ -15,19 +15,6 @@ namespace WatsonWebserver
 {
     public class Server : IDisposable
     {
-        #region Public-Members
-        
-        /// <summary>
-        /// Indicates whether or not the server is listening.
-        /// </summary>
-        public bool IsListening
-        {
-            get { return (Http != null) ? Http.IsListening : false; }
-        }
-
-        public Func<HttpRequest, HttpResponse> OptionsRoute = null;
-
-        #endregion
 
         #region Private-Members
 

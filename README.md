@@ -7,6 +7,9 @@
 
 A simple C# async web server for handling incoming RESTful HTTP/HTTPS requests. 
 
+## New in v2.0.0
+- Updated to netcoreapp2.0, simplifying project files and making it consumable in containers (thanks @GeoffMcGrath)
+
 ## New in v1.2.11
 - Bugfix for content routes that have spaces or ```+``` (thanks @Linqx)
 
