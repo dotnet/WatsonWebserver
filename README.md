@@ -7,8 +7,11 @@
 
 A simple C# async web server for handling incoming RESTful HTTP/HTTPS requests. 
 
-## New in v1.2.11
-- Bugfix for content routes that have spaces or ```+``` (thanks @Linqx)
+## New in v1.3.2
+- Retarget to .NET Framework 4.6.2
+
+## Contribute
+I'm actively looking for assistance in modifying the project to target both .NET Framework 4.6.2 (or higher) and .NET Core 2.0 (alternatively I could create separate projects).  If you can assist in this area, please let me know!
 
 ## Test App
 A test project is included which will help you exercise the class library.
@@ -90,6 +93,7 @@ static HttpResponse DefaultRoute(HttpRequest req)
 Notes from previous versions are shown below (summarized to minor build)
 
 v1.2.x
+- Bugfix for content routes that have spaces or ```+``` (thanks @Linqx)
 - Support for passing an object as Data to HttpResponse (will be JSON serialized)
 - Support for implementing your own OPTIONS handler (for CORS and other use cases)
 - Bugfix for dispose (thank you @AChmieletzki)

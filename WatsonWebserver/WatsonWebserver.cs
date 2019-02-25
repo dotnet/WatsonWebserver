@@ -31,7 +31,7 @@ namespace WatsonWebserver
 
         #region Private-Members
 
-        private readonly EventWaitHandle Terminator = new EventWaitHandle(false, EventResetMode.ManualReset, "UserIntervention");
+        private readonly EventWaitHandle Terminator = new EventWaitHandle(false, EventResetMode.ManualReset);
 
         private HttpListener Http;
         private string ListenerIp;
