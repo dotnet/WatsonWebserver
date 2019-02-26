@@ -41,14 +41,14 @@ static void Main(string[] args)
    s.AddContentRoute("/img/watson.jpg", false);
 
    // add static routes
-   s.AddStaticRoute("get", "/hello/", GetHelloRoute);
-   s.AddStaticRoute("get", "/world/", GetWorldRoute);
+   s.AddStaticRoute(HttpMethod.GET, "/hello/", GetHelloRoute);
+   s.AddStaticRoute(HttpMethod.GET, "/world/", GetWorldRoute);
 
    // add dynamic routes
-   s.AddDynamicRoute("get", new Regex("^/foo/\\d+$"), GetFooWithId);
-   s.AddDynamicRoute("get", new Regex("^/foo/(.*?)/(.*?)/?$"), GetFooMultipleChildren);
-   s.AddDynamicRoute("get", new Regex("^/foo/(.*?)/?$"), GetFooOneChild);
-   s.AddDynamicRoute("get", new Regex("^/foo/?$"), GetFoo); 
+   s.AddDynamicRoute(HttpMethod.GET, new Regex("^/foo/\\d+$"), GetFooWithId);
+   s.AddDynamicRoute(HttpMethod.GET, new Regex("^/foo/(.*?)/(.*?)/?$"), GetFooMultipleChildren);
+   s.AddDynamicRoute(HttpMethod.GET, new Regex("^/foo/(.*?)/?$"), GetFooOneChild);
+   s.AddDynamicRoute(HttpMethod.GET, new Regex("^/foo/?$"), GetFoo); 
 
    Console.WriteLine("Press ENTER to exit");
    Console.ReadLine();
