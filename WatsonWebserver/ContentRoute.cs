@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace WatsonWebserver
 {
     /// <summary>
-    /// Assign a method handler for when requests are received matching the supplied verb and path.
+    /// Assign a method handler for when requests are received matching the supplied method and path.
     /// </summary>
     internal class ContentRoute
     {

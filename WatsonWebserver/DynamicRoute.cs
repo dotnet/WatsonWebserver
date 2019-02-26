@@ -8,16 +8,16 @@ using System.Threading.Tasks;
 namespace WatsonWebserver
 {
     /// <summary>
-    /// Assign a method handler for when requests are received matching the supplied verb and path regex.
+    /// Assign a method handler for when requests are received matching the supplied method and path regex.
     /// </summary>
     internal class DynamicRoute
     {
         #region Public-Members
 
         /// <summary>
-        /// The HTTP verb, i.e. GET, PUT, POST, DELETE, etc.
+        /// The HTTP method, i.e. GET, PUT, POST, DELETE, etc.
         /// </summary>
-        public string Verb;
+        public HttpMethod Method;
 
         /// <summary>
         /// The pattern against which the raw URL should be matched.  
@@ -40,16 +40,15 @@ namespace WatsonWebserver
         /// <summary>
         /// Create a new route object.
         /// </summary>
-        /// <param name="verb">The HTTP verb, i.e. GET, PUT, POST, DELETE, etc.</param>
+        /// <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE, etc.</param>
         /// <param name="path">The pattern against which the raw URL should be matched.</param>
         /// <param name="handler">The method that should be called to handle the request.</param>
-        public DynamicRoute(string verb, Regex path, Func<HttpRequest, HttpResponse> handler)
+        public DynamicRoute(HttpMethod method, Regex path, Func<HttpRequest, HttpResponse> handler)
         {
-            if (String.IsNullOrEmpty(verb)) throw new ArgumentNullException(nameof(verb));
             if (path == null) throw new ArgumentNullException(nameof(path));
             if (handler == null) throw new ArgumentNullException(nameof(handler));
 
-            Verb = verb.ToLower();
+            Method = method;
             Path = path;
             Handler = handler;
         }

@@ -2,12 +2,12 @@ C:\code\watson\WatsonWebserver\TestStaticRoutes\bin\Debug\TestStaticRoutes.exe.c
 C:\code\watson\WatsonWebserver\TestStaticRoutes\bin\Debug\TestStaticRoutes.exe
 C:\code\watson\WatsonWebserver\TestStaticRoutes\bin\Debug\TestStaticRoutes.pdb
 C:\code\watson\WatsonWebserver\TestStaticRoutes\bin\Debug\Watson.dll
-C:\code\watson\WatsonWebserver\TestStaticRoutes\bin\Debug\RegexMatcher.dll
 C:\code\watson\WatsonWebserver\TestStaticRoutes\bin\Debug\Newtonsoft.Json.dll
+C:\code\watson\WatsonWebserver\TestStaticRoutes\bin\Debug\RegexMatcher.dll
 C:\code\watson\WatsonWebserver\TestStaticRoutes\bin\Debug\Watson.pdb
-C:\code\watson\WatsonWebserver\TestStaticRoutes\bin\Debug\RegexMatcher.pdb
 C:\code\watson\WatsonWebserver\TestStaticRoutes\bin\Debug\Newtonsoft.Json.pdb
 C:\code\watson\WatsonWebserver\TestStaticRoutes\bin\Debug\Newtonsoft.Json.xml
+C:\code\watson\WatsonWebserver\TestStaticRoutes\bin\Debug\RegexMatcher.pdb
 C:\code\watson\WatsonWebserver\TestStaticRoutes\obj\Debug\TestStaticRoutes.csprojAssemblyReference.cache
 C:\code\watson\WatsonWebserver\TestStaticRoutes\obj\Debug\TestStaticRoutes.csproj.CoreCompileInputs.cache
 C:\code\watson\WatsonWebserver\TestStaticRoutes\obj\Debug\TestStaticRoutes.csproj.CopyComplete

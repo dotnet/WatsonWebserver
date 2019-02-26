@@ -57,9 +57,9 @@ namespace WatsonWebserver
         public int DestPort;
 
         /// <summary>
-        /// The HTTP verb used in the request.
+        /// The HTTP method used in the request.
         /// </summary>
-        public string Method;
+        public HttpMethod Method;
 
         /// <summary>
         /// The raw (relative) URL without the querystring attached.

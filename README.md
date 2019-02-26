@@ -7,8 +7,9 @@
 
 A simple C# async web server for handling incoming RESTful HTTP/HTTPS requests. 
 
-## New in v1.3.2
+## New in v1.4.0
 - Retarget to .NET Framework 4.6.2
+- Enum for HTTP method instead of string (breaking change)
 
 ## Contribute
 I'm actively looking for assistance in modifying the project to target both .NET Framework 4.6.2 (or higher) and .NET Core 2.0 (alternatively I could create separate projects).  If you can assist in this area, please let me know!

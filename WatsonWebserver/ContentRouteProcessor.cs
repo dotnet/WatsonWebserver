@@ -57,7 +57,7 @@ namespace WatsonWebserver
             try
             {
                 byte[] data = null;
-                if (req.Method.ToLower().Equals("get")) data = File.ReadAllBytes(filePath);
+                if (req.Method == HttpMethod.GET) data = File.ReadAllBytes(filePath);
                 return new HttpResponse(req, true, 200, null, contentType, data, true);
             }
             catch (Exception e)

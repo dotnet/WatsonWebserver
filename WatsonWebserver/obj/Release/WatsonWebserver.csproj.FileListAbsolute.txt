@@ -1,3 +1,5 @@
+C:\code\watson\WatsonWebserver\WatsonWebserver\obj\Release\WatsonWebserver.csproj.CoreCompileInputs.cache
+C:\code\watson\WatsonWebserver\WatsonWebserver\obj\Release\WatsonWebserver.csprojAssemblyReference.cache
 C:\code\watson\WatsonWebserver\WatsonWebserver\bin\Release\Watson.dll
 C:\code\watson\WatsonWebserver\WatsonWebserver\bin\Release\Watson.pdb
 C:\code\watson\WatsonWebserver\WatsonWebserver\bin\Release\Newtonsoft.Json.dll
@@ -5,8 +7,6 @@ C:\code\watson\WatsonWebserver\WatsonWebserver\bin\Release\RegexMatcher.dll
 C:\code\watson\WatsonWebserver\WatsonWebserver\bin\Release\Newtonsoft.Json.pdb
 C:\code\watson\WatsonWebserver\WatsonWebserver\bin\Release\Newtonsoft.Json.xml
 C:\code\watson\WatsonWebserver\WatsonWebserver\bin\Release\RegexMatcher.pdb
-C:\code\watson\WatsonWebserver\WatsonWebserver\obj\Release\WatsonWebserver.csprojAssemblyReference.cache
-C:\code\watson\WatsonWebserver\WatsonWebserver\obj\Release\WatsonWebserver.csproj.CoreCompileInputs.cache
 C:\code\watson\WatsonWebserver\WatsonWebserver\obj\Release\WatsonWebserver.csproj.CopyComplete
 C:\code\watson\WatsonWebserver\WatsonWebserver\obj\Release\Watson.dll
 C:\code\watson\WatsonWebserver\WatsonWebserver\obj\Release\Watson.pdb

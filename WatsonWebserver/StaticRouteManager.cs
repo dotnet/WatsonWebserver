@@ -37,22 +37,20 @@ namespace WatsonWebserver
 
         #region Public-Methods
 
-        public void Add(string verb, string path, Func<HttpRequest, HttpResponse> handler)
+        public void Add(HttpMethod method, string path, Func<HttpRequest, HttpResponse> handler)
         {
-            if (String.IsNullOrEmpty(verb)) throw new ArgumentNullException(nameof(verb));
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
             if (handler == null) throw new ArgumentNullException(nameof(handler));
 
-            StaticRoute r = new StaticRoute(verb, path, handler);
+            StaticRoute r = new StaticRoute(method, path, handler);
             Add(r);
         }
 
-        public void Remove(string verb, string path)
+        public void Remove(HttpMethod method, string path)
         { 
-            if (String.IsNullOrEmpty(verb)) throw new ArgumentNullException(nameof(verb));
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
 
-            StaticRoute r = Get(verb, path);
+            StaticRoute r = Get(method, path);
             if (r == null || r == default(StaticRoute))
             { 
                 return;
@@ -68,19 +66,17 @@ namespace WatsonWebserver
             }
         }
 
-        public StaticRoute Get(string verb, string path)
+        public StaticRoute Get(HttpMethod method, string path)
         {
-            if (String.IsNullOrEmpty(verb)) throw new ArgumentNullException(nameof(verb));
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
-
-            verb = verb.ToLower();
+            
             path = path.ToLower();
             if (!path.StartsWith("/")) path = "/" + path;
             if (!path.EndsWith("/")) path = path + "/";
 
             lock (RouteLock)
             {
-                StaticRoute curr = Routes.FirstOrDefault(i => i.Verb == verb && i.Path == path);
+                StaticRoute curr = Routes.FirstOrDefault(i => i.Method == method && i.Path == path);
                 if (curr == null || curr == default(StaticRoute))
                 {
                     return null;
@@ -92,19 +88,17 @@ namespace WatsonWebserver
             }
         }
 
-        public bool Exists(string verb, string path)
+        public bool Exists(HttpMethod method, string path)
         {
-            if (String.IsNullOrEmpty(verb)) throw new ArgumentNullException(nameof(verb));
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
              
-            verb = verb.ToLower();
             path = path.ToLower();
             if (!path.StartsWith("/")) path = "/" + path;
             if (!path.EndsWith("/")) path = path + "/";
 
             lock (RouteLock)
             {
-                StaticRoute curr = Routes.FirstOrDefault(i => i.Verb == verb && i.Path == path);
+                StaticRoute curr = Routes.FirstOrDefault(i => i.Method == method && i.Path == path);
                 if (curr == null || curr == default(StaticRoute))
                 { 
                     return false;
@@ -114,19 +108,17 @@ namespace WatsonWebserver
             return true;
         }
 
-        public Func<HttpRequest, HttpResponse> Match(string verb, string path)
+        public Func<HttpRequest, HttpResponse> Match(HttpMethod method, string path)
         {
-            if (String.IsNullOrEmpty(verb)) throw new ArgumentNullException(nameof(verb));
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
 
-            verb = verb.ToLower();
             path = path.ToLower();
             if (!path.StartsWith("/")) path = "/" + path;
             if (!path.EndsWith("/")) path = path + "/";
 
             lock (RouteLock)
             {
-                StaticRoute curr = Routes.FirstOrDefault(i => i.Verb == verb && i.Path == path);
+                StaticRoute curr = Routes.FirstOrDefault(i => i.Method == method && i.Path == path);
                 if (curr == null || curr == default(StaticRoute))
                 {
                     return null;
@@ -145,13 +137,12 @@ namespace WatsonWebserver
         private void Add(StaticRoute route)
         {
             if (route == null) throw new ArgumentNullException(nameof(route));
-
-            route.Verb = route.Verb.ToLower();
+            
             route.Path = route.Path.ToLower();
             if (!route.Path.StartsWith("/")) route.Path = "/" + route.Path;
             if (!route.Path.EndsWith("/")) route.Path = route.Path + "/";
 
-            if (Exists(route.Verb, route.Path))
+            if (Exists(route.Method, route.Path))
             { 
                 return;
             }

@@ -7,16 +7,16 @@ using System.Threading.Tasks;
 namespace WatsonWebserver
 {
     /// <summary>
-    /// Assign a method handler for when requests are received matching the supplied verb and path.
+    /// Assign a method handler for when requests are received matching the supplied method and path.
     /// </summary>
     internal class StaticRoute
     {
         #region Public-Members
 
         /// <summary>
-        /// The HTTP verb, i.e. GET, PUT, POST, DELETE, etc.
+        /// The HTTP method, i.e. GET, PUT, POST, DELETE, etc.
         /// </summary>
-        public string Verb;
+        public HttpMethod Method;
 
         /// <summary>
         /// The raw URL, i.e. /foo/bar/.  Be sure this begins and ends with '/'.
@@ -39,16 +39,15 @@ namespace WatsonWebserver
         /// <summary>
         /// Create a new route object.
         /// </summary>
-        /// <param name="verb">The HTTP verb, i.e. GET, PUT, POST, DELETE, etc.</param>
+        /// <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE, etc.</param>
         /// <param name="path">The raw URL, i.e. /foo/bar/.  Be sure this begins and ends with '/'.</param>
         /// <param name="handler">The method that should be called to handle the request.</param>
-        public StaticRoute(string verb, string path, Func<HttpRequest, HttpResponse> handler)
+        public StaticRoute(HttpMethod method, string path, Func<HttpRequest, HttpResponse> handler)
         {
-            if (String.IsNullOrEmpty(verb)) throw new ArgumentNullException(nameof(verb));
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
             if (handler == null) throw new ArgumentNullException(nameof(handler));
 
-            Verb = verb.ToLower();
+            Method = method;
             
             Path = path.ToLower();
             if (!Path.StartsWith("/")) Path = "/" + Path;

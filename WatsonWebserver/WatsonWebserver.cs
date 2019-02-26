@@ -13,6 +13,9 @@ using System.Threading.Tasks;
 
 namespace WatsonWebserver
 {
+    /// <summary>
+    /// Watson webserver.
+    /// </summary>
     public class Server : IDisposable
     {
         #region Public-Members
@@ -25,6 +28,9 @@ namespace WatsonWebserver
             get { return (Http != null) ? Http.IsListening : false; }
         }
 
+        /// <summary>
+        /// Function to call when an OPTIONS request is received.  Often used to handle CORS.  Leave as 'null' to use the default OPTIONS handler.
+        /// </summary>
         public Func<HttpRequest, HttpResponse> OptionsRoute = null;
 
         #endregion
@@ -122,31 +128,29 @@ namespace WatsonWebserver
         /// <summary>
         /// Add a static route to the server.
         /// </summary>
-        /// <param name="verb">The HTTP method, i.e. GET, PUT, POST, DELETE.</param>
+        /// <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE.</param>
         /// <param name="path">The raw URL to match, i.e. /foo/bar.</param>
         /// <param name="handler">The method to which control should be passed.</param>
-        public void AddStaticRoute(string verb, string path, Func<HttpRequest, HttpResponse> handler)
+        public void AddStaticRoute(HttpMethod method, string path, Func<HttpRequest, HttpResponse> handler)
         {
-            if (String.IsNullOrEmpty(verb)) throw new ArgumentNullException(nameof(verb));
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
             if (handler == null) throw new ArgumentNullException(nameof(handler));
 
-            StaticRoutes.Add(verb, path, handler);
+            StaticRoutes.Add(method, path, handler);
         }
 
         /// <summary>
         /// Add a dynamic route to the server.
         /// </summary>
-        /// <param name="verb">The HTTP method, i.e. GET, PUT, POST, DELETE.</param>
+        /// <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE.</param>
         /// <param name="path">The regular expression upon which the raw URL should match.</param>
         /// <param name="handler">The method to which control should be passed.</param>
-        public void AddDynamicRoute(string verb, Regex path, Func<HttpRequest, HttpResponse> handler)
+        public void AddDynamicRoute(HttpMethod method, Regex path, Func<HttpRequest, HttpResponse> handler)
         {
-            if (String.IsNullOrEmpty(verb)) throw new ArgumentNullException(nameof(verb));
             if (path == null) throw new ArgumentNullException(nameof(path));
             if (handler == null) throw new ArgumentNullException(nameof(handler));
 
-            DynamicRoutes.Add(verb, path, handler); 
+            DynamicRoutes.Add(method, path, handler); 
         }
 
         /// <summary>
@@ -163,55 +167,51 @@ namespace WatsonWebserver
         /// <summary>
         /// Remove a static route from the server.
         /// </summary>
-        /// <param name="verb">The HTTP method, i.e. GET, PUT, POST, DELETE.</param>
+        /// <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE.</param>
         /// <param name="path">The raw URL to match, i.e. /foo/bar.</param>
-        public void RemoveStaticRoute(string verb, string path)
+        public void RemoveStaticRoute(HttpMethod method, string path)
         {
-            if (String.IsNullOrEmpty(verb)) throw new ArgumentNullException(nameof(verb));
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
 
-            StaticRoutes.Remove(verb, path);
+            StaticRoutes.Remove(method, path);
         }
 
         /// <summary>
         /// Remove a dynamic route from the server.
         /// </summary>
-        /// <param name="verb">The HTTP method, i.e. GET, PUT, POST, DELETE.</param>
+        /// <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE.</param>
         /// <param name="path">The regular expression upon which the raw URL should match.</param>
-        public void RemoveDynamicRoute(string verb, Regex path)
+        public void RemoveDynamicRoute(HttpMethod method, Regex path)
         {
-            if (String.IsNullOrEmpty(verb)) throw new ArgumentNullException(nameof(verb));
             if (path == null) throw new ArgumentNullException(nameof(path));
 
-            DynamicRoutes.Remove(verb, path);
+            DynamicRoutes.Remove(method, path);
         }
 
         /// <summary>
         /// Check if a static route exists.
         /// </summary>
-        /// <param name="verb">The HTTP method, i.e. GET, PUT, POST, DELETE.</param>
+        /// <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE.</param>
         /// <param name="path">The raw URL to match, i.e. /foo/bar.</param>
         /// <returns>True if a route exists.</returns>
-        public bool StaticRouteExists(string verb, string path)
+        public bool StaticRouteExists(HttpMethod method, string path)
         {
-            if (String.IsNullOrEmpty(verb)) throw new ArgumentNullException(nameof(verb));
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
 
-            return StaticRoutes.Exists(verb, path);
+            return StaticRoutes.Exists(method, path);
         }
 
         /// <summary>
         /// Check if a dynamic route exists.
         /// </summary>
-        /// <param name="verb">The HTTP method, i.e. GET, PUT, POST, DELETE.</param>
+        /// <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE.</param>
         /// <param name="path">The raw URL to match, i.e. /foo/bar.</param>
         /// <returns>True if a route exists.</returns>
-        public bool DynamicRouteExists(string verb, Regex path)
+        public bool DynamicRouteExists(HttpMethod method, Regex path)
         {
-            if (String.IsNullOrEmpty(verb)) throw new ArgumentNullException(nameof(verb));
             if (path == null) throw new ArgumentNullException(nameof(path));
 
-            return DynamicRoutes.Exists(verb, path);
+            return DynamicRoutes.Exists(method, path);
         }
 
         #endregion
@@ -278,7 +278,7 @@ namespace WatsonWebserver
 
                             #region Process-OPTIONS-Request
 
-                            if (currRequest.Method.ToLower().Trim().Contains("option")
+                            if (currRequest.Method == HttpMethod.OPTIONS
                                 && OptionsRoute != null)
                             {
                                 Logging.Log("Thread " + Thread.CurrentThread.ManagedThreadId + " OPTIONS request received");
@@ -299,7 +299,8 @@ namespace WatsonWebserver
 
                                 #region Find-Route
                                 
-                                if (currRequest.Method.ToLower().Equals("get") || currRequest.Method.ToLower().Equals("head"))
+                                if (currRequest.Method == HttpMethod.GET
+                                    || currRequest.Method == HttpMethod.HEAD)
                                 { 
                                     if (ContentRoutes.Exists(currRequest.RawUrlWithoutQuery))
                                     {
@@ -1024,7 +1025,7 @@ namespace WatsonWebserver
 
                 #region Handle-HEAD-Request
 
-                if (String.Compare(req.Method.ToLower(), "head") == 0)
+                if (req.Method == HttpMethod.HEAD)
                 {
                     data = null;
                 }

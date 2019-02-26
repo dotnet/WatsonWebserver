@@ -69,9 +69,9 @@ namespace WatsonWebserver
         public bool Keepalive;
 
         /// <summary>
-        /// The HTTP verb used in the request.
+        /// The HTTP method used in the request.
         /// </summary>
-        public string Method;
+        public HttpMethod Method;
 
         /// <summary>
         /// The full URL as sent by the requestor (client).
@@ -190,7 +190,7 @@ namespace WatsonWebserver
             SourcePort = ctx.Request.RemoteEndPoint.Port;
             DestIp = ctx.Request.LocalEndPoint.Address.ToString();
             DestPort = ctx.Request.LocalEndPoint.Port;
-            Method = ctx.Request.HttpMethod;
+            Method = (HttpMethod)Enum.Parse(typeof(HttpMethod), ctx.Request.HttpMethod, true);
             FullUrl = String.Copy(ctx.Request.Url.ToString().Trim());
             RawUrlWithQuery = String.Copy(ctx.Request.RawUrl.ToString().Trim());
             RawUrlWithoutQuery = String.Copy(ctx.Request.RawUrl.ToString().Trim());
@@ -373,7 +373,7 @@ namespace WatsonWebserver
 
             if (ContentLength > 0)
             {
-                if (String.Compare(Method.ToLower().Trim(), "get") != 0)
+                if (Method == HttpMethod.GET)
                 {
                     try
                     {
@@ -1252,7 +1252,7 @@ namespace WatsonWebserver
                     string[] requestLine = headers[i].Trim().Trim('\0').Split(' ');
                     if (requestLine.Length < 3) throw new ArgumentException("Request line does not contain at least three parts (method, raw URL, protocol/version).");
                       
-                    ret.Method = requestLine[0].ToUpper();
+                    ret.Method = (HttpMethod)Enum.Parse(typeof(HttpMethod), requestLine[0], true);
                     ret.FullUrl = requestLine[1];
                     ret.ProtocolVersion = requestLine[2];
                     ret.RawUrlWithQuery = ret.FullUrl;

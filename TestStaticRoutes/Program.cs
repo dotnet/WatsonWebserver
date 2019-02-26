@@ -12,8 +12,8 @@ namespace TestStaticRoutes
         static void Main()
         {
             Server s = new Server("127.0.0.1", 9000, false, DefaultRoute, true);
-            s.AddStaticRoute("get", "/hello/", GetHelloRoute);
-            s.AddStaticRoute("get", "/world/", GetWorldRoute);
+            s.AddStaticRoute(HttpMethod.GET, "/hello/", GetHelloRoute);
+            s.AddStaticRoute(HttpMethod.GET, "/world/", GetWorldRoute);
             Console.WriteLine("Press ENTER to exit");
             Console.ReadLine();
         }

@@ -37,41 +37,37 @@ namespace WatsonWebserver
 
         #region Public-Methods
 
-        public void Add(string verb, Regex path, Func<HttpRequest, HttpResponse> handler)
+        public void Add(HttpMethod method, Regex path, Func<HttpRequest, HttpResponse> handler)
         {
-            if (String.IsNullOrEmpty(verb)) throw new ArgumentNullException(nameof(verb));
             if (path == null) throw new ArgumentNullException(nameof(path));
             if (handler == null) throw new ArgumentNullException(nameof(handler));
             RegexMatch.Add(
-                new Regex(BuildConsolidatedRegex(verb, path)), 
+                new Regex(BuildConsolidatedRegex(method, path)), 
                 handler);
         }
 
-        public void Remove(string verb, Regex path)
+        public void Remove(HttpMethod method, Regex path)
         { 
-            if (String.IsNullOrEmpty(verb)) throw new ArgumentNullException(nameof(verb));
             if (path == null) throw new ArgumentNullException(nameof(path));
             RegexMatch.Remove(
-                new Regex(BuildConsolidatedRegex(verb, path)));
+                new Regex(BuildConsolidatedRegex(method, path)));
         }
          
-        public bool Exists(string verb, Regex path)
+        public bool Exists(HttpMethod method, Regex path)
         {
-            if (String.IsNullOrEmpty(verb)) throw new ArgumentNullException(nameof(verb));
             if (path == null) throw new ArgumentNullException(nameof(path));
             return RegexMatch.Exists(
-                new Regex(BuildConsolidatedRegex(verb, path)));
+                new Regex(BuildConsolidatedRegex(method, path)));
         }
 
-        public Func<HttpRequest, HttpResponse> Match(string verb, string rawUrl)
+        public Func<HttpRequest, HttpResponse> Match(HttpMethod method, string rawUrl)
         {
-            if (String.IsNullOrEmpty(verb)) throw new ArgumentNullException(nameof(verb));
             if (String.IsNullOrEmpty(rawUrl)) throw new ArgumentNullException(nameof(rawUrl));
 
             object val;
             Func<HttpRequest, HttpResponse> handler;
             if (RegexMatch.Match(
-                BuildConsolidatedRegex(verb, rawUrl), 
+                BuildConsolidatedRegex(method, rawUrl), 
                 out val))
             { 
                 if (val == null) return null;
@@ -86,16 +82,16 @@ namespace WatsonWebserver
 
         #region Private-Methods
 
-        private string BuildConsolidatedRegex(string verb, string rawUrl)
+        private string BuildConsolidatedRegex(HttpMethod method, string rawUrl)
         {
             rawUrl = rawUrl.Replace("^", "");
-            return verb.ToLower() + " " + rawUrl;
+            return method.ToString() + " " + rawUrl;
         }
 
-        private string BuildConsolidatedRegex(string verb, Regex path)
+        private string BuildConsolidatedRegex(HttpMethod method, Regex path)
         {
             string pathString = path.ToString().Replace("^", "");
-            return verb.ToLower() + " " + pathString;
+            return method.ToString() + " " + pathString;
         }
 
         #endregion
