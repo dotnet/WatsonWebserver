@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26403.7
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WatsonWebserver", "WatsonWebserver\WatsonWebserver.csproj", "{63F6B9F6-FF80-4764-BD45-109D549BF459}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestDefault", "TestDefault\TestDefault.csproj", "{1AA3B2D4-3481-42CA-AD82-6DD3945D3509}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestStaticRoutes", "TestStaticRoutes\TestStaticRoutes.csproj", "{1CC4254C-ED82-4020-8554-4BFA34BC22A9}"
@@ -13,16 +11,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestDynamicRoutes", "TestDy
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestContentRoutes", "TestContentRoutes\TestContentRoutes.csproj", "{535FC641-4068-4F93-9420-095C0584D71F}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WatsonWebserver", "WatsonWebserver\WatsonWebserver.csproj", "{62003A3E-AB59-4B91-AFBF-4545ACD2A8D9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestNetCore", "TestNetCore\TestNetCore.csproj", "{0C66A980-0B71-47C0-9487-D355A1597FC7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{63F6B9F6-FF80-4764-BD45-109D549BF459}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{63F6B9F6-FF80-4764-BD45-109D549BF459}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{63F6B9F6-FF80-4764-BD45-109D549BF459}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{63F6B9F6-FF80-4764-BD45-109D549BF459}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1AA3B2D4-3481-42CA-AD82-6DD3945D3509}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{1AA3B2D4-3481-42CA-AD82-6DD3945D3509}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1AA3B2D4-3481-42CA-AD82-6DD3945D3509}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -39,8 +37,19 @@ Global
 		{535FC641-4068-4F93-9420-095C0584D71F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{535FC641-4068-4F93-9420-095C0584D71F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{535FC641-4068-4F93-9420-095C0584D71F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{62003A3E-AB59-4B91-AFBF-4545ACD2A8D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{62003A3E-AB59-4B91-AFBF-4545ACD2A8D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{62003A3E-AB59-4B91-AFBF-4545ACD2A8D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{62003A3E-AB59-4B91-AFBF-4545ACD2A8D9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0C66A980-0B71-47C0-9487-D355A1597FC7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C66A980-0B71-47C0-9487-D355A1597FC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C66A980-0B71-47C0-9487-D355A1597FC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C66A980-0B71-47C0-9487-D355A1597FC7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {003C9121-1ADF-4547-86F0-F3772A6DE9F9}
 	EndGlobalSection
 EndGlobal

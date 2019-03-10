@@ -7,17 +7,16 @@
 
 A simple C# async web server for handling incoming RESTful HTTP/HTTPS requests. 
 
-## New in v1.4.0
-- Retarget to .NET Framework 4.6.2
-- Enum for HTTP method instead of string (breaking change)
+## New in v1.5.x
 
-## Contribute
-I'm actively looking for assistance in modifying the project to target both .NET Framework 4.6.2 (or higher) and .NET Core 2.0 (alternatively I could create separate projects).  If you can assist in this area, please let me know!
+- Retarget to support both .NET Core 2.0 and .NET Framework 4.6.2.
 
 ## Test App
+
 A test project is included which will help you exercise the class library.
 
 ## Important Notes
+
 - Watson Webserver will always check routes in the following order:
   - If the request is GET or HEAD, content routes will first be checked
   - Then static routes will be evaluated
@@ -91,7 +90,12 @@ static HttpResponse DefaultRoute(HttpRequest req)
 ```
 
 ## Version History
+
 Notes from previous versions are shown below (summarized to minor build)
+
+v1.4.x
+- Retarget to .NET Framework 4.6.2
+- Enum for HTTP method instead of string (breaking change)
 
 v1.2.x
 - Bugfix for content routes that have spaces or ```+``` (thanks @Linqx)
@@ -115,6 +119,7 @@ v1.0.x
 - Initial release.
 
 ## Running under Mono
+
 Watson works well in Mono environments to the extent that we have tested it. It is recommended that when running under Mono, you execute the containing EXE using --server and after using the Mono Ahead-of-Time Compiler (AOT).
 
 NOTE: Windows accepts '0.0.0.0' as an IP address representing any interface.  On Mac and Linux you must be specified ('127.0.0.1' is also acceptable, but '0.0.0.0' is NOT).

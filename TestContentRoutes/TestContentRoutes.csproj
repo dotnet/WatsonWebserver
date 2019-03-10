@@ -50,12 +50,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\WatsonWebserver\WatsonWebserver.csproj">
-      <Project>{63f6b9f6-ff80-4764-bd45-109d549bf459}</Project>
-      <Name>WatsonWebserver</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="html\index.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -63,6 +57,11 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\WatsonWebserver\WatsonWebserver.csproj">
+      <Project>{62003a3e-ab59-4b91-afbf-4545acd2a8d9}</Project>
+      <Name>WatsonWebserver</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
