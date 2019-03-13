@@ -373,7 +373,8 @@ namespace WatsonWebserver
 
             if (ContentLength > 0)
             {
-                if (Method == HttpMethod.GET)
+                if (Method != HttpMethod.GET 
+                    && Method != HttpMethod.HEAD)
                 {
                     try
                     {
@@ -385,7 +386,6 @@ namespace WatsonWebserver
                         {
                             Data = new byte[ContentLength];
                             Stream bodyStream = ctx.Request.InputStream;
-
                             Data = WatsonCommon.StreamToBytes(bodyStream);
                         }
                     }

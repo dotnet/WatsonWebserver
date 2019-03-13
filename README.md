@@ -10,6 +10,7 @@ A simple C# async web server for handling incoming RESTful HTTP/HTTPS requests.
 ## New in v1.5.x
 
 - Retarget to support both .NET Core 2.0 and .NET Framework 4.6.2.
+- Fix for attaching request body data to the HttpRequest object (thanks @user4000!)
 
 ## Test App
 

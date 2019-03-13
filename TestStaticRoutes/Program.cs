@@ -14,6 +14,7 @@ namespace TestStaticRoutes
             Server s = new Server("127.0.0.1", 9000, false, DefaultRoute, true);
             s.AddStaticRoute(HttpMethod.GET, "/hello/", GetHelloRoute);
             s.AddStaticRoute(HttpMethod.GET, "/world/", GetWorldRoute);
+            s.AddStaticRoute(HttpMethod.POST, "/data/", PostDataRoute);
             Console.WriteLine("Press ENTER to exit");
             Console.ReadLine();
         }
@@ -28,9 +29,16 @@ namespace TestStaticRoutes
             return ResponseBuilder(req, "Watson says hello from the GET /world static route!");
         }
 
+        static HttpResponse PostDataRoute(HttpRequest req)
+        {
+            string text = null;
+            if (req.Data != null) text = Encoding.UTF8.GetString(req.Data);
+            return ResponseBuilder(req, text);
+        }
+
         static HttpResponse DefaultRoute(HttpRequest req)
         { 
-            return ResponseBuilder(req, "Watson says hello from the default route!");
+            return ResponseBuilder(req, WatsonCommon.SerializeJson(req));
         }
 
         static HttpResponse ResponseBuilder(HttpRequest req, string text)
