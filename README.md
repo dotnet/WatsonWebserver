@@ -9,6 +9,7 @@ A simple C# async web server for handling incoming RESTful HTTP/HTTPS requests.
 
 ## New in v1.5.x
 
+- Added a new constructor allowing Watson to support multiple listener hostnames
 - Retarget to support both .NET Core 2.0 and .NET Framework 4.6.2.
 - Fix for attaching request body data to the HttpRequest object (thanks @user4000!)
 
@@ -34,7 +35,10 @@ using WatsonWebserver;
 
 static void Main(string[] args)
 {
-   Server s = new Server("127.0.0.1", 9000, false, DefaultRoute, true);
+   List<string> hostnames = new List<string>();
+   hostnames.Add("127.0.0.1");
+   hostnames.Add("www.localhost.com");
+   Server s = new Server(hostnames, 9000, false, DefaultRoute, true);
 
    // add content routes
    s.AddContentRoute("/html/", true);
@@ -121,7 +125,7 @@ v1.0.x
 
 ## Running under Mono
 
-Watson works well in Mono environments to the extent that we have tested it. It is recommended that when running under Mono, you execute the containing EXE using --server and after using the Mono Ahead-of-Time Compiler (AOT).
+While .NET Core is always preferred for non-Windows environments, Watson compiled using .NET Framework works well in Mono environments to the extent that we have tested it. It is recommended that when running under Mono, you execute the containing EXE using --server and after using the Mono Ahead-of-Time Compiler (AOT).
 
 NOTE: Windows accepts '0.0.0.0' as an IP address representing any interface.  On Mac and Linux you must be specified ('127.0.0.1' is also acceptable, but '0.0.0.0' is NOT).
 

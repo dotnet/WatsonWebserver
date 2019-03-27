@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26403.7
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestDefault", "TestDefault\TestDefault.csproj", "{1AA3B2D4-3481-42CA-AD82-6DD3945D3509}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestStaticRoutes", "TestStaticRoutes\TestStaticRoutes.csproj", "{1CC4254C-ED82-4020-8554-4BFA34BC22A9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestDynamicRoutes", "TestDynamicRoutes\TestDynamicRoutes.csproj", "{2F57BFE9-01F3-44D6-9B17-8AB25DC7BC6A}"
@@ -13,7 +11,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestContentRoutes", "TestCo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WatsonWebserver", "WatsonWebserver\WatsonWebserver.csproj", "{62003A3E-AB59-4B91-AFBF-4545ACD2A8D9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestNetCore", "TestNetCore\TestNetCore.csproj", "{0C66A980-0B71-47C0-9487-D355A1597FC7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestNetCore", "TestNetCore\TestNetCore.csproj", "{0C66A980-0B71-47C0-9487-D355A1597FC7}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestDefault", "TestDefault\TestDefault.csproj", "{4FA79C94-4B6F-41DF-815C-C8DD7065E784}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,10 +21,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{1AA3B2D4-3481-42CA-AD82-6DD3945D3509}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1AA3B2D4-3481-42CA-AD82-6DD3945D3509}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1AA3B2D4-3481-42CA-AD82-6DD3945D3509}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1AA3B2D4-3481-42CA-AD82-6DD3945D3509}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1CC4254C-ED82-4020-8554-4BFA34BC22A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{1CC4254C-ED82-4020-8554-4BFA34BC22A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1CC4254C-ED82-4020-8554-4BFA34BC22A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -45,6 +41,10 @@ Global
 		{0C66A980-0B71-47C0-9487-D355A1597FC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0C66A980-0B71-47C0-9487-D355A1597FC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0C66A980-0B71-47C0-9487-D355A1597FC7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4FA79C94-4B6F-41DF-815C-C8DD7065E784}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4FA79C94-4B6F-41DF-815C-C8DD7065E784}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4FA79C94-4B6F-41DF-815C-C8DD7065E784}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4FA79C94-4B6F-41DF-815C-C8DD7065E784}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

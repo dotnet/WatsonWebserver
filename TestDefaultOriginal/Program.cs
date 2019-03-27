@@ -44,7 +44,7 @@ namespace TestDefault
                         server.Dispose();
                         break;
                 }
-            }
+            } 
         }
 
         static void Menu()
@@ -58,7 +58,7 @@ namespace TestDefault
         }
 
         static HttpResponse RequestReceived(HttpRequest req)
-        {
+        { 
             // for an encapsulated JSON response:
             // {"success":true,"md5":"BE3DB22E4FDF3021162C013320CEED09","data":"Watson says hello!"}
             // resp = new HttpResponse(req, true, 200, null, "text/plain", "Watson says hello!", false);

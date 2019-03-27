@@ -25,7 +25,7 @@ namespace WatsonWebserver
         /// </summary>
         public bool IsListening
         {
-            get { return (Http != null) ? Http.IsListening : false; }
+            get { return (_HttpListener != null) ? _HttpListener.IsListening : false; }
         }
 
         /// <summary>
@@ -37,30 +37,29 @@ namespace WatsonWebserver
 
         #region Private-Members
 
-        private readonly EventWaitHandle Terminator = new EventWaitHandle(false, EventResetMode.ManualReset);
+        private readonly EventWaitHandle _Terminator = new EventWaitHandle(false, EventResetMode.ManualReset);
 
-        private HttpListener Http;
-        private string ListenerIp;
-        private int ListenerPort;
-        private bool ListenerSsl;
-        private string ListenerPrefix;
-        private LoggingManager Logging;
-        private bool DebugRestRequests;
-        private bool DebugRestResponses;
+        private HttpListener _HttpListener;
+        private List<string> _ListenerHostnames;
+        private int _ListenerPort;
+        private bool _ListenerSsl;
+        private LoggingManager _Logging;
+        private bool _DebugRequests;
+        private bool _DebugResponses;
 
-        private DynamicRouteManager DynamicRoutes;
-        private StaticRouteManager StaticRoutes;
-        private ContentRouteManager ContentRoutes;
-        private ContentRouteProcessor ContentProcessor;
-        private Func<HttpRequest, HttpResponse> DefaultRoute;
+        private DynamicRouteManager _DynamicRoutes;
+        private StaticRouteManager _StaticRoutes;
+        private ContentRouteManager _ContentRoutes;
+        private ContentRouteProcessor _ContentRouteProcessor;
+        private Func<HttpRequest, HttpResponse> _DefaultRoute;
         
-        private CancellationTokenSource TokenSource;
-        private CancellationToken Token;
+        private CancellationTokenSource _TokenSource;
+        private CancellationToken _Token;
 
         #endregion
 
         #region Constructor
-        
+
         /// <summary>
         /// Creates a new instance of the Watson Webserver.
         /// </summary>
@@ -74,31 +73,72 @@ namespace WatsonWebserver
             if (port < 1) throw new ArgumentOutOfRangeException(nameof(port));
             if (defaultRequestHandler == null) throw new ArgumentNullException(nameof(defaultRequestHandler));
 
-            Http = new HttpListener();
-            ListenerIp = ip;
-            ListenerPort = port;
-            ListenerSsl = ssl;
-            Logging = new LoggingManager(debug);
+            _HttpListener = new HttpListener();
+
+            _ListenerHostnames = new List<string>();
+            _ListenerHostnames.Add(ip); 
+
+            _ListenerPort = port;
+            _ListenerSsl = ssl;
+            _Logging = new LoggingManager(debug);
             if (debug)
             {
-                DebugRestRequests = true;
-                DebugRestResponses = true;
+                _DebugRequests = true;
+                _DebugResponses = true;
             }
 
-            DynamicRoutes = new DynamicRouteManager(Logging, debug);
-            StaticRoutes = new StaticRouteManager(Logging, debug);
-            ContentRoutes = new ContentRouteManager(Logging, debug);
-            ContentProcessor = new ContentRouteProcessor(Logging, debug, ContentRoutes);
-            DefaultRoute = defaultRequestHandler;
-            OptionsRoute = null;
-             
-            Console.Write("Starting Watson Webserver at ");
-            if (ListenerSsl) Console.WriteLine("https://" + ListenerIp + ":" + ListenerPort);
-            else Console.WriteLine("http://" + ListenerIp + ":" + ListenerPort);
+            _DefaultRoute = defaultRequestHandler;
+            InitializeRouteManagers(debug);
+            Welcome();
 
-            TokenSource = new CancellationTokenSource();
-            Token = TokenSource.Token;
-            Task.Run(() => StartServer(Token), Token);
+            _TokenSource = new CancellationTokenSource();
+            _Token = _TokenSource.Token;
+            Task.Run(() => StartServer(_Token), _Token);
+        }
+         
+        /// <summary>
+        /// Creates a new instance of the Watson Webserver.
+        /// </summary>
+        /// <param name="ipAddresses">IP addresses on which to listen.</param>
+        /// <param name="port">TCP port on which to listen.</param>
+        /// <param name="ssl">Specify whether or not SSL should be used (HTTPS).</param>
+        /// <param name="defaultRequestHandler">Method used when a request is received and no routes are defined.  Commonly used as the 404 handler when routes are used.</param>
+        public Server(List<string> ipAddresses, int port, bool ssl, Func<HttpRequest, HttpResponse> defaultRequestHandler, bool debug)
+        {
+            if (port < 1) throw new ArgumentOutOfRangeException(nameof(port));
+            if (defaultRequestHandler == null) throw new ArgumentNullException(nameof(defaultRequestHandler));
+
+            _HttpListener = new HttpListener();
+
+            _ListenerHostnames = new List<string>();
+            if (ipAddresses == null || ipAddresses.Count < 1)
+            {
+                _ListenerHostnames.Add("*");
+            }
+            else
+            {
+                foreach (string curr in ipAddresses)
+                {
+                    _ListenerHostnames.Add(curr);
+                }
+            }
+            
+            _ListenerPort = port;
+            _ListenerSsl = ssl;
+            _Logging = new LoggingManager(debug);
+            if (debug)
+            {
+                _DebugRequests = true;
+                _DebugResponses = true;
+            }
+
+            _DefaultRoute = defaultRequestHandler;
+            InitializeRouteManagers(debug);
+            Welcome();
+
+            _TokenSource = new CancellationTokenSource();
+            _Token = _TokenSource.Token;
+            Task.Run(() => StartServer(_Token), _Token);
         }
 
         #endregion
@@ -122,7 +162,7 @@ namespace WatsonWebserver
         { 
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
 
-            ContentRoutes.Add(path, isDirectory);
+            _ContentRoutes.Add(path, isDirectory);
         }
 
         /// <summary>
@@ -136,7 +176,7 @@ namespace WatsonWebserver
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
             if (handler == null) throw new ArgumentNullException(nameof(handler));
 
-            StaticRoutes.Add(method, path, handler);
+            _StaticRoutes.Add(method, path, handler);
         }
 
         /// <summary>
@@ -150,7 +190,7 @@ namespace WatsonWebserver
             if (path == null) throw new ArgumentNullException(nameof(path));
             if (handler == null) throw new ArgumentNullException(nameof(handler));
 
-            DynamicRoutes.Add(method, path, handler); 
+            _DynamicRoutes.Add(method, path, handler); 
         }
 
         /// <summary>
@@ -161,7 +201,7 @@ namespace WatsonWebserver
         { 
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
 
-            ContentRoutes.Remove(path);
+            _ContentRoutes.Remove(path);
         }
 
         /// <summary>
@@ -173,7 +213,7 @@ namespace WatsonWebserver
         {
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
 
-            StaticRoutes.Remove(method, path);
+            _StaticRoutes.Remove(method, path);
         }
 
         /// <summary>
@@ -185,7 +225,7 @@ namespace WatsonWebserver
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
 
-            DynamicRoutes.Remove(method, path);
+            _DynamicRoutes.Remove(method, path);
         }
 
         /// <summary>
@@ -198,7 +238,7 @@ namespace WatsonWebserver
         {
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
 
-            return StaticRoutes.Exists(method, path);
+            return _StaticRoutes.Exists(method, path);
         }
 
         /// <summary>
@@ -211,7 +251,7 @@ namespace WatsonWebserver
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
 
-            return DynamicRoutes.Exists(method, path);
+            return _DynamicRoutes.Exists(method, path);
         }
 
         #endregion
@@ -222,32 +262,57 @@ namespace WatsonWebserver
         {
             if (disposing)
             {
-                if (Http != null)
+                if (_HttpListener != null)
                 {
-                    if (Http.IsListening) Http.Stop();
-                    Http.Close();
+                    if (_HttpListener.IsListening) _HttpListener.Stop();
+                    _HttpListener.Close();
                 }
                 
-                TokenSource.Cancel();
+                _TokenSource.Cancel();
             }
+        }
+
+        private void InitializeRouteManagers(bool debug)
+        {
+            _DynamicRoutes = new DynamicRouteManager(_Logging, debug);
+            _StaticRoutes = new StaticRouteManager(_Logging, debug);
+            _ContentRoutes = new ContentRouteManager(_Logging, debug);
+            _ContentRouteProcessor = new ContentRouteProcessor(_Logging, debug, _ContentRoutes);
+            OptionsRoute = null;
+        }
+
+        private void Welcome()
+        {
+            Console.Write("Starting Watson Webserver on: ");
+            foreach (string curr in _ListenerHostnames)
+            {
+                if (_ListenerSsl) Console.Write("https://" + curr + ":" + _ListenerPort + " ");
+                else Console.Write("http://" + curr + ":" + _ListenerPort + " ");
+            }
+            Console.WriteLine("");
         }
 
         private void StartServer(CancellationToken token)
         {
             Task.Run(() => AcceptConnections(token), token);
-            Terminator.WaitOne();
+            _Terminator.WaitOne();
         }
 
         private void AcceptConnections(CancellationToken token)
         {
             try
             {
-                if (ListenerSsl) ListenerPrefix = "https://" + ListenerIp + ":" + ListenerPort + "/";
-                else ListenerPrefix = "http://" + ListenerIp + ":" + ListenerPort + "/";
-                Http.Prefixes.Add(ListenerPrefix);
-                Http.Start();
+                foreach (string curr in _ListenerHostnames)
+                {
+                    string prefix = null;
+                    if (_ListenerSsl) prefix = "https://" + curr + ":" + _ListenerPort + "/";
+                    else prefix = "http://" + curr + ":" + _ListenerPort + "/";
+                    _HttpListener.Prefixes.Add(prefix);
+                }
+
+                _HttpListener.Start();
                 
-                while (Http.IsListening)
+                while (_HttpListener.IsListening)
                 {
                     ThreadPool.QueueUserWorkItem((c) =>
                     { 
@@ -262,7 +327,7 @@ namespace WatsonWebserver
                             HttpRequest currRequest = new HttpRequest(context);
                             if (currRequest == null)
                             {
-                                Logging.Log("Unable to populate HTTP request object on thread ID " + Thread.CurrentThread.ManagedThreadId + ", returning 400");
+                                _Logging.Log("Unable to populate HTTP request object on thread ID " + Thread.CurrentThread.ManagedThreadId + ", returning 400");
                                 SendResponse(
                                     context,
                                     currRequest,
@@ -272,7 +337,7 @@ namespace WatsonWebserver
                                 return;
                             }
 
-                            Logging.Log("Thread " + currRequest.ThreadId + " " + currRequest.SourceIp + ":" + currRequest.SourcePort + " " + currRequest.Method + " " + currRequest.RawUrlWithoutQuery);
+                            _Logging.Log("Thread " + currRequest.ThreadId + " " + currRequest.SourceIp + ":" + currRequest.SourcePort + " " + currRequest.Method + " " + currRequest.RawUrlWithoutQuery);
 
                             #endregion
 
@@ -281,7 +346,7 @@ namespace WatsonWebserver
                             if (currRequest.Method == HttpMethod.OPTIONS
                                 && OptionsRoute != null)
                             {
-                                Logging.Log("Thread " + Thread.CurrentThread.ManagedThreadId + " OPTIONS request received");
+                                _Logging.Log("Thread " + Thread.CurrentThread.ManagedThreadId + " OPTIONS request received");
                                 OptionsProcessor(context, currRequest);
                                 return;
                             }
@@ -290,7 +355,7 @@ namespace WatsonWebserver
 
                             #region Send-to-Handler
 
-                            if (DebugRestRequests) Logging.Log(currRequest.ToString());
+                            if (_DebugRequests) _Logging.Log(currRequest.ToString());
 
                             Task.Run(() =>
                             {
@@ -302,16 +367,16 @@ namespace WatsonWebserver
                                 if (currRequest.Method == HttpMethod.GET
                                     || currRequest.Method == HttpMethod.HEAD)
                                 { 
-                                    if (ContentRoutes.Exists(currRequest.RawUrlWithoutQuery))
+                                    if (_ContentRoutes.Exists(currRequest.RawUrlWithoutQuery))
                                     {
                                         // content route found
-                                        currResponse = ContentProcessor.Process(currRequest);
+                                        currResponse = _ContentRouteProcessor.Process(currRequest);
                                     }
                                 }
 
                                 if (currResponse == null)
                                 {
-                                    handler = StaticRoutes.Match(currRequest.Method, currRequest.RawUrlWithoutQuery);
+                                    handler = _StaticRoutes.Match(currRequest.Method, currRequest.RawUrlWithoutQuery);
                                     if (handler != null)
                                     {
                                         // static route found
@@ -320,7 +385,7 @@ namespace WatsonWebserver
                                     else
                                     {
                                         // no static route, check for dynamic route
-                                        handler = DynamicRoutes.Match(currRequest.Method, currRequest.RawUrlWithoutQuery);
+                                        handler = _DynamicRoutes.Match(currRequest.Method, currRequest.RawUrlWithoutQuery);
                                         if (handler != null)
                                         {
                                             // dynamic route found
@@ -340,7 +405,7 @@ namespace WatsonWebserver
 
                                 if (currResponse == null)
                                 {
-                                    Logging.Log("Null response from handler for " + currRequest.SourceIp + ":" + currRequest.SourcePort + " " + currRequest.Method + " " + currRequest.RawUrlWithoutQuery);
+                                    _Logging.Log("Null response from handler for " + currRequest.SourceIp + ":" + currRequest.SourcePort + " " + currRequest.Method + " " + currRequest.RawUrlWithoutQuery);
                                     SendResponse(
                                         context,
                                         currRequest,
@@ -351,7 +416,7 @@ namespace WatsonWebserver
                                 }
                                 else
                                 {
-                                    if (DebugRestResponses) Logging.Log(currResponse.ToString());
+                                    if (_DebugResponses) _Logging.Log(currResponse.ToString());
 
                                     Dictionary<string, string> headers = new Dictionary<string, string>();
                                     if (!String.IsNullOrEmpty(currResponse.ContentType))
@@ -402,17 +467,17 @@ namespace WatsonWebserver
                         {
 
                         }
-                    }, Http.GetContext());
+                    }, _HttpListener.GetContext());
                 }
             } 
             catch (Exception eOuter)
             {
-                Logging.LogException("AcceptConnections", eOuter);
+                _Logging.LogException("AcceptConnections", eOuter);
                 throw;
             }
             finally
             {
-                Logging.Log("Exiting");
+                _Logging.Log("Exiting");
             }
         }
 
@@ -420,10 +485,10 @@ namespace WatsonWebserver
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
             if (request == null) throw new ArgumentNullException(nameof(request));
-            HttpResponse ret = DefaultRoute(request);
+            HttpResponse ret = _DefaultRoute(request);
             if (ret == null)
             {
-                Logging.Log("Null HttpResponse received from call to RequestReceived, sending 500");
+                _Logging.Log("Null HttpResponse received from call to RequestReceived, sending 500");
                 ret = new HttpResponse(request, false, 500, null, "application/json", "Unable to generate response", false);
                 return ret;
             }
@@ -1095,7 +1160,7 @@ namespace WatsonWebserver
                 }
                 catch (HttpListenerException)
                 {
-                    Logging.Log("Remote endpoint " + req.SourceIp + ":" + req.SourcePort + " appears to have disconnected");
+                    _Logging.Log("Remote endpoint " + req.SourceIp + ":" + req.SourcePort + " appears to have disconnected");
                 }
                 finally
                 {
@@ -1108,17 +1173,17 @@ namespace WatsonWebserver
             }
             catch (IOException)
             {
-                Logging.Log("Remote endpoint " + req.SourceIp + ":" + req.SourcePort + " appears to have terminated connection prematurely (outer IOException)");
+                _Logging.Log("Remote endpoint " + req.SourceIp + ":" + req.SourcePort + " appears to have terminated connection prematurely (outer IOException)");
                 return;
             }
             catch (HttpListenerException)
             {
-                Logging.Log("Remote endpoint " + req.SourceIp + ":" + req.SourcePort + " appears to have terminated connection prematurely (outer HttpListenerException)");
+                _Logging.Log("Remote endpoint " + req.SourceIp + ":" + req.SourcePort + " appears to have terminated connection prematurely (outer HttpListenerException)");
                 return;
             }
             catch (Exception e)
             {
-                Logging.LogException("SendResponse", e);
+                _Logging.LogException("SendResponse", e);
                 return;
             }
             finally
@@ -1127,7 +1192,7 @@ namespace WatsonWebserver
                 {
                     if (req.TimestampUtc != null)
                     {
-                        Logging.Log("Thread " + req.ThreadId + " sending " + responseLen + "B status " + status + " " + req.SourceIp + ":" + req.SourcePort + " for " + req.Method + " " + req.RawUrlWithoutQuery + " (" + WatsonCommon.TotalMsFrom(req.TimestampUtc) + "ms)");
+                        _Logging.Log("Thread " + req.ThreadId + " sending " + responseLen + "B status " + status + " " + req.SourceIp + ":" + req.SourcePort + " for " + req.Method + " " + req.RawUrlWithoutQuery + " (" + WatsonCommon.TotalMsFrom(req.TimestampUtc) + "ms)");
                     }
                 }
 
@@ -1140,7 +1205,7 @@ namespace WatsonWebserver
         
         private void OptionsProcessor(HttpListenerContext context, HttpRequest req)
         {
-            Logging.Log("Thread " + Thread.CurrentThread.ManagedThreadId + " processing OPTIONS request");
+            _Logging.Log("Thread " + Thread.CurrentThread.ManagedThreadId + " processing OPTIONS request");
 
             HttpListenerResponse response = context.Response;
             response.StatusCode = 200;
@@ -1174,6 +1239,10 @@ namespace WatsonWebserver
                 }
             }
 
+            string listenerPrefix = null;
+            if (_ListenerSsl) listenerPrefix = "https://" + req.DestHostname + ":" + req.DestPort + "/";
+            else listenerPrefix = "http://" + req.DestHostname + ":" + req.DestPort + "/";
+
             response.AddHeader("Access-Control-Allow-Methods", "OPTIONS, HEAD, GET, PUT, POST, DELETE");
             response.AddHeader("Access-Control-Allow-Headers", "*, Content-Type, X-Requested-With, " + headers);
             response.AddHeader("Access-Control-Expose-Headers", "Content-Type, X-Requested-With, " + headers);
@@ -1182,11 +1251,11 @@ namespace WatsonWebserver
             response.AddHeader("Accept-Language", "en-US, en");
             response.AddHeader("Accept-Charset", "ISO-8859-1, utf-8");
             response.AddHeader("Connection", "keep-alive");
-            response.AddHeader("Host", ListenerPrefix);
+            response.AddHeader("Host", listenerPrefix);
             response.ContentLength64 = 0;
             response.Close();
 
-            Logging.Log("Thread " + Thread.CurrentThread.ManagedThreadId + " sent OPTIONS response");
+            _Logging.Log("Thread " + Thread.CurrentThread.ManagedThreadId + " sent OPTIONS response");
             return;
         }
 
