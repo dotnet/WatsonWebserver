@@ -11,8 +11,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestContentRoutes", "TestCo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WatsonWebserver", "WatsonWebserver\WatsonWebserver.csproj", "{62003A3E-AB59-4B91-AFBF-4545ACD2A8D9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestNetCore", "TestNetCore\TestNetCore.csproj", "{0C66A980-0B71-47C0-9487-D355A1597FC7}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestDefault", "TestDefault\TestDefault.csproj", "{4FA79C94-4B6F-41DF-815C-C8DD7065E784}"
 EndProject
 Global
