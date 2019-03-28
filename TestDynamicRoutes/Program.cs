@@ -12,11 +12,11 @@ namespace TestDynamicRoutes
     {
         static void Main()
         {
-            Server s = new Server("127.0.0.1", 9000, false, DefaultRoute, true);
-            s.AddDynamicRoute(HttpMethod.GET, new Regex("^/foo/\\d+$"), GetFooWithId);
-            s.AddDynamicRoute(HttpMethod.GET, new Regex("^/foo/(.*?)/(.*?)/?$"), GetFooMultipleChildren);
-            s.AddDynamicRoute(HttpMethod.GET, new Regex("^/foo/(.*?)/?$"), GetFooOneChild);
-            s.AddDynamicRoute(HttpMethod.GET, new Regex("^/foo/?$"), GetFoo); 
+            Server s = new Server("127.0.0.1", 9000, false, DefaultRoute);
+            s.DynamicRoutes.Add(HttpMethod.GET, new Regex("^/foo/\\d+$"), GetFooWithId);
+            s.DynamicRoutes.Add(HttpMethod.GET, new Regex("^/foo/(.*?)/(.*?)/?$"), GetFooMultipleChildren);
+            s.DynamicRoutes.Add(HttpMethod.GET, new Regex("^/foo/(.*?)/?$"), GetFooOneChild);
+            s.DynamicRoutes.Add(HttpMethod.GET, new Regex("^/foo/?$"), GetFoo); 
             Console.WriteLine("Press ENTER to exit");
             Console.ReadLine();
         }

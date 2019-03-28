@@ -8,6 +8,8 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft;
+using Newtonsoft.Json;
 
 namespace WatsonWebserver
 {
@@ -131,6 +133,7 @@ namespace WatsonWebserver
         /// <summary>
         /// The original HttpListenerContext from which the HttpRequest was constructed.
         /// </summary>
+        [JsonIgnore]
         public HttpListenerContext ListenerContext;
 
         #endregion
@@ -143,7 +146,7 @@ namespace WatsonWebserver
 
         #endregion
 
-        #region Constructor
+        #region Constructors-and-Factories
 
         /// <summary>
         /// Construct a new HTTP request.
@@ -400,15 +403,7 @@ namespace WatsonWebserver
         }
 
         #endregion
-
-        #region Public-Internal-Classes
-
-        #endregion
-
-        #region Private-Internal-Classes
-
-        #endregion
-
+        
         #region Public-Methods
          
         /// <summary>

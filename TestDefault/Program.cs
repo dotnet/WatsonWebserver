@@ -13,9 +13,13 @@ namespace TestDefault
         {
             List<string> hostnames = new List<string>();
             hostnames.Add("127.0.0.1");
-            hostnames.Add("www.localhost.com");
 
-            Server server = new Server(hostnames, 9000, false, RequestReceived, true);
+            Server server = new Server(hostnames, 9000, false, RequestReceived);
+            server.Debug = true;
+            
+            // server.AccessControl.Mode = AccessControlMode.DefaultDeny;
+            // server.AccessControl.Whitelist.Add("127.0.0.1", "255.255.255.255");
+            // server.AccessControl.Whitelist.Add("127.0.0.1", "255.255.255.255");
 
             bool runForever = true;
             while (runForever)

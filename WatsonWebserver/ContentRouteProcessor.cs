@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace WatsonWebserver
 {
+    /// <summary>
+    /// Content route processor.  Handles GET and HEAD requests to content routes for files and directories. 
+    /// </summary>
     internal class ContentRouteProcessor
     {
         #region Public-Members
@@ -15,31 +18,48 @@ namespace WatsonWebserver
 
         #region Private-Members
 
-        private LoggingManager Logging;
-        private bool Debug;
-        private ContentRouteManager Routes;
+        private LoggingManager _Logging;
+        private bool _Debug;
+        private ContentRouteManager _Routes;
 
         #endregion
 
         #region Constructors-and-Factories
 
+        /// <summary>
+        /// Instantiate the object.
+        /// </summary>
+        /// <param name="logging">Logging instance.</param>
+        /// <param name="debug">Enable or disable debugging.</param>
         public ContentRouteProcessor(LoggingManager logging, bool debug, ContentRouteManager routes)
         {
             if (logging == null) throw new ArgumentNullException(nameof(logging));
             if (routes == null) throw new ArgumentNullException(nameof(routes));
 
-            Logging = logging;
-            Debug = debug;
-            Routes = routes; 
+            _Logging = logging;
+            _Debug = debug;
+            _Routes = routes; 
         }
 
         #endregion
 
         #region Public-Methods
 
+        /// <summary>
+        /// Process an incoming request for a content route.
+        /// </summary>
+        /// <param name="req">The HttpRequest.</param>
+        /// <returns>HttpResponse.</returns>
         public HttpResponse Process(HttpRequest req)
         {
             if (req == null) throw new ArgumentNullException(nameof(req));
+
+            if (req.Method != HttpMethod.GET 
+                && req.Method != HttpMethod.HEAD)
+            {
+                _Logging.Log("ContentRouteProcessor request using method other than GET and HEAD: " + req.Method.ToString());
+                return Send500Response(req);
+            }
 
             string filePath = req.RawUrlWithoutQuery;
             if (!String.IsNullOrEmpty(filePath) && filePath.StartsWith("/")) filePath = filePath.Substring(1);
@@ -50,19 +70,32 @@ namespace WatsonWebserver
 
             if (!File.Exists(filePath))
             {
-                Logging.Log("ContentRouteProcessor unable to find " + filePath);
+                _Logging.Log("ContentRouteProcessor unable to find " + filePath);
                 return Send404Response(req);
             }
 
             try
             {
                 byte[] data = null;
-                if (req.Method == HttpMethod.GET) data = File.ReadAllBytes(filePath);
-                return new HttpResponse(req, true, 200, null, contentType, data, true);
+                if (req.Method == HttpMethod.GET)
+                {
+                    data = File.ReadAllBytes(filePath);
+                    return new HttpResponse(req, true, 200, null, contentType, data, true);
+                }
+                else if (req.Method == HttpMethod.HEAD)
+                {
+                    data = null;
+                    return Send204Response(req);
+                }
+                else
+                {
+                    _Logging.Log("ContentRouteProcessor request using method other than GET and HEAD: " + req.Method.ToString());
+                    return Send500Response(req);
+                }
             }
             catch (Exception e)
             {
-                Logging.Log("ContentRouteProcessor error reading " + filePath + ": " + e.Message);
+                _Logging.Log("ContentRouteProcessor error reading " + filePath + ": " + e.Message);
                 return Send500Response(req);
             }
         }

@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace WatsonWebserver
 {
+    /// <summary>
+    /// MIME types and file extensions.
+    /// </summary>
     public class MimeTypes
     {
         // Thank you https://github.com/samuelneff/MimeTypeMap/blob/master/src/MimeTypes/MimeTypeMap.cs
@@ -603,11 +606,19 @@ namespace WatsonWebserver
 
         #region Constructors-and-Factories
 
+        /// <summary>
+        /// Instantiates the object.
+        /// </summary>
         public MimeTypes()
         {
 
         }
 
+        /// <summary>
+        /// Retrieve MIME type from file extension.
+        /// </summary>
+        /// <param name="extension">File extension.</param>
+        /// <returns>String containing MIME type.</returns>
         public static string GetFromExtension(string extension)
         {
             if (String.IsNullOrEmpty(nameof(extension))) return null;

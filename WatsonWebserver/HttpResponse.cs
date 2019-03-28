@@ -11,15 +11,11 @@ using System.Threading.Tasks;
 
 namespace WatsonWebserver
 {
+    /// <summary>
+    /// Response to an HTTP request.
+    /// </summary>
     public class HttpResponse
-    {
-        //
-        //
-        // Do not serialize this object directly when sending a response.  Use the .ToJson() method instead
-        // since the JSON output will not match in terms of actual class member names and such.
-        //
-        //
-
+    { 
         #region Public-Members
 
         //
@@ -121,7 +117,7 @@ namespace WatsonWebserver
 
         #endregion
 
-        #region Constructor
+        #region Constructors-and-Factories
 
         /// <summary>
         /// Create an uninitialized HttpResponse object.
@@ -265,15 +261,7 @@ namespace WatsonWebserver
         }
 
         #endregion
-
-        #region Public-Internal-Classes
-
-        #endregion
-
-        #region Private-Internal-Classes
-
-        #endregion
-
+         
         #region Public-Methods
 
         /// <summary>

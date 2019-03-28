@@ -10,7 +10,7 @@ namespace WatsonWebserver
     /// <summary>
     /// Assign a method handler for when requests are received matching the supplied method and path regex.
     /// </summary>
-    internal class DynamicRoute
+    public class DynamicRoute
     {
         #region Public-Members
 

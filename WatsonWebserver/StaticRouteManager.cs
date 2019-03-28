@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace WatsonWebserver
 {
-    internal class StaticRouteManager
+    /// <summary>
+    /// Static route manager.  Static routes are used for requests using any HTTP method to a specific path.
+    /// </summary>
+    public class StaticRouteManager
     {
         #region Public-Members
 
@@ -14,29 +17,40 @@ namespace WatsonWebserver
 
         #region Private-Members
 
-        private LoggingManager Logging;
-        private bool Debug;
-        private List<StaticRoute> Routes;
-        private readonly object RouteLock;
+        private LoggingManager _Logging;
+        private bool _Debug;
+        private List<StaticRoute> _Routes;
+        private readonly object _Lock;
 
         #endregion
 
         #region Constructors-and-Factories
 
+        /// <summary>
+        /// Instantiate the object.
+        /// </summary>
+        /// <param name="logging">Logging instance.</param>
+        /// <param name="debug">Enable or disable debugging.</param>
         public StaticRouteManager(LoggingManager logging, bool debug)
         {
             if (logging == null) throw new ArgumentNullException(nameof(logging));
 
-            Logging = logging;
-            Debug = debug;
-            Routes = new List<StaticRoute>();
-            RouteLock = new object();
+            _Logging = logging;
+            _Debug = debug;
+            _Routes = new List<StaticRoute>();
+            _Lock = new object();
         }
 
         #endregion
 
         #region Public-Methods
 
+        /// <summary>
+        /// Add a route.
+        /// </summary>
+        /// <param name="method">The HTTP method.</param>
+        /// <param name="path">URL path, i.e. /path/to/resource.</param>
+        /// <param name="handler">Method to invoke.</param>
         public void Add(HttpMethod method, string path, Func<HttpRequest, HttpResponse> handler)
         {
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
@@ -46,6 +60,11 @@ namespace WatsonWebserver
             Add(r);
         }
 
+        /// <summary>
+        /// Remove a route.
+        /// </summary>
+        /// <param name="method">The HTTP method.</param>
+        /// <param name="path">URL path.</param>
         public void Remove(HttpMethod method, string path)
         { 
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
@@ -57,15 +76,21 @@ namespace WatsonWebserver
             }
             else
             {
-                lock (RouteLock)
+                lock (_Lock)
                 {
-                    Routes.Remove(r);
+                    _Routes.Remove(r);
                 }
                  
                 return;
             }
         }
 
+        /// <summary>
+        /// Retrieve a static route.
+        /// </summary>
+        /// <param name="method">The HTTP method.</param>
+        /// <param name="path">URL path.</param>
+        /// <returns>StaticRoute if the route exists, otherwise null.</returns>
         public StaticRoute Get(HttpMethod method, string path)
         {
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
@@ -74,9 +99,9 @@ namespace WatsonWebserver
             if (!path.StartsWith("/")) path = "/" + path;
             if (!path.EndsWith("/")) path = path + "/";
 
-            lock (RouteLock)
+            lock (_Lock)
             {
-                StaticRoute curr = Routes.FirstOrDefault(i => i.Method == method && i.Path == path);
+                StaticRoute curr = _Routes.FirstOrDefault(i => i.Method == method && i.Path == path);
                 if (curr == null || curr == default(StaticRoute))
                 {
                     return null;
@@ -88,6 +113,12 @@ namespace WatsonWebserver
             }
         }
 
+        /// <summary>
+        /// Check if a static route exists.
+        /// </summary>
+        /// <param name="method">The HTTP method.</param>
+        /// <param name="path">URL path.</param>
+        /// <returns>True if exists.</returns>
         public bool Exists(HttpMethod method, string path)
         {
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
@@ -96,9 +127,9 @@ namespace WatsonWebserver
             if (!path.StartsWith("/")) path = "/" + path;
             if (!path.EndsWith("/")) path = path + "/";
 
-            lock (RouteLock)
+            lock (_Lock)
             {
-                StaticRoute curr = Routes.FirstOrDefault(i => i.Method == method && i.Path == path);
+                StaticRoute curr = _Routes.FirstOrDefault(i => i.Method == method && i.Path == path);
                 if (curr == null || curr == default(StaticRoute))
                 { 
                     return false;
@@ -108,6 +139,12 @@ namespace WatsonWebserver
             return true;
         }
 
+        /// <summary>
+        /// Match a request method and URL to a handler method.
+        /// </summary>
+        /// <param name="method">The HTTP method.</param>
+        /// <param name="path">URL path.</param>
+        /// <returns>Method to invoke.</returns>
         public Func<HttpRequest, HttpResponse> Match(HttpMethod method, string path)
         {
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
@@ -116,9 +153,9 @@ namespace WatsonWebserver
             if (!path.StartsWith("/")) path = "/" + path;
             if (!path.EndsWith("/")) path = path + "/";
 
-            lock (RouteLock)
+            lock (_Lock)
             {
-                StaticRoute curr = Routes.FirstOrDefault(i => i.Method == method && i.Path == path);
+                StaticRoute curr = _Routes.FirstOrDefault(i => i.Method == method && i.Path == path);
                 if (curr == null || curr == default(StaticRoute))
                 {
                     return null;
@@ -147,9 +184,9 @@ namespace WatsonWebserver
                 return;
             }
 
-            lock (RouteLock)
+            lock (_Lock)
             {
-                Routes.Add(route); 
+                _Routes.Add(route); 
             }
         }
 
@@ -157,9 +194,9 @@ namespace WatsonWebserver
         {
             if (route == null) throw new ArgumentNullException(nameof(route));
 
-            lock (RouteLock)
+            lock (_Lock)
             {
-                Routes.Remove(route);
+                _Routes.Remove(route);
             }
              
             return;

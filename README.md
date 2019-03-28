@@ -7,11 +7,10 @@
 
 A simple C# async web server for handling incoming RESTful HTTP/HTTPS requests. 
 
-## New in v1.5.x
+## New in v1.6.x
 
-- Added a new constructor allowing Watson to support multiple listener hostnames
-- Retarget to support both .NET Core 2.0 and .NET Framework 4.6.2.
-- Fix for attaching request body data to the HttpRequest object (thanks @user4000!)
+- Refactored content routes, static routes, and dynamic routes (breaking change)
+- Added default permit/deny operation along with whitelist and blacklist
 
 ## Test App
 
@@ -28,7 +27,12 @@ A test project is included which will help you exercise the class library.
 - If a matching content route exists:
   - And the content does not exist, a standard 404 is sent
   - And the content cannot be read, a standard 500 is sent
-  
+- By default, Watson will permit all inbound connections
+  - If you want to block certain IPs or networks, use ```Server.AccessControl.Blacklist.Add(ip, netmask)```
+  - If you only want to allow certain IPs or networks, and block all others, use:
+    - ```Server.AccessControl.Mode = AccessControlMode.DefaultDeny```
+    - ```Server.AccessControl.Whitelist.Add(ip, netmask)```
+    
 ## Example using Routes
 ```
 using WatsonWebserver;
@@ -40,19 +44,27 @@ static void Main(string[] args)
    hostnames.Add("www.localhost.com");
    Server s = new Server(hostnames, 9000, false, DefaultRoute, true);
 
+   // set default permit (permit any) with blacklist to block specific IP addresses or networks
+   s.AccessControl.Mode = AccessControlMode.DefaultPermit;
+   s.AccessControl.Blacklist.Add("127.0.0.1", "255.255.255.255");  
+
+   // set default deny (deny all) with whitelist to permit specific IP addresses or networks
+   s.AccessControl.Mode = AccessControlMode.DefaultDeny;
+   s.AccessControl.Whitelist.Add("127.0.0.1", "255.255.255.255");
+
    // add content routes
-   s.AddContentRoute("/html/", true);
-   s.AddContentRoute("/img/watson.jpg", false);
+   s.ContentRoutes.Add("/html/", true);
+   s.ContentRoutes.Add("/img/watson.jpg", false);
 
    // add static routes
-   s.AddStaticRoute(HttpMethod.GET, "/hello/", GetHelloRoute);
-   s.AddStaticRoute(HttpMethod.GET, "/world/", GetWorldRoute);
+   s.StaticRoutes.Add(HttpMethod.GET, "/hello/", GetHelloRoute);
+   s.StaticRoutes.Add(HttpMethod.GET, "/world/", GetWorldRoute);
 
    // add dynamic routes
-   s.AddDynamicRoute(HttpMethod.GET, new Regex("^/foo/\\d+$"), GetFooWithId);
-   s.AddDynamicRoute(HttpMethod.GET, new Regex("^/foo/(.*?)/(.*?)/?$"), GetFooMultipleChildren);
-   s.AddDynamicRoute(HttpMethod.GET, new Regex("^/foo/(.*?)/?$"), GetFooOneChild);
-   s.AddDynamicRoute(HttpMethod.GET, new Regex("^/foo/?$"), GetFoo); 
+   s.DynamicRoutes.Add(HttpMethod.GET, new Regex("^/foo/\\d+$"), GetFooWithId);
+   s.DynamicRoutes.Add(HttpMethod.GET, new Regex("^/foo/(.*?)/(.*?)/?$"), GetFooMultipleChildren);
+   s.DynamicRoutes.Add(HttpMethod.GET, new Regex("^/foo/(.*?)/?$"), GetFooOneChild);
+   s.DynamicRoutes.Add(HttpMethod.GET, new Regex("^/foo/?$"), GetFoo); 
 
    Console.WriteLine("Press ENTER to exit");
    Console.ReadLine();
@@ -97,6 +109,11 @@ static HttpResponse DefaultRoute(HttpRequest req)
 ## Version History
 
 Notes from previous versions are shown below (summarized to minor build)
+
+v1.5.x
+- Added a new constructor allowing Watson to support multiple listener hostnames
+- Retarget to support both .NET Core 2.0 and .NET Framework 4.6.2.
+- Fix for attaching request body data to the HttpRequest object (thanks @user4000!)
 
 v1.4.x
 - Retarget to .NET Framework 4.6.2

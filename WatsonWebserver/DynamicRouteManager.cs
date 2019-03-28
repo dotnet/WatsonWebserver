@@ -8,7 +8,10 @@ using RegexMatcher;
 
 namespace WatsonWebserver
 {
-    internal class DynamicRouteManager
+    /// <summary>
+    /// Dynamic route manager.  Dynamic routes are used for requests using any HTTP method to any path that can be matched by regular expression.
+    /// </summary>
+    public class DynamicRouteManager
     {
         #region Public-Members
 
@@ -16,57 +19,85 @@ namespace WatsonWebserver
 
         #region Private-Members
 
-        private LoggingManager Logging;
-        private bool Debug;
-        private Matcher RegexMatch;
+        private LoggingManager _Logging;
+        private bool _Debug;
+        private Matcher _Matcher;
 
         #endregion
 
         #region Constructors-and-Factories
 
+        /// <summary>
+        /// Instantiate the object.
+        /// </summary>
+        /// <param name="logging">Logging instance.</param>
+        /// <param name="debug">Enable or disable debugging.</param>
         public DynamicRouteManager(LoggingManager logging, bool debug)
         {
             if (logging == null) throw new ArgumentNullException(nameof(logging));
 
-            Logging = logging;
-            Debug = debug;
-            RegexMatch = new Matcher();
+            _Logging = logging;
+            _Debug = debug;
+            _Matcher = new Matcher();
         }
 
         #endregion
 
         #region Public-Methods
 
+        /// <summary>
+        /// Add a route.
+        /// </summary>
+        /// <param name="method">The HTTP method.</param>
+        /// <param name="path">URL path, i.e. /path/to/resource.</param>
+        /// <param name="handler">Method to invoke.</param>
         public void Add(HttpMethod method, Regex path, Func<HttpRequest, HttpResponse> handler)
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
             if (handler == null) throw new ArgumentNullException(nameof(handler));
-            RegexMatch.Add(
+            _Matcher.Add(
                 new Regex(BuildConsolidatedRegex(method, path)), 
                 handler);
         }
 
+        /// <summary>
+        /// Remove a route.
+        /// </summary>
+        /// <param name="method">The HTTP method.</param>
+        /// <param name="path">URL path.</param>
         public void Remove(HttpMethod method, Regex path)
         { 
             if (path == null) throw new ArgumentNullException(nameof(path));
-            RegexMatch.Remove(
-                new Regex(BuildConsolidatedRegex(method, path)));
-        }
-         
-        public bool Exists(HttpMethod method, Regex path)
-        {
-            if (path == null) throw new ArgumentNullException(nameof(path));
-            return RegexMatch.Exists(
+            _Matcher.Remove(
                 new Regex(BuildConsolidatedRegex(method, path)));
         }
 
+        /// <summary>
+        /// Check if a content route exists.
+        /// </summary>
+        /// <param name="method">The HTTP method.</param>
+        /// <param name="path">URL path.</param>
+        /// <returns>True if exists.</returns>
+        public bool Exists(HttpMethod method, Regex path)
+        {
+            if (path == null) throw new ArgumentNullException(nameof(path));
+            return _Matcher.Exists(
+                new Regex(BuildConsolidatedRegex(method, path)));
+        }
+
+        /// <summary>
+        /// Match a request method and URL to a handler method.
+        /// </summary>
+        /// <param name="method">The HTTP method.</param>
+        /// <param name="rawUrl">URL path.</param>
+        /// <returns>Method to invoke.</returns>
         public Func<HttpRequest, HttpResponse> Match(HttpMethod method, string rawUrl)
         {
             if (String.IsNullOrEmpty(rawUrl)) throw new ArgumentNullException(nameof(rawUrl));
 
             object val;
             Func<HttpRequest, HttpResponse> handler;
-            if (RegexMatch.Match(
+            if (_Matcher.Match(
                 BuildConsolidatedRegex(method, rawUrl), 
                 out val))
             { 

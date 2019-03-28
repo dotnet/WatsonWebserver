@@ -7,7 +7,10 @@ using System.Threading.Tasks;
 
 namespace WatsonWebserver
 {
-    internal class ContentRouteManager
+    /// <summary>
+    /// Content route manager.  Content routes are used for GET and HEAD requests to specific files or entire directories.
+    /// </summary>
+    public class ContentRouteManager
     {
         #region Public-Members
 
@@ -15,29 +18,39 @@ namespace WatsonWebserver
 
         #region Private-Members
 
-        private LoggingManager Logging;
-        private bool Debug;
-        private List<ContentRoute> Routes;
-        private readonly object RouteLock;
+        private LoggingManager _Logging;
+        private bool _Debug;
+        private List<ContentRoute> _Routes;
+        private readonly object _Lock;
 
         #endregion
 
         #region Constructors-and-Factories
 
+        /// <summary>
+        /// Instantiate the object.
+        /// </summary>
+        /// <param name="logging">Logging instance.</param>
+        /// <param name="debug">Enable or disable debugging.</param>
         public ContentRouteManager(LoggingManager logging, bool debug)
         {
             if (logging == null) throw new ArgumentNullException(nameof(logging));
 
-            Logging = logging;
-            Debug = debug;
-            Routes = new List<ContentRoute>();
-            RouteLock = new object();
+            _Logging = logging;
+            _Debug = debug;
+            _Routes = new List<ContentRoute>();
+            _Lock = new object();
         }
 
         #endregion
 
         #region Public-Methods
 
+        /// <summary>
+        /// Add a route.
+        /// </summary>
+        /// <param name="path">URL path, i.e. /path/to/resource.</param>
+        /// <param name="isDirectory">True if the path represents a directory.</param>
         public void Add(string path, bool isDirectory)
         {
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
@@ -46,6 +59,10 @@ namespace WatsonWebserver
             Add(r);
         }
 
+        /// <summary>
+        /// Remove a route.
+        /// </summary>
+        /// <param name="path">URL path.</param>
         public void Remove(string path)
         { 
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
@@ -57,15 +74,20 @@ namespace WatsonWebserver
             }
             else
             {
-                lock (RouteLock)
+                lock (_Lock)
                 {
-                    Routes.Remove(r);
+                    _Routes.Remove(r);
                 }
                  
                 return;
             }
         }
 
+        /// <summary>
+        /// Retrieve a content route.
+        /// </summary>
+        /// <param name="path">URL path.</param>
+        /// <returns>ContentRoute if the route exists, otherwise null.</returns>
         public ContentRoute Get(string path)
         {
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
@@ -74,9 +96,9 @@ namespace WatsonWebserver
             if (!path.StartsWith("/")) path = "/" + path;
             if (!path.EndsWith("/")) path = path + "/";
 
-            lock (RouteLock)
+            lock (_Lock)
             {
-                foreach (ContentRoute curr in Routes)
+                foreach (ContentRoute curr in _Routes)
                 {
                     if (curr.IsDirectory)
                     {
@@ -92,6 +114,11 @@ namespace WatsonWebserver
             }
         }
 
+        /// <summary>
+        /// Check if a content route exists.
+        /// </summary>
+        /// <param name="path">URL path.</param>
+        /// <returns>True if exists.</returns>
         public bool Exists(string path)
         {
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
@@ -99,9 +126,9 @@ namespace WatsonWebserver
             path = path.ToLower();
             if (!path.StartsWith("/")) path = "/" + path; 
 
-            lock (RouteLock)
+            lock (_Lock)
             {
-                foreach (ContentRoute curr in Routes)
+                foreach (ContentRoute curr in _Routes)
                 {
                     if (curr.IsDirectory)
                     {
@@ -134,9 +161,9 @@ namespace WatsonWebserver
                 return;
             }
 
-            lock (RouteLock)
+            lock (_Lock)
             {
-                Routes.Add(route); 
+                _Routes.Add(route); 
             }
         }
 
@@ -144,9 +171,9 @@ namespace WatsonWebserver
         {
             if (route == null) throw new ArgumentNullException(nameof(route));
 
-            lock (RouteLock)
+            lock (_Lock)
             {
-                Routes.Remove(route);
+                _Routes.Remove(route);
             }
              
             return;

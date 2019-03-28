@@ -11,7 +11,7 @@ namespace WatsonWebserver
     /// <summary>
     /// Logging methods for Watson Webserver.
     /// </summary>
-    internal class LoggingManager
+    public class LoggingManager
     {
         #region Public-Members
 

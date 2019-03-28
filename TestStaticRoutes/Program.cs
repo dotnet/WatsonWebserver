@@ -11,10 +11,10 @@ namespace TestStaticRoutes
     {
         static void Main()
         {
-            Server s = new Server("127.0.0.1", 9000, false, DefaultRoute, true);
-            s.AddStaticRoute(HttpMethod.GET, "/hello/", GetHelloRoute);
-            s.AddStaticRoute(HttpMethod.GET, "/world/", GetWorldRoute);
-            s.AddStaticRoute(HttpMethod.POST, "/data/", PostDataRoute);
+            Server s = new Server("127.0.0.1", 9000, false, DefaultRoute);
+            s.StaticRoutes.Add(HttpMethod.GET, "/hello/", GetHelloRoute);
+            s.StaticRoutes.Add(HttpMethod.GET, "/world/", GetWorldRoute);
+            s.StaticRoutes.Add(HttpMethod.POST, "/data/", PostDataRoute);
             Console.WriteLine("Press ENTER to exit");
             Console.ReadLine();
         }
