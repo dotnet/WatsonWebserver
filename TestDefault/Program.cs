@@ -16,7 +16,7 @@ namespace TestDefault
 
             Server server = new Server(hostnames, 9000, false, RequestReceived);
             server.Debug = true;
-            
+
             // server.AccessControl.Mode = AccessControlMode.DefaultDeny;
             // server.AccessControl.Whitelist.Add("127.0.0.1", "255.255.255.255");
             // server.AccessControl.Whitelist.Add("127.0.0.1", "255.255.255.255");

@@ -18,6 +18,9 @@ A test project is included which will help you exercise the class library.
 
 ## Important Notes
 
+- Using Watson may require elevation (administrative privileges) if binding an IP other than 127.0.0.1
+- The HTTP HOST header must match the specified binding
+- .NET Framework supports multiple bindings, .NET Core does not (yet)
 - Watson Webserver will always check routes in the following order:
   - If the request is GET or HEAD, content routes will first be checked
   - Then static routes will be evaluated
