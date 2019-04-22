@@ -313,7 +313,7 @@ namespace WatsonWebserver
                                 inKey = 1;
                                 inVal = 0;
 
-                                if (!String.IsNullOrEmpty(tempVal)) tempVal = System.Uri.EscapeUriString(tempVal);
+                                if (!String.IsNullOrEmpty(tempVal)) tempVal = WebUtility.UrlEncode(tempVal);
                                 QuerystringEntries = WatsonCommon.AddToDict(tempKey, tempVal, QuerystringEntries);
                                 
                                 tempKey = "";
@@ -326,7 +326,7 @@ namespace WatsonWebserver
 
                     if (inVal == 1)
                     {
-                        if (!String.IsNullOrEmpty(tempVal)) tempVal = System.Uri.EscapeUriString(tempVal);
+                        if (!String.IsNullOrEmpty(tempVal)) tempVal = WebUtility.UrlEncode(tempVal);
                         QuerystringEntries = WatsonCommon.AddToDict(tempKey, tempVal, QuerystringEntries);
                     }
                 }
@@ -1429,7 +1429,7 @@ namespace WatsonWebserver
                         inKey = 1;
                         inVal = 0;
 
-                        if (!String.IsNullOrEmpty(tempVal)) tempVal = System.Uri.EscapeUriString(tempVal);
+                        if (!String.IsNullOrEmpty(tempVal)) tempVal = WebUtility.UrlEncode(tempVal);
                         ret = WatsonCommon.AddToDict(tempKey, tempVal, ret);
 
                         tempKey = "";
@@ -1441,7 +1441,7 @@ namespace WatsonWebserver
                 
                 if (inVal == 1)
                 {
-                    if (!String.IsNullOrEmpty(tempVal)) tempVal = System.Uri.EscapeUriString(tempVal);
+                    if (!String.IsNullOrEmpty(tempVal)) tempVal = WebUtility.UrlEncode(tempVal);
                     ret = WatsonCommon.AddToDict(tempKey, tempVal, ret);
                 }
             }

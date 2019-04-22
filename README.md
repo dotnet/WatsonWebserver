@@ -9,6 +9,7 @@ A simple C# async web server for handling incoming RESTful HTTP/HTTPS requests.
 
 ## New in v1.6.x
 
+- Fix URL encoding (using System.Net.WebUtility.UrlDecode instead of Uri.EscapeString)
 - Refactored content routes, static routes, and dynamic routes (breaking change)
 - Added default permit/deny operation along with whitelist and blacklist
 
