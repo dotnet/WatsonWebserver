@@ -254,17 +254,21 @@ namespace WatsonWebserver
                         {
                             #region Populate-Http-Request-Object
 
-                            HttpRequest currRequest = new HttpRequest(context, ReadInputStream);
-                            if (currRequest == null)
-                            { 
+                            HttpRequest req = new HttpRequest(context, ReadInputStream);
+                            if (req == null)
+                            {
+                                HttpResponse resp = new HttpResponse(
+                                    req,
+                                    500,
+                                    null,
+                                    "text/plain",
+                                    Encoding.UTF8.GetBytes("Unable to parse your HTTP request"));
+
                                 SendResponse(
                                     context,
-                                    currRequest,
-                                    0,
-                                    Encoding.UTF8.GetBytes("Unable to parse your HTTP request"), 
-                                    null,
-                                    WatsonCommon.AddToDict("content-type", "text/plain", null),
-                                    500);
+                                    req,
+                                    resp);
+
                                 return;
                             }
 
@@ -272,7 +276,7 @@ namespace WatsonWebserver
 
                             #region Access-Control
 
-                            if (!AccessControl.Permit(currRequest.SourceIp))
+                            if (!AccessControl.Permit(req.SourceIp))
                             { 
                                 context.Response.Close();
                                 return;
@@ -282,10 +286,10 @@ namespace WatsonWebserver
 
                             #region Process-OPTIONS-Request
 
-                            if (currRequest.Method == HttpMethod.OPTIONS
+                            if (req.Method == HttpMethod.OPTIONS
                                 && OptionsRoute != null)
                             { 
-                                OptionsProcessor(context, currRequest);
+                                OptionsProcessor(context, req);
                                 return;
                             }
 
@@ -295,42 +299,42 @@ namespace WatsonWebserver
 
                             Task.Run(() =>
                             {
-                                HttpResponse currResponse = null;
+                                HttpResponse resp = null;
                                 Func<HttpRequest, HttpResponse> handler = null;
 
                                 #region Find-Route
                                 
-                                if (currRequest.Method == HttpMethod.GET
-                                    || currRequest.Method == HttpMethod.HEAD)
+                                if (req.Method == HttpMethod.GET
+                                    || req.Method == HttpMethod.HEAD)
                                 { 
-                                    if (ContentRoutes.Exists(currRequest.RawUrlWithoutQuery))
+                                    if (ContentRoutes.Exists(req.RawUrlWithoutQuery))
                                     {
                                         // content route found
-                                        currResponse = _ContentRouteProcessor.Process(currRequest);
+                                        resp = _ContentRouteProcessor.Process(req);
                                     }
                                 }
 
-                                if (currResponse == null)
+                                if (resp == null)
                                 {
-                                    handler = StaticRoutes.Match(currRequest.Method, currRequest.RawUrlWithoutQuery);
+                                    handler = StaticRoutes.Match(req.Method, req.RawUrlWithoutQuery);
                                     if (handler != null)
                                     {
                                         // static route found
-                                        currResponse = handler(currRequest);
+                                        resp = handler(req);
                                     }
                                     else
                                     {
                                         // no static route, check for dynamic route
-                                        handler = DynamicRoutes.Match(currRequest.Method, currRequest.RawUrlWithoutQuery);
+                                        handler = DynamicRoutes.Match(req.Method, req.RawUrlWithoutQuery);
                                         if (handler != null)
                                         {
                                             // dynamic route found
-                                            currResponse = handler(currRequest);
+                                            resp = handler(req);
                                         }
                                         else
                                         {
                                             // process using default route
-                                            currResponse = DefaultRouteProcessor(context, currRequest);
+                                            resp = DefaultRouteProcessor(context, req);
                                         }
                                     }
                                 }
@@ -339,29 +343,33 @@ namespace WatsonWebserver
 
                                 #region Return
 
-                                if (currResponse == null)
-                                { 
+                                if (resp == null)
+                                {
+                                    resp = new HttpResponse(
+                                        req,
+                                        500,
+                                        null,
+                                        "text/plain",
+                                        Encoding.UTF8.GetBytes("Unable to generate response"));
+
                                     SendResponse(
                                         context,
-                                        currRequest,
-                                        0,
-                                        Encoding.UTF8.GetBytes("Unable to generate response"),
-                                        null,
-                                        WatsonCommon.AddToDict("content-type", "text/plain", null),
-                                        500);
+                                        req,
+                                        resp);
+
                                     return;
                                 }
                                 else
                                 { 
                                     Dictionary<string, string> headers = new Dictionary<string, string>();
-                                    if (!String.IsNullOrEmpty(currResponse.ContentType))
+                                    if (!String.IsNullOrEmpty(resp.ContentType))
                                     {
-                                        headers.Add("content-type", currResponse.ContentType);
+                                        headers.Add("content-type", resp.ContentType);
                                     }
 
-                                    if (currResponse.Headers != null && currResponse.Headers.Count > 0)
+                                    if (resp.Headers != null && resp.Headers.Count > 0)
                                     {
-                                        foreach (KeyValuePair<string, string> curr in currResponse.Headers)
+                                        foreach (KeyValuePair<string, string> curr in resp.Headers)
                                         {
                                             headers = WatsonCommon.AddToDict(curr.Key, curr.Value, headers);
                                         }
@@ -369,12 +377,9 @@ namespace WatsonWebserver
                                     
                                     SendResponse(
                                         context,
-                                        currRequest,
-                                        currResponse.ContentLength,
-                                        currResponse.Data,
-                                        currResponse.DataStream,
-                                        headers,
-                                        currResponse.StatusCode);
+                                        req,
+                                        resp);
+
                                     return;
                                 }
 
@@ -383,9 +388,9 @@ namespace WatsonWebserver
 
                             #endregion
                         }
-                        catch (Exception e)
+                        catch (Exception)
                         {
-                            Console.WriteLine(e.Message);
+
                         }
                         finally
                         {
@@ -420,11 +425,7 @@ namespace WatsonWebserver
         private void SendResponse(
             HttpListenerContext context,
             HttpRequest req,
-            long contentLength,
-            byte[] data,
-            Stream dataStream,
-            Dictionary<string, string> headers,
-            int status)
+            HttpResponse resp)
         {
             long responseLength = 0;
             HttpListenerResponse response = null;
@@ -434,9 +435,9 @@ namespace WatsonWebserver
                 #region Status-Code-and-Description
 
                 response = context.Response;
-                response.StatusCode = status;
+                response.StatusCode = resp.StatusCode;
 
-                switch (status)
+                switch (resp.StatusCode)
                 {
                     case 200:
                         response.StatusDescription = "OK";
@@ -506,9 +507,9 @@ namespace WatsonWebserver
                 response.AddHeader("Access-Control-Allow-Origin", "*");
                 response.ContentType = req.ContentType;
                   
-                if (headers != null && headers.Count > 0)
+                if (resp.Headers != null && resp.Headers.Count > 0)
                 {
-                    foreach (KeyValuePair<string, string> curr in headers)
+                    foreach (KeyValuePair<string, string> curr in resp.Headers)
                     {
                         response.AddHeader(curr.Key, curr.Value);
                     }
@@ -520,8 +521,9 @@ namespace WatsonWebserver
 
                 if (req.Method == HttpMethod.HEAD)
                 {
-                    data = null;
-                    dataStream = null;
+                    resp.Data = null;
+                    resp.DataStream = null;
+                    resp.ContentLength = 0;
                 }
 
                 #endregion
@@ -532,27 +534,27 @@ namespace WatsonWebserver
                  
                 try
                 {
-                    if (data != null && data.Length > 0)
+                    if (resp.Data != null && resp.Data.Length > 0)
                     { 
-                        responseLength = data.Length;
+                        responseLength = resp.Data.Length;
                         response.ContentLength64 = responseLength;
-                        output.Write(data, 0, (int)responseLength);
+                        output.Write(resp.Data, 0, (int)responseLength);
                     }
-                    else if (dataStream != null)
+                    else if (resp.DataStream != null && resp.ContentLength > 0)
                     {  
-                        responseLength = contentLength; 
-                        response.ContentLength64 = contentLength; 
-                        dataStream.Seek(0, SeekOrigin.Begin);
+                        responseLength = resp.ContentLength; 
+                        response.ContentLength64 = resp.ContentLength; 
+                        resp.DataStream.Seek(0, SeekOrigin.Begin);
                          
-                        long bytesRemaining = contentLength;
+                        long bytesRemaining = resp.ContentLength;
 
                         while (bytesRemaining > 0)
                         { 
                             int bytesRead = 0;
                             byte[] buffer = new byte[StreamReadBufferSize];
 
-                            if (bytesRemaining >= StreamReadBufferSize) bytesRead = dataStream.Read(buffer, 0, StreamReadBufferSize); 
-                            else bytesRead = dataStream.Read(buffer, 0, (int)bytesRemaining); 
+                            if (bytesRemaining >= StreamReadBufferSize) bytesRead = resp.DataStream.Read(buffer, 0, StreamReadBufferSize); 
+                            else bytesRead = resp.DataStream.Read(buffer, 0, (int)bytesRemaining); 
 
                             output.Write(buffer, 0, bytesRead);
                             bytesRemaining -= bytesRead;
