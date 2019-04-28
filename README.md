@@ -7,7 +7,7 @@
 
 A simple C# async web server for handling incoming RESTful HTTP/HTTPS requests. 
 
-## New in v1.6.x
+## New in v2.0.x
 
 - Support for Stream in ```HttpRequest``` and ```HttpResponse```.  To use, set ```Server.ReadInputStream``` to ```false```.  Refer to the ```TestStreamServer``` project for a full example
 - Simplified constructors, removed pre-defined JSON packaging for responses
