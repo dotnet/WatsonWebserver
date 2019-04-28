@@ -131,6 +131,12 @@ namespace WatsonWebserver
         public byte[] Data;
 
         /// <summary>
+        /// The stream from which to read the request body sent by the requestor (client).
+        /// </summary>
+        [JsonIgnore]
+        public Stream DataStream;
+
+        /// <summary>
         /// The original HttpListenerContext from which the HttpRequest was constructed.
         /// </summary>
         [JsonIgnore]
@@ -141,8 +147,8 @@ namespace WatsonWebserver
         #region Private-Members
 
         private Uri _Uri;
-        private static int TimeoutDataReadMs = 2000;
-        private static int DataReadSleepMs = 10;
+        private static int _TimeoutDataReadMs = 2000;
+        private static int _DataReadSleepMs = 10;
 
         #endregion
 
@@ -161,7 +167,8 @@ namespace WatsonWebserver
         /// Construct a new HTTP request from a given HttpListenerContext.
         /// </summary>
         /// <param name="ctx">The HttpListenerContext for the request.</param>
-        public HttpRequest(HttpListenerContext ctx)
+        /// <param name="readStreamFully">Indicate whether or not the input stream should be read and converted to a byte array.</param>
+        public HttpRequest(HttpListenerContext ctx, bool readStreamFully)
         {
             #region Check-for-Null-Values
 
@@ -376,26 +383,27 @@ namespace WatsonWebserver
 
             if (ContentLength > 0)
             {
-                if (Method != HttpMethod.GET 
-                    && Method != HttpMethod.HEAD)
+                if (readStreamFully)
                 {
-                    try
+                    if (Method != HttpMethod.GET
+                        && Method != HttpMethod.HEAD)
                     {
-                        if (ContentLength < 1)
+                        try
+                        { 
+                            Data = new byte[ContentLength];
+                            Stream bodyStream = ctx.Request.InputStream;
+                            Data = WatsonCommon.StreamToBytes(bodyStream); 
+                        }
+                        catch (Exception)
                         {
                             Data = null;
                         }
-                        else
-                        {
-                            Data = new byte[ContentLength];
-                            Stream bodyStream = ctx.Request.InputStream;
-                            Data = WatsonCommon.StreamToBytes(bodyStream);
-                        }
                     }
-                    catch (Exception)
-                    {
-                        Data = null;
-                    }
+                }
+                else
+                {
+                    Data = null;
+                    DataStream = ctx.Request.InputStream; 
                 }
             }
 
@@ -760,15 +768,15 @@ namespace WatsonWebserver
                             }
                             else
                             {
-                                if (currentTimeout >= TimeoutDataReadMs)
+                                if (currentTimeout >= _TimeoutDataReadMs)
                                 {
                                     timeout = true;
                                     break;
                                 }
                                 else
                                 {
-                                    currentTimeout += DataReadSleepMs;
-                                    Thread.Sleep(DataReadSleepMs);
+                                    currentTimeout += _DataReadSleepMs;
+                                    Thread.Sleep(_DataReadSleepMs);
                                 }
                             }
                         }
@@ -957,15 +965,15 @@ namespace WatsonWebserver
                             }
                             else
                             {
-                                if (currentTimeout >= TimeoutDataReadMs)
+                                if (currentTimeout >= _TimeoutDataReadMs)
                                 {
                                     timeout = true;
                                     break;
                                 }
                                 else
                                 {
-                                    currentTimeout += DataReadSleepMs;
-                                    Thread.Sleep(DataReadSleepMs);
+                                    currentTimeout += _DataReadSleepMs;
+                                    Thread.Sleep(_DataReadSleepMs);
                                 }
                             }
                         }
@@ -1156,15 +1164,15 @@ namespace WatsonWebserver
                             }
                             else
                             {
-                                if (currentTimeout >= TimeoutDataReadMs)
+                                if (currentTimeout >= _TimeoutDataReadMs)
                                 {
                                     timeout = true;
                                     break;
                                 }
                                 else
                                 {
-                                    currentTimeout += DataReadSleepMs;
-                                    Thread.Sleep(DataReadSleepMs);
+                                    currentTimeout += _DataReadSleepMs;
+                                    Thread.Sleep(_DataReadSleepMs);
                                 }
                             }
                         }

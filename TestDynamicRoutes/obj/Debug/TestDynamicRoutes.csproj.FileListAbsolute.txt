@@ -23,3 +23,16 @@ C:\Code\Watson\WatsonWebserverRetarget\TestDynamicRoutes\obj\Debug\TestDynamicRo
 C:\Code\Watson\WatsonWebserver\TestDynamicRoutes\bin\Debug\WatsonWebserver.dll
 C:\Code\Watson\WatsonWebserver\TestDynamicRoutes\bin\Debug\WatsonWebserver.pdb
 C:\code\watson\WatsonWebserver\TestDynamicRoutes\bin\Debug\IpMatcher.dll
+C:\Code\Watson\WatsonWebserver-2.0\TestDynamicRoutes\bin\Debug\TestDynamicRoutes.exe.config
+C:\Code\Watson\WatsonWebserver-2.0\TestDynamicRoutes\bin\Debug\TestDynamicRoutes.exe
+C:\Code\Watson\WatsonWebserver-2.0\TestDynamicRoutes\bin\Debug\TestDynamicRoutes.pdb
+C:\Code\Watson\WatsonWebserver-2.0\TestDynamicRoutes\bin\Debug\WatsonWebserver.dll
+C:\Code\Watson\WatsonWebserver-2.0\TestDynamicRoutes\bin\Debug\IpMatcher.dll
+C:\Code\Watson\WatsonWebserver-2.0\TestDynamicRoutes\bin\Debug\Newtonsoft.Json.dll
+C:\Code\Watson\WatsonWebserver-2.0\TestDynamicRoutes\bin\Debug\RegexMatcher.dll
+C:\Code\Watson\WatsonWebserver-2.0\TestDynamicRoutes\bin\Debug\WatsonWebserver.pdb
+C:\Code\Watson\WatsonWebserver-2.0\TestDynamicRoutes\obj\Debug\TestDynamicRoutes.csprojAssemblyReference.cache
+C:\Code\Watson\WatsonWebserver-2.0\TestDynamicRoutes\obj\Debug\TestDynamicRoutes.csproj.CoreCompileInputs.cache
+C:\Code\Watson\WatsonWebserver-2.0\TestDynamicRoutes\obj\Debug\TestDynamicRoutes.csproj.CopyComplete
+C:\Code\Watson\WatsonWebserver-2.0\TestDynamicRoutes\obj\Debug\TestDynamicRoutes.exe
+C:\Code\Watson\WatsonWebserver-2.0\TestDynamicRoutes\obj\Debug\TestDynamicRoutes.pdb

@@ -26,7 +26,10 @@ namespace WatsonWebserver
         /// </summary>
         public bool IsListening
         {
-            get { return (_HttpListener != null) ? _HttpListener.IsListening : false; }
+            get
+            {
+                return (_HttpListener != null) ? _HttpListener.IsListening : false;
+            } 
         }
 
         /// <summary>
@@ -35,20 +38,27 @@ namespace WatsonWebserver
         public Func<HttpRequest, HttpResponse> OptionsRoute = null;
 
         /// <summary>
-        /// Enable or disable console debugging.
+        /// Indicate whether or not Watson should fully read the input stream and populate HttpRequest.Data.
+        /// Otherwise, the request body will be available by reading HttpRequest.DataStream.
         /// </summary>
-        public bool Debug
+        public bool ReadInputStream = true;
+
+        /// <summary>
+        /// Indicate the buffer size to use when reading from a stream to send data to a requestor.
+        /// </summary>
+        public int StreamReadBufferSize
         {
             get
             {
-                return _Debug;
+                return _StreamReadBufferSize;
             }
             set
             {
-                _Debug = value;
+                if (value < 1) throw new ArgumentException("StreamReadBufferSize must be greater than zero.");
+                _StreamReadBufferSize = value;
             }
         }
-
+         
         /// <summary>
         /// Dynamic routes; i.e. routes with regex matching and any HTTP method.
         /// </summary>
@@ -79,8 +89,7 @@ namespace WatsonWebserver
         private List<string> _ListenerHostnames;
         private int _ListenerPort;
         private bool _ListenerSsl;
-        private bool _Debug;
-        private LoggingManager _Logging; 
+        private int _StreamReadBufferSize = 65536; 
 
         private ContentRouteProcessor _ContentRouteProcessor;
         private Func<HttpRequest, HttpResponse> _DefaultRoute;
@@ -110,13 +119,11 @@ namespace WatsonWebserver
             _ListenerHostnames = new List<string>();
             _ListenerHostnames.Add(hostname); 
             _ListenerPort = port;
-            _ListenerSsl = ssl;
-            _Debug = false;
-            _Logging = new LoggingManager(_Debug); 
+            _ListenerSsl = ssl; 
             _DefaultRoute = defaultRequestHandler;
 
-            InitializeRouteManagers(_Debug);
-            AccessControl = new AccessControlManager(_Logging, _Debug, AccessControlMode.DefaultPermit);
+            InitializeRouteManagers();
+            AccessControl = new AccessControlManager(AccessControlMode.DefaultPermit);
             Welcome();
 
             _TokenSource = new CancellationTokenSource();
@@ -153,12 +160,10 @@ namespace WatsonWebserver
             
             _ListenerPort = port;
             _ListenerSsl = ssl;
-            _Debug = false;
-            _Logging = new LoggingManager(_Debug); 
             _DefaultRoute = defaultRequestHandler;
 
-            InitializeRouteManagers(_Debug);
-            AccessControl = new AccessControlManager(_Logging, _Debug, AccessControlMode.DefaultPermit);
+            InitializeRouteManagers();
+            AccessControl = new AccessControlManager(AccessControlMode.DefaultPermit);
             Welcome();
 
             _TokenSource = new CancellationTokenSource();
@@ -196,13 +201,13 @@ namespace WatsonWebserver
             }
         }
 
-        private void InitializeRouteManagers(bool debug)
+        private void InitializeRouteManagers()
         {
-            DynamicRoutes = new DynamicRouteManager(_Logging, debug);
-            StaticRoutes = new StaticRouteManager(_Logging, debug);
-            ContentRoutes = new ContentRouteManager(_Logging, debug);
+            DynamicRoutes = new DynamicRouteManager();
+            StaticRoutes = new StaticRouteManager();
+            ContentRoutes = new ContentRouteManager();
 
-            _ContentRouteProcessor = new ContentRouteProcessor(_Logging, debug, ContentRoutes);
+            _ContentRouteProcessor = new ContentRouteProcessor(ContentRoutes);
             OptionsRoute = null;
         }
 
@@ -249,16 +254,17 @@ namespace WatsonWebserver
                         {
                             #region Populate-Http-Request-Object
 
-                            HttpRequest currRequest = new HttpRequest(context);
+                            HttpRequest currRequest = new HttpRequest(context, ReadInputStream);
                             if (currRequest == null)
-                            {
-                                _Logging.Log("Unable to populate HTTP request object on thread ID " + Thread.CurrentThread.ManagedThreadId + ", returning 400");
+                            { 
                                 SendResponse(
                                     context,
                                     currRequest,
-                                    BuildErrorResponse(500, "Unable to parse your request.", null),
-                                    WatsonCommon.AddToDict("content-type", "application/json", null),
-                                    400);
+                                    0,
+                                    Encoding.UTF8.GetBytes("Unable to parse your HTTP request"), 
+                                    null,
+                                    WatsonCommon.AddToDict("content-type", "text/plain", null),
+                                    500);
                                 return;
                             }
 
@@ -267,15 +273,10 @@ namespace WatsonWebserver
                             #region Access-Control
 
                             if (!AccessControl.Permit(currRequest.SourceIp))
-                            {
-                                _Logging.Log("Thread " + currRequest.ThreadId + " " + currRequest.SourceIp + ":" + currRequest.SourcePort + " " + currRequest.Method + " " + currRequest.RawUrlWithoutQuery + " denied");
+                            { 
                                 context.Response.Close();
                                 return;
-                            }
-                            else
-                            {
-                                _Logging.Log("Thread " + currRequest.ThreadId + " " + currRequest.SourceIp + ":" + currRequest.SourcePort + " " + currRequest.Method + " " + currRequest.RawUrlWithoutQuery);
-                            }
+                            } 
 
                             #endregion
 
@@ -283,8 +284,7 @@ namespace WatsonWebserver
 
                             if (currRequest.Method == HttpMethod.OPTIONS
                                 && OptionsRoute != null)
-                            {
-                                _Logging.Log("Thread " + Thread.CurrentThread.ManagedThreadId + " OPTIONS request received");
+                            { 
                                 OptionsProcessor(context, currRequest);
                                 return;
                             }
@@ -292,8 +292,6 @@ namespace WatsonWebserver
                             #endregion
 
                             #region Send-to-Handler
-
-                            if (_Debug) _Logging.Log(currRequest.ToString());
 
                             Task.Run(() =>
                             {
@@ -342,20 +340,19 @@ namespace WatsonWebserver
                                 #region Return
 
                                 if (currResponse == null)
-                                {
-                                    _Logging.Log("Null response from handler for " + currRequest.SourceIp + ":" + currRequest.SourcePort + " " + currRequest.Method + " " + currRequest.RawUrlWithoutQuery);
+                                { 
                                     SendResponse(
                                         context,
                                         currRequest,
-                                        BuildErrorResponse(500, "Unable to generate response", null),
-                                        WatsonCommon.AddToDict("content-type", "application/json", null),
+                                        0,
+                                        Encoding.UTF8.GetBytes("Unable to generate response"),
+                                        null,
+                                        WatsonCommon.AddToDict("content-type", "text/plain", null),
                                         500);
                                     return;
                                 }
                                 else
-                                {
-                                    if (_Debug) _Logging.Log(currResponse.ToString());
-
+                                { 
                                     Dictionary<string, string> headers = new Dictionary<string, string>();
                                     if (!String.IsNullOrEmpty(currResponse.ContentType))
                                     {
@@ -369,27 +366,16 @@ namespace WatsonWebserver
                                             headers = WatsonCommon.AddToDict(curr.Key, curr.Value, headers);
                                         }
                                     }
-
-                                    if (currResponse.RawResponse)
-                                    {
-                                        SendResponse(
-                                            context,
-                                            currRequest,
-                                            currResponse.Data,
-                                            headers,
-                                            currResponse.StatusCode);
-                                        return;
-                                    }
-                                    else
-                                    {
-                                        SendResponse(
-                                            context,
-                                            currRequest,
-                                            currResponse.ToJsonBytes(),
-                                            headers,
-                                            currResponse.StatusCode);
-                                        return;
-                                    }
+                                    
+                                    SendResponse(
+                                        context,
+                                        currRequest,
+                                        currResponse.ContentLength,
+                                        currResponse.Data,
+                                        currResponse.DataStream,
+                                        headers,
+                                        currResponse.StatusCode);
+                                    return;
                                 }
 
                                 #endregion
@@ -408,14 +394,12 @@ namespace WatsonWebserver
                     }, _HttpListener.GetContext());
                 }
             } 
-            catch (Exception eOuter)
-            {
-                _Logging.LogException("AcceptConnections", eOuter);
+            catch (Exception)
+            { 
                 throw;
             }
             finally
-            {
-                _Logging.Log("Exiting");
+            { 
             }
         }
 
@@ -425,512 +409,28 @@ namespace WatsonWebserver
             if (request == null) throw new ArgumentNullException(nameof(request));
             HttpResponse ret = _DefaultRoute(request);
             if (ret == null)
-            {
-                _Logging.Log("Null HttpResponse received from call to RequestReceived, sending 500");
-                ret = new HttpResponse(request, false, 500, null, "application/json", "Unable to generate response", false);
+            { 
+                ret = new HttpResponse(request, 500, null, "application/json", Encoding.UTF8.GetBytes("Unable to generate response"));
                 return ret;
             }
 
             return ret;
         }
-
-        private byte[] BuildErrorResponse(
-            int status,
-            string text,
-            byte[] data)
-        {
-            Dictionary<string, object> ret = new Dictionary<string, object>();
-            ret.Add("data", data);
-            ret.Add("success", false);
-            ret.Add("http_status", status);
-
-            switch (status)
-            {
-                case 200:
-                    ret.Add("http_text", "OK");
-                    break;
-
-                case 201:
-                    ret.Add("http_text", "Created");
-                    break;
-
-                case 301:
-                    ret.Add("http_text", "Moved Permanently");
-                    break;
-
-                case 302:
-                    ret.Add("http_text", "Moved Temporarily");
-                    break;
-
-                case 304:
-                    ret.Add("http_text", "Not Modified");
-                    break;
-
-                case 400:
-                    ret.Add("http_text", "Bad Request");
-                    break;
-
-                case 401:
-                    ret.Add("http_text", "Unauthorized");
-                    break;
-
-                case 403:
-                    ret.Add("http_text", "Forbidden");
-                    break;
-
-                case 404:
-                    ret.Add("http_text", "Not Found");
-                    break;
-
-                case 405:
-                    ret.Add("http_text", "Method Not Allowed");
-                    break;
-
-                case 429:
-                    ret.Add("http_text", "Too Many Requests");
-                    break;
-
-                case 500:
-                    ret.Add("http_text", "Internal Server Error");
-                    break;
-
-                case 501:
-                    ret.Add("http_text", "Not Implemented");
-                    break;
-
-                case 503:
-                    ret.Add("http_text", "Service Unavailable");
-                    break;
-
-                default:
-                    ret.Add("http_text", "Unknown Status");
-                    break;
-            }
-
-            ret.Add("text", text);
-            string json = WatsonCommon.SerializeJson(ret);
-            return Encoding.UTF8.GetBytes(json);
-        }
-
-        private byte[] BuildSuccessResponse(
-            int status,
-            object data)
-        {
-            Dictionary<string, object> ret = new Dictionary<string, object>();
-            ret.Add("data", data);
-            ret.Add("success", true);
-            ret.Add("http_status", status);
-
-            switch (status)
-            {
-                // see https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
-
-                #region Official
-
-                case 100:
-                    ret.Add("http_text", "Continue");
-                    break;
-
-                case 101:
-                    ret.Add("http_text", "Switching Protocols");
-                    break;
-
-                case 102:
-                    ret.Add("http_text", "Processing");
-                    break;
-
-                case 200:
-                    ret.Add("http_text", "OK");
-                    break;
-
-                case 201:
-                    ret.Add("http_text", "Created");
-                    break;
-
-                case 202:
-                    ret.Add("http_text", "Accepted");
-                    break;
-
-                case 203:
-                    ret.Add("http_text", "Non-Authoritative Information");
-                    break;
-
-                case 204:
-                    ret.Add("http_text", "No Content");
-                    break;
-
-                case 205:
-                    ret.Add("http_text", "Reset Content");
-                    break;
-
-                case 206:
-                    ret.Add("http_text", "Partial Content");
-                    break;
-
-                case 207:
-                    ret.Add("http_text", "Multi-Status");
-                    break;
-
-                case 208:
-                    ret.Add("http_text", "Already Reported");
-                    break;
-
-                case 226:
-                    ret.Add("http_text", "IM Used");
-                    break;
-
-                case 300:
-                    ret.Add("http_text", "Multiple Choices");
-                    break;
-
-                case 301:
-                    ret.Add("http_text", "Moved Permanently");
-                    break;
-
-                case 302:
-                    ret.Add("http_text", "Moved Temporarily");
-                    break;
-
-                case 303:
-                    ret.Add("http_text", "See Other");
-                    break;
-
-                case 304:
-                    ret.Add("http_text", "Not Modified");
-                    break;
-
-                case 305:
-                    ret.Add("http_text", "Use Proxy");
-                    break;
-
-                case 306:
-                    ret.Add("http_text", "Switch Proxy");
-                    break;
-
-                case 307:
-                    ret.Add("http_text", "Temporary Redirect");
-                    break;
-
-                case 308:
-                    ret.Add("http_text", "Permanent Redirect");
-                    break;
-
-                case 400:
-                    ret.Add("http_text", "Bad Request");
-                    break;
-
-                case 401:
-                    ret.Add("http_text", "Unauthorized");
-                    break;
-
-                case 402:
-                    ret.Add("http_text", "Payment Required");
-                    break;
-
-                case 403:
-                    ret.Add("http_text", "Forbidden");
-                    break;
-
-                case 404:
-                    ret.Add("http_text", "Not Found");
-                    break;
-
-                case 405:
-                    ret.Add("http_text", "Method Not Allowed");
-                    break;
-
-                case 406:
-                    ret.Add("http_text", "Not Acceptable");
-                    break;
-
-                case 407:
-                    ret.Add("http_text", "Proxy Authentication Required");
-                    break;
-
-                case 408:
-                    ret.Add("http_text", "Request Timeout");
-                    break;
-
-                case 409:
-                    ret.Add("http_text", "Conflict");
-                    break;
-
-                case 410:
-                    ret.Add("http_text", "Gone");
-                    break;
-
-                case 411:
-                    ret.Add("http_text", "Length Required");
-                    break;
-
-                case 412:
-                    ret.Add("http_text", "Precondition Failed");
-                    break;
-
-                case 413:
-                    ret.Add("http_text", "Payload Too Large");
-                    break;
-
-                case 414:
-                    ret.Add("http_text", "URI Too Long");
-                    break;
-
-                case 415:
-                    ret.Add("http_text", "Unsupported Media Type");
-                    break;
-
-                case 416:
-                    ret.Add("http_text", "Range Not Satisfiable");
-                    break;
-
-                case 417:
-                    ret.Add("http_text", "Expectation Failed");
-                    break;
-
-                case 418:
-                    ret.Add("http_text", "I'm a Teapot :)");
-                    break;
-
-                case 421:
-                    ret.Add("http_text", "Misdirected Request");
-                    break;
-
-                case 422:
-                    ret.Add("http_text", "Unprocessable Entity");
-                    break;
-
-                case 423:
-                    ret.Add("http_text", "Locked");
-                    break;
-
-                case 424:
-                    ret.Add("http_text", "Failed Dependency");
-                    break;
-
-                case 426:
-                    ret.Add("http_text", "Upgrade Required");
-                    break;
-
-                case 428:
-                    ret.Add("http_text", "Precondition Required");
-                    break;
-
-                case 429:
-                    ret.Add("http_text", "Too Many Requests");
-                    break;
-
-                case 431:
-                    ret.Add("http_text", "Request Header Fields Too Large");
-                    break;
-
-                case 451:
-                    ret.Add("http_text", "Unavailable for Legal Reasons");
-                    break;
-
-                case 500:
-                    ret.Add("http_text", "Internal Server Error");
-                    break;
-
-                case 501:
-                    ret.Add("http_text", "Not Implemented");
-                    break;
-
-                case 502:
-                    ret.Add("http_text", "Bad Gateway");
-                    break;
-
-                case 503:
-                    ret.Add("http_text", "Service Unavailable");
-                    break;
-
-                case 504:
-                    ret.Add("http_text", "Gateway Timeout");
-                    break;
-
-                case 505:
-                    ret.Add("http_text", "HTTP Version Not Supported");
-                    break;
-
-                case 506:
-                    ret.Add("http_text", "Variant Also Negotiates");
-                    break;
-
-                case 507:
-                    ret.Add("http_text", "Insufficient Storage");
-                    break;
-
-                case 508:
-                    ret.Add("http_text", "Loop Detected");
-                    break;
-
-                case 510:
-                    ret.Add("http_text", "Not Extended");
-                    break;
-
-                case 511:
-                    ret.Add("http_text", "Network Authentication Required");
-                    break;
-
-                #endregion
-
-                #region Unofficial
-
-                case 103:
-                    ret.Add("http_text", "Checkpoint or Early Hints");
-                    break;
-
-                case 420:
-                    ret.Add("http_text", "Method Failure or Enhance Your Calm");
-                    break;
-
-                case 450:
-                    ret.Add("http_text", "Blocked By Parental Controls");
-                    break;
-
-                case 498:
-                    ret.Add("http_text", "Invalid Token");
-                    break;
-
-                case 499:
-                    ret.Add("http_text", "Token Required or Client Closed Request");
-                    break;
-
-                case 509:
-                    ret.Add("http_text", "Bandwidth Limit Exceeded");
-                    break;
-
-                case 530:
-                    ret.Add("http_text", "Site Is Frozen");
-                    break;
-
-                case 598:
-                    ret.Add("http_text", "Network Read Timeout Error");
-                    break;
-
-                case 599:
-                    ret.Add("http_text", "Network Connect Timeout Error");
-                    break;
-
-                #endregion
-
-                #region IIS
-
-                case 440:
-                    ret.Add("http_text", "Login Timeout");
-                    break;
-
-                case 449:
-                    ret.Add("http_text", "Retry With");
-                    break;
-
-                #endregion
-
-                #region nginx
-
-                case 444:
-                    ret.Add("http_text", "No Response");
-                    break;
-
-                case 495:
-                    ret.Add("http_text", "SSL Certificate Error");
-                    break;
-
-                case 496:
-                    ret.Add("http_text", "SSL Certificate Required");
-                    break;
-
-                case 497:
-                    ret.Add("http_text", "HTTP Request Sent To HTTPS Port");
-                    break;
-
-                #endregion
-
-                #region Cloudflare
-
-                case 520:
-                    ret.Add("http_text", "Unknown Error");
-                    break;
-
-                case 521:
-                    ret.Add("http_text", "Web Server Is Down");
-                    break;
-
-                case 522:
-                    ret.Add("http_text", "Connection Timed Out");
-                    break;
-
-                case 523:
-                    ret.Add("http_text", "Origin Is Unreachable");
-                    break;
-
-                case 524:
-                    ret.Add("http_text", "A Timeout Occurred");
-                    break;
-
-                case 525:
-                    ret.Add("http_text", "SSL Handshake Failed");
-                    break;
-
-                case 526:
-                    ret.Add("http_text", "Invalid SSL Certificate");
-                    break;
-
-                case 527:
-                    ret.Add("http_text", "Railgun Error");
-                    break;
-
-                #endregion
-
-                default:
-                    ret.Add("http_text", "Unknown Status");
-                    break;
-            }
-            
-            string json = WatsonCommon.SerializeJson(ret);
-            return Encoding.UTF8.GetBytes(json);
-        }
-
+         
         private void SendResponse(
             HttpListenerContext context,
             HttpRequest req,
-            object data,
+            long contentLength,
+            byte[] data,
+            Stream dataStream,
             Dictionary<string, string> headers,
             int status)
         {
-            int responseLen = 0;
+            long responseLength = 0;
             HttpListenerResponse response = null;
 
             try
-            {
-                #region Set-Variables
-
-                if (data != null)
-                {
-                    if (data is string)
-                    {
-                        if (!String.IsNullOrEmpty(data.ToString()))
-                        {
-                            responseLen = data.ToString().Length;
-                        }
-                    }
-                    else if (data is byte[])
-                    {
-                        if ((byte[])data != null)
-                        {
-                            if (((byte[])data).Length > 0)
-                            {
-                                responseLen = ((byte[])data).Length;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        responseLen = (WatsonCommon.SerializeJson(data)).Length;
-                    }
-                }
-                
-                #endregion
-
+            { 
                 #region Status-Code-and-Description
 
                 response = context.Response;
@@ -1005,18 +505,8 @@ namespace WatsonWebserver
 
                 response.AddHeader("Access-Control-Allow-Origin", "*");
                 response.ContentType = req.ContentType;
-
-                int headerCount = 0;
-
-                if (headers != null)
-                {
-                    if (headers.Count > 0)
-                    {
-                        headerCount = headers.Count;
-                    }
-                }
-
-                if (headerCount > 0)
+                  
+                if (headers != null && headers.Count > 0)
                 {
                     foreach (KeyValuePair<string, string> curr in headers)
                     {
@@ -1031,6 +521,7 @@ namespace WatsonWebserver
                 if (req.Method == HttpMethod.HEAD)
                 {
                     data = null;
+                    dataStream = null;
                 }
 
                 #endregion
@@ -1038,102 +529,61 @@ namespace WatsonWebserver
                 #region Send-Response
                 
                 Stream output = response.OutputStream;
-
+                 
                 try
                 {
-                    if (data != null)
-                    {
-                        #region Response-Body-Attached
+                    if (data != null && data.Length > 0)
+                    { 
+                        responseLength = data.Length;
+                        response.ContentLength64 = responseLength;
+                        output.Write(data, 0, (int)responseLength);
+                    }
+                    else if (dataStream != null)
+                    {  
+                        responseLength = contentLength; 
+                        response.ContentLength64 = contentLength; 
+                        dataStream.Seek(0, SeekOrigin.Begin);
+                         
+                        long bytesRemaining = contentLength;
 
-                        if (data is string)
-                        {
-                            #region string
+                        while (bytesRemaining > 0)
+                        { 
+                            int bytesRead = 0;
+                            byte[] buffer = new byte[StreamReadBufferSize];
 
-                            if (!String.IsNullOrEmpty(data.ToString()))
-                            {
-                                if (data.ToString().Length > 0)
-                                {
-                                    byte[] buffer = System.Text.Encoding.UTF8.GetBytes(data.ToString());
-                                    response.ContentLength64 = buffer.Length;
-                                    output.Write(buffer, 0, buffer.Length);
-                                    output.Close();
-                                }
-                            }
+                            if (bytesRemaining >= StreamReadBufferSize) bytesRead = dataStream.Read(buffer, 0, StreamReadBufferSize); 
+                            else bytesRead = dataStream.Read(buffer, 0, (int)bytesRemaining); 
 
-                            #endregion
-                        }
-                        else if (data is byte[])
-                        {
-                            #region byte-array
-
-                            response.ContentLength64 = responseLen;
-                            output.Write((byte[])data, 0, responseLen);
-                            output.Close();
-
-                            #endregion
-                        }
-                        else
-                        {
-                            #region other
-
-                            response.ContentLength64 = responseLen;
-                            output.Write(Encoding.UTF8.GetBytes(WatsonCommon.SerializeJson(data)), 0, responseLen); 
-                            output.Close();
-
-                            #endregion
-                        }
-
-                        #endregion
+                            output.Write(buffer, 0, bytesRead);
+                            bytesRemaining -= bytesRead;
+                        } 
                     }
                     else
-                    {
-                        #region No-Response-Body
-
-                        response.ContentLength64 = 0;
-                        output.Flush();
-                        output.Close();
-
-                        #endregion
+                    { 
+                        response.ContentLength64 = 0;  
                     }
                 }
-                catch (HttpListenerException)
+                catch (Exception)
                 {
-                    _Logging.Log("Remote endpoint " + req.SourceIp + ":" + req.SourcePort + " appears to have disconnected");
                 }
                 finally
                 {
                     if (response != null) response.Close();
+
+                    output.Flush();
+                    output.Close();
                 }
 
                 #endregion
 
                 return;
-            }
-            catch (IOException)
-            {
-                _Logging.Log("Remote endpoint " + req.SourceIp + ":" + req.SourcePort + " appears to have terminated connection prematurely (outer IOException)");
-                return;
-            }
-            catch (HttpListenerException)
-            {
-                _Logging.Log("Remote endpoint " + req.SourceIp + ":" + req.SourcePort + " appears to have terminated connection prematurely (outer HttpListenerException)");
-                return;
-            }
-            catch (Exception e)
-            {
-                _Logging.LogException("SendResponse", e);
+            } 
+            catch (Exception)
+            { 
                 return;
             }
             finally
-            {
-                if (req != null)
-                {
-                    if (req.TimestampUtc != null)
-                    {
-                        _Logging.Log("Thread " + req.ThreadId + " sending " + responseLen + "B status " + status + " " + req.SourceIp + ":" + req.SourcePort + " for " + req.Method + " " + req.RawUrlWithoutQuery + " (" + WatsonCommon.TotalMsFrom(req.TimestampUtc) + "ms)");
-                    }
-                }
-
+            { 
                 if (response != null)
                 {
                     response.Close();
@@ -1142,9 +592,7 @@ namespace WatsonWebserver
         }
         
         private void OptionsProcessor(HttpListenerContext context, HttpRequest req)
-        {
-            _Logging.Log("Thread " + Thread.CurrentThread.ManagedThreadId + " processing OPTIONS request");
-
+        { 
             HttpListenerResponse response = context.Response;
             response.StatusCode = 200;
 
@@ -1191,9 +639,7 @@ namespace WatsonWebserver
             response.AddHeader("Connection", "keep-alive");
             response.AddHeader("Host", listenerPrefix);
             response.ContentLength64 = 0;
-            response.Close();
-
-            _Logging.Log("Thread " + Thread.CurrentThread.ManagedThreadId + " sent OPTIONS response");
+            response.Close(); 
             return;
         }
 

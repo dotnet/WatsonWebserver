@@ -23,3 +23,16 @@ C:\Code\Watson\WatsonWebserverRetarget\TestStaticRoutes\obj\Debug\TestStaticRout
 C:\Code\Watson\WatsonWebserver\TestStaticRoutes\bin\Debug\WatsonWebserver.dll
 C:\Code\Watson\WatsonWebserver\TestStaticRoutes\bin\Debug\WatsonWebserver.pdb
 C:\code\watson\WatsonWebserver\TestStaticRoutes\bin\Debug\IpMatcher.dll
+C:\Code\Watson\WatsonWebserver-2.0\TestStaticRoutes\bin\Debug\TestStaticRoutes.exe.config
+C:\Code\Watson\WatsonWebserver-2.0\TestStaticRoutes\bin\Debug\TestStaticRoutes.exe
+C:\Code\Watson\WatsonWebserver-2.0\TestStaticRoutes\bin\Debug\TestStaticRoutes.pdb
+C:\Code\Watson\WatsonWebserver-2.0\TestStaticRoutes\bin\Debug\WatsonWebserver.dll
+C:\Code\Watson\WatsonWebserver-2.0\TestStaticRoutes\bin\Debug\IpMatcher.dll
+C:\Code\Watson\WatsonWebserver-2.0\TestStaticRoutes\bin\Debug\Newtonsoft.Json.dll
+C:\Code\Watson\WatsonWebserver-2.0\TestStaticRoutes\bin\Debug\RegexMatcher.dll
+C:\Code\Watson\WatsonWebserver-2.0\TestStaticRoutes\bin\Debug\WatsonWebserver.pdb
+C:\Code\Watson\WatsonWebserver-2.0\TestStaticRoutes\obj\Debug\TestStaticRoutes.csprojAssemblyReference.cache
+C:\Code\Watson\WatsonWebserver-2.0\TestStaticRoutes\obj\Debug\TestStaticRoutes.csproj.CoreCompileInputs.cache
+C:\Code\Watson\WatsonWebserver-2.0\TestStaticRoutes\obj\Debug\TestStaticRoutes.csproj.CopyComplete
+C:\Code\Watson\WatsonWebserver-2.0\TestStaticRoutes\obj\Debug\TestStaticRoutes.exe
+C:\Code\Watson\WatsonWebserver-2.0\TestStaticRoutes\obj\Debug\TestStaticRoutes.pdb

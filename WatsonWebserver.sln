@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WatsonWebserver", "WatsonWe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestDefault", "TestDefault\TestDefault.csproj", "{4FA79C94-4B6F-41DF-815C-C8DD7065E784}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestStreamServer", "TestStreamServer\TestStreamServer.csproj", "{3FF185FD-8490-4AC2-8A3F-9C15EAD2166B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,14 +37,14 @@ Global
 		{62003A3E-AB59-4B91-AFBF-4545ACD2A8D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{62003A3E-AB59-4B91-AFBF-4545ACD2A8D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{62003A3E-AB59-4B91-AFBF-4545ACD2A8D9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0C66A980-0B71-47C0-9487-D355A1597FC7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0C66A980-0B71-47C0-9487-D355A1597FC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0C66A980-0B71-47C0-9487-D355A1597FC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0C66A980-0B71-47C0-9487-D355A1597FC7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4FA79C94-4B6F-41DF-815C-C8DD7065E784}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4FA79C94-4B6F-41DF-815C-C8DD7065E784}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4FA79C94-4B6F-41DF-815C-C8DD7065E784}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4FA79C94-4B6F-41DF-815C-C8DD7065E784}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3FF185FD-8490-4AC2-8A3F-9C15EAD2166B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3FF185FD-8490-4AC2-8A3F-9C15EAD2166B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3FF185FD-8490-4AC2-8A3F-9C15EAD2166B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3FF185FD-8490-4AC2-8A3F-9C15EAD2166B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

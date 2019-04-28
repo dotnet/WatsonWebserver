@@ -75,12 +75,7 @@ namespace WatsonWebserver
         /// The HTTP status description to return to the requestor (client).
         /// </summary>
         public string StatusDescription;
-
-        /// <summary>
-        /// Indicates whether or not the request was successful, which populates the 'success' flag in the JSON response.
-        /// </summary>
-        public bool Success;
-
+         
         /// <summary>
         /// User-supplied headers to include in the response.
         /// </summary>
@@ -97,20 +92,20 @@ namespace WatsonWebserver
         public long ContentLength;
 
         /// <summary>
-        /// The data to return to the requestor in the response body.  This must be either a byte[] or string.
+        /// The data to return to the requestor in the response body.
         /// </summary>
-        public object Data;
+        public byte[] Data;
+
+        /// <summary>
+        /// The stream to read and send to the requestor in the response body.
+        /// </summary>
+        public Stream DataStream;
 
         /// <summary>
         /// The MD5 value calculated over the supplied Data.
         /// </summary>
         public string DataMd5;
-
-        /// <summary>
-        /// Indicates whether or not the response Data should be enapsulated in a JSON object containing standard fields including 'success'.
-        /// </summary>
-        public bool RawResponse;
-
+         
         #endregion
 
         #region Private-Members
@@ -132,18 +127,99 @@ namespace WatsonWebserver
         /// Create a new HttpResponse object.
         /// </summary>
         /// <param name="req">The HttpRequest object for which this request is being created.</param>
-        /// <param name="success">Indicates whether or not the request was successful.</param>
         /// <param name="status">The HTTP status code to return to the requestor (client).</param>
         /// <param name="headers">User-supplied headers to include in the response.</param>
         /// <param name="contentType">User-supplied content-type to include in the response.</param>
-        /// <param name="data">The data to return to the requestor in the response body.  This must be either a byte[] or string.</param>
-        /// <param name="rawResponse">Indicates whether or not the response Data should be enapsulated in a JSON object containing standard fields including 'success'.</param>
-        public HttpResponse(HttpRequest req, bool success, int status, Dictionary<string, string> headers, string contentType, object data, bool rawResponse)
+        /// <param name="data">The data to return to the requestor in the response body.</param> 
+        public HttpResponse(HttpRequest req, int status, Dictionary<string, string> headers, string contentType, byte[] data)
         {
             if (req == null) throw new ArgumentNullException(nameof(req));
 
-            #region Set-Base-Variables
+            SetBaseVariables(req, status, headers, contentType);
+            SetStatusDescription();
 
+            DataStream = null;
+            Data = data; 
+            if (Data != null && Data.Length > 0) ContentLength = Data.Length;  
+        }
+
+        /// <summary>
+        /// Create a new HttpResponse object.
+        /// </summary>
+        /// <param name="req">The HttpRequest object for which this request is being created.</param>
+        /// <param name="status">The HTTP status code to return to the requestor (client).</param>
+        /// <param name="headers">User-supplied headers to include in the response.</param>
+        /// <param name="contentType">User-supplied content-type to include in the response.</param>
+        /// <param name="contentLength">The number of bytes the client should expect to read from the data stream.</param>
+        /// <param name="dataStream">The stream containing the data that should be read to return to the requestor.</param>
+        public HttpResponse(HttpRequest req, int status, Dictionary<string, string> headers, string contentType, long contentLength, Stream dataStream)
+        {
+            if (req == null) throw new ArgumentNullException(nameof(req));
+            if (contentLength < 0) throw new ArgumentException("Content length must be zero or greater.");
+            SetBaseVariables(req, status, headers, contentType);
+            SetStatusDescription();
+
+            Data = null;
+            DataStream = dataStream;
+            ContentLength = contentLength; 
+
+            if (contentLength > 0 && !DataStream.CanRead) throw new IOException("Cannot read from input stream.");
+            if (contentLength > 0 && !DataStream.CanSeek) throw new IOException("Cannot perform seek on input stream.");
+            if (contentLength > 0) DataStream.Seek(0, SeekOrigin.Begin);
+        }
+
+        #endregion
+         
+        #region Public-Methods
+
+        /// <summary>
+        /// Retrieve a string-formatted, human-readable copy of the HttpResponse instance.
+        /// </summary>
+        /// <returns>String-formatted, human-readable copy of the HttpResponse instance.</returns>
+        public override string ToString()
+        {
+            string ret = "";
+  
+            ret += "--- HTTP Response ---" + Environment.NewLine;
+            ret += TimestampUtc.ToString("MM/dd/yyyy HH:mm:ss") + " " + SourceIp + ":" + SourcePort + " to " + DestIp + ":" + DestPort + " " + Method + " " + RawUrlWithoutQuery + " [" + StatusCode + "]" + Environment.NewLine;
+            ret += "  Content     : " + ContentType + " (" + ContentLength + " bytes)" + Environment.NewLine;
+            if (Headers != null && Headers.Count > 0)
+            {
+                ret += "  Headers     : " + Environment.NewLine;
+                foreach (KeyValuePair<string, string> curr in Headers)
+                {
+                    ret += "  - " + curr.Key + ": " + curr.Value + Environment.NewLine;
+                }
+            }
+            else
+            {
+                ret += "  Headers     : none" + Environment.NewLine;
+            }
+
+            if (Data != null)
+            {
+                ret += "  Data        : " + Environment.NewLine;
+                ret += Encoding.UTF8.GetString(Data) + Environment.NewLine;
+            }
+            else
+            {
+                ret += "  Data        : [null]" + Environment.NewLine;
+            }
+
+            if (DataStream != null)
+            {
+                ret += "  Data Stream : [exists]" + Environment.NewLine;
+            }
+
+            return ret;
+        }
+          
+        #endregion
+
+        #region Private-Methods
+
+        private void SetBaseVariables(HttpRequest req, int status, Dictionary<string, string> headers, string contentType)
+        {
             TimestampUtc = req.TimestampUtc;
             SourceIp = req.SourceIp;
             SourcePort = req.SourcePort;
@@ -151,21 +227,17 @@ namespace WatsonWebserver
             DestPort = req.DestPort;
             Method = req.Method;
             RawUrlWithoutQuery = req.RawUrlWithoutQuery;
-
-            Success = success;
+             
             Headers = headers;
-            ContentType = contentType;
-            if (String.IsNullOrEmpty(ContentType)) ContentType = "application/json";
+            ContentType = contentType; 
+            if (String.IsNullOrEmpty(ContentType)) ContentType = "application/octet-stream";
 
-            StatusCode = status;
-            RawResponse = rawResponse;
-            Data = data;
+            StatusCode = status; 
+        }
 
-            #endregion
-
-            #region Set-Status
-
-            switch (status)
+        private void SetStatusDescription()
+        { 
+            switch (StatusCode)
             {
                 case 200:
                     StatusDescription = "OK";
@@ -230,167 +302,8 @@ namespace WatsonWebserver
                 default:
                     StatusDescription = "Unknown";
                     return;
-            }
-
-            #endregion
-
-            #region Check-Data
-
-            if (Data != null)
-            {
-                if (Data is byte[])
-                {
-                    ContentLength = ((byte[])Data).Length;
-                }
-                else if (Data is string)
-                {
-                    ContentLength = ((string)Data).Length;
-                }
-                else
-                {
-                    ContentLength = (WatsonCommon.SerializeJson(Data)).Length;
-                    Data = WatsonCommon.SerializeJson(Data);
-                } 
-            }
-            else
-            {
-                ContentLength = 0;
-            }
-
-            #endregion
+            } 
         }
-
-        #endregion
-         
-        #region Public-Methods
-
-        /// <summary>
-        /// Retrieve a string-formatted, human-readable copy of the HttpResponse instance.
-        /// </summary>
-        /// <returns>String-formatted, human-readable copy of the HttpResponse instance.</returns>
-        public override string ToString()
-        {
-            string ret = "";
-  
-            ret += "--- HTTP Response ---" + Environment.NewLine;
-            ret += TimestampUtc.ToString("MM/dd/yyyy HH:mm:ss") + " " + SourceIp + ":" + SourcePort + " to " + DestIp + ":" + DestPort + "  " + Method + " " + RawUrlWithoutQuery + Environment.NewLine;
-            ret += "  Success : " + Success + Environment.NewLine;
-            ret += "  Content : " + ContentType + " (" + ContentLength + " bytes)" + Environment.NewLine;
-            if (Headers != null && Headers.Count > 0)
-            {
-                ret += "  Headers : " + Environment.NewLine;
-                foreach (KeyValuePair<string, string> curr in Headers)
-                {
-                    ret += "    " + curr.Key + ": " + curr.Value + Environment.NewLine;
-                }
-            }
-            else
-            {
-                ret += "  Headers : none" + Environment.NewLine;
-            }
-
-            if (Data != null)
-            {
-                ret += "  Data    : " + Environment.NewLine;
-                if (Data is byte[])
-                {
-                    ret += Encoding.UTF8.GetString(((byte[])Data)) + Environment.NewLine;
-                }
-                else if (Data is string)
-                {
-                    ret += Data + Environment.NewLine;
-                }
-                else
-                {
-                    ret += WatsonCommon.SerializeJson(Data) + Environment.NewLine;
-                }
-            }
-            else
-            {
-                ret += "  Data    : [null]" + Environment.NewLine;
-            }
-
-            return ret;
-        }
-
-        /// <summary>
-        /// Creates a JSON string of the response and data including fields indicating success and data MD5.
-        /// </summary>
-        /// <returns>String containing JSON representation of the HTTP response.</returns>
-        public string ToJson()
-        {
-            Dictionary<string, object> ret = new Dictionary<string, object>();
-            ret.Add("success", Success);
-            if (Data != null)
-            {
-                ret.Add("md5", WatsonCommon.CalculateMd5(Data.ToString()));
-                ret.Add("data", Data);
-            }
-            return WatsonCommon.SerializeJson(ret);
-        }
-
-        /// <summary>
-        /// Creates a byte array containing a JSON string of the response and data including fields indicatng success and data MD5.
-        /// </summary>
-        /// <returns>Byte array containing the JSON representation of the HTTP response.</returns>
-        public byte[] ToJsonBytes()
-        {
-            return Encoding.UTF8.GetBytes(ToJson());
-        }
-
-        /// <summary>
-        /// Creates a byte array containing the HTTP response (useful for sockets apps what want to transmit the response directly).
-        /// </summary>
-        /// <returns></returns>
-        public byte[] ToHttpBytes()
-        { 
-            byte[] ret = null;
-
-            string statusLine = ProtocolVersion + " " + StatusCode + " " + StatusDescription + "\r\n";
-            ret = AppendBytes(ret, Encoding.UTF8.GetBytes(statusLine));
-
-            if (!String.IsNullOrEmpty(ContentType))
-            {
-                string contentTypeLine = "Content-Type: " + ContentType + "\r\n";
-                ret = AppendBytes(ret, Encoding.UTF8.GetBytes(contentTypeLine));
-            }
-
-            if (Headers != null && Headers.Count > 0)
-            {
-                foreach (KeyValuePair<string, string> currHeader in Headers)
-                {
-                    if (String.IsNullOrEmpty(currHeader.Key)) continue;
-                    if (currHeader.Key.ToLower().Trim().Equals("content-type")) continue;
-
-                    string headerLine = currHeader.Key + ": " + currHeader.Value + "\r\n";
-                    ret = AppendBytes(ret, Encoding.UTF8.GetBytes(headerLine));
-                }
-            }
-
-            ret = AppendBytes(ret, Encoding.UTF8.GetBytes("\r\n"));
-
-            if (Data != null)
-            {
-                if (Data is byte[])
-                {
-                    ret = AppendBytes(ret, (byte[])Data);
-                }
-                else if (Data is string)
-                {
-                    ret = AppendBytes(ret, Encoding.UTF8.GetBytes((string)Data));
-                }
-                else
-                {
-                    ret = AppendBytes(ret, Encoding.UTF8.GetBytes(WatsonCommon.SerializeJson(Data)));
-                }
-            }
-
-            return ret;
-        }
-
-        #endregion
-
-        #region Private-Methods
 
         private byte[] AppendBytes(byte[] orig, byte[] append)
         {

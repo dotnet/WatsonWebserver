@@ -16,9 +16,7 @@ namespace WatsonWebserver
         #endregion
 
         #region Private-Members
-
-        private LoggingManager _Logging;
-        private bool _Debug;
+         
         private List<StaticRoute> _Routes;
         private readonly object _Lock;
 
@@ -28,15 +26,9 @@ namespace WatsonWebserver
 
         /// <summary>
         /// Instantiate the object.
-        /// </summary>
-        /// <param name="logging">Logging instance.</param>
-        /// <param name="debug">Enable or disable debugging.</param>
-        public StaticRouteManager(LoggingManager logging, bool debug)
-        {
-            if (logging == null) throw new ArgumentNullException(nameof(logging));
-
-            _Logging = logging;
-            _Debug = debug;
+        /// </summary> 
+        public StaticRouteManager()
+        { 
             _Routes = new List<StaticRoute>();
             _Lock = new object();
         }

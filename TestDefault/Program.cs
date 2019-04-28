@@ -14,8 +14,7 @@ namespace TestDefault
             List<string> hostnames = new List<string>();
             hostnames.Add("127.0.0.1");
 
-            Server server = new Server(hostnames, 9000, false, RequestReceived);
-            server.Debug = true;
+            Server server = new Server(hostnames, 9000, false, RequestReceived); 
 
             // server.AccessControl.Mode = AccessControlMode.DefaultDeny;
             // server.AccessControl.Whitelist.Add("127.0.0.1", "255.255.255.255");
@@ -62,14 +61,8 @@ namespace TestDefault
         }
 
         static HttpResponse RequestReceived(HttpRequest req)
-        {
-            // for an encapsulated JSON response:
-            // {"success":true,"md5":"BE3DB22E4FDF3021162C013320CEED09","data":"Watson says hello!"}
-            // resp = new HttpResponse(req, true, 200, null, "text/plain", "Watson says hello!", false);
-
-            // for a response containing only the string data...
-            // Watson says hello!
-            return new HttpResponse(req, true, 200, null, "text/plain", "Watson says hello from the default route!", true);
+        { 
+            return new HttpResponse(req, 200, null, "text/plain", Encoding.UTF8.GetBytes("Watson says hello from the default route!"));
         }
     }
 }

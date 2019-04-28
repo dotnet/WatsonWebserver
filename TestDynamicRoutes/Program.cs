@@ -47,14 +47,8 @@ namespace TestDynamicRoutes
         }
 
         static HttpResponse ResponseBuilder(HttpRequest req, string text)
-        {
-            // for an encapsulated JSON response:
-            // {"success":true,"md5":"BE3DB22E4FDF3021162C013320CEED09","data":"Watson says hello!"}
-            // resp = new HttpResponse(req, true, 200, null, "text/plain", "Watson says hello!", false);
-
-            // for a response containing only the string data...
-            // Watson says hello!
-            return new HttpResponse(req, true, 200, null, "text/plain", text, true);
+        { 
+            return new HttpResponse(req, 200, null, "text/plain", Encoding.UTF8.GetBytes(text));
         }
     }
 }

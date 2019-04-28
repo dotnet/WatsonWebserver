@@ -22,26 +22,17 @@ namespace WatsonWebserver
         #endregion
 
         #region Private-Members
-
-        private LoggingManager _Logging;
-        private bool _Debug;
-
+          
         #endregion
 
         #region Constructors-and-Factories
 
         /// <summary>
         /// Instantiate the object.
-        /// </summary>
-        /// <param name="logging">Logging instance.</param>
-        /// <param name="debug">Enable or disable debugging.</param>
-        public AccessControlManager(LoggingManager logging, bool debug, AccessControlMode mode)
+        /// </summary> 
+        /// <param name="mode">Access control mode.</param>
+        public AccessControlManager(AccessControlMode mode)
         {
-            if (logging == null) throw new ArgumentNullException(nameof(logging));
-
-            _Logging = logging;
-            _Debug = debug;
-
             Blacklist = new Matcher();
             Whitelist = new Matcher();
             Mode = mode;

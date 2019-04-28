@@ -9,9 +9,9 @@ A simple C# async web server for handling incoming RESTful HTTP/HTTPS requests.
 
 ## New in v1.6.x
 
-- Fix URL encoding (using System.Net.WebUtility.UrlDecode instead of Uri.EscapeString)
-- Refactored content routes, static routes, and dynamic routes (breaking change)
-- Added default permit/deny operation along with whitelist and blacklist
+- Support for Stream in ```HttpRequest``` and ```HttpResponse```.  To use, set ```Server.ReadInputStream``` to ```false```.  Refer to the ```TestStreamServer``` project for a full example
+- Simplified constructors, removed pre-defined JSON packaging for responses
+- ```HttpResponse``` now only accepts byte arrays for ```Data``` for simplicity
 
 ## Test App
 
@@ -39,14 +39,13 @@ A test project is included which will help you exercise the class library.
     
 ## Example using Routes
 ```
+using System.IO;
+using System.Text;
 using WatsonWebserver;
 
 static void Main(string[] args)
 {
-   List<string> hostnames = new List<string>();
-   hostnames.Add("127.0.0.1");
-   hostnames.Add("www.localhost.com");
-   Server s = new Server(hostnames, 9000, false, DefaultRoute, true);
+   Server s = new Server("127.0.0.1", 9000, false, DefaultRoute);
 
    // set default permit (permit any) with blacklist to block specific IP addresses or networks
    s.AccessControl.Mode = AccessControlMode.DefaultPermit;
@@ -76,54 +75,63 @@ static void Main(string[] args)
 
 static HttpResponse GetHelloRoute(HttpRequest req)
 {
-   return new HttpResponse(req, true, 200, null, "text/plain", "Hello from the GET /hello static route!", true);
+   return new HttpResponse(req, 200, null, "text/plain", Encoding.UTF8.GetBytes("Hello!  GET /hello static route");
 }
 
 static HttpResponse GetWorldRoute(HttpRequest req)
 {
-   return new HttpResponse(req, true, 200, null, "text/plain", "Hello from the GET /world static route!", true);
+   return new HttpResponse(req, 200, null, "text/plain", Encoding.UTF8.GetBytes("Hello!  GET /world static route");
 }
 
 static HttpResponse GetFooWithId(HttpRequest req)
 {
-   return new HttpResponse(req, true, 200, null, "text/plain", "Hello from the GET /foo with ID dynamic route!", true);
+   return new HttpResponse(req, 200, null, "text/plain", Encoding.UTF8.GetBytes("Hello!  GET /foo with ID dynamic route");
 }
 
 static HttpResponse GetFooMultipleChildren(HttpRequest req)
 { 
-   return new HttpResponse(req, true, 200, null, "text/plain", "Hello from the GET /foo with multiple children dynamic route!", true);
+   return new HttpResponse(req, 200, null, "text/plain", Encoding.UTF8.GetBytes("Hello!  GET /foo with multiple children dynamic route"));
 }
 
 static HttpResponse GetFooOneChild(HttpRequest req)
 { 
-   return new HttpResponse(req, true, 200, null, "text/plain", "Hello from the GET /foo with one child dynamic route!", true);
+   return new HttpResponse(req, 200, null, "text/plain", Encoding.UTF8.GetBytes("Hello!  GET /foo with one child dynamic route"));
 }
 
 static HttpResponse GetFoo(HttpRequest req)
 { 
-   return new HttpResponse(req, true, 200, null, "text/plain", "Hello from the GET /foo dynamic route!", true);
+   return new HttpResponse(req, 200, null, "text/plain", Encoding.UTF8.GetBytes("Hello!  GET /foo dynamic route"));
 }
 
 static HttpResponse DefaultRoute(HttpRequest req)
 {
-   return new HttpResponse(req, true, 200, null, "text/plain", "Hello from the default route!", true);
+   return new HttpResponse(req, 200, null, "text/plain", Encoding.UTF8.GetBytes("Hello!  Default route"));
 }
 ```
-
+ 
 ## Version History
 
 Notes from previous versions are shown below (summarized to minor build)
 
+v1.6.x
+
+- Fix URL encoding (using System.Net.WebUtility.UrlDecode instead of Uri.EscapeString)
+- Refactored content routes, static routes, and dynamic routes (breaking change)
+- Added default permit/deny operation along with whitelist and blacklist
+
 v1.5.x
+
 - Added a new constructor allowing Watson to support multiple listener hostnames
 - Retarget to support both .NET Core 2.0 and .NET Framework 4.6.2.
 - Fix for attaching request body data to the HttpRequest object (thanks @user4000!)
 
 v1.4.x
+
 - Retarget to .NET Framework 4.6.2
 - Enum for HTTP method instead of string (breaking change)
 
 v1.2.x
+
 - Bugfix for content routes that have spaces or ```+``` (thanks @Linqx)
 - Support for passing an object as Data to HttpResponse (will be JSON serialized)
 - Support for implementing your own OPTIONS handler (for CORS and other use cases)
@@ -139,9 +147,11 @@ v1.2.x
 - IsListening property
 
 v1.1.x
+
 - Added support for static routes.  The default handler can be used for cases where a matching route isn't available, for instance, to build a custom 404 response.
 
 v1.0.x
+
 - Initial release.
 
 ## Running under Mono

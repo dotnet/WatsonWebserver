@@ -23,7 +23,7 @@ namespace TestContentRoutes
           
         static HttpResponse DefaultRoute(HttpRequest req)
         {
-            return new HttpResponse(req, false, 404, null, "text/plain", "Not found", true);
+            return new HttpResponse(req, 404, null, "text/plain", Encoding.UTF8.GetBytes("Not found"));
         } 
     }
 }
