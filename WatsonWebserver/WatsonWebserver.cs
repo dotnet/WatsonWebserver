@@ -543,8 +543,7 @@ namespace WatsonWebserver
                     else if (resp.DataStream != null && resp.ContentLength > 0)
                     {  
                         responseLength = resp.ContentLength; 
-                        response.ContentLength64 = resp.ContentLength; 
-                        resp.DataStream.Seek(0, SeekOrigin.Begin);
+                        response.ContentLength64 = resp.ContentLength;  
                          
                         long bytesRemaining = resp.ContentLength;
 
@@ -558,7 +557,10 @@ namespace WatsonWebserver
 
                             output.Write(buffer, 0, bytesRead);
                             bytesRemaining -= bytesRead;
-                        } 
+                        }
+
+                        resp.DataStream.Close();
+                        resp.DataStream.Dispose();
                     }
                     else
                     { 
@@ -567,13 +569,15 @@ namespace WatsonWebserver
                 }
                 catch (Exception)
                 {
+                    // Console.WriteLine("Outer exception");
+                    // Console.WriteLine(WatsonCommon.SerializeJson(eInner)); 
                 }
                 finally
                 {
-                    if (response != null) response.Close();
-
                     output.Flush();
                     output.Close();
+
+                    if (response != null) response.Close(); 
                 }
 
                 #endregion
@@ -581,7 +585,9 @@ namespace WatsonWebserver
                 return;
             } 
             catch (Exception)
-            { 
+            {
+                // Console.WriteLine("Outer exception");
+                // Console.WriteLine(WatsonCommon.SerializeJson(eOuter));
                 return;
             }
             finally
