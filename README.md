@@ -4,8 +4,9 @@
 
 [nuget]:     https://www.nuget.org/packages/Watson/
 [nuget-img]: https://badge.fury.io/nu/Object.svg
+[![StackShare](https://img.shields.io/badge/tech-stack-0690fa.svg?style=flat)](https://stackshare.io/jchristn/watsonwebserver)
 
-A simple C# async web server for handling incoming RESTful HTTP/HTTPS requests. 
+Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS requests, written in C#.
 
 ## New in v2.0.x
 
