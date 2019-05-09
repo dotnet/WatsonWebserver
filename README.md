@@ -1,7 +1,5 @@
 # Watson Webserver
 
-[![][nuget-img]][nuget]
-
 [![nuget](https://badge.fury.io/nu/Object.svg)](https://www.nuget.org/packages/Watson/)     
 [![StackShare](https://img.shields.io/badge/tech-stack-0690fa.svg?style=flat)](https://stackshare.io/jchristn/watsonwebserver)
 
