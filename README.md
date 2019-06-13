@@ -1,3 +1,5 @@
+![alt tag](https://github.com/jchristn/watsonwebserver/blob/master/assets/watson.ico)
+
 # Watson Webserver
 
 [![nuget](https://badge.fury.io/nu/Object.svg)](https://www.nuget.org/packages/Watson/)     
