@@ -16,7 +16,7 @@
     <PackageReleaseNotes>Icon</PackageReleaseNotes>
     <PackageId>Watson</PackageId>
     <Product>Watson</Product>
-    <PackageIconUrl>https://raw.githubusercontent.com/jchristn/watsonwebserverr/master/assets/watson.ico</PackageIconUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/jchristn/WatsonWebserver/master/assets/watson.ico</PackageIconUrl>
   </PropertyGroup>
 
   <ItemGroup>
