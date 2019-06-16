@@ -150,20 +150,13 @@ namespace WatsonWebserver
             {
                 if (existing.ContainsKey(key))
                 {
+                    if (String.IsNullOrEmpty(val)) return existing;
                     string tempVal = existing[key];
                     tempVal += "," + val;
                     existing.Remove(key);
                     existing.Add(key, tempVal);
                     return existing;
-                }
-                else if (existing.ContainsKey(key.ToLower()))
-                {
-                    string tempVal = existing[key.ToLower()];
-                    tempVal += "," + val;
-                    existing.Remove(key.ToLower());
-                    existing.Add(key.ToLower(), tempVal);
-                    return existing;
-                }
+                } 
                 else
                 {
                     existing.Add(key, val);

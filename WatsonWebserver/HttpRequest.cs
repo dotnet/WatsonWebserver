@@ -297,7 +297,24 @@ namespace WatsonWebserver
                     {
                         if (inKey == 1)
                         {
-                            if (c != '=')
+                            if (c == '&')
+                            {
+                                // key with no value
+                                if (!String.IsNullOrEmpty(tempKey))
+                                {
+                                    inKey = 1;
+                                    inVal = 0;
+
+                                    tempKey = WebUtility.UrlDecode(tempKey);
+                                    QuerystringEntries = WatsonCommon.AddToDict(tempKey, null, QuerystringEntries);
+
+                                    tempKey = "";
+                                    tempVal = "";
+                                    position++;
+                                    continue;
+                                }
+                            }
+                            else if (c != '=')
                             {
                                 tempKey += c;
                             }
@@ -320,9 +337,10 @@ namespace WatsonWebserver
                                 inKey = 1;
                                 inVal = 0;
 
-                                if (!String.IsNullOrEmpty(tempVal)) tempVal = WebUtility.UrlEncode(tempVal);
+                                tempKey = WebUtility.UrlDecode(tempKey);
+                                if (!String.IsNullOrEmpty(tempVal)) tempVal = WebUtility.UrlDecode(tempVal);
                                 QuerystringEntries = WatsonCommon.AddToDict(tempKey, tempVal, QuerystringEntries);
-                                
+
                                 tempKey = "";
                                 tempVal = "";
                                 position++;
@@ -331,10 +349,24 @@ namespace WatsonWebserver
                         }
                     }
 
+                    if (inVal == 0)
+                    {
+                        // val will be null
+                        if (!String.IsNullOrEmpty(tempKey))
+                        {
+                            tempKey = WebUtility.UrlDecode(tempKey);
+                            QuerystringEntries = WatsonCommon.AddToDict(tempKey, null, QuerystringEntries);
+                        } 
+                    }
+
                     if (inVal == 1)
                     {
-                        if (!String.IsNullOrEmpty(tempVal)) tempVal = WebUtility.UrlEncode(tempVal);
-                        QuerystringEntries = WatsonCommon.AddToDict(tempKey, tempVal, QuerystringEntries);
+                        if (!String.IsNullOrEmpty(tempKey))
+                        {
+                            tempKey = WebUtility.UrlDecode(tempKey);
+                            if (!String.IsNullOrEmpty(tempVal)) tempVal = WebUtility.UrlDecode(tempVal);
+                            QuerystringEntries = WatsonCommon.AddToDict(tempKey, tempVal, QuerystringEntries);
+                        }
                     }
                 }
 
