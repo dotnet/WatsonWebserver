@@ -110,7 +110,7 @@ namespace WatsonWebserver
 
         private HttpResponse Send204Response(HttpRequest req)
         {
-            return new HttpResponse(req, 204, null, null, null);
+            return new HttpResponse(req, 204, null);
         }
 
         private HttpResponse Send404Response(HttpRequest req)

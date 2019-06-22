@@ -252,40 +252,23 @@ namespace WatsonWebserver
                          
                         try
                         {
-                            #region Populate-Http-Request-Object
-
+                            // Populate HTTP request object
                             HttpRequest req = new HttpRequest(context, ReadInputStream);
                             if (req == null)
                             {
-                                HttpResponse resp = new HttpResponse(
-                                    req,
-                                    500,
-                                    null,
-                                    "text/plain",
-                                    Encoding.UTF8.GetBytes("Unable to parse your HTTP request"));
-
-                                SendResponse(
-                                    context,
-                                    req,
-                                    resp);
-
+                                HttpResponse resp = new HttpResponse(req, 500, null, "text/plain", "Unable to parse HTTP request");
+                                SendResponse(context, req, resp);
                                 return;
                             }
 
-                            #endregion
-
-                            #region Access-Control
-
+                            // Check access control
                             if (!AccessControl.Permit(req.SourceIp))
                             { 
                                 context.Response.Close();
                                 return;
                             } 
 
-                            #endregion
-
-                            #region Process-OPTIONS-Request
-
+                            // Process OPTIONS request
                             if (req.Method == HttpMethod.OPTIONS
                                 && OptionsRoute != null)
                             { 
@@ -293,100 +276,64 @@ namespace WatsonWebserver
                                 return;
                             }
 
-                            #endregion
-
-                            #region Send-to-Handler
-
+                            // Send to handler
                             Task.Run(() =>
                             {
                                 HttpResponse resp = null;
                                 Func<HttpRequest, HttpResponse> handler = null;
 
-                                #region Find-Route
-                                
+                                // Check content routes
                                 if (req.Method == HttpMethod.GET
                                     || req.Method == HttpMethod.HEAD)
                                 { 
                                     if (ContentRoutes.Exists(req.RawUrlWithoutQuery))
-                                    {
-                                        // content route found
                                         resp = _ContentRouteProcessor.Process(req);
-                                    }
                                 }
 
+                                // Check static routes
                                 if (resp == null)
                                 {
                                     handler = StaticRoutes.Match(req.Method, req.RawUrlWithoutQuery);
-                                    if (handler != null)
-                                    {
-                                        // static route found
-                                        resp = handler(req);
-                                    }
+                                    if (handler != null) 
+                                        resp = handler(req); 
                                     else
                                     {
-                                        // no static route, check for dynamic route
+                                        // Check dynamic routes
                                         handler = DynamicRoutes.Match(req.Method, req.RawUrlWithoutQuery);
                                         if (handler != null)
-                                        {
-                                            // dynamic route found
                                             resp = handler(req);
-                                        }
                                         else
                                         {
-                                            // process using default route
+                                            // Use default route
                                             resp = DefaultRouteProcessor(context, req);
                                         }
                                     }
                                 }
 
-                                #endregion
-
-                                #region Return
-
+                                // Return
                                 if (resp == null)
                                 {
-                                    resp = new HttpResponse(
-                                        req,
-                                        500,
-                                        null,
-                                        "text/plain",
-                                        Encoding.UTF8.GetBytes("Unable to generate response"));
-
-                                    SendResponse(
-                                        context,
-                                        req,
-                                        resp);
-
+                                    resp = new HttpResponse(req, 500, null, "text/plain", "Unable to generate repsonse");
+                                    SendResponse(context, req, resp);
                                     return;
                                 }
                                 else
                                 { 
                                     Dictionary<string, string> headers = new Dictionary<string, string>();
-                                    if (!String.IsNullOrEmpty(resp.ContentType))
-                                    {
-                                        headers.Add("content-type", resp.ContentType);
-                                    }
+                                    if (!String.IsNullOrEmpty(resp.ContentType)) 
+                                        headers.Add("content-type", resp.ContentType); 
 
                                     if (resp.Headers != null && resp.Headers.Count > 0)
                                     {
-                                        foreach (KeyValuePair<string, string> curr in resp.Headers)
-                                        {
-                                            headers = WatsonCommon.AddToDict(curr.Key, curr.Value, headers);
-                                        }
+                                        foreach (KeyValuePair<string, string> curr in resp.Headers) 
+                                            headers = Common.AddToDict(curr.Key, curr.Value, headers); 
                                     }
                                     
-                                    SendResponse(
-                                        context,
-                                        req,
-                                        resp);
+                                    SendResponse(context, req, resp);
 
                                     return;
-                                }
-
-                                #endregion
-                            });
-
-                            #endregion
+                                } 
+                            }); 
                         }
                         catch (Exception)
                         {
@@ -399,6 +346,10 @@ namespace WatsonWebserver
                     }, _HttpListener.GetContext());
                 }
             } 
+            catch (OperationCanceledException)
+            {
+                // do nothing
+            }
             catch (Exception)
             { 
                 throw;

@@ -159,6 +159,8 @@ namespace WatsonWebserver
         /// </summary>
         public HttpRequest()
         {
+            ThreadId = Thread.CurrentThread.ManagedThreadId;
+            TimestampUtc = DateTime.Now.ToUniversalTime();
             QuerystringEntries = new Dictionary<string, string>();
             Headers = new Dictionary<string, string>();
         }
@@ -306,7 +308,7 @@ namespace WatsonWebserver
                                     inVal = 0;
 
                                     tempKey = WebUtility.UrlDecode(tempKey);
-                                    QuerystringEntries = WatsonCommon.AddToDict(tempKey, null, QuerystringEntries);
+                                    QuerystringEntries = Common.AddToDict(tempKey, null, QuerystringEntries);
 
                                     tempKey = "";
                                     tempVal = "";
@@ -339,7 +341,7 @@ namespace WatsonWebserver
 
                                 tempKey = WebUtility.UrlDecode(tempKey);
                                 if (!String.IsNullOrEmpty(tempVal)) tempVal = WebUtility.UrlDecode(tempVal);
-                                QuerystringEntries = WatsonCommon.AddToDict(tempKey, tempVal, QuerystringEntries);
+                                QuerystringEntries = Common.AddToDict(tempKey, tempVal, QuerystringEntries);
 
                                 tempKey = "";
                                 tempVal = "";
@@ -355,7 +357,7 @@ namespace WatsonWebserver
                         if (!String.IsNullOrEmpty(tempKey))
                         {
                             tempKey = WebUtility.UrlDecode(tempKey);
-                            QuerystringEntries = WatsonCommon.AddToDict(tempKey, null, QuerystringEntries);
+                            QuerystringEntries = Common.AddToDict(tempKey, null, QuerystringEntries);
                         } 
                     }
 
@@ -365,7 +367,7 @@ namespace WatsonWebserver
                         {
                             tempKey = WebUtility.UrlDecode(tempKey);
                             if (!String.IsNullOrEmpty(tempVal)) tempVal = WebUtility.UrlDecode(tempVal);
-                            QuerystringEntries = WatsonCommon.AddToDict(tempKey, tempVal, QuerystringEntries);
+                            QuerystringEntries = Common.AddToDict(tempKey, tempVal, QuerystringEntries);
                         }
                     }
                 }
@@ -406,14 +408,94 @@ namespace WatsonWebserver
             {
                 string key = String.Copy(ctx.Request.Headers.GetKey(i));
                 string val = String.Copy(ctx.Request.Headers.Get(i));
-                Headers = WatsonCommon.AddToDict(key, val, Headers);
+                Headers = Common.AddToDict(key, val, Headers);
             }
 
             #endregion
 
-            #region Copy-Payload
+            #region Payload
 
-            if (ContentLength > 0)
+            bool chunkedXfer = false;
+            bool gzip = false;
+            bool deflate = false;
+            string xferEncodingHeader = RetrieveHeaderValue("Transfer-Encoding");
+            if (!String.IsNullOrEmpty(xferEncodingHeader))
+            {
+                chunkedXfer = xferEncodingHeader.ToLower().Contains("chunked");
+                gzip = xferEncodingHeader.ToLower().Contains("gzip");
+                deflate = xferEncodingHeader.ToLower().Contains("deflate");
+            }
+            
+            if (chunkedXfer)
+            {
+                MemoryStream ms = new MemoryStream();
+                Stream bodyStream = ctx.Request.InputStream;
+                ContentLength = 0;
+
+                // Variables
+                int bytesRead = 0;
+                long segmentLength = 0;
+                byte[] headerBuffer = new byte[1];
+                string header = "";
+                byte[] dataBuffer = null;
+                long bytesRemaining = 0;
+
+                while (true)
+                {
+                    // Read length
+                    while (true)
+                    {
+                        bytesRead = bodyStream.Read(headerBuffer, 0, headerBuffer.Length);
+                        if (bytesRead > 0)
+                        {
+                            header += Encoding.UTF8.GetString(headerBuffer);
+                            if (header.EndsWith("\r\n")) break;
+                        }
+                    }
+
+                    header = header.Trim(); 
+                    if (!String.IsNullOrEmpty(header)) segmentLength = Convert.ToInt64(header, 16);
+                    if (segmentLength < 1)
+                    {
+                        // Read out the final \r\n
+                        headerBuffer = new byte[2];
+                        bytesRead = bodyStream.Read(headerBuffer, 0, headerBuffer.Length);
+                        break;  // end of stream
+                    }
+
+                    // Read data line
+                    dataBuffer = new byte[segmentLength];
+                    bytesRemaining = segmentLength;
+
+                    while (bytesRemaining > 0)
+                    {
+                        bytesRead = bodyStream.Read(dataBuffer, 0, dataBuffer.Length);
+                        if (bytesRead > 0)
+                        {
+                            ms.Write(dataBuffer, 0, bytesRead);
+                            bytesRemaining -= bytesRead;
+                            ContentLength += bytesRead;
+                        } 
+                    }
+
+                    // Read out the final \r\n
+                    dataBuffer = new byte[2];
+                    bytesRead = bodyStream.Read(dataBuffer, 0, dataBuffer.Length);
+                }
+
+                ms.Seek(0, SeekOrigin.Begin);
+                if (!readStreamFully)
+                {
+                    Data = null;
+                    DataStream = ms; 
+                }
+                else
+                {
+                    DataStream = null;
+                    Data = ms.ToArray();
+                }
+            }
+            else if (ContentLength > 0)
             {
                 if (readStreamFully)
                 {
@@ -424,7 +506,7 @@ namespace WatsonWebserver
                         { 
                             Data = new byte[ContentLength];
                             Stream bodyStream = ctx.Request.InputStream;
-                            Data = WatsonCommon.StreamToBytes(bodyStream); 
+                            Data = Common.StreamToBytes(bodyStream); 
                         }
                         catch (Exception)
                         {
@@ -1355,7 +1437,7 @@ namespace WatsonWebserver
                         }
                         else
                         {
-                            ret.Headers = WatsonCommon.AddToDict(key, val, ret.Headers);
+                            ret.Headers = Common.AddToDict(key, val, ret.Headers);
                         }
                     }
 
@@ -1470,7 +1552,7 @@ namespace WatsonWebserver
                         inVal = 0;
 
                         if (!String.IsNullOrEmpty(tempVal)) tempVal = WebUtility.UrlEncode(tempVal);
-                        ret = WatsonCommon.AddToDict(tempKey, tempVal, ret);
+                        ret = Common.AddToDict(tempKey, tempVal, ret);
 
                         tempKey = "";
                         tempVal = "";
@@ -1482,7 +1564,7 @@ namespace WatsonWebserver
                 if (inVal == 1)
                 {
                     if (!String.IsNullOrEmpty(tempVal)) tempVal = WebUtility.UrlEncode(tempVal);
-                    ret = WatsonCommon.AddToDict(tempKey, tempVal, ret);
+                    ret = Common.AddToDict(tempKey, tempVal, ret);
                 }
             }
 
