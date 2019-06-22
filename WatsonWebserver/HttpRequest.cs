@@ -426,13 +426,12 @@ namespace WatsonWebserver
                 deflate = xferEncodingHeader.ToLower().Contains("deflate");
             }
             
-            if (chunkedXfer)
-            {
+            if (chunkedXfer && Method != HttpMethod.GET && Method != HttpMethod.HEAD)
+            { 
                 MemoryStream ms = new MemoryStream();
                 Stream bodyStream = ctx.Request.InputStream;
                 ContentLength = 0;
-
-                // Variables
+                 
                 int bytesRead = 0;
                 long segmentLength = 0;
                 byte[] headerBuffer = new byte[1];
@@ -441,21 +440,33 @@ namespace WatsonWebserver
                 long bytesRemaining = 0;
 
                 while (true)
-                {
-                    // Read length
+                { 
+                    #region Read-Chunk-Length
+
+                    headerBuffer = new byte[1];
+                    header = "";
+                     
                     while (true)
                     {
                         bytesRead = bodyStream.Read(headerBuffer, 0, headerBuffer.Length);
                         if (bytesRead > 0)
-                        {
-                            header += Encoding.UTF8.GetString(headerBuffer);
-                            if (header.EndsWith("\r\n")) break;
+                        { 
+                            header += Convert.ToChar(headerBuffer[0]); 
+                            if ((int)headerBuffer[0] == 10)
+                            { 
+                                // end of header
+                                break;
+                            }
                         }
                     }
 
+                    #endregion
+
+                    #region Check-for-End
+
                     header = header.Trim(); 
-                    if (!String.IsNullOrEmpty(header)) segmentLength = Convert.ToInt64(header, 16);
-                    if (segmentLength < 1)
+                    if (!String.IsNullOrEmpty(header)) segmentLength = Convert.ToInt64(header, 16); 
+                    if (segmentLength < 1)  // Segment length of 0 indicates end of message
                     {
                         // Read out the final \r\n
                         headerBuffer = new byte[2];
@@ -463,9 +474,12 @@ namespace WatsonWebserver
                         break;  // end of stream
                     }
 
-                    // Read data line
+                    #endregion
+
+                    #region Read-Data
+                     
                     dataBuffer = new byte[segmentLength];
-                    bytesRemaining = segmentLength;
+                    bytesRemaining = segmentLength; 
 
                     while (bytesRemaining > 0)
                     {
@@ -475,24 +489,37 @@ namespace WatsonWebserver
                             ms.Write(dataBuffer, 0, bytesRead);
                             bytesRemaining -= bytesRead;
                             ContentLength += bytesRead;
-                        } 
+                        }
                     }
 
+                    #endregion
+
+                    #region Read-CRLF-After-Data
+
                     // Read out the final \r\n
-                    dataBuffer = new byte[2];
-                    bytesRead = bodyStream.Read(dataBuffer, 0, dataBuffer.Length);
+                    byte[] newlineBuffer = new byte[1];
+                    while (true)
+                    {
+                        bytesRead = bodyStream.Read(newlineBuffer, 0, newlineBuffer.Length);
+                        if (bytesRead > 0)
+                        {
+                            if ((int)newlineBuffer[0] == 10) break;
+                        }
+                    }
+
+                    #endregion
                 }
 
                 ms.Seek(0, SeekOrigin.Begin);
                 if (!readStreamFully)
-                {
+                { 
                     Data = null;
                     DataStream = ms; 
                 }
                 else
-                {
+                { 
                     DataStream = null;
-                    Data = ms.ToArray();
+                    Data = ms.ToArray(); 
                 }
             }
             else if (ContentLength > 0)

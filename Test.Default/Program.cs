@@ -61,21 +61,20 @@ namespace Test
         }
 
         static HttpResponse RequestReceived(HttpRequest req)
-        {
-            /*
+        { 
             Console.WriteLine(req.ToString());
-            if (req.QuerystringEntries != null && req.QuerystringEntries.Count > 0)
-            {
-                Console.WriteLine("");
-                Console.WriteLine("Querystring Entries:");
-                foreach (KeyValuePair<string, string> curr in req.QuerystringEntries)
-                {
-                    Console.WriteLine(curr.Key + ": " + curr.Value);
-                }
-            }
-            */
 
-            return new HttpResponse(req, 200, null, "text/plain", Encoding.UTF8.GetBytes("Watson says hello from the default route!"));
+            if ((req.Method == HttpMethod.POST
+                || req.Method == HttpMethod.PUT)
+                && req.Data != null
+                && req.ContentLength > 0)
+            {
+                return new HttpResponse(req, 200, null, "text/plain", req.Data);
+            }
+            else
+            {
+                return new HttpResponse(req, 200, null, "text/plain", Encoding.UTF8.GetBytes("Watson says hello from the default route!"));
+            }
         }
 
         static string InputString(string question, string defaultAnswer, bool allowNull)
