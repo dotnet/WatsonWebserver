@@ -474,8 +474,7 @@ namespace WatsonWebserver
                 if (req.Method == HttpMethod.HEAD)
                 {
                     resp.Data = null;
-                    resp.DataStream = null;
-                    resp.ContentLength = 0;
+                    resp.DataStream = null; 
                 }
 
                 #endregion
@@ -483,7 +482,8 @@ namespace WatsonWebserver
                 #region Send-Response
                 
                 Stream output = response.OutputStream;
-                 
+                response.ContentLength64 = resp.ContentLength;
+
                 try
                 {
                     if (resp.Data != null && resp.Data.Length > 0)
@@ -513,11 +513,7 @@ namespace WatsonWebserver
 
                         resp.DataStream.Close();
                         resp.DataStream.Dispose();
-                    }
-                    else
-                    { 
-                        response.ContentLength64 = 0;  
-                    }
+                    } 
                 }
                 catch (Exception)
                 {

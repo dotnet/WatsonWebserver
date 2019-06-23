@@ -7,10 +7,11 @@
 
 Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS requests, written in C#.
 
-## New in v2.0.x
+## New in v2.1.x
 
 - Automatic decoding of incoming requests that have ```Transfer-Encoding: chunked``` in the headers
 - Does not validate chunk signatures or decompress using gzip/deflate yet
+- Better support for HEAD requests where content-length header is required (separate constructor for HttpResponse)
 
 ## Test App
 

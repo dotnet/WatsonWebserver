@@ -142,6 +142,25 @@ namespace WatsonWebserver
         }
 
         /// <summary>
+        /// Create a new HttpResponse object with no data.
+        /// </summary>
+        /// <param name="req">The HttpRequest object for which this request is being created.</param>
+        /// <param name="status">The HTTP status code to return to the requestor (client).</param>
+        /// <param name="headers">User-supplied headers to include in the response.</param>
+        /// <param name="contentLength">Explicit content-length value, useful for HEAD responses.</param>
+        public HttpResponse(HttpRequest req, int status, Dictionary<string, string> headers, long contentLength)
+        {
+            if (req == null) throw new ArgumentNullException(nameof(req));
+
+            SetBaseVariables(req, status, headers, null);
+            SetStatusDescription();
+
+            DataStream = null;
+            Data = null;
+            ContentLength = contentLength;
+        }
+
+        /// <summary>
         /// Create a new HttpResponse object.
         /// </summary>
         /// <param name="req">The HttpRequest object for which this request is being created.</param>
