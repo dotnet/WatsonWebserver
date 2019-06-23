@@ -9,9 +9,8 @@ Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS reque
 
 ## New in v2.0.x
 
-- Support for Stream in ```HttpRequest``` and ```HttpResponse```.  To use, set ```Server.ReadInputStream``` to ```false```.  Refer to the ```TestStreamServer``` project for a full example
-- Simplified constructors, removed pre-defined JSON packaging for responses
-- ```HttpResponse``` now only accepts byte arrays for ```Data``` for simplicity
+- Automatic decoding of incoming requests that have ```Transfer-Encoding: chunked``` in the headers
+- Does not validate chunk signatures or decompress using gzip/deflate yet
 
 ## Test App
 
@@ -111,27 +110,24 @@ static HttpResponse DefaultRoute(HttpRequest req)
  
 ## Version History
 
-Notes from previous versions are shown below (summarized to minor build)
+Notes from previous versions are shown below:
 
-v1.6.x
+v2.0.x
+
+- Support for Stream in ```HttpRequest``` and ```HttpResponse```.  To use, set ```Server.ReadInputStream``` to ```false```.  Refer to the ```TestStreamServer``` project for a full example
+- Simplified constructors, removed pre-defined JSON packaging for responses
+- ```HttpResponse``` now only accepts byte arrays for ```Data``` for simplicity
+
+v1.x
 
 - Fix URL encoding (using System.Net.WebUtility.UrlDecode instead of Uri.EscapeString)
 - Refactored content routes, static routes, and dynamic routes (breaking change)
 - Added default permit/deny operation along with whitelist and blacklist
-
-v1.5.x
-
 - Added a new constructor allowing Watson to support multiple listener hostnames
 - Retarget to support both .NET Core 2.0 and .NET Framework 4.6.2.
 - Fix for attaching request body data to the HttpRequest object (thanks @user4000!)
-
-v1.4.x
-
 - Retarget to .NET Framework 4.6.2
 - Enum for HTTP method instead of string (breaking change)
-
-v1.2.x
-
 - Bugfix for content routes that have spaces or ```+``` (thanks @Linqx)
 - Support for passing an object as Data to HttpResponse (will be JSON serialized)
 - Support for implementing your own OPTIONS handler (for CORS and other use cases)
@@ -145,14 +141,7 @@ v1.2.x
 - Added content routes for serving static files.
 - Dynamic route support using C#/.NET regular expressions (see RegexMatcher library https://github.com/jchristn/RegexMatcher).
 - IsListening property
-
-v1.1.x
-
 - Added support for static routes.  The default handler can be used for cases where a matching route isn't available, for instance, to build a custom 404 response.
-
-v1.0.x
-
-- Initial release.
 
 ## Running under Mono
 
