@@ -8,7 +8,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-
+ 
 namespace WatsonWebserver
 {
     /// <summary>
@@ -105,7 +105,7 @@ namespace WatsonWebserver
         /// The MD5 value calculated over the supplied Data.
         /// </summary>
         public string DataMd5;
-         
+
         #endregion
 
         #region Private-Members

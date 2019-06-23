@@ -8,6 +8,8 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+
+using ChunkDecoder;
 using Newtonsoft;
 using Newtonsoft.Json;
 
@@ -149,6 +151,8 @@ namespace WatsonWebserver
         private Uri _Uri;
         private static int _TimeoutDataReadMs = 2000;
         private static int _DataReadSleepMs = 10;
+
+        private ChunkDecoder.Decoder _Decoder = new ChunkDecoder.Decoder();
 
         #endregion
 
@@ -426,101 +430,39 @@ namespace WatsonWebserver
                 deflate = xferEncodingHeader.ToLower().Contains("deflate");
             }
             
-            if (chunkedXfer && Method != HttpMethod.GET && Method != HttpMethod.HEAD)
-            { 
-                MemoryStream ms = new MemoryStream();
+            if (chunkedXfer 
+                && Method != HttpMethod.GET 
+                && Method != HttpMethod.HEAD)
+            {
                 Stream bodyStream = ctx.Request.InputStream;
-                ContentLength = 0;
-                 
-                int bytesRead = 0;
-                long segmentLength = 0;
-                byte[] headerBuffer = new byte[1];
-                string header = "";
-                byte[] dataBuffer = null;
-                long bytesRemaining = 0;
 
-                while (true)
-                { 
-                    #region Read-Chunk-Length
-
-                    headerBuffer = new byte[1];
-                    header = "";
-                     
-                    while (true)
-                    {
-                        bytesRead = bodyStream.Read(headerBuffer, 0, headerBuffer.Length);
-                        if (bytesRead > 0)
-                        { 
-                            header += Convert.ToChar(headerBuffer[0]); 
-                            if ((int)headerBuffer[0] == 10)
-                            { 
-                                // end of header
-                                break;
-                            }
-                        }
-                    }
-
-                    #endregion
-
-                    #region Check-for-End
-
-                    header = header.Trim(); 
-                    if (!String.IsNullOrEmpty(header)) segmentLength = Convert.ToInt64(header, 16); 
-                    if (segmentLength < 1)  // Segment length of 0 indicates end of message
-                    {
-                        // Read out the final \r\n
-                        headerBuffer = new byte[2];
-                        bytesRead = bodyStream.Read(headerBuffer, 0, headerBuffer.Length);
-                        break;  // end of stream
-                    }
-
-                    #endregion
-
-                    #region Read-Data
-                     
-                    dataBuffer = new byte[segmentLength];
-                    bytesRemaining = segmentLength; 
-
-                    while (bytesRemaining > 0)
-                    {
-                        bytesRead = bodyStream.Read(dataBuffer, 0, dataBuffer.Length);
-                        if (bytesRead > 0)
-                        {
-                            ms.Write(dataBuffer, 0, bytesRead);
-                            bytesRemaining -= bytesRead;
-                            ContentLength += bytesRead;
-                        }
-                    }
-
-                    #endregion
-
-                    #region Read-CRLF-After-Data
-
-                    // Read out the final \r\n
-                    byte[] newlineBuffer = new byte[1];
-                    while (true)
-                    {
-                        bytesRead = bodyStream.Read(newlineBuffer, 0, newlineBuffer.Length);
-                        if (bytesRead > 0)
-                        {
-                            if ((int)newlineBuffer[0] == 10) break;
-                        }
-                    }
-
-                    #endregion
-                }
-
-                ms.Seek(0, SeekOrigin.Begin);
                 if (!readStreamFully)
-                { 
-                    Data = null;
-                    DataStream = ms; 
+                {
+                    long contentLength = 0;
+                    MemoryStream ms = new MemoryStream();
+
+                    if (!_Decoder.Decode(bodyStream, out contentLength, out ms))
+                    {
+                        throw new IOException("Unable to decode chunk-encoded stream");
+                    }
+
+                    ContentLength = contentLength;
+                    DataStream = ms;
                 }
                 else
-                { 
-                    DataStream = null;
-                    Data = ms.ToArray(); 
-                }
+                {
+                    byte[] encodedData = Common.StreamToBytes(bodyStream);
+                    byte[] decodedData = null;
+
+                    if (!_Decoder.Decode(encodedData, out decodedData))
+                    {
+                        throw new IOException("Unable to decode chunk-encoded stream");
+                    }
+
+                    ContentLength = decodedData.Length;
+                    Data = new byte[ContentLength];
+                    Buffer.BlockCopy(decodedData, 0, Data, 0, decodedData.Length);
+                } 
             }
             else if (ContentLength > 0)
             {
