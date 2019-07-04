@@ -235,6 +235,11 @@ namespace WatsonWebserver
 
                 #region Process-Raw-URL-and-Populate-Raw-URL-Elements
 
+                while (RawUrlWithoutQuery.Contains("//"))
+                {
+                    RawUrlWithoutQuery = RawUrlWithoutQuery.Replace("//", "/");
+                }
+
                 foreach (char c in RawUrlWithoutQuery)
                 {
                     if (inQuery == 1)
