@@ -44,8 +44,9 @@ namespace WatsonWebserver
         /// Process an incoming request for a content route.
         /// </summary>
         /// <param name="req">The HttpRequest.</param>
+        /// <param name="readStream">Indicates if the stream should be returned (false) or if the file's data should be read fully before sending (true).</param>
         /// <returns>HttpResponse.</returns>
-        public HttpResponse Process(HttpRequest req)
+        public HttpResponse Process(HttpRequest req, bool readStream)
         {
             if (req == null) throw new ArgumentNullException(nameof(req));
 
@@ -69,20 +70,42 @@ namespace WatsonWebserver
 
             try
             {
-                byte[] data = null;
-                if (req.Method == HttpMethod.GET)
+                FileInfo fi = new FileInfo(filePath);
+                long contentLength = fi.Length;
+
+                if (!readStream)
                 {
-                    data = File.ReadAllBytes(filePath);
-                    return new HttpResponse(req, 200, null, contentType, data);
-                }
-                else if (req.Method == HttpMethod.HEAD)
-                {
-                    data = null;
-                    return Send204Response(req);
+                    // return the stream 
+                    if (req.Method == HttpMethod.GET)
+                    {
+                        FileStream fs = new FileStream(filePath, FileMode.Open);
+                        return new HttpResponse(req, 200, null, contentType, contentLength, fs);
+                    }
+                    else if (req.Method == HttpMethod.HEAD)
+                    {
+                        return new HttpResponse(req, 200, null, contentLength);
+                    }
+                    else
+                    {
+                        return Send500Response(req);
+                    }
                 }
                 else
-                { 
-                    return Send500Response(req);
+                {
+                    // read the data and return it
+                    if (req.Method == HttpMethod.GET)
+                    {
+                        byte[] data = File.ReadAllBytes(filePath);
+                        return new HttpResponse(req, 200, null, contentType, data);
+                    }
+                    else if (req.Method == HttpMethod.HEAD)
+                    {
+                        return new HttpResponse(req, 200, null, contentLength);
+                    }
+                    else
+                    {
+                        return Send500Response(req);
+                    }
                 }
             }
             catch (Exception)

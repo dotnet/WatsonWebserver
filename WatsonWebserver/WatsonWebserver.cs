@@ -288,7 +288,7 @@ namespace WatsonWebserver
                                     || req.Method == HttpMethod.HEAD)
                                 { 
                                     if (ContentRoutes.Exists(req.RawUrlWithoutQuery))
-                                        resp = _ContentRouteProcessor.Process(req);
+                                        resp = _ContentRouteProcessor.Process(req, ReadInputStream);
                                 }
 
                                 // Check static routes
@@ -503,22 +503,22 @@ namespace WatsonWebserver
                         { 
                             int bytesRead = 0;
                             byte[] buffer = new byte[StreamReadBufferSize];
-
-                            if (bytesRemaining >= StreamReadBufferSize) bytesRead = resp.DataStream.Read(buffer, 0, StreamReadBufferSize); 
-                            else bytesRead = resp.DataStream.Read(buffer, 0, (int)bytesRemaining); 
-
-                            output.Write(buffer, 0, bytesRead);
-                            bytesRemaining -= bytesRead;
+                            bytesRead = resp.DataStream.Read(buffer, 0, buffer.Length);
+                            if (bytesRead > 0)
+                            {
+                                output.Write(buffer, 0, bytesRead);
+                                bytesRemaining -= bytesRead;
+                            }
                         }
 
                         resp.DataStream.Close();
                         resp.DataStream.Dispose();
                     } 
                 }
-                catch (Exception)
+                catch (Exception eInner)
                 {
                     // Console.WriteLine("Outer exception");
-                    // Console.WriteLine(WatsonCommon.SerializeJson(eInner)); 
+                    // Console.WriteLine(Common.SerializeJson(eInner)); 
                 }
                 finally
                 {
@@ -532,10 +532,10 @@ namespace WatsonWebserver
 
                 return;
             } 
-            catch (Exception)
+            catch (Exception eOuter)
             {
                 // Console.WriteLine("Outer exception");
-                // Console.WriteLine(WatsonCommon.SerializeJson(eOuter));
+                // Console.WriteLine(Common.SerializeJson(eOuter));
                 return;
             }
             finally

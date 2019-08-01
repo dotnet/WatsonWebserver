@@ -12,6 +12,7 @@ Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS reque
 - Automatic decoding of incoming requests that have ```Transfer-Encoding: chunked``` in the headers
 - Does not validate chunk signatures or decompress using gzip/deflate yet
 - Better support for HEAD requests where content-length header is required (separate constructor for HttpResponse)
+- Added stream support to content route processor for better large object support
 
 ## Test App
 

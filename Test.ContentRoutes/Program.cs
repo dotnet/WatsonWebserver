@@ -14,6 +14,7 @@ namespace Test
         static void Main()
         {
             Server s = new Server("127.0.0.1", 9000, false, DefaultRoute);
+            s.ReadInputStream = true;
             s.ContentRoutes.Add("/", true);
             s.ContentRoutes.Add("/html/", true);
             s.ContentRoutes.Add("/img/watson.jpg", false);
