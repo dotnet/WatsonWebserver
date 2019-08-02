@@ -629,7 +629,7 @@ namespace WatsonWebserver
             }
 
             string mime;
-            return data.TryGetValue(extension, out mime) ? mime : "application/octet-stream";
+            return data.TryGetValue(extension.ToLower(), out mime) ? mime : "application/octet-stream";
         }
 
         #endregion

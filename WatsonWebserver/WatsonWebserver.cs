@@ -457,7 +457,7 @@ namespace WatsonWebserver
                 #region Response-Headers
 
                 response.AddHeader("Access-Control-Allow-Origin", "*");
-                response.ContentType = req.ContentType;
+                response.ContentType = resp.ContentType;
                   
                 if (resp.Headers != null && resp.Headers.Count > 0)
                 {
