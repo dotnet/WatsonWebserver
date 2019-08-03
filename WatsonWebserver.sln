@@ -5,15 +5,17 @@ VisualStudioVersion = 15.0.26403.7
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WatsonWebserver", "WatsonWebserver\WatsonWebserver.csproj", "{62003A3E-AB59-4B91-AFBF-4545ACD2A8D9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.ContentRoutes", "Test.ContentRoutes\Test.ContentRoutes.csproj", "{B121C717-ECB2-4162-A0F5-906F6F63B6B0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.ContentRoutes", "Test.ContentRoutes\Test.ContentRoutes.csproj", "{B121C717-ECB2-4162-A0F5-906F6F63B6B0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Default", "Test.Default\Test.Default.csproj", "{7C689D8A-EB85-480E-8244-7424A25B7B63}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Default", "Test.Default\Test.Default.csproj", "{7C689D8A-EB85-480E-8244-7424A25B7B63}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.DynamicRoutes", "Test.DynamicRoutes\Test.DynamicRoutes.csproj", "{101C08AE-1D13-4C4B-9A50-9DA1E866365C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.DynamicRoutes", "Test.DynamicRoutes\Test.DynamicRoutes.csproj", "{101C08AE-1D13-4C4B-9A50-9DA1E866365C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.StaticRoutes", "Test.StaticRoutes\Test.StaticRoutes.csproj", "{67E57F24-D1D0-4F0D-8DA4-4D8308691A8D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.StaticRoutes", "Test.StaticRoutes\Test.StaticRoutes.csproj", "{67E57F24-D1D0-4F0D-8DA4-4D8308691A8D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Stream", "Test.Stream\Test.Stream.csproj", "{7C529D27-EC2C-452C-AF71-CD2371D45DED}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Stream", "Test.Stream\Test.Stream.csproj", "{7C529D27-EC2C-452C-AF71-CD2371D45DED}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Events", "Test.Events\Test.Events.csproj", "{7508FAF3-EF44-4F99-A309-E2C43D13B6C9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{7C529D27-EC2C-452C-AF71-CD2371D45DED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7C529D27-EC2C-452C-AF71-CD2371D45DED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7C529D27-EC2C-452C-AF71-CD2371D45DED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7508FAF3-EF44-4F99-A309-E2C43D13B6C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7508FAF3-EF44-4F99-A309-E2C43D13B6C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7508FAF3-EF44-4F99-A309-E2C43D13B6C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7508FAF3-EF44-4F99-A309-E2C43D13B6C9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

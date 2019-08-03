@@ -35,7 +35,7 @@ namespace Test
         }
 
         static HttpResponse DefaultRoute(HttpRequest req)
-        {
+        { 
             return new HttpResponse(req, 200, null, "text/plain", Encoding.UTF8.GetBytes("Hello from the default route!")); 
         }
          

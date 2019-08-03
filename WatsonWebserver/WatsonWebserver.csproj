@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net462</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>2.1.4</Version>
+    <Version>2.1.5</Version>
     <Description>Simple async C# web server for handling REST requests with SSL support, targeted to both .NET Core 2.0 and .NET Framework 4.6.2.</Description>
     <Authors>Joel Christner</Authors>
     <Company>Joel Christner</Company>
@@ -13,7 +13,7 @@
     <RepositoryUrl>https://github.com/jchristn/WatsonWebserver</RepositoryUrl>
     <RepositoryType>Github</RepositoryType>
     <PackageTags>web server rest restful http https api async ssl</PackageTags>
-    <PackageReleaseNotes>Fix content-type issue (not being set)</PackageReleaseNotes>
+    <PackageReleaseNotes>Events/callbacks</PackageReleaseNotes>
     <PackageId>Watson</PackageId>
     <Product>Watson</Product>
     <PackageIconUrl>https://raw.githubusercontent.com/jchristn/WatsonWebserver/master/assets/watson.ico</PackageIconUrl>

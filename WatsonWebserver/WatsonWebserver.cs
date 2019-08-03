@@ -80,6 +80,11 @@ namespace WatsonWebserver
         /// </summary>
         public AccessControlManager AccessControl;
 
+        /// <summary>
+        /// Set specific actions/callbacks to use when events are raised.
+        /// </summary>
+        public EventCallbacks Events;
+
         #endregion
 
         #region Private-Members
@@ -123,6 +128,7 @@ namespace WatsonWebserver
             _ListenerSsl = ssl; 
             _DefaultRoute = defaultRequestHandler;
 
+            Events = new EventCallbacks();
             InitializeRouteManagers();
             AccessControl = new AccessControlManager(AccessControlMode.DefaultPermit);
             Welcome();
@@ -163,6 +169,7 @@ namespace WatsonWebserver
             _ListenerSsl = ssl;
             _DefaultRoute = defaultRequestHandler;
 
+            Events = new EventCallbacks();
             InitializeRouteManagers();
             AccessControl = new AccessControlManager(AccessControlMode.DefaultPermit);
             Welcome();
@@ -200,6 +207,8 @@ namespace WatsonWebserver
                 
                 _TokenSource.Cancel();
             }
+
+            Events.ServerDisposed();
         }
 
         private void InitializeRouteManagers()
@@ -250,21 +259,32 @@ namespace WatsonWebserver
                         if (token.IsCancellationRequested) throw new OperationCanceledException();
 
                         var context = c as HttpListenerContext;
-                         
+
+                        Events.ConnectionReceived(
+                            context.Request.RemoteEndPoint.Address.ToString(),
+                            context.Request.RemoteEndPoint.Port);
+
+                        HttpRequest req = null;
+
                         try
                         {
                             // Populate HTTP request object
-                            HttpRequest req = new HttpRequest(context, ReadInputStream);
+                            req = new HttpRequest(context, ReadInputStream);
                             if (req == null)
                             {
                                 HttpResponse resp = new HttpResponse(req, 500, null, "text/plain", "Unable to parse HTTP request");
                                 SendResponse(context, req, resp);
                                 return;
                             }
+                            else
+                            {
+                                Events.RequestReceived(req.SourceIp, req.SourcePort, req.Method.ToString(), req.FullUrl);
+                            }
 
                             // Check access control
                             if (!AccessControl.Permit(req.SourceIp))
-                            { 
+                            {
+                                Events.AccessControlDenied(req.SourceIp, req.SourcePort, req.Method.ToString(), req.FullUrl);
                                 context.Response.Close();
                                 return;
                             } 
@@ -331,33 +351,30 @@ namespace WatsonWebserver
                                     }
                                     
                                     SendResponse(context, req, resp);
-
                                     return;
                                 } 
                             }); 
                         }
-                        catch (Exception)
+                        catch (Exception eInner)
                         {
-
-                        }
-                        finally
-                        {
-
-                        }
+                            if (req == null) Events.ExceptionEncountered(null, 0, eInner);
+                            else Events.ExceptionEncountered(req.SourceIp, req.SourcePort, eInner);
+                        } 
                     }, _HttpListener.GetContext());
                 }
-            } 
+            }
+            catch (HttpListenerException)
+            {
+                Events.ServerStopped();
+            }
             catch (OperationCanceledException)
             {
-                // do nothing
+                Events.ServerStopped();
             }
-            catch (Exception)
-            { 
-                throw;
-            }
-            finally
-            { 
-            }
+            catch (Exception eOuter)
+            {
+                Events.ExceptionEncountered(null, 0, eOuter);
+            } 
         }
 
         private HttpResponse DefaultRouteProcessor(HttpListenerContext context, HttpRequest request)
@@ -515,10 +532,13 @@ namespace WatsonWebserver
                         resp.DataStream.Dispose();
                     } 
                 }
+                catch (OperationCanceledException)
+                {
+                    // do nothing, handled by AcceptConnections
+                }
                 catch (Exception eInner)
                 {
-                    // Console.WriteLine("Outer exception");
-                    // Console.WriteLine(Common.SerializeJson(eInner)); 
+                    Events.ExceptionEncountered(req.SourceIp, req.SourcePort, eInner);
                 }
                 finally
                 {
@@ -530,12 +550,16 @@ namespace WatsonWebserver
 
                 #endregion
 
+                Events.ResponseSent(req.SourceIp, req.SourcePort, req.Method.ToString(), req.FullUrl, resp.StatusCode);
                 return;
             } 
+            catch (OperationCanceledException)
+            {
+                // do nothing, handled by AcceptConnections
+            }
             catch (Exception eOuter)
             {
-                // Console.WriteLine("Outer exception");
-                // Console.WriteLine(Common.SerializeJson(eOuter));
+                Events.ExceptionEncountered(req.SourceIp, req.SourcePort, eOuter);
                 return;
             }
             finally

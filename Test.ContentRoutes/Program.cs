@@ -18,6 +18,7 @@ namespace Test
             s.ContentRoutes.Add("/", true);
             s.ContentRoutes.Add("/html/", true);
             s.ContentRoutes.Add("/img/watson.jpg", false);
+            
             Console.WriteLine("Press ENTER to exit");
             Console.ReadLine();
         }
