@@ -34,11 +34,6 @@ namespace WatsonWebserver
         }
 
         /// <summary>
-        /// Function to call when an OPTIONS request is received.  Often used to handle CORS.  Leave as 'null' to use the default OPTIONS handler.
-        /// </summary>
-        public Func<HttpRequest, HttpResponse> OptionsRoute = null;
-
-        /// <summary>
         /// Indicate whether or not Watson should fully read the input stream and populate HttpRequest.Data.
         /// Otherwise, the request body will be available by reading HttpRequest.DataStream.
         /// </summary>
@@ -59,7 +54,17 @@ namespace WatsonWebserver
                 _StreamReadBufferSize = value;
             }
         }
-         
+
+        /// <summary>
+        /// Function to call when an OPTIONS request is received.  Often used to handle CORS.  Leave as 'null' to use the default OPTIONS handler.
+        /// </summary>
+        public Func<HttpRequest, HttpResponse> OptionsRoute = null;
+
+        /// <summary>
+        /// Function to call prior to routing.  Returning an HttpResponse will cause Watson to send the supplied response.  Returning 'null' allows the request to be routed.
+        /// </summary>
+        public Func<HttpRequest, HttpResponse> PreRoutingHandler = null;
+
         /// <summary>
         /// Dynamic routes; i.e. routes with regex matching and any HTTP method.
         /// </summary>
@@ -303,35 +308,54 @@ namespace WatsonWebserver
                                 HttpResponse resp = null;
                                 Func<HttpRequest, HttpResponse> handler = null;
 
-                                // Check content routes
-                                if (req.Method == HttpMethod.GET
-                                    || req.Method == HttpMethod.HEAD)
-                                { 
-                                    if (ContentRoutes.Exists(req.RawUrlWithoutQuery))
-                                        resp = _ContentRouteProcessor.Process(req, ReadInputStream);
+                                #region Pre-Routing-Handler
+
+                                if (PreRoutingHandler != null)
+                                {
+                                    resp = PreRoutingHandler(req);
                                 }
 
-                                // Check static routes
+                                #endregion
+
+                                #region Content-Routes
+
+                                if (req.Method == HttpMethod.GET || req.Method == HttpMethod.HEAD)
+                                {
+                                    if (ContentRoutes.Exists(req.RawUrlWithoutQuery))
+                                    {
+                                        resp = _ContentRouteProcessor.Process(req, ReadInputStream);
+                                    }
+                                }
+
+                                #endregion
+
+                                #region Static-Dynamic-Default-Routes
+
                                 if (resp == null)
                                 {
                                     handler = StaticRoutes.Match(req.Method, req.RawUrlWithoutQuery);
-                                    if (handler != null) 
-                                        resp = handler(req); 
+                                    if (handler != null)
+                                    {
+                                        resp = handler(req);
+                                    }
                                     else
                                     {
-                                        // Check dynamic routes
                                         handler = DynamicRoutes.Match(req.Method, req.RawUrlWithoutQuery);
                                         if (handler != null)
-                                            resp = handler(req);
-                                        else
                                         {
-                                            // Use default route
+                                            resp = handler(req);
+                                        }
+                                        else
+                                        { 
                                             resp = DefaultRouteProcessor(context, req);
                                         }
                                     }
                                 }
 
-                                // Return
+                                #endregion
+
+                                #region Respond
+
                                 if (resp == null)
                                 {
                                     resp = new HttpResponse(req, 500, null, "text/plain", "Unable to generate repsonse");
@@ -339,20 +363,26 @@ namespace WatsonWebserver
                                     return;
                                 }
                                 else
-                                { 
+                                {
                                     Dictionary<string, string> headers = new Dictionary<string, string>();
-                                    if (!String.IsNullOrEmpty(resp.ContentType)) 
-                                        headers.Add("content-type", resp.ContentType); 
+                                    if (!String.IsNullOrEmpty(resp.ContentType))
+                                    {
+                                        headers.Add("content-type", resp.ContentType);
+                                    }
 
                                     if (resp.Headers != null && resp.Headers.Count > 0)
                                     {
-                                        foreach (KeyValuePair<string, string> curr in resp.Headers) 
-                                            headers = Common.AddToDict(curr.Key, curr.Value, headers); 
+                                        foreach (KeyValuePair<string, string> curr in resp.Headers)
+                                        {
+                                            headers = Common.AddToDict(curr.Key, curr.Value, headers);
+                                        }
                                     }
-                                    
+
                                     SendResponse(context, req, resp);
                                     return;
-                                } 
+                                }
+
+                                #endregion
                             }); 
                         }
                         catch (Exception eInner)

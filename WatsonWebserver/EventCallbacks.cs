@@ -169,12 +169,12 @@ namespace WatsonWebserver
             return true;
         }
 
-        private bool ResponseSentInternal(string msg, int port, string method, string url, int status)
+        private bool ResponseSentInternal(string ip, int port, string method, string url, int status)
         {
             return true;
         }
 
-        private bool ExceptionEncounteredInternal(string msg, int port, Exception e)
+        private bool ExceptionEncounteredInternal(string ip, int port, Exception e)
         {
             return true;
         }

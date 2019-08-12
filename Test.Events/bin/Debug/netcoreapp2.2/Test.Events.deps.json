@@ -1,24 +1,24 @@
 {
   "runtimeTarget": {
     "name": ".NETCoreApp,Version=v2.2",
-    "signature": "15a529958e4e8ccb6445683cec91850045e5eb85"
+    "signature": "86a6b235a27718d8eea39eaec1260263cad70792"
   },
   "compilationOptions": {},
   "targets": {
     ".NETCoreApp,Version=v2.2": {
       "Test.Events/1.0.0": {
         "dependencies": {
-          "Watson": "2.1.5"
+          "Watson": "2.1.6"
         },
         "runtime": {
           "Test.Events.dll": {}
         }
       },
-      "ChunkDecoder/1.0.2": {
+      "ChunkDecoder/1.0.3": {
         "runtime": {
           "lib/netstandard2.0/ChunkDecoder.dll": {
-            "assemblyVersion": "1.0.2.0",
-            "fileVersion": "1.0.2.0"
+            "assemblyVersion": "1.0.3.0",
+            "fileVersion": "1.0.3.0"
           }
         }
       },
@@ -30,11 +30,11 @@
           }
         }
       },
-      "Newtonsoft.Json/11.0.1": {
+      "Newtonsoft.Json/12.0.2": {
         "runtime": {
           "lib/netstandard2.0/Newtonsoft.Json.dll": {
-            "assemblyVersion": "11.0.0.0",
-            "fileVersion": "11.0.1.21818"
+            "assemblyVersion": "12.0.0.0",
+            "fileVersion": "12.0.2.23222"
           }
         }
       },
@@ -46,11 +46,11 @@
           }
         }
       },
-      "Watson/2.1.5": {
+      "Watson/2.1.6": {
         "dependencies": {
-          "ChunkDecoder": "1.0.2",
+          "ChunkDecoder": "1.0.3",
           "IpMatcher": "1.0.1",
-          "Newtonsoft.Json": "11.0.1",
+          "Newtonsoft.Json": "12.0.2",
           "RegexMatcher": "1.0.2"
         },
         "runtime": {
@@ -65,12 +65,12 @@
       "serviceable": false,
       "sha512": ""
     },
-    "ChunkDecoder/1.0.2": {
+    "ChunkDecoder/1.0.3": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-UBLedsOxBcxQmN/Fz7VR8jad+XTdnhsoqBOzp3Aquz3STYnwf+98AiQm9aD1poh1gCQGGp3ZHpiw+17Lkoi6kA==",
-      "path": "chunkdecoder/1.0.2",
-      "hashPath": "chunkdecoder.1.0.2.nupkg.sha512"
+      "sha512": "sha512-asHFIIEKA1osWR52HC62b96dYOrdphZb70v/6anI4m20Hpb4Pp9yLTmlwn39aNPcyezPBt1AtxUKhf81BVo0Xw==",
+      "path": "chunkdecoder/1.0.3",
+      "hashPath": "chunkdecoder.1.0.3.nupkg.sha512"
     },
     "IpMatcher/1.0.1": {
       "type": "package",
@@ -79,12 +79,12 @@
       "path": "ipmatcher/1.0.1",
       "hashPath": "ipmatcher.1.0.1.nupkg.sha512"
     },
-    "Newtonsoft.Json/11.0.1": {
+    "Newtonsoft.Json/12.0.2": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-wrf5LBX1omJ/8HiYKby22uBV7MPCfwxXWY39w28VZJjYdN1Cb3eiTkkWk5gAkkdW+N/A0hgSmqtiPoAwsb07qg==",
-      "path": "newtonsoft.json/11.0.1",
-      "hashPath": "newtonsoft.json.11.0.1.nupkg.sha512"
+      "sha512": "sha512-mtweBXPWhp1CMQATtBT7ZfMZrbZBTKfjGwz6Y75NwGjx/GztDaUnfw8GK9KZ2T4fDIqKJyDjc9Rxlw5+G2FcVA==",
+      "path": "newtonsoft.json/12.0.2",
+      "hashPath": "newtonsoft.json.12.0.2.nupkg.sha512"
     },
     "RegexMatcher/1.0.2": {
       "type": "package",
@@ -93,7 +93,7 @@
       "path": "regexmatcher/1.0.2",
       "hashPath": "regexmatcher.1.0.2.nupkg.sha512"
     },
-    "Watson/2.1.5": {
+    "Watson/2.1.6": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
