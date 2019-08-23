@@ -8,7 +8,7 @@
     ".NETCoreApp,Version=v2.2": {
       "Test.Events/1.0.0": {
         "dependencies": {
-          "Watson": "2.1.6"
+          "Watson": "2.1.7"
         },
         "runtime": {
           "Test.Events.dll": {}
@@ -46,7 +46,7 @@
           }
         }
       },
-      "Watson/2.1.6": {
+      "Watson/2.1.7": {
         "dependencies": {
           "ChunkDecoder": "1.0.3",
           "IpMatcher": "1.0.1",
@@ -93,7 +93,7 @@
       "path": "regexmatcher/1.0.2",
       "hashPath": "regexmatcher.1.0.2.nupkg.sha512"
     },
-    "Watson/2.1.6": {
+    "Watson/2.1.7": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

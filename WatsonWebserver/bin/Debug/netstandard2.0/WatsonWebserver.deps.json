@@ -7,7 +7,7 @@
   "targets": {
     ".NETStandard,Version=v2.0": {},
     ".NETStandard,Version=v2.0/": {
-      "WatsonWebserver/2.1.6": {
+      "WatsonWebserver/2.1.7": {
         "dependencies": {
           "ChunkDecoder": "1.0.3",
           "IpMatcher": "1.0.1",
@@ -60,7 +60,7 @@
     }
   },
   "libraries": {
-    "WatsonWebserver/2.1.6": {
+    "WatsonWebserver/2.1.7": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
