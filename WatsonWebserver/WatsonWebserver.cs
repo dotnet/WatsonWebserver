@@ -264,15 +264,14 @@ namespace WatsonWebserver
                         if (token.IsCancellationRequested) throw new OperationCanceledException();
 
                         var context = c as HttpListenerContext;
-
-                        Events.ConnectionReceived(
-                            context.Request.RemoteEndPoint.Address.ToString(),
-                            context.Request.RemoteEndPoint.Port);
-
                         HttpRequest req = null;
-
+                        
                         try
                         {
+                            Events.ConnectionReceived(
+                                context.Request.RemoteEndPoint.Address.ToString(),
+                                context.Request.RemoteEndPoint.Port);
+                        
                             // Populate HTTP request object
                             req = new HttpRequest(context, ReadInputStream);
                             if (req == null)
