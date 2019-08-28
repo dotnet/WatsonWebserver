@@ -38,6 +38,11 @@ namespace WatsonWebserver
         public string ProtocolVersion;
 
         /// <summary>
+        /// Last value of GET request
+        /// </summary>
+        public string FetchGetRequestValue;
+
+        /// <summary>
         /// IP address of the requestor (client).
         /// </summary>
         public string SourceIp;
@@ -210,6 +215,7 @@ namespace WatsonWebserver
             FullUrl = String.Copy(ctx.Request.Url.ToString().Trim());
             RawUrlWithQuery = String.Copy(ctx.Request.RawUrl.ToString().Trim());
             RawUrlWithoutQuery = String.Copy(ctx.Request.RawUrl.ToString().Trim());
+            FetchGetRequestValue = String.Copy(ctx.Request.RawUrl.ToString().Trim().Split('/').Last());
             Keepalive = ctx.Request.KeepAlive;
             ContentLength = ctx.Request.ContentLength64;
             Useragent = ctx.Request.UserAgent;
