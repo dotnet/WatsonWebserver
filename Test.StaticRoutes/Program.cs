@@ -19,24 +19,32 @@ namespace Test
             Console.ReadLine();
         }
 
-        static HttpResponse GetHelloRoute(HttpRequest req)
+        static async Task GetHelloRoute(HttpContext ctx)
         {
-            return new HttpResponse(req, 200, null, "text/plain", Encoding.UTF8.GetBytes("Watson says hello from the GET /hello static route!"));
+            ctx.Response.StatusCode = 200;
+            await ctx.Response.Send("Watson says hello from the GET /hello static route!");
+            return;
         }
 
-        static HttpResponse GetWorldRoute(HttpRequest req)
+        static async Task GetWorldRoute(HttpContext ctx)
         {
-            return new HttpResponse(req, 200, null, "text/plain", Encoding.UTF8.GetBytes("Watson says hello from the GET /world static route!"));
+            ctx.Response.StatusCode = 200;
+            await ctx.Response.Send("Watson says hello from the GET /world static route!");
+            return;
         }
 
-        static HttpResponse PostDataRoute(HttpRequest req)
-        { 
-            return new HttpResponse(req, 200, null, req.ContentType, req.Data);
+        static async Task PostDataRoute(HttpContext ctx)
+        {
+            ctx.Response.StatusCode = 200;
+            await ctx.Response.Send(ctx.Request.ContentLength, ctx.Request.Data);
+            return;
         }
 
-        static HttpResponse DefaultRoute(HttpRequest req)
-        { 
-            return new HttpResponse(req, 200, null, "text/plain", Encoding.UTF8.GetBytes("Hello from the default route!")); 
+        static async Task DefaultRoute(HttpContext ctx)
+        {
+            ctx.Response.StatusCode = 200;
+            await ctx.Response.Send("Watson says hello from the default route!");
+            return;
         }
          
         static string InputString(string question, string defaultAnswer, bool allowNull)

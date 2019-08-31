@@ -40,77 +40,75 @@ namespace WatsonWebserver
 
         #region Public-Methods
 
-        /// <summary>
-        /// Process an incoming request for a content route.
-        /// </summary>
-        /// <param name="req">The HttpRequest.</param>
-        /// <param name="readStream">Indicates if the stream should be returned (false) or if the file's data should be read fully before sending (true).</param>
-        /// <returns>HttpResponse.</returns>
-        public HttpResponse Process(HttpRequest req, bool readStream)
+        public async Task Process(HttpContext ctx)
         {
-            if (req == null) throw new ArgumentNullException(nameof(req));
+            if (ctx == null) throw new ArgumentNullException(nameof(ctx));
+            if (ctx.Request == null) throw new ArgumentNullException(nameof(ctx.Request));
+            if (ctx.Response == null) throw new ArgumentNullException(nameof(ctx.Response));
 
-            if (req.Method != HttpMethod.GET 
-                && req.Method != HttpMethod.HEAD)
-            { 
-                return Send500Response(req);
+            if (ctx.Request.Method != HttpMethod.GET 
+                && ctx.Request.Method != HttpMethod.HEAD)
+            {
+                Set500Response(ctx);
+                await ctx.Response.Send();
+                return;
             }
 
-            string filePath = req.RawUrlWithoutQuery;
-            if (!String.IsNullOrEmpty(filePath) && filePath.StartsWith("/")) filePath = filePath.Substring(1);
+            string filePath = ctx.Request.RawUrlWithoutQuery;
+            if (!String.IsNullOrEmpty(filePath))
+            {
+                while (filePath.StartsWith("/"))
+                {
+                    filePath = filePath.Substring(1);
+                }
+            }
+
             filePath = AppDomain.CurrentDomain.BaseDirectory + filePath;
             filePath = filePath.Replace("+", " ").Replace("%20", " ");
 
             string contentType = GetContentType(filePath);
 
             if (!File.Exists(filePath))
-            { 
-                return Send404Response(req);
+            {
+                Set404Response(ctx);
+                await ctx.Response.Send();
+                return;
             }
 
             try
             {
                 FileInfo fi = new FileInfo(filePath);
                 long contentLength = fi.Length;
-
-                if (!readStream)
+                  
+                if (ctx.Request.Method == HttpMethod.GET)
                 {
-                    // return the stream 
-                    if (req.Method == HttpMethod.GET)
-                    {
-                        FileStream fs = new FileStream(filePath, FileMode.Open);
-                        return new HttpResponse(req, 200, null, contentType, contentLength, fs);
-                    }
-                    else if (req.Method == HttpMethod.HEAD)
-                    {
-                        return new HttpResponse(req, 200, null, contentLength);
-                    }
-                    else
-                    {
-                        return Send500Response(req);
-                    }
+                    FileStream fs = new FileStream(filePath, FileMode.Open);
+                    ctx.Response.StatusCode = 200;
+                    ctx.Response.ContentLength = contentLength;
+                    ctx.Response.ContentType = GetContentType(filePath);
+                    await ctx.Response.Send(contentLength, fs);
+                    return;
+                }
+                else if (ctx.Request.Method == HttpMethod.HEAD)
+                {
+                    ctx.Response.StatusCode = 200;
+                    ctx.Response.ContentLength = contentLength;
+                    ctx.Response.ContentType = GetContentType(filePath);
+                    await ctx.Response.Send(contentLength);
+                    return;
                 }
                 else
                 {
-                    // read the data and return it
-                    if (req.Method == HttpMethod.GET)
-                    {
-                        byte[] data = File.ReadAllBytes(filePath);
-                        return new HttpResponse(req, 200, null, contentType, data);
-                    }
-                    else if (req.Method == HttpMethod.HEAD)
-                    {
-                        return new HttpResponse(req, 200, null, contentLength);
-                    }
-                    else
-                    {
-                        return Send500Response(req);
-                    }
-                }
+                    Set500Response(ctx);
+                    await ctx.Response.Send();
+                    return;
+                } 
             }
             catch (Exception)
-            { 
-                return Send500Response(req);
+            {
+                Set500Response(ctx);
+                await ctx.Response.Send();
+                return;
             }
         }
 
@@ -131,19 +129,22 @@ namespace WatsonWebserver
             return "application/octet-stream";
         }
 
-        private HttpResponse Send204Response(HttpRequest req)
+        private void Set204Response(HttpContext ctx)
         {
-            return new HttpResponse(req, 204, null);
+            ctx.Response.StatusCode = 204;
+            ctx.Response.ContentLength = 0;
         }
 
-        private HttpResponse Send404Response(HttpRequest req)
+        private void Set404Response(HttpContext ctx)
         {
-            return new HttpResponse(req, 404, null, "text/plain", Encoding.UTF8.GetBytes("Not Found"));
+            ctx.Response.StatusCode = 404;
+            ctx.Response.ContentLength = 0;
         }
 
-        private HttpResponse Send500Response(HttpRequest req)
+        private void Set500Response(HttpContext ctx)
         {
-            return new HttpResponse(req, 500, null, "text/plain", Encoding.UTF8.GetBytes("Internal Server Error"));
+            ctx.Response.StatusCode = 500;
+            ctx.Response.ContentLength = 0;
         }
 
         #endregion

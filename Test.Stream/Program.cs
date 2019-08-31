@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using WatsonWebserver;
 
 namespace Test
@@ -13,49 +15,58 @@ namespace Test
         static void Main(string[] args)
         {
             if (!Directory.Exists(_Directory)) Directory.CreateDirectory(_Directory);
-            _Server = new Server("127.0.0.1", 8000, false, RequestHandler);
-            _Server.ReadInputStream = false;
+            _Server = new Server("127.0.0.1", 9000, false, DefaultRoute); 
             Console.ReadLine();
         }
 
-        static HttpResponse RequestHandler(HttpRequest req)
+        static async Task DefaultRoute(HttpContext ctx)
         {
-            Console.WriteLine(req.Method + " " + req.RawUrlWithoutQuery);
+            Console.WriteLine(ctx.Request.Method + " " + ctx.Request.RawUrlWithoutQuery);
 
             FileStream fs = null;
              
-            switch (req.Method)
+            switch (ctx.Request.Method)
             {
                 case HttpMethod.GET:
                     long len = new System.IO.FileInfo("watson.jpg").Length;
                     fs = new FileStream("watson.jpg", FileMode.Open, FileAccess.Read);
-                    return new HttpResponse(req, 200, null, "image/jpeg", len, fs);
+                    ctx.Response.StatusCode = 200;
+                    await ctx.Response.Send(len, fs);
+                    return; 
 
                 case HttpMethod.POST:
-                    if (req.RawUrlEntries == null || req.RawUrlEntries.Count != 1)
+                    if (ctx.Request.RawUrlEntries == null || ctx.Request.RawUrlEntries.Count != 1)
                     {
-                        return new HttpResponse(req, 400, null, "text/plain", Encoding.UTF8.GetBytes("Bad request"));
+                        ctx.Response.StatusCode = 400;
+                        await ctx.Response.Send("Bad request");
+                        return;
                     }
-                    else if (req.DataStream == null || !req.DataStream.CanRead)
+                    else if (ctx.Request.Data == null || !ctx.Request.Data.CanRead)
                     {
-                        return new HttpResponse(req, 400, null, "text/plain", Encoding.UTF8.GetBytes("Bad request"));
+                        ctx.Response.StatusCode = 400;
+                        await ctx.Response.Send("Bad request");
+                        return;
                     }
                     else
                     {
-                        fs = new FileStream(_Directory + "/" + req.RawUrlEntries[0], FileMode.OpenOrCreate);
+                        fs = new FileStream(_Directory + "/" + ctx.Request.RawUrlEntries[0], FileMode.OpenOrCreate);
                         int bytesRead = 0;
                         byte[] buffer = new byte[2048];
-                        while ((bytesRead = req.DataStream.Read(buffer, 0, buffer.Length)) > 0)
+                        while ((bytesRead = ctx.Request.Data.Read(buffer, 0, buffer.Length)) > 0)
                         {
                             fs.Write(buffer, 0, bytesRead);
                         }
                         fs.Close();
                         fs.Dispose();
-                        return new HttpResponse(req, 201, null);
+                        ctx.Response.StatusCode = 201;
+                        await ctx.Response.Send();
+                        return;
                     }
 
                 default:
-                    return new HttpResponse(req, 400, null, "text/plain", Encoding.UTF8.GetBytes("Bad request")); 
+                    ctx.Response.StatusCode = 400;
+                    await ctx.Response.Send("Bad request");
+                    return;
             } 
         }
 

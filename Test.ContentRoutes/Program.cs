@@ -13,8 +13,7 @@ namespace Test
     {
         static void Main()
         {
-            Server s = new Server("127.0.0.1", 9000, false, DefaultRoute);
-            s.ReadInputStream = true;
+            Server s = new Server("127.0.0.1", 9000, false, DefaultRoute); 
             s.ContentRoutes.Add("/", true);
             s.ContentRoutes.Add("/html/", true);
             s.ContentRoutes.Add("/img/watson.jpg", false);
@@ -23,9 +22,11 @@ namespace Test
             Console.ReadLine();
         }
 
-        static HttpResponse DefaultRoute(HttpRequest req)
+        static async Task DefaultRoute(HttpContext ctx)
         {
-            return new HttpResponse(req, 404, null, "text/plain", Encoding.UTF8.GetBytes("Not found"));
+            ctx.Response.StatusCode = 404;
+            await ctx.Response.Send();
+            return; 
         }
     }
 }

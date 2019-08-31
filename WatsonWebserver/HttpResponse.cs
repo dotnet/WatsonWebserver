@@ -15,221 +15,70 @@ namespace WatsonWebserver
     /// Response to an HTTP request.
     /// </summary>
     public class HttpResponse
-    { 
+    {
         #region Public-Members
-
-        //
-        // Values from the request
-        //
-
-        /// <summary>
-        /// UTC timestamp from when the response was generated.
-        /// </summary>
-        public DateTime TimestampUtc;
-
-        /// <summary>
-        /// The protocol and version.
-        /// </summary>
-        public string ProtocolVersion;
-
-        /// <summary>
-        /// IP address of the requestor (client).
-        /// </summary>
-        public string SourceIp;
-
-        /// <summary>
-        /// TCP port from which the request originated on the requestor (client).
-        /// </summary>
-        public int SourcePort;
-
-        /// <summary>
-        /// IP address of the recipient (server).
-        /// </summary>
-        public string DestIp;
-
-        /// <summary>
-        /// TCP port on which the request was received by the recipient (server).
-        /// </summary>
-        public int DestPort;
-
-        /// <summary>
-        /// The HTTP method used in the request.
-        /// </summary>
-        public HttpMethod Method;
-
-        /// <summary>
-        /// The raw (relative) URL without the querystring attached.
-        /// </summary>
-        public string RawUrlWithoutQuery;
-
-        //
-        // Response values
-        //
 
         /// <summary>
         /// The HTTP status code to return to the requestor (client).
         /// </summary>
-        public int StatusCode;
+        public int StatusCode = 200;
 
         /// <summary>
         /// The HTTP status description to return to the requestor (client).
         /// </summary>
-        public string StatusDescription;
-         
+        public string StatusDescription = "OK";
+
         /// <summary>
         /// User-supplied headers to include in the response.
         /// </summary>
-        public Dictionary<string, string> Headers;
+        public Dictionary<string, string> Headers = new Dictionary<string, string>();
 
         /// <summary>
         /// User-supplied content-type to include in the response.
         /// </summary>
-        public string ContentType;
+        public string ContentType = String.Empty;
 
         /// <summary>
         /// The length of the supplied response data.
         /// </summary>
-        public long ContentLength;
-
-        /// <summary>
-        /// The data to return to the requestor in the response body.
-        /// </summary>
-        public byte[] Data;
-
-        /// <summary>
-        /// The stream to read and send to the requestor in the response body.
-        /// </summary>
-        public Stream DataStream;
-
-        /// <summary>
-        /// The MD5 value calculated over the supplied Data.
-        /// </summary>
-        public string DataMd5;
+        public long ContentLength = 0;
 
         #endregion
 
         #region Private-Members
+         
+        private int _StreamBufferSize = 65536;
+
+        private HttpRequest _Request;
+        private HttpListenerContext _Context;
+        private HttpListenerResponse _Response;
+        private Stream _OutputStream;
+        private bool _HeadersSent = false;
+
+        private EventCallbacks _Events;
 
         #endregion
 
         #region Constructors-and-Factories
-
-        /// <summary>
-        /// Create an uninitialized HttpResponse object.
-        /// </summary>
-        public HttpResponse()
-        {
-            TimestampUtc = DateTime.Now.ToUniversalTime();
-            Headers = new Dictionary<string, string>();
-        }
-
-        /// <summary>
-        /// Create a new HttpResponse object with no data.
-        /// </summary>
-        /// <param name="req">The HttpRequest object for which this request is being created.</param>
-        /// <param name="status">The HTTP status code to return to the requestor (client).</param>
-        /// <param name="headers">User-supplied headers to include in the response.</param>
-        public HttpResponse(HttpRequest req, int status, Dictionary<string, string> headers)
+         
+        internal HttpResponse(HttpRequest req, HttpListenerContext ctx, EventCallbacks events, int bufferSize)
         {
             if (req == null) throw new ArgumentNullException(nameof(req));
+            if (ctx == null) throw new ArgumentNullException(nameof(ctx));
+            if (events == null) throw new ArgumentNullException(nameof(events));
 
-            SetBaseVariables(req, status, headers, null);
-            SetStatusDescription();
-
-            DataStream = null;
-            Data = null;
-            ContentLength = 0;
-        }
-
-        /// <summary>
-        /// Create a new HttpResponse object with no data.
-        /// </summary>
-        /// <param name="req">The HttpRequest object for which this request is being created.</param>
-        /// <param name="status">The HTTP status code to return to the requestor (client).</param>
-        /// <param name="headers">User-supplied headers to include in the response.</param>
-        /// <param name="contentLength">Explicit content-length value, useful for HEAD responses.</param>
-        public HttpResponse(HttpRequest req, int status, Dictionary<string, string> headers, long contentLength)
-        {
-            if (req == null) throw new ArgumentNullException(nameof(req));
-
-            SetBaseVariables(req, status, headers, null);
-            SetStatusDescription();
-
-            DataStream = null;
-            Data = null;
-            ContentLength = contentLength;
-        }
-
-        /// <summary>
-        /// Create a new HttpResponse object.
-        /// </summary>
-        /// <param name="req">The HttpRequest object for which this request is being created.</param>
-        /// <param name="status">The HTTP status code to return to the requestor (client).</param>
-        /// <param name="headers">User-supplied headers to include in the response.</param>
-        /// <param name="contentType">User-supplied content-type to include in the response.</param>
-        /// <param name="data">The data to return to the requestor in the response body.</param> 
-        public HttpResponse(HttpRequest req, int status, Dictionary<string, string> headers, string contentType, byte[] data)
-        {
-            if (req == null) throw new ArgumentNullException(nameof(req));
-
-            SetBaseVariables(req, status, headers, contentType);
-            SetStatusDescription();
-
-            DataStream = null;
-            Data = data;
-            if (Data != null && Data.Length > 0) ContentLength = Data.Length;
-        }
-
-        /// <summary>
-        /// Create a new HttpResponse object.
-        /// </summary>
-        /// <param name="req">The HttpRequest object for which this request is being created.</param>
-        /// <param name="status">The HTTP status code to return to the requestor (client).</param>
-        /// <param name="headers">User-supplied headers to include in the response.</param>
-        /// <param name="contentType">User-supplied content-type to include in the response.</param>
-        /// <param name="data">The data to return to the requestor in the response body.</param> 
-        public HttpResponse(HttpRequest req, int status, Dictionary<string, string> headers, string contentType, string data)
-        {
-            if (req == null) throw new ArgumentNullException(nameof(req));
-
-            SetBaseVariables(req, status, headers, contentType);
-            SetStatusDescription();
-
-            DataStream = null;
-            Data = null;
-            if (!String.IsNullOrEmpty(data)) Data = Encoding.UTF8.GetBytes(data);
-            if (Data != null && Data.Length > 0) ContentLength = Data.Length;
-        }
-
-        /// <summary>
-        /// Create a new HttpResponse object.
-        /// </summary>
-        /// <param name="req">The HttpRequest object for which this request is being created.</param>
-        /// <param name="status">The HTTP status code to return to the requestor (client).</param>
-        /// <param name="headers">User-supplied headers to include in the response.</param>
-        /// <param name="contentType">User-supplied content-type to include in the response.</param>
-        /// <param name="contentLength">The number of bytes the client should expect to read from the data stream.</param>
-        /// <param name="dataStream">The stream containing the data that should be read to return to the requestor.</param>
-        public HttpResponse(HttpRequest req, int status, Dictionary<string, string> headers, string contentType, long contentLength, Stream dataStream)
-        {
-            if (req == null) throw new ArgumentNullException(nameof(req));
-            if (contentLength < 0) throw new ArgumentException("Content length must be zero or greater.");
-            SetBaseVariables(req, status, headers, contentType);
-            SetStatusDescription();
-
-            Data = null;
-            DataStream = dataStream;
-            ContentLength = contentLength; 
-
-            if (contentLength > 0 && !DataStream.CanRead) throw new IOException("Cannot read from input stream.");
-            if (contentLength > 0 && !DataStream.CanSeek) throw new IOException("Cannot perform seek on input stream.");
-            if (contentLength > 0) DataStream.Seek(0, SeekOrigin.Begin);
+            _Request = req;
+            _Context = ctx;
+            _Response = _Context.Response;
+            _Events = events;
+            _StreamBufferSize = bufferSize;
+            _OutputStream = _Response.OutputStream;
         }
 
         #endregion
-         
-        #region Public-Methods
 
+        #region Public-Methods
+         
         /// <summary>
         /// Retrieve a string-formatted, human-readable copy of the HttpResponse instance.
         /// </summary>
@@ -239,7 +88,6 @@ namespace WatsonWebserver
             string ret = "";
   
             ret += "--- HTTP Response ---" + Environment.NewLine;
-            ret += TimestampUtc.ToString("MM/dd/yyyy HH:mm:ss") + " " + SourceIp + ":" + SourcePort + " to " + DestIp + ":" + DestPort + " " + Method + " " + RawUrlWithoutQuery + " [" + StatusCode + "]" + Environment.NewLine;
             ret += "  Content     : " + ContentType + " (" + ContentLength + " bytes)" + Environment.NewLine;
             if (Headers != null && Headers.Count > 0)
             {
@@ -253,124 +101,353 @@ namespace WatsonWebserver
             {
                 ret += "  Headers     : none" + Environment.NewLine;
             }
+             
+            return ret;
+        }
 
-            if (Data != null)
+        /// <summary>
+        /// Send headers and no data to the requestor and terminate the connection.
+        /// </summary>
+        /// <returns>True if successful.</returns>
+        public async Task<bool> Send()
+        {
+            if (!_HeadersSent) SendHeaders();
+
+            await _OutputStream.FlushAsync();
+            _OutputStream.Close();
+
+            if (_Response != null) _Response.Close();
+            return true;
+        }
+
+        /// <summary>
+        /// Send headers with a specified content length and no data to the requestor and terminate the connection.  Useful for HEAD requests where the content length must be set.
+        /// </summary>
+        /// <returns>True if successful.</returns>
+        public async Task<bool> Send(long contentLength)
+        {
+            ContentLength = contentLength;
+            if (!_HeadersSent) SendHeaders();
+
+            await _OutputStream.FlushAsync();
+            _OutputStream.Close();
+
+            if (_Response != null) _Response.Close();
+            return true;
+        }
+
+        /// <summary>
+        /// Send headers and data to the requestor and terminate the connection.
+        /// </summary>
+        /// <param name="data">Data.</param>
+        /// <returns>True if successful.</returns>
+        public async Task<bool> Send(string data)
+        {
+            if (!_HeadersSent) SendHeaders();
+
+            byte[] bytes = null;
+            if (!String.IsNullOrEmpty(data))
             {
-                ret += "  Data        : " + Environment.NewLine;
-                ret += Encoding.UTF8.GetString(Data) + Environment.NewLine;
+                bytes = Encoding.UTF8.GetBytes(data);
+                _Response.ContentLength64 = bytes.Length;
             }
             else
             {
-                ret += "  Data        : [null]" + Environment.NewLine;
+                _Response.ContentLength64 = 0;
             }
 
-            if (DataStream != null)
+            try
             {
-                ret += "  Data Stream : [exists]" + Environment.NewLine;
+                if (_Request.Method != HttpMethod.HEAD)
+                {
+                    if (bytes != null && bytes.Length > 0)
+                    {
+                        await _OutputStream.WriteAsync(bytes, 0, bytes.Length);
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // do nothing
+                return false;
+            }
+            catch (Exception eInner)
+            {
+                _Events.ExceptionEncountered(_Request.SourceIp, _Request.SourcePort, eInner);
+                return false;
+            }
+            finally
+            {
+                await _OutputStream.FlushAsync();
+                _OutputStream.Close();
+
+                if (_Response != null) _Response.Close();
             }
 
-            return ret;
+            return true;
         }
-          
+
+        /// <summary>
+        /// Send headers and data to the requestor and terminate the connection.
+        /// </summary>
+        /// <param name="data">Data.</param>
+        /// <returns>True if successful.</returns>
+        public async Task<bool> Send(byte[] data)
+        {
+            if (!_HeadersSent) SendHeaders();
+
+            if (data != null && data.Length > 0) _Response.ContentLength64 = data.Length;
+            else _Response.ContentLength64 = 0;
+
+            try
+            {
+                if (_Request.Method != HttpMethod.HEAD)
+                {
+                    if (data != null && data.Length > 0)
+                    {
+                        await _OutputStream.WriteAsync(data, 0, (int)_Response.ContentLength64);
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // do nothing
+                return false;
+            }
+            catch (Exception eInner)
+            {
+                _Events.ExceptionEncountered(_Request.SourceIp, _Request.SourcePort, eInner);
+                return false;
+            }
+            finally
+            {
+                await _OutputStream.FlushAsync();
+                _OutputStream.Close();
+
+                if (_Response != null) _Response.Close();
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Send headers and data to the requestor and terminate.
+        /// </summary>
+        /// <param name="contentLength">Number of bytes to send.</param>
+        /// <param name="stream">Stream containing the data.</param>
+        /// <returns>True if successful.</returns>
+        public async Task<bool> Send(long contentLength, Stream stream)
+        {
+            ContentLength = contentLength;
+            if (!_HeadersSent) SendHeaders();
+             
+            try
+            {
+                if (_Request.Method != HttpMethod.HEAD)
+                {
+                    if (stream != null && stream.CanRead && contentLength > 0)
+                    {
+                        long bytesRemaining = contentLength;
+
+                        while (bytesRemaining > 0)
+                        {
+                            int bytesRead = 0;
+                            byte[] buffer = new byte[_StreamBufferSize];
+                            bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
+                            if (bytesRead > 0)
+                            {
+                                await _OutputStream.WriteAsync(buffer, 0, bytesRead);
+                                bytesRemaining -= bytesRead;
+                            }
+                        }
+
+                        stream.Close();
+                        stream.Dispose();
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                return false;
+            }
+            catch (Exception eInner)
+            {
+                _Events.ExceptionEncountered(_Request.SourceIp, _Request.SourcePort, eInner);
+                return false;
+            }
+            finally
+            {
+                await _OutputStream.FlushAsync();
+                _OutputStream.Close();
+
+                if (_Response != null) _Response.Close();
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Send headers (if not already sent) and a chunk of data using chunked transfer-encoding, and keep the connection in-tact.
+        /// </summary>
+        /// <param name="chunk">Chunk of data.</param>
+        /// <returns>True if successful.</returns>
+        public async Task<bool> SendChunk(byte[] chunk)
+        {
+            if (!_HeadersSent) SendHeaders();
+
+            try
+            {
+                if (chunk != null && chunk.Length > 0)
+                {
+                    byte[] packagedChunk = PackageChunk(chunk);
+                    await _OutputStream.WriteAsync(packagedChunk, 0, packagedChunk.Length);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // do nothing
+                return false;
+            }
+            catch (Exception eInner)
+            {
+                _Events.ExceptionEncountered(_Request.SourceIp, _Request.SourcePort, eInner);
+                return false;
+            }
+            finally
+            {
+                await _OutputStream.FlushAsync();
+                // do not close or dispose
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Send headers (if not already sent) and the final chunk of data using chunked transfer-encoding and terminate the connection.
+        /// </summary>
+        /// <param name="chunk">Chunk of data.</param>
+        /// <returns>True if successful.</returns>
+        public async Task<bool> SendFinalChunk(byte[] chunk)
+        {
+            if (!_HeadersSent) SendHeaders();
+
+            try
+            {
+                if (chunk != null && chunk.Length > 0)
+                {
+                    byte[] packagedChunk = PackageChunk(chunk);
+                    await _OutputStream.WriteAsync(packagedChunk, 0, packagedChunk.Length);
+                }
+
+                byte[] endChunk = PackageChunk(null);
+                await _OutputStream.WriteAsync(endChunk, 0, endChunk.Length);
+            }
+            catch (OperationCanceledException)
+            {
+                // do nothing
+                return false;
+            }
+            catch (Exception eInner)
+            {
+                _Events.ExceptionEncountered(_Request.SourceIp, _Request.SourcePort, eInner);
+                return false;
+            }
+            finally
+            {
+                await _OutputStream.FlushAsync();
+                _OutputStream.Close();
+
+                if (_Response != null) _Response.Close();
+            }
+
+            return true;
+        }
+
         #endregion
 
         #region Private-Methods
 
-        private void SetBaseVariables(HttpRequest req, int status, Dictionary<string, string> headers, string contentType)
+        private void SendHeaders()
         {
-            TimestampUtc = req.TimestampUtc;
-            SourceIp = req.SourceIp;
-            SourcePort = req.SourcePort;
-            DestIp = req.DestIp;
-            DestPort = req.DestPort;
-            Method = req.Method;
-            RawUrlWithoutQuery = req.RawUrlWithoutQuery;
-             
-            Headers = headers;
-            ContentType = contentType; 
-            if (String.IsNullOrEmpty(ContentType)) ContentType = "application/octet-stream";
+            if (_HeadersSent) throw new IOException("Headers already sent.");
 
-            StatusCode = status; 
+            _Response.ContentLength64 = ContentLength;
+            _Response.StatusCode = StatusCode;
+            _Response.StatusDescription = GetStatusDescription(StatusCode);
+            _Response.AddHeader("Access-Control-Allow-Origin", "*");
+            _Response.ContentType = ContentType;
+
+            if (Headers != null && Headers.Count > 0)
+            {
+                foreach (KeyValuePair<string, string> curr in Headers)
+                {
+                    if (String.IsNullOrEmpty(curr.Key)) continue;
+                    _Response.AddHeader(curr.Key, curr.Value);
+                }
+            }
+
+            _HeadersSent = true;
         }
 
-        private void SetStatusDescription()
-        { 
-            switch (StatusCode)
+        private string GetStatusDescription(int statusCode)
+        {
+            switch (statusCode)
             {
                 case 200:
-                    StatusDescription = "OK";
-                    break;
-
+                    return "OK";
                 case 201:
-                    StatusDescription = "Created";
-                    break;
-
-                case 204:
-                    StatusDescription = "No Content";
-                    break;
-
+                    return "Created";
                 case 301:
-                    StatusDescription = "Moved Permanently";
-                    break;
-
+                    return "Moved Permanently";
                 case 302:
-                    StatusDescription = "Moved Temporarily";
-                    break;
-
+                    return "Moved Temporarily";
                 case 304:
-                    StatusDescription = "Not Modified";
-                    break;
-
+                    return "Not Modified";
                 case 400:
-                    StatusDescription = "Bad Request";
-                    break;
-
+                    return "Bad Request";
                 case 401:
-                    StatusDescription = "Unauthorized";
-                    break;
-
+                    return "Unauthorized";
                 case 403:
-                    StatusDescription = "Forbidden";
-                    break;
-
+                    return "Forbidden";
                 case 404:
-                    StatusDescription = "Not Found";
-                    break;
-
+                    return "Not Found";
                 case 405:
-                    StatusDescription = "Method Not Allowed";
-                    break;
-
+                    return "Method Not Allowed";
                 case 429:
-                    StatusDescription = "Too Many Requests";
-                    break;
-
+                    return "Too Many Requests";
                 case 500:
-                    StatusDescription = "Internal Server Error";
-                    break;
-
+                    return "Internal Server Error";
                 case 501:
-                    StatusDescription = "Not Implemented";
-                    break;
-
+                    return "Not Implemented";
                 case 503:
-                    StatusDescription = "Service Unavailable";
-                    break;
-
+                    return "Service Unavailable";
                 default:
-                    StatusDescription = "Unknown";
-                    return;
-            } 
+                    return "Unknown Status";
+            }
         }
 
-        private byte[] AppendBytes(byte[] orig, byte[] append)
+        private byte[] PackageChunk(byte[] chunk)
         {
-            if (append == null) return orig;
-            if (orig == null) return append;
+            if (chunk == null || chunk.Length < 1)
+            {
+                return Encoding.UTF8.GetBytes("0\r\n\r\n");
+            }
+             
+            MemoryStream ms = new MemoryStream();
 
-            byte[] ret = new byte[orig.Length + append.Length];
-            Buffer.BlockCopy(orig, 0, ret, 0, orig.Length);
-            Buffer.BlockCopy(append, 0, ret, orig.Length, append.Length);
+            string newlineStr = "\r\n";
+            byte[] newline = Encoding.UTF8.GetBytes(newlineStr);
+
+            string chunkLenHex = chunk.Length.ToString("X");
+            byte[] chunkLen = Encoding.UTF8.GetBytes(chunkLenHex);
+
+            ms.Write(chunkLen, 0, chunkLen.Length);
+            ms.Write(newline, 0, newline.Length);
+            ms.Write(chunk, 0, chunk.Length);
+            ms.Write(newline, 0, newline.Length);
+            ms.Seek(0, SeekOrigin.Begin);
+
+            byte[] ret = ms.ToArray();
             return ret;
         }
 

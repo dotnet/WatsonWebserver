@@ -43,7 +43,7 @@ namespace WatsonWebserver
         /// <param name="method">The HTTP method.</param>
         /// <param name="path">URL path, i.e. /path/to/resource.</param>
         /// <param name="handler">Method to invoke.</param>
-        public void Add(HttpMethod method, string path, Func<HttpRequest, HttpResponse> handler)
+        public void Add(HttpMethod method, string path, Func<HttpContext, Task> handler)
         {
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
             if (handler == null) throw new ArgumentNullException(nameof(handler));
@@ -137,7 +137,7 @@ namespace WatsonWebserver
         /// <param name="method">The HTTP method.</param>
         /// <param name="path">URL path.</param>
         /// <returns>Method to invoke.</returns>
-        public Func<HttpRequest, HttpResponse> Match(HttpMethod method, string path)
+        public Func<HttpContext, Task> Match(HttpMethod method, string path)
         {
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
 

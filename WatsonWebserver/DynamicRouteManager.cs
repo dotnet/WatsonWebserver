@@ -43,7 +43,7 @@ namespace WatsonWebserver
         /// <param name="method">The HTTP method.</param>
         /// <param name="path">URL path, i.e. /path/to/resource.</param>
         /// <param name="handler">Method to invoke.</param>
-        public void Add(HttpMethod method, Regex path, Func<HttpRequest, HttpResponse> handler)
+        public void Add(HttpMethod method, Regex path, Func<HttpContext, Task> handler)
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
             if (handler == null) throw new ArgumentNullException(nameof(handler));
@@ -83,18 +83,18 @@ namespace WatsonWebserver
         /// <param name="method">The HTTP method.</param>
         /// <param name="rawUrl">URL path.</param>
         /// <returns>Method to invoke.</returns>
-        public Func<HttpRequest, HttpResponse> Match(HttpMethod method, string rawUrl)
+        public Func<HttpContext, Task> Match(HttpMethod method, string rawUrl)
         {
             if (String.IsNullOrEmpty(rawUrl)) throw new ArgumentNullException(nameof(rawUrl));
 
             object val;
-            Func<HttpRequest, HttpResponse> handler;
+            Func<HttpContext, Task> handler;
             if (_Matcher.Match(
                 BuildConsolidatedRegex(method, rawUrl), 
                 out val))
             { 
                 if (val == null) return null;
-                handler = (Func<HttpRequest, HttpResponse>)val;
+                handler = (Func<HttpContext, Task>)val;
                 return handler;
             }
 

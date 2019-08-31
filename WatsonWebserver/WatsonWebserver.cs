@@ -32,13 +32,7 @@ namespace WatsonWebserver
                 return (_HttpListener != null) ? _HttpListener.IsListening : false;
             } 
         }
-
-        /// <summary>
-        /// Indicate whether or not Watson should fully read the input stream and populate HttpRequest.Data.
-        /// Otherwise, the request body will be available by reading HttpRequest.DataStream.
-        /// </summary>
-        public bool ReadInputStream = true;
-
+         
         /// <summary>
         /// Indicate the buffer size to use when reading from a stream to send data to a requestor.
         /// </summary>
@@ -58,37 +52,39 @@ namespace WatsonWebserver
         /// <summary>
         /// Function to call when an OPTIONS request is received.  Often used to handle CORS.  Leave as 'null' to use the default OPTIONS handler.
         /// </summary>
-        public Func<HttpRequest, HttpResponse> OptionsRoute = null;
+        public Func<HttpContext, Task<bool>> OptionsRoute = null;
 
         /// <summary>
-        /// Function to call prior to routing.  Returning an HttpResponse will cause Watson to send the supplied response.  Returning 'null' allows the request to be routed.
+        /// Function to call prior to routing.  
+        /// Return 'true' if the connection should be terminated.
+        /// Return 'false' to allow the connection to continue routing.
         /// </summary>
-        public Func<HttpRequest, HttpResponse> PreRoutingHandler = null;
+        public Func<HttpContext, Task<bool>> PreRoutingHandler = null;
 
         /// <summary>
         /// Dynamic routes; i.e. routes with regex matching and any HTTP method.
         /// </summary>
-        public DynamicRouteManager DynamicRoutes;
+        public DynamicRouteManager DynamicRoutes = new DynamicRouteManager();
 
         /// <summary>
         /// Static routes; i.e. routes with explicit matching and any HTTP method.
         /// </summary>
-        public StaticRouteManager StaticRoutes;
+        public StaticRouteManager StaticRoutes = new StaticRouteManager();
 
         /// <summary>
         /// Content routes; i.e. routes to specific files or folders for GET and HEAD requests.
         /// </summary>
-        public ContentRouteManager ContentRoutes;
+        public ContentRouteManager ContentRoutes = new ContentRouteManager();
 
         /// <summary>
         /// Access control manager, i.e. default mode of operation, white list, and black list.
         /// </summary>
-        public AccessControlManager AccessControl;
+        public AccessControlManager AccessControl = new AccessControlManager(AccessControlMode.DefaultPermit);
 
         /// <summary>
         /// Set specific actions/callbacks to use when events are raised.
         /// </summary>
-        public EventCallbacks Events;
+        public EventCallbacks Events = new EventCallbacks();
 
         #endregion
 
@@ -103,7 +99,7 @@ namespace WatsonWebserver
         private int _StreamReadBufferSize = 65536; 
 
         private ContentRouteProcessor _ContentRouteProcessor;
-        private Func<HttpRequest, HttpResponse> _DefaultRoute;
+        private Func<HttpContext, Task> _DefaultRoute;
         
         private CancellationTokenSource _TokenSource;
         private CancellationToken _Token;
@@ -118,12 +114,12 @@ namespace WatsonWebserver
         /// <param name="hostname">Hostname or IP address on which to listen.</param>
         /// <param name="port">TCP port on which to listen.</param>
         /// <param name="ssl">Specify whether or not SSL should be used (HTTPS).</param>
-        /// <param name="defaultRequestHandler">Method used when a request is received and no routes are defined.  Commonly used as the 404 handler when routes are used.</param>
-        public Server(string hostname, int port, bool ssl, Func<HttpRequest, HttpResponse> defaultRequestHandler)
+        /// <param name="defaultRoute">Method used when a request is received and no matching routes are found.  Commonly used as the 404 handler when routes are used.</param>
+        public Server(string hostname, int port, bool ssl, Func<HttpContext, Task> defaultRoute)
         {
             if (String.IsNullOrEmpty(hostname)) hostname = "*";
             if (port < 1) throw new ArgumentOutOfRangeException(nameof(port));
-            if (defaultRequestHandler == null) throw new ArgumentNullException(nameof(defaultRequestHandler));
+            if (defaultRoute == null) throw new ArgumentNullException(nameof(defaultRoute));
 
             _HttpListener = new HttpListener();
 
@@ -131,29 +127,27 @@ namespace WatsonWebserver
             _ListenerHostnames.Add(hostname); 
             _ListenerPort = port;
             _ListenerSsl = ssl; 
-            _DefaultRoute = defaultRequestHandler;
-
-            Events = new EventCallbacks();
-            InitializeRouteManagers();
-            AccessControl = new AccessControlManager(AccessControlMode.DefaultPermit);
-            Welcome();
-
+            _DefaultRoute = defaultRoute;
             _TokenSource = new CancellationTokenSource();
             _Token = _TokenSource.Token;
+            _ContentRouteProcessor = new ContentRouteProcessor(ContentRoutes);
+
+            Welcome();
+
             Task.Run(() => StartServer(_Token), _Token);
         }
-         
+
         /// <summary>
         /// Creates a new instance of the Watson Webserver.
         /// </summary>
         /// <param name="hostnames">Hostnames or IP addresses on which to listen.  Note: multiple listener endpoints is not supported on all platforms.</param>
         /// <param name="port">TCP port on which to listen.</param>
         /// <param name="ssl">Specify whether or not SSL should be used (HTTPS).</param>
-        /// <param name="defaultRequestHandler">Method used when a request is received and no routes are defined.  Commonly used as the 404 handler when routes are used.</param>
-        public Server(List<string> hostnames, int port, bool ssl, Func<HttpRequest, HttpResponse> defaultRequestHandler)
+        /// <param name="defaultRoute">Method used when a request is received and no matching routes are found.  Commonly used as the 404 handler when routes are used.</param>
+        public Server(List<string> hostnames, int port, bool ssl, Func<HttpContext, Task> defaultRoute)
         {
             if (port < 1) throw new ArgumentOutOfRangeException(nameof(port));
-            if (defaultRequestHandler == null) throw new ArgumentNullException(nameof(defaultRequestHandler));
+            if (defaultRoute == null) throw new ArgumentNullException(nameof(defaultRoute));
 
             _HttpListener = new HttpListener();
 
@@ -172,15 +166,13 @@ namespace WatsonWebserver
             
             _ListenerPort = port;
             _ListenerSsl = ssl;
-            _DefaultRoute = defaultRequestHandler;
-
-            Events = new EventCallbacks();
-            InitializeRouteManagers();
-            AccessControl = new AccessControlManager(AccessControlMode.DefaultPermit);
-            Welcome();
-
+            _DefaultRoute = defaultRoute; 
             _TokenSource = new CancellationTokenSource();
             _Token = _TokenSource.Token;
+            _ContentRouteProcessor = new ContentRouteProcessor(ContentRoutes);
+
+            Welcome();
+
             Task.Run(() => StartServer(_Token), _Token);
         }
 
@@ -215,17 +207,7 @@ namespace WatsonWebserver
 
             Events.ServerDisposed();
         }
-
-        private void InitializeRouteManagers()
-        {
-            DynamicRoutes = new DynamicRouteManager();
-            StaticRoutes = new StaticRouteManager();
-            ContentRoutes = new ContentRouteManager();
-
-            _ContentRouteProcessor = new ContentRouteProcessor(ContentRoutes);
-            OptionsRoute = null;
-        }
-
+         
         private void Welcome()
         {
             Console.Write("Starting Watson Webserver on: ");
@@ -247,6 +229,8 @@ namespace WatsonWebserver
         {
             try
             {
+                #region Start-Listeners
+
                 foreach (string curr in _ListenerHostnames)
                 {
                     string prefix = null;
@@ -256,139 +240,129 @@ namespace WatsonWebserver
                 }
 
                 _HttpListener.Start();
-                
+
+                #endregion
+
                 while (_HttpListener.IsListening)
                 {
-                    ThreadPool.QueueUserWorkItem((c) =>
+                    ThreadPool.QueueUserWorkItem((c) => 
                     { 
                         if (token.IsCancellationRequested) throw new OperationCanceledException();
 
-                        var context = c as HttpListenerContext;
-                        HttpRequest req = null;
-                        
+                        HttpListenerContext listenerContext = c as HttpListenerContext;
+                        HttpContext ctx = null; 
+
                         try
                         {
+                            #region Build-Context-and-Send-Notification
+
                             Events.ConnectionReceived(
-                                context.Request.RemoteEndPoint.Address.ToString(),
-                                context.Request.RemoteEndPoint.Port);
-                        
-                            // Populate HTTP request object
-                            req = new HttpRequest(context, ReadInputStream);
-                            if (req == null)
+                                listenerContext.Request.RemoteEndPoint.Address.ToString(),
+                                listenerContext.Request.RemoteEndPoint.Port);
+
+                            ctx = new HttpContext(listenerContext, Events);
+
+                            Events.RequestReceived(
+                                ctx.Request.SourceIp, 
+                                ctx.Request.SourcePort, 
+                                ctx.Request.Method.ToString(), 
+                                ctx.Request.FullUrl);
+
+                            #endregion
+
+                            #region Check-Access-Control
+
+                            if (!AccessControl.Permit(ctx.Request.SourceIp))
                             {
-                                HttpResponse resp = new HttpResponse(req, 500, null, "text/plain", "Unable to parse HTTP request");
-                                SendResponse(context, req, resp);
+                                Events.AccessControlDenied(
+                                    ctx.Request.SourceIp,
+                                    ctx.Request.SourcePort,
+                                    ctx.Request.Method.ToString(),
+                                    ctx.Request.FullUrl);
+
+                                listenerContext.Response.Close();
                                 return;
                             }
-                            else
-                            {
-                                Events.RequestReceived(req.SourceIp, req.SourcePort, req.Method.ToString(), req.FullUrl);
-                            }
 
-                            // Check access control
-                            if (!AccessControl.Permit(req.SourceIp))
-                            {
-                                Events.AccessControlDenied(req.SourceIp, req.SourcePort, req.Method.ToString(), req.FullUrl);
-                                context.Response.Close();
-                                return;
-                            } 
+                            #endregion
 
-                            // Process OPTIONS request
-                            if (req.Method == HttpMethod.OPTIONS
+                            #region Process-Preflight-Requests
+                             
+                            if (ctx.Request.Method == HttpMethod.OPTIONS
                                 && OptionsRoute != null)
                             { 
-                                OptionsProcessor(context, req);
+                                OptionsProcessor(listenerContext, ctx.Request);
                                 return;
                             }
 
-                            // Send to handler
-                            Task.Run(() =>
+                            #endregion
+
+                            #region Process-Via-Routing
+
+                            Task.Run(() =>  
                             {
-                                HttpResponse resp = null;
-                                Func<HttpRequest, HttpResponse> handler = null;
+                                Func<HttpContext, Task> handler = null;
 
                                 #region Pre-Routing-Handler
 
                                 if (PreRoutingHandler != null)
                                 {
-                                    resp = PreRoutingHandler(req);
+                                    if (PreRoutingHandler(ctx).Result) return;
                                 }
 
                                 #endregion
 
                                 #region Content-Routes
 
-                                if (req.Method == HttpMethod.GET || req.Method == HttpMethod.HEAD)
+                                if (ctx.Request.Method == HttpMethod.GET || ctx.Request.Method == HttpMethod.HEAD)
                                 {
-                                    if (ContentRoutes.Exists(req.RawUrlWithoutQuery))
+                                    if (ContentRoutes.Exists(ctx.Request.RawUrlWithoutQuery))
                                     {
-                                        resp = _ContentRouteProcessor.Process(req, ReadInputStream);
+                                        _ContentRouteProcessor.Process(ctx).RunSynchronously();
+                                        return;
                                     }
                                 }
 
                                 #endregion
 
-                                #region Static-Dynamic-Default-Routes
-
-                                if (resp == null)
+                                #region Static-Routes
+                                 
+                                handler = StaticRoutes.Match(ctx.Request.Method, ctx.Request.RawUrlWithoutQuery);
+                                if (handler != null)
                                 {
-                                    handler = StaticRoutes.Match(req.Method, req.RawUrlWithoutQuery);
-                                    if (handler != null)
-                                    {
-                                        resp = handler(req);
-                                    }
-                                    else
-                                    {
-                                        handler = DynamicRoutes.Match(req.Method, req.RawUrlWithoutQuery);
-                                        if (handler != null)
-                                        {
-                                            resp = handler(req);
-                                        }
-                                        else
-                                        { 
-                                            resp = DefaultRouteProcessor(context, req);
-                                        }
-                                    }
-                                }
-
-                                #endregion
-
-                                #region Respond
-
-                                if (resp == null)
-                                {
-                                    resp = new HttpResponse(req, 500, null, "text/plain", "Unable to generate repsonse");
-                                    SendResponse(context, req, resp);
-                                    return;
-                                }
-                                else
-                                {
-                                    Dictionary<string, string> headers = new Dictionary<string, string>();
-                                    if (!String.IsNullOrEmpty(resp.ContentType))
-                                    {
-                                        headers.Add("content-type", resp.ContentType);
-                                    }
-
-                                    if (resp.Headers != null && resp.Headers.Count > 0)
-                                    {
-                                        foreach (KeyValuePair<string, string> curr in resp.Headers)
-                                        {
-                                            headers = Common.AddToDict(curr.Key, curr.Value, headers);
-                                        }
-                                    }
-
-                                    SendResponse(context, req, resp);
+                                    handler(ctx).RunSynchronously();
                                     return;
                                 }
 
                                 #endregion
-                            }); 
+
+                                #region Dynamic-Routes
+
+                                handler = DynamicRoutes.Match(ctx.Request.Method, ctx.Request.RawUrlWithoutQuery);
+                                if (handler != null)
+                                {
+                                    handler(ctx).RunSynchronously();
+                                    return;
+                                }
+
+                                #endregion
+
+                                #region Default-Route
+
+                                _DefaultRoute(ctx).RunSynchronously();
+                                return; 
+
+                                #endregion 
+                            });
+
+                            #endregion
                         }
                         catch (Exception eInner)
                         {
-                            if (req == null) Events.ExceptionEncountered(null, 0, eInner);
-                            else Events.ExceptionEncountered(req.SourceIp, req.SourcePort, eInner);
+                            if (ctx == null || ctx.Request == null) Events.ExceptionEncountered(null, 0, eInner);
+                            else Events.ExceptionEncountered(ctx.Request.SourceIp, ctx.Request.SourcePort, eInner);
                         } 
+
                     }, _HttpListener.GetContext());
                 }
             }
@@ -405,201 +379,7 @@ namespace WatsonWebserver
                 Events.ExceptionEncountered(null, 0, eOuter);
             } 
         }
-
-        private HttpResponse DefaultRouteProcessor(HttpListenerContext context, HttpRequest request)
-        {
-            if (context == null) throw new ArgumentNullException(nameof(context));
-            if (request == null) throw new ArgumentNullException(nameof(request));
-            HttpResponse ret = _DefaultRoute(request);
-            if (ret == null)
-            { 
-                ret = new HttpResponse(request, 500, null, "application/json", Encoding.UTF8.GetBytes("Unable to generate response"));
-                return ret;
-            }
-
-            return ret;
-        }
          
-        private void SendResponse(
-            HttpListenerContext context,
-            HttpRequest req,
-            HttpResponse resp)
-        {
-            long responseLength = 0;
-            HttpListenerResponse response = null;
-
-            try
-            { 
-                #region Status-Code-and-Description
-
-                response = context.Response;
-                response.StatusCode = resp.StatusCode;
-
-                switch (resp.StatusCode)
-                {
-                    case 200:
-                        response.StatusDescription = "OK";
-                        break;
-
-                    case 201:
-                        response.StatusDescription = "Created";
-                        break;
-
-                    case 301:
-                        response.StatusDescription = "Moved Permanently";
-                        break;
-
-                    case 302:
-                        response.StatusDescription = "Moved Temporarily";
-                        break;
-
-                    case 304:
-                        response.StatusDescription = "Not Modified";
-                        break;
-
-                    case 400:
-                        response.StatusDescription = "Bad Request";
-                        break;
-
-                    case 401:
-                        response.StatusDescription = "Unauthorized";
-                        break;
-
-                    case 403:
-                        response.StatusDescription = "Forbidden";
-                        break;
-
-                    case 404:
-                        response.StatusDescription = "Not Found";
-                        break;
-
-                    case 405:
-                        response.StatusDescription = "Method Not Allowed";
-                        break;
-
-                    case 429:
-                        response.StatusDescription = "Too Many Requests";
-                        break;
-
-                    case 500:
-                        response.StatusDescription = "Internal Server Error";
-                        break;
-
-                    case 501:
-                        response.StatusDescription = "Not Implemented";
-                        break;
-
-                    case 503:
-                        response.StatusDescription = "Service Unavailable";
-                        break;
-
-                    default:
-                        response.StatusDescription = "Unknown Status";
-                        break;
-                }
-
-                #endregion
-
-                #region Response-Headers
-
-                response.AddHeader("Access-Control-Allow-Origin", "*");
-                response.ContentType = resp.ContentType;
-                  
-                if (resp.Headers != null && resp.Headers.Count > 0)
-                {
-                    foreach (KeyValuePair<string, string> curr in resp.Headers)
-                    {
-                        response.AddHeader(curr.Key, curr.Value);
-                    }
-                }
-
-                #endregion
-
-                #region Handle-HEAD-Request
-
-                if (req.Method == HttpMethod.HEAD)
-                {
-                    resp.Data = null;
-                    resp.DataStream = null; 
-                }
-
-                #endregion
-
-                #region Send-Response
-                
-                Stream output = response.OutputStream;
-                response.ContentLength64 = resp.ContentLength;
-
-                try
-                {
-                    if (resp.Data != null && resp.Data.Length > 0)
-                    { 
-                        responseLength = resp.Data.Length;
-                        response.ContentLength64 = responseLength;
-                        output.Write(resp.Data, 0, (int)responseLength);
-                    }
-                    else if (resp.DataStream != null && resp.ContentLength > 0)
-                    {  
-                        responseLength = resp.ContentLength; 
-                        response.ContentLength64 = resp.ContentLength;  
-                         
-                        long bytesRemaining = resp.ContentLength;
-
-                        while (bytesRemaining > 0)
-                        { 
-                            int bytesRead = 0;
-                            byte[] buffer = new byte[StreamReadBufferSize];
-                            bytesRead = resp.DataStream.Read(buffer, 0, buffer.Length);
-                            if (bytesRead > 0)
-                            {
-                                output.Write(buffer, 0, bytesRead);
-                                bytesRemaining -= bytesRead;
-                            }
-                        }
-
-                        resp.DataStream.Close();
-                        resp.DataStream.Dispose();
-                    } 
-                }
-                catch (OperationCanceledException)
-                {
-                    // do nothing, handled by AcceptConnections
-                }
-                catch (Exception eInner)
-                {
-                    Events.ExceptionEncountered(req.SourceIp, req.SourcePort, eInner);
-                }
-                finally
-                {
-                    output.Flush();
-                    output.Close();
-
-                    if (response != null) response.Close(); 
-                }
-
-                #endregion
-
-                Events.ResponseSent(req.SourceIp, req.SourcePort, req.Method.ToString(), req.FullUrl, resp.StatusCode);
-                return;
-            } 
-            catch (OperationCanceledException)
-            {
-                // do nothing, handled by AcceptConnections
-            }
-            catch (Exception eOuter)
-            {
-                Events.ExceptionEncountered(req.SourceIp, req.SourcePort, eOuter);
-                return;
-            }
-            finally
-            { 
-                if (response != null)
-                {
-                    response.Close();
-                }
-            }
-        }
-        
         private void OptionsProcessor(HttpListenerContext context, HttpRequest req)
         { 
             HttpListenerResponse response = context.Response;

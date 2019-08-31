@@ -26,7 +26,7 @@ namespace WatsonWebserver
         /// <summary>
         /// The 
         /// </summary>
-        public Func<HttpRequest, HttpResponse> Handler;
+        public Func<HttpContext, Task> Handler;
 
         #endregion
 
@@ -42,7 +42,7 @@ namespace WatsonWebserver
         /// <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE, etc.</param>
         /// <param name="path">The raw URL, i.e. /foo/bar/.  Be sure this begins and ends with '/'.</param>
         /// <param name="handler">The method that should be called to handle the request.</param>
-        public StaticRoute(HttpMethod method, string path, Func<HttpRequest, HttpResponse> handler)
+        public StaticRoute(HttpMethod method, string path, Func<HttpContext, Task> handler)
         {
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
             if (handler == null) throw new ArgumentNullException(nameof(handler));

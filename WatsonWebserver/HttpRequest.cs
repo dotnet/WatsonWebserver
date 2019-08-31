@@ -78,6 +78,21 @@ namespace WatsonWebserver
         public HttpMethod Method;
 
         /// <summary>
+        /// Indicates whether or not chunked transfer encoding was detected.
+        /// </summary>
+        public bool ChunkedTransfer = false;
+
+        /// <summary>
+        /// Indicates whether or not the payload has been gzip compressed.
+        /// </summary>
+        public bool Gzip = false;
+
+        /// <summary>
+        /// Indicates whether or not the payload has been deflate compressed.
+        /// </summary>
+        public bool Deflate = false;
+
+        /// <summary>
         /// The full URL as sent by the requestor (client).
         /// </summary>
         public string FullUrl;
@@ -126,17 +141,12 @@ namespace WatsonWebserver
         /// The headers found in the request.
         /// </summary>
         public Dictionary<string, string> Headers;
-
-        /// <summary>
-        /// The request body as sent by the requestor (client).
-        /// </summary>
-        public byte[] Data;
-
+         
         /// <summary>
         /// The stream from which to read the request body sent by the requestor (client).
         /// </summary>
         [JsonIgnore]
-        public Stream DataStream;
+        public Stream Data;
 
         /// <summary>
         /// The original HttpListenerContext from which the HttpRequest was constructed.
@@ -147,7 +157,7 @@ namespace WatsonWebserver
         #endregion
 
         #region Private-Members
-
+         
         private Uri _Uri;
         private static int _TimeoutDataReadMs = 2000;
         private static int _DataReadSleepMs = 10;
@@ -173,8 +183,7 @@ namespace WatsonWebserver
         /// Construct a new HTTP request from a given HttpListenerContext.
         /// </summary>
         /// <param name="ctx">The HttpListenerContext for the request.</param>
-        /// <param name="readStreamFully">Indicate whether or not the input stream should be read and converted to a byte array.</param>
-        public HttpRequest(HttpListenerContext ctx, bool readStreamFully)
+        public HttpRequest(HttpListenerContext ctx)
         {
             #region Check-for-Null-Values
 
@@ -420,80 +429,27 @@ namespace WatsonWebserver
                 Headers = Common.AddToDict(key, val, Headers);
             }
 
+            foreach (KeyValuePair<string, string> curr in Headers)
+            {
+                if (String.IsNullOrEmpty(curr.Key)) continue;
+                if (String.IsNullOrEmpty(curr.Value)) continue;
+
+                if (curr.Key.ToLower().Equals("transfer-encoding"))
+                {
+                    if (curr.Value.ToLower().Contains("chunked"))
+                        ChunkedTransfer = true;
+                    if (curr.Value.ToLower().Contains("gzip"))
+                        Gzip = true;
+                    if (curr.Value.ToLower().Contains("deflate"))
+                        Deflate = true;
+                }
+            }
+
             #endregion
 
             #region Payload
-
-            bool chunkedXfer = false;
-            bool gzip = false;
-            bool deflate = false;
-            string xferEncodingHeader = RetrieveHeaderValue("Transfer-Encoding");
-            if (!String.IsNullOrEmpty(xferEncodingHeader))
-            {
-                chunkedXfer = xferEncodingHeader.ToLower().Contains("chunked");
-                gzip = xferEncodingHeader.ToLower().Contains("gzip");
-                deflate = xferEncodingHeader.ToLower().Contains("deflate");
-            }
-            
-            if (chunkedXfer 
-                && Method != HttpMethod.GET 
-                && Method != HttpMethod.HEAD)
-            {
-                Stream bodyStream = ctx.Request.InputStream;
-
-                if (!readStreamFully)
-                {
-                    long contentLength = 0;
-                    MemoryStream ms = new MemoryStream();
-
-                    if (!_Decoder.Decode(bodyStream, out contentLength, out ms))
-                    {
-                        throw new IOException("Unable to decode chunk-encoded stream");
-                    }
-
-                    ContentLength = contentLength;
-                    DataStream = ms;
-                }
-                else
-                {
-                    byte[] encodedData = Common.StreamToBytes(bodyStream);
-                    byte[] decodedData = null;
-
-                    if (!_Decoder.Decode(encodedData, out decodedData))
-                    {
-                        throw new IOException("Unable to decode chunk-encoded stream");
-                    }
-
-                    ContentLength = decodedData.Length;
-                    Data = new byte[ContentLength];
-                    Buffer.BlockCopy(decodedData, 0, Data, 0, decodedData.Length);
-                } 
-            }
-            else if (ContentLength > 0)
-            {
-                if (readStreamFully)
-                {
-                    if (Method != HttpMethod.GET
-                        && Method != HttpMethod.HEAD)
-                    {
-                        try
-                        { 
-                            Data = new byte[ContentLength];
-                            Stream bodyStream = ctx.Request.InputStream;
-                            Data = Common.StreamToBytes(bodyStream); 
-                        }
-                        catch (Exception)
-                        {
-                            Data = null;
-                        }
-                    }
-                }
-                else
-                {
-                    Data = null;
-                    DataStream = ctx.Request.InputStream; 
-                }
-            }
+             
+            Data = ctx.Request.InputStream;   
 
             #endregion
         }
@@ -508,12 +464,7 @@ namespace WatsonWebserver
         /// <returns>String-formatted, human-readable copy of the HttpRequest instance.</returns>
         public override string ToString()
         {
-            string ret = "";
-            int contentLength = 0;
-            if (Data != null)
-            {
-                contentLength = Data.Length;
-            }
+            string ret = ""; 
 
             ret += "--- HTTP Request ---" + Environment.NewLine;
             ret += TimestampUtc.ToString("MM/dd/yyyy HH:mm:ss") + " " + SourceIp + ":" + SourcePort + " to " + DestIp + ":" + DestPort + Environment.NewLine;
@@ -522,7 +473,7 @@ namespace WatsonWebserver
             ret += "  Raw URL     : " + RawUrlWithoutQuery + Environment.NewLine;
             ret += "  Querystring : " + Querystring + Environment.NewLine;
             ret += "  Useragent   : " + Useragent + " (Keepalive " + Keepalive + ")" + Environment.NewLine;
-            ret += "  Content     : " + ContentType + " (" + contentLength + " bytes)" + Environment.NewLine;
+            ret += "  Content     : " + ContentType + " (" + ContentLength + " bytes)" + Environment.NewLine;
             ret += "  Destination : " + DestHostname + ":" + DestHostPort + Environment.NewLine;
 
             if (Headers != null && Headers.Count > 0)
@@ -537,22 +488,12 @@ namespace WatsonWebserver
             {
                 ret += "  Headers     : none" + Environment.NewLine;
             }
-
-            if (Data != null)
-            {
-                ret += "  Data        : " + Environment.NewLine;
-                ret += Encoding.UTF8.GetString(Data) + Environment.NewLine;
-            }
-            else
-            {
-                ret += "  Data        : [null]" + Environment.NewLine;
-            }
-
+             
             return ret;
         }
 
         /// <summary>
-        /// Retrieve a specified header value from either the headers or the querystring.
+        /// Retrieve a specified header value from either the headers or the querystring (case insensitive).
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
@@ -579,138 +520,7 @@ namespace WatsonWebserver
 
             return null;
         }
-
-        /// <summary>
-        /// Retrieve the integer value of the last raw URL element, if found.
-        /// </summary>
-        /// <returns>A nullable integer.</returns>
-        public int? RetrieveIdValue()
-        {
-            if (RawUrlEntries == null || RawUrlEntries.Count < 1) return null;
-            string[] entries = RawUrlEntries.ToArray();
-            int len = entries.Length;
-            string entry = entries[(len - 1)];
-            int ret;
-            if (Int32.TryParse(entry, out ret))
-            {
-                return ret;
-            }
-            return null;
-        }
-
-        /// <summary>
-        /// Create an HttpRequest object from a byte array.
-        /// </summary>
-        /// <param name="bytes">Byte data.</param>
-        /// <returns>A populated HttpRequest.</returns>
-        public static HttpRequest FromBytes(byte[] bytes)
-        {
-            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
-            if (bytes.Length < 4) throw new ArgumentException("Too few bytes supplied to form a valid HTTP request.");
-
-            bool endOfHeader = false;
-            byte[] headerBytes = new byte[1]; 
-
-            HttpRequest ret = new HttpRequest();
-
-            for (int i = 0; i < bytes.Length; i++)
-            {
-                if (headerBytes.Length == 1)
-                {
-                    #region First-Byte
-
-                    headerBytes[0] = bytes[i];
-                    continue;
-
-                    #endregion
-                }
-
-                if (!endOfHeader && headerBytes.Length < 4)
-                {
-                    #region Fewer-Than-Four-Bytes
-
-                    byte[] tempHeader = new byte[i + 1];
-                    Buffer.BlockCopy(headerBytes, 0, tempHeader, 0, headerBytes.Length);
-                    tempHeader[i] = bytes[i];
-                    headerBytes = tempHeader;
-                    continue;
-
-                    #endregion
-                }
-
-                if (!endOfHeader)
-                {
-                    #region Check-for-End-of-Header
-
-                    // check if end of headers reached
-                    if (
-                        (int)headerBytes[(headerBytes.Length - 1)] == 10
-                        && (int)headerBytes[(headerBytes.Length - 2)] == 13
-                        && (int)headerBytes[(headerBytes.Length - 3)] == 10
-                        && (int)headerBytes[(headerBytes.Length - 4)] == 13
-                        )
-                    {
-                        #region End-of-Header
-
-                        // end of headers reached
-                        endOfHeader = true;
-                        ret = BuildHeaders(headerBytes);
-
-                        #endregion
-                    }
-                    else
-                    {
-                        #region Still-Reading-Header
-
-                        byte[] tempHeader = new byte[i + 1];
-                        Buffer.BlockCopy(headerBytes, 0, tempHeader, 0, headerBytes.Length);
-                        tempHeader[i] = bytes[i];
-                        headerBytes = tempHeader;
-                        continue;
-
-                        #endregion
-                    }
-
-                    #endregion
-                }
-                else
-                {
-                    if (ret.ContentLength > 0)
-                    {
-                        #region Append-Data
-
-                        //           1         2
-                        // 01234567890123456789012345
-                        // content-length: 5rnrnddddd
-                        // bytes.length = 26
-                        // i = 21
-
-                        if (ret.ContentLength != (bytes.Length - i))
-                        {
-                            throw new ArgumentException("Content-Length header does not match the number of data bytes.");
-                        }
-
-                        ret.Data = new byte[ret.ContentLength];
-                        Buffer.BlockCopy(bytes, i, ret.Data, 0, (int)ret.ContentLength);
-                        break;
-
-                        #endregion
-                    }
-                    else
-                    {
-                        #region No-Data
-
-                        ret.Data = null;
-                        break;
-
-                        #endregion
-                    }
-                }
-            }
-
-            return ret;
-        }
-
+         
         /// <summary>
         /// Create an HttpRequest object from a Stream.
         /// </summary>
@@ -818,80 +628,63 @@ namespace WatsonWebserver
                 {
                     #region Read-from-Stream
 
-                    ret.Data = new byte[ret.ContentLength];
+                    ret.Data = new MemoryStream();
 
-                    using (MemoryStream dataMs = new MemoryStream())
+                    long bytesRemaining = ret.ContentLength;
+                    long bytesRead = 0;
+                    bool timeout = false;
+                    int currentTimeout = 0;
+
+                    int read = 0;
+                    byte[] buffer;
+                    long bufferSize = 2048;
+                    if (bufferSize > bytesRemaining) bufferSize = bytesRemaining;
+                    buffer = new byte[bufferSize];
+
+                    while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
                     {
-                        long bytesRemaining = ret.ContentLength;
-                        long bytesRead = 0;
-                        bool timeout = false;
-                        int currentTimeout = 0;
-
-                        int read = 0;
-                        byte[] buffer;
-                        long bufferSize = 2048;
-                        if (bufferSize > bytesRemaining) bufferSize = bytesRemaining;
-                        buffer = new byte[bufferSize];
-
-                        while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
+                        if (read > 0)
                         {
-                            if (read > 0)
+                            ret.Data.Write(buffer, 0, read);
+                            bytesRead = bytesRead + read;
+                            bytesRemaining = bytesRemaining - read;
+
+                            // reduce buffer size if number of bytes remaining is
+                            // less than the pre-defined buffer size of 2KB
+                            if (bytesRemaining < bufferSize)
                             {
-                                dataMs.Write(buffer, 0, read);
-                                bytesRead = bytesRead + read;
-                                bytesRemaining = bytesRemaining - read;
+                                bufferSize = bytesRemaining;
+                            }
 
-                                // reduce buffer size if number of bytes remaining is
-                                // less than the pre-defined buffer size of 2KB
-                                if (bytesRemaining < bufferSize)
-                                {
-                                    bufferSize = bytesRemaining;
-                                }
+                            buffer = new byte[bufferSize];
 
-                                buffer = new byte[bufferSize];
-
-                                // check if read fully
-                                if (bytesRemaining == 0) break;
-                                if (bytesRead == ret.ContentLength) break;
+                            // check if read fully
+                            if (bytesRemaining == 0) break;
+                            if (bytesRead == ret.ContentLength) break;
+                        }
+                        else
+                        {
+                            if (currentTimeout >= _TimeoutDataReadMs)
+                            {
+                                timeout = true;
+                                break;
                             }
                             else
                             {
-                                if (currentTimeout >= _TimeoutDataReadMs)
-                                {
-                                    timeout = true;
-                                    break;
-                                }
-                                else
-                                {
-                                    currentTimeout += _DataReadSleepMs;
-                                    Thread.Sleep(_DataReadSleepMs);
-                                }
+                                currentTimeout += _DataReadSleepMs;
+                                Thread.Sleep(_DataReadSleepMs);
                             }
                         }
-
-                        if (timeout)
-                        {
-                            throw new IOException("Timeout reading data from stream.");
-                        }
-
-                        ret.Data = dataMs.ToArray();
                     }
 
-                    #endregion
-
-                    #region Validate-Data
-
-                    if (ret.Data == null || ret.Data.Length < 1)
+                    if (timeout)
                     {
-                        throw new IOException("Unable to read data from stream.");
+                        throw new IOException("Timeout reading data from stream.");
                     }
 
-                    if (ret.Data.Length != ret.ContentLength)
-                    {
-                        throw new IOException("Data read does not match specified content length.");
-                    }
-
-                    #endregion
+                    ret.Data.Seek(0, SeekOrigin.Begin);
+                     
+                    #endregion 
                 }
                 else
                 {
@@ -1015,78 +808,61 @@ namespace WatsonWebserver
                 {
                     #region Read-from-Stream
 
-                    ret.Data = new byte[ret.ContentLength];
+                    ret.Data = new MemoryStream();
 
-                    using (MemoryStream dataMs = new MemoryStream())
+                    long bytesRemaining = ret.ContentLength;
+                    long bytesRead = 0;
+                    bool timeout = false;
+                    int currentTimeout = 0;
+
+                    int read = 0;
+                    byte[] buffer;
+                    long bufferSize = 2048;
+                    if (bufferSize > bytesRemaining) bufferSize = bytesRemaining;
+                    buffer = new byte[bufferSize];
+
+                    while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
                     {
-                        long bytesRemaining = ret.ContentLength;
-                        long bytesRead = 0;
-                        bool timeout = false;
-                        int currentTimeout = 0;
-
-                        int read = 0;
-                        byte[] buffer;
-                        long bufferSize = 2048;
-                        if (bufferSize > bytesRemaining) bufferSize = bytesRemaining;
-                        buffer = new byte[bufferSize];
-
-                        while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
+                        if (read > 0)
                         {
-                            if (read > 0)
+                            ret.Data.Write(buffer, 0, read);
+                            bytesRead = bytesRead + read;
+                            bytesRemaining = bytesRemaining - read;
+
+                            // reduce buffer size if number of bytes remaining is
+                            // less than the pre-defined buffer size of 2KB
+                            if (bytesRemaining < bufferSize)
                             {
-                                dataMs.Write(buffer, 0, read);
-                                bytesRead = bytesRead + read;
-                                bytesRemaining = bytesRemaining - read;
+                                bufferSize = bytesRemaining;
+                            }
 
-                                // reduce buffer size if number of bytes remaining is
-                                // less than the pre-defined buffer size of 2KB
-                                if (bytesRemaining < bufferSize)
-                                {
-                                    bufferSize = bytesRemaining;
-                                }
+                            buffer = new byte[bufferSize];
 
-                                buffer = new byte[bufferSize];
-
-                                // check if read fully
-                                if (bytesRemaining == 0) break;
-                                if (bytesRead == ret.ContentLength) break;
+                            // check if read fully
+                            if (bytesRemaining == 0) break;
+                            if (bytesRead == ret.ContentLength) break;
+                        }
+                        else
+                        {
+                            if (currentTimeout >= _TimeoutDataReadMs)
+                            {
+                                timeout = true;
+                                break;
                             }
                             else
                             {
-                                if (currentTimeout >= _TimeoutDataReadMs)
-                                {
-                                    timeout = true;
-                                    break;
-                                }
-                                else
-                                {
-                                    currentTimeout += _DataReadSleepMs;
-                                    Thread.Sleep(_DataReadSleepMs);
-                                }
+                                currentTimeout += _DataReadSleepMs;
+                                Thread.Sleep(_DataReadSleepMs);
                             }
                         }
-
-                        if (timeout)
-                        {
-                            throw new IOException("Timeout reading data from stream.");
-                        }
-
-                        ret.Data = dataMs.ToArray();
                     }
 
-                    #endregion
-
-                    #region Validate-Data
-
-                    if (ret.Data == null || ret.Data.Length < 1)
+                    if (timeout)
                     {
-                        throw new IOException("Unable to read data from stream.");
+                        throw new IOException("Timeout reading data from stream.");
                     }
 
-                    if (ret.Data.Length != ret.ContentLength)
-                    {
-                        throw new IOException("Data read does not match specified content length.");
-                    }
+                    ret.Data.Seek(0, SeekOrigin.Begin);
 
                     #endregion
                 }
@@ -1203,7 +979,7 @@ namespace WatsonWebserver
                 #region Process-Headers
 
                 if (headerBytes == null || headerBytes.Length < 1) throw new IOException("No header data read from the stream."); 
-                ret = BuildHeaders(headerBytes); 
+                ret = BuildHeaders(headerBytes);
 
                 #endregion
 
@@ -1211,81 +987,64 @@ namespace WatsonWebserver
 
                 ret.Data = null;
                 if (ret.ContentLength > 0)
-                { 
+                {
                     #region Read-from-Stream
 
-                    ret.Data = new byte[ret.ContentLength];
+                    ret.Data = new MemoryStream();
 
-                    using (MemoryStream dataMs = new MemoryStream())
+                    long bytesRemaining = ret.ContentLength;
+                    long bytesRead = 0;
+                    bool timeout = false;
+                    int currentTimeout = 0;
+
+                    int read = 0;
+                    byte[] buffer;
+                    long bufferSize = 2048;
+                    if (bufferSize > bytesRemaining) bufferSize = bytesRemaining;
+                    buffer = new byte[bufferSize];
+
+                    while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
                     {
-                        long bytesRemaining = ret.ContentLength;
-                        long bytesRead = 0;
-                        bool timeout = false;
-                        int currentTimeout = 0;
-
-                        int read = 0;
-                        byte[] buffer;
-                        long bufferSize = 2048;
-                        if (bufferSize > bytesRemaining) bufferSize = bytesRemaining;
-                        buffer = new byte[bufferSize];
-
-                        while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
+                        if (read > 0)
                         {
-                            if (read > 0)
+                            ret.Data.Write(buffer, 0, read);
+                            bytesRead = bytesRead + read;
+                            bytesRemaining = bytesRemaining - read;
+
+                            // reduce buffer size if number of bytes remaining is
+                            // less than the pre-defined buffer size of 2KB
+                            if (bytesRemaining < bufferSize)
                             {
-                                dataMs.Write(buffer, 0, read);
-                                bytesRead = bytesRead + read;
-                                bytesRemaining = bytesRemaining - read;
+                                bufferSize = bytesRemaining;
+                            }
 
-                                // reduce buffer size if number of bytes remaining is
-                                // less than the pre-defined buffer size of 2KB
-                                if (bytesRemaining < bufferSize)
-                                {
-                                    bufferSize = bytesRemaining;
-                                }
+                            buffer = new byte[bufferSize];
 
-                                buffer = new byte[bufferSize];
-
-                                // check if read fully
-                                if (bytesRemaining == 0) break;
-                                if (bytesRead == ret.ContentLength) break;
+                            // check if read fully
+                            if (bytesRemaining == 0) break;
+                            if (bytesRead == ret.ContentLength) break;
+                        }
+                        else
+                        {
+                            if (currentTimeout >= _TimeoutDataReadMs)
+                            {
+                                timeout = true;
+                                break;
                             }
                             else
                             {
-                                if (currentTimeout >= _TimeoutDataReadMs)
-                                {
-                                    timeout = true;
-                                    break;
-                                }
-                                else
-                                {
-                                    currentTimeout += _DataReadSleepMs;
-                                    Thread.Sleep(_DataReadSleepMs);
-                                }
+                                currentTimeout += _DataReadSleepMs;
+                                Thread.Sleep(_DataReadSleepMs);
                             }
                         }
-
-                        if (timeout)
-                        {
-                            throw new IOException("Timeout reading data from stream.");
-                        }
-
-                        ret.Data = dataMs.ToArray();
                     }
 
-                    #endregion
-
-                    #region Validate-Data
-
-                    if (ret.Data == null || ret.Data.Length < 1)
+                    if (timeout)
                     {
-                        throw new IOException("Unable to read data from stream.");
+                        throw new IOException("Timeout reading data from stream.");
                     }
 
-                    if (ret.Data.Length != ret.ContentLength)
-                    {
-                        throw new IOException("Data read does not match specified content length.");
-                    }
+                    ret.Data.Seek(0, SeekOrigin.Begin);
 
                     #endregion
                 }
@@ -1307,7 +1066,7 @@ namespace WatsonWebserver
         #endregion
 
         #region Private-Methods
-
+         
         private static HttpRequest BuildHeaders(byte[] bytes)
         {
             if (bytes == null) throw new ArgumentNullException(nameof(bytes));
@@ -1408,6 +1167,16 @@ namespace WatsonWebserver
                         else if (keyEval.Equals("content-type"))
                         {
                             ret.ContentType = val;
+                        }
+                        else if (keyEval.Equals("transfer-encoding"))
+                        {
+                            if (String.IsNullOrEmpty(val)) continue;
+                            if (val.ToLower().Contains("chunked"))
+                                ret.ChunkedTransfer = true;
+                            if (val.ToLower().Contains("gzip"))
+                                ret.Gzip = true;
+                            if (val.ToLower().Contains("deflate"))
+                                ret.Deflate = true;
                         }
                         else
                         {

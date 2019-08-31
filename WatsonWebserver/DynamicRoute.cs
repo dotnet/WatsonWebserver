@@ -27,7 +27,7 @@ namespace WatsonWebserver
         /// <summary>
         /// The 
         /// </summary>
-        public Func<HttpRequest, HttpResponse> Handler;
+        public Func<HttpRequest, HttpResponse, Task<bool>> Handler;
 
         #endregion
 
@@ -43,7 +43,7 @@ namespace WatsonWebserver
         /// <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE, etc.</param>
         /// <param name="path">The pattern against which the raw URL should be matched.</param>
         /// <param name="handler">The method that should be called to handle the request.</param>
-        public DynamicRoute(HttpMethod method, Regex path, Func<HttpRequest, HttpResponse> handler)
+        public DynamicRoute(HttpMethod method, Regex path, Func<HttpRequest, HttpResponse, Task<bool>> handler)
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
             if (handler == null) throw new ArgumentNullException(nameof(handler));

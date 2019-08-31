@@ -14,7 +14,7 @@ namespace Test
             List<string> hostnames = new List<string>();
             hostnames.Add("127.0.0.1");
 
-            Server server = new Server(hostnames, 9000, false, RequestReceived);
+            Server server = new Server(hostnames, 9000, false, DefaultRoute);
             server.PreRoutingHandler = PreRoutingHandler;
              
             bool runForever = true;
@@ -57,32 +57,35 @@ namespace Test
             Console.WriteLine("  dispose  dispose the server object");
         }
 
-        static HttpResponse PreRoutingHandler(HttpRequest req)
+        static async Task<bool> PreRoutingHandler(HttpContext ctx)
         {
-            if (req.RawUrlWithoutQuery.Equals("/foo"))
+            if (ctx.Request.RawUrlWithoutQuery.Equals("/foo"))
             {
-                return new HttpResponse(req, 400, null, "text/plain", Encoding.UTF8.GetBytes("Prerouting handler says 'bad request'!"));
+                ctx.Response.StatusCode = 400;
+                await ctx.Response.Send("Prerouting handler says 'bad request'!");
+                return true;
             }
             else
             {
-                return null;
+                return false;
             }
         }
 
-        static HttpResponse RequestReceived(HttpRequest req)
-        {
-            Console.WriteLine(req.ToString());
-
-            if ((req.Method == HttpMethod.POST
-                || req.Method == HttpMethod.PUT)
-                && req.Data != null
-                && req.ContentLength > 0)
+        static async Task DefaultRoute(HttpContext ctx)
+        { 
+            if ((ctx.Request.Method == HttpMethod.POST
+                || ctx.Request.Method == HttpMethod.PUT)
+                && ctx.Request.Data != null
+                && ctx.Request.ContentLength > 0)
             {
-                return new HttpResponse(req, 200, null, "text/plain", req.Data);
+                await ctx.Response.Send(ctx.Request.ContentLength, ctx.Request.Data);
+                return;
             }
             else
             {
-                return new HttpResponse(req, 200, null, "text/plain", Encoding.UTF8.GetBytes("Watson says hello from the default route!"));
+                ctx.Response.StatusCode = 200;
+                await ctx.Response.Send("Watson says hello from the default route!");
+                return;
             }
         }
 

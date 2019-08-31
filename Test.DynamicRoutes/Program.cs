@@ -21,34 +21,42 @@ namespace Test
             Console.ReadLine();
         }
 
-        static HttpResponse GetFooWithId(HttpRequest req)
+        static async Task GetFooWithId(HttpContext ctx)
         {
-            return ResponseBuilder(req, "Watson says hello from the GET /foo with ID dynamic route!");
+            await SendResponse(ctx, "Watson says hello from the GET /foo with ID dynamic route!");
+            return;
         }
 
-        static HttpResponse GetFooMultipleChildren(HttpRequest req)
+        static async Task GetFooMultipleChildren(HttpContext ctx)
         {
-            return ResponseBuilder(req, "Watson says hello from the GET /foo with multiple children dynamic route!");
+            await SendResponse(ctx, "Watson says hello from the GET /foo with multiple children dynamic route!");
+            return;
         }
 
-        static HttpResponse GetFooOneChild(HttpRequest req)
+        static async Task GetFooOneChild(HttpContext ctx)
         {
-            return ResponseBuilder(req, "Watson says hello from the GET /foo with one child dynamic route!");
+            await SendResponse(ctx, "Watson says hello from the GET /foo with one child dynamic route!");
+            return;
         }
 
-        static HttpResponse GetFoo(HttpRequest req)
+        static async Task GetFoo(HttpContext ctx)
         {
-            return ResponseBuilder(req, "Watson says hello from the GET /foo dynamic route!");
+            await SendResponse(ctx, "Watson says hello from the GET /foo dynamic route!");
+            return;
         }
 
-        static HttpResponse DefaultRoute(HttpRequest req)
+        static async Task DefaultRoute(HttpContext ctx)
         {
-            return ResponseBuilder(req, "Watson says hello from the default route!");
+            await SendResponse(ctx, "Watson says hello from the default route!");
+            return;
         }
 
-        static HttpResponse ResponseBuilder(HttpRequest req, string text)
+        static async Task SendResponse(HttpContext ctx, string text)
         {
-            return new HttpResponse(req, 200, null, "text/plain", Encoding.UTF8.GetBytes(text));
+            ctx.Response.StatusCode = 200;
+            ctx.Response.ContentType = "text/plain";
+            await ctx.Response.Send(text);
+            return;
         }
     }
 }

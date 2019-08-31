@@ -17,7 +17,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Stream", "Test.Stream\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Events", "Test.Events\Test.Events.csproj", "{7508FAF3-EF44-4F99-A309-E2C43D13B6C9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.PreRouting", "Test.PreRouting\Test.PreRouting.csproj", "{27B647F0-94EF-46CE-A1FC-2E3FBBA4F989}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.PreRouting", "Test.PreRouting\Test.PreRouting.csproj", "{27B647F0-94EF-46CE-A1FC-2E3FBBA4F989}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

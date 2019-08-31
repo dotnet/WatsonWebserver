@@ -14,7 +14,7 @@ namespace Test
             List<string> hostnames = new List<string>();
             hostnames.Add("127.0.0.1");
 
-            Server server = new Server(hostnames, 9000, false, RequestReceived);
+            Server server = new Server(hostnames, 9000, false, DefaultRoute);
             // server.AccessControl.Mode = AccessControlMode.DefaultDeny;
             // server.AccessControl.Whitelist.Add("127.0.0.1", "255.255.255.255");
             // server.AccessControl.Whitelist.Add("127.0.0.1", "255.255.255.255");
@@ -59,20 +59,24 @@ namespace Test
             Console.WriteLine("  dispose  dispose the server object");
         }
 
-        static HttpResponse RequestReceived(HttpRequest req)
+        static async Task DefaultRoute(HttpContext ctx)
         { 
-            Console.WriteLine(req.ToString());
+            Console.WriteLine(ctx.Request.ToString());
 
-            if ((req.Method == HttpMethod.POST
-                || req.Method == HttpMethod.PUT)
-                && req.Data != null
-                && req.ContentLength > 0)
+            if ((ctx.Request.Method == HttpMethod.POST
+                || ctx.Request.Method == HttpMethod.PUT)
+                && ctx.Request.Data != null
+                && ctx.Request.ContentLength > 0)
             {
-                return new HttpResponse(req, 200, null, "text/plain", req.Data);
+                ctx.Response.StatusCode = 200;
+                await ctx.Response.Send(ctx.Request.ContentLength, ctx.Request.Data);
+                return;
             }
             else
             {
-                return new HttpResponse(req, 200, null, "text/plain", Encoding.UTF8.GetBytes("Watson says hello from the default route!"));
+                ctx.Response.StatusCode = 200;
+                await ctx.Response.Send("Watson says hello from the default route!");
+                return;
             }
         }
 

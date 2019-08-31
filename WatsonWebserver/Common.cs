@@ -8,96 +8,10 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 namespace WatsonWebserver
-{
-    /// <summary>
-    /// Commonly used static methods.
-    /// </summary>
+{ 
     internal class Common
-    {
-        #region Public-Members
-
-        #endregion
-
-        #region Private-Members
-
-        #endregion
-
-        #region Constructor
-
-        #endregion
-
-        #region Public-Internal-Classes
-
-        #endregion
-
-        #region Private-Internal-Classes
-
-        #endregion
-
-        #region Public-Methods
-         
-        /// <summary>
-        /// Serialize object to JSON using Newtonsoft JSON.NET.
-        /// </summary>
-        /// <param name="obj">The object to serialize.</param>
-        /// <returns>JSON string.</returns>
-        public static string SerializeJson(object obj)
-        {
-            if (obj == null) return null;
-            string json = JsonConvert.SerializeObject(
-                obj,
-                Newtonsoft.Json.Formatting.Indented,
-                new JsonSerializerSettings
-                {
-                    NullValueHandling = NullValueHandling.Ignore,
-                    DateTimeZoneHandling = DateTimeZoneHandling.Utc
-                });
-
-            return json;
-        }
-         
-        /// <summary>
-        /// Deserialize JSON string to an object using Newtonsoft JSON.NET.
-        /// </summary>
-        /// <typeparam name="T">The type of object.</typeparam>
-        /// <param name="json">JSON string.</param>
-        /// <returns>An object of the specified type.</returns>
-        public static T DeserializeJson<T>(string json)
-        {
-            if (String.IsNullOrEmpty(json)) throw new ArgumentNullException(nameof(json));
-
-            try
-            {
-                return JsonConvert.DeserializeObject<T>(json);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("");
-                Console.WriteLine("Exception while deserializing:");
-                Console.WriteLine(json);
-                Console.WriteLine("");
-                throw e;
-            }
-        }
-
-        /// <summary>
-        /// Deserialize JSON string to an object using Newtonsoft JSON.NET.
-        /// </summary>
-        /// <typeparam name="T">The type of object.</typeparam>
-        /// <param name="data">Byte array containing the JSON string.</param>
-        /// <returns>An object of the specified type.</returns>
-        public static T DeserializeJson<T>(byte[] data)
-        {
-            if (data == null || data.Length < 1) throw new ArgumentNullException(nameof(data));
-            return DeserializeJson<T>(Encoding.UTF8.GetString(data));
-        }
-        
-        /// <summary>
-        /// Fully read a stream into a byte array.
-        /// </summary>
-        /// <param name="input">The input stream.</param>
-        /// <returns>A byte array containing the data read from the stream.</returns>
-        public static byte[] StreamToBytes(Stream input)
+    {       
+        internal static byte[] StreamToBytes(Stream input)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
             if (!input.CanRead) throw new InvalidOperationException("Input stream is not readable");
@@ -116,26 +30,25 @@ namespace WatsonWebserver
             }
         }
 
-        /// <summary>
-        /// Calculate the number of milliseconds between now and a supplied start time.
-        /// </summary>
-        /// <param name="start">The start time.</param>
-        /// <returns>The number of milliseconds.</returns>
-        public static double TotalMsFrom(DateTime start)
+        internal static byte[] AppendBytes(byte[] orig, byte[] append)
+        {
+            if (append == null) return orig;
+            if (orig == null) return append;
+
+            byte[] ret = new byte[orig.Length + append.Length];
+            Buffer.BlockCopy(orig, 0, ret, 0, orig.Length);
+            Buffer.BlockCopy(append, 0, ret, orig.Length, append.Length);
+            return ret;
+        }
+         
+        internal static double TotalMsFrom(DateTime start)
         {
             DateTime end = DateTime.Now.ToUniversalTime();
             TimeSpan total = (end - start);
             return total.TotalMilliseconds;
         }
-        
-        /// <summary>
-        /// Add a key-value pair to a supplied Dictionary.
-        /// </summary>
-        /// <param name="key">The key.</param>
-        /// <param name="val">The value.</param>
-        /// <param name="existing">An existing dictionary.</param>
-        /// <returns>The existing dictionary with a new key and value, or, a new dictionary with the new key value pair.</returns>
-        public static Dictionary<string, string> AddToDict(string key, string val, Dictionary<string, string> existing)
+         
+        internal static Dictionary<string, string> AddToDict(string key, string val, Dictionary<string, string> existing)
         {
             if (String.IsNullOrEmpty(key)) return existing;
 
@@ -164,15 +77,8 @@ namespace WatsonWebserver
                 }
             }
         }
-        
-        /// <summary>
-        /// Compare two URLs to see if they are equal to one another.
-        /// </summary>
-        /// <param name="url1">The first URL.</param>
-        /// <param name="url2">The second URL.</param>
-        /// <param name="includeIntegers">Indicate whether or not integers found in the URL should be included in the comparison.</param>
-        /// <returns>A Boolean indicating whether or not the URLs match.</returns>
-        public static bool UrlEqual(string url1, string url2, bool includeIntegers)
+         
+        internal static bool UrlEqual(string url1, string url2, bool includeIntegers)
         {
             /* 
              * 
@@ -536,13 +442,8 @@ namespace WatsonWebserver
 
             #endregion
         }
-
-        /// <summary>
-        /// Calculate the MD5 hash of a given byte array.
-        /// </summary>
-        /// <param name="data">The input byte array.</param>
-        /// <returns>A string containing the MD5 hash.</returns>
-        public static string CalculateMd5(byte[] data)
+         
+        internal static string Md5(byte[] data)
         {
             if (data == null || data.Length < 1) throw new ArgumentNullException(nameof(data));
             MD5 md5 = MD5.Create();
@@ -551,25 +452,14 @@ namespace WatsonWebserver
             for (int i = 0; i < hash.Length; i++) sb.Append(hash[i].ToString("X2"));
             return sb.ToString();
         }
-
-        /// <summary>
-        /// Calculate the MD5 hash of a given string.
-        /// </summary>
-        /// <param name="data">The input string.</param>
-        /// <returns>A string containing the MD5 hash.</returns>
-        public static string CalculateMd5(string data)
+         
+        internal static string Md5(string data)
         {
             if (String.IsNullOrEmpty(data)) throw new ArgumentNullException(nameof(data));
-            return CalculateMd5(Encoding.UTF8.GetBytes(data));
+            return Md5(Encoding.UTF8.GetBytes(data));
         }
-
-        /// <summary>
-        /// Display a console prompt and return a Boolean.
-        /// </summary>
-        /// <param name="question">Prompt to display.</param>
-        /// <param name="yesDefault">Specify whether yes/true is the default response.</param>
-        /// <returns>Boolean.</returns>
-        public static bool InputBoolean(string question, bool yesDefault)
+         
+        internal static bool InputBoolean(string question, bool yesDefault)
         {
             Console.Write(question);
 
@@ -611,15 +501,8 @@ namespace WatsonWebserver
                 return false;
             }
         }
-
-        /// <summary>
-        /// Display a console prompt and return a string.
-        /// </summary>
-        /// <param name="question">Prompt to display.</param>
-        /// <param name="defaultAnswer">Specify the default value to return if no value provided by the user.</param>
-        /// <param name="allowNull">True if null responses are allowed.</param>
-        /// <returns>String.</returns>
-        public static string InputString(string question, string defaultAnswer, bool allowNull)
+         
+        internal static string InputString(string question, string defaultAnswer, bool allowNull)
         {
             while (true)
             {
@@ -644,16 +527,8 @@ namespace WatsonWebserver
                 return userInput;
             }
         }
-
-        /// <summary>
-        /// Display a console prompt and return an integer.
-        /// </summary>
-        /// <param name="question">Prompt to display.</param>
-        /// <param name="defaultAnswer">Specify the default value to return if no value provided by the user.</param>
-        /// <param name="positiveOnly">True if only positive numbers can be supplied.</param>
-        /// <param name="allowZero">True if zero is an accepted value.</param>
-        /// <returns>Integer.</returns>
-        public static int InputInteger(string question, int defaultAnswer, bool positiveOnly, bool allowZero)
+         
+        internal static int InputInteger(string question, int defaultAnswer, bool positiveOnly, bool allowZero)
         {
             while (true)
             {
@@ -693,12 +568,6 @@ namespace WatsonWebserver
 
                 return ret;
             }
-        }
-
-        #endregion
-
-        #region Private-Methods
-
-        #endregion
+        } 
     }
 }
