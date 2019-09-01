@@ -1,7 +1,7 @@
 {
   "runtimeTarget": {
     "name": ".NETCoreApp,Version=v2.2",
-    "signature": "86a6b235a27718d8eea39eaec1260263cad70792"
+    "signature": "9edd137b809fa05e635e4ac1d1d7e7f06fe57b92"
   },
   "compilationOptions": {},
   "targets": {
@@ -12,14 +12,6 @@
         },
         "runtime": {
           "Test.PreRouting.dll": {}
-        }
-      },
-      "ChunkDecoder/1.0.3": {
-        "runtime": {
-          "lib/netstandard2.0/ChunkDecoder.dll": {
-            "assemblyVersion": "1.0.3.0",
-            "fileVersion": "1.0.3.0"
-          }
         }
       },
       "IpMatcher/1.0.1": {
@@ -48,7 +40,6 @@
       },
       "Watson/2.1.7": {
         "dependencies": {
-          "ChunkDecoder": "1.0.3",
           "IpMatcher": "1.0.1",
           "Newtonsoft.Json": "12.0.2",
           "RegexMatcher": "1.0.2"
@@ -64,13 +55,6 @@
       "type": "project",
       "serviceable": false,
       "sha512": ""
-    },
-    "ChunkDecoder/1.0.3": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-asHFIIEKA1osWR52HC62b96dYOrdphZb70v/6anI4m20Hpb4Pp9yLTmlwn39aNPcyezPBt1AtxUKhf81BVo0Xw==",
-      "path": "chunkdecoder/1.0.3",
-      "hashPath": "chunkdecoder.1.0.3.nupkg.sha512"
     },
     "IpMatcher/1.0.1": {
       "type": "package",

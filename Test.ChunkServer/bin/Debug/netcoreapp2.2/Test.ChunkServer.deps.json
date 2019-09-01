@@ -1,19 +1,17 @@
 {
   "runtimeTarget": {
-    "name": ".NETStandard,Version=v2.0/",
-    "signature": "3c8382b150a6c05606c8f2fe30b994b8545bb933"
+    "name": ".NETCoreApp,Version=v2.2",
+    "signature": "9edd137b809fa05e635e4ac1d1d7e7f06fe57b92"
   },
   "compilationOptions": {},
   "targets": {
-    ".NETStandard,Version=v2.0": {},
-    ".NETStandard,Version=v2.0/": {
-      "Test.ContentRoutes/1.0.0": {
+    ".NETCoreApp,Version=v2.2": {
+      "Test.ChunkServer/1.0.0": {
         "dependencies": {
-          "NETStandard.Library": "2.0.3",
           "Watson": "2.1.7"
         },
         "runtime": {
-          "Test.ContentRoutes.dll": {}
+          "Test.ChunkServer.dll": {}
         }
       },
       "IpMatcher/1.0.1": {
@@ -22,12 +20,6 @@
             "assemblyVersion": "1.0.1.0",
             "fileVersion": "1.0.1.0"
           }
-        }
-      },
-      "Microsoft.NETCore.Platforms/1.1.0": {},
-      "NETStandard.Library/2.0.3": {
-        "dependencies": {
-          "Microsoft.NETCore.Platforms": "1.1.0"
         }
       },
       "Newtonsoft.Json/12.0.2": {
@@ -59,7 +51,7 @@
     }
   },
   "libraries": {
-    "Test.ContentRoutes/1.0.0": {
+    "Test.ChunkServer/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
@@ -70,20 +62,6 @@
       "sha512": "sha512-ASdqz1wygrLi6biivalAsxORk24DI5ZMyfgyRazsEqqXsVSDqzEBUt9IqxVdGhY6le2P0TX3eQqUzaokNXCpog==",
       "path": "ipmatcher/1.0.1",
       "hashPath": "ipmatcher.1.0.1.nupkg.sha512"
-    },
-    "Microsoft.NETCore.Platforms/1.1.0": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-a/iSwnRZb+LHFk49hQOyThh/ZNC3vsbZsF65XwQIb863qF6msmhdQtxGXFL28Ob2NsCz/drEj28BJd/YPpLRBg==",
-      "path": "microsoft.netcore.platforms/1.1.0",
-      "hashPath": "microsoft.netcore.platforms.1.1.0.nupkg.sha512"
-    },
-    "NETStandard.Library/2.0.3": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-st47PosZSHrjECdjeIzZQbzivYBJFv6P2nv4cj2ypdI204DO+vZ7l5raGMiX4eXMJ53RfOIg+/s4DHVZ54Nu2A==",
-      "path": "netstandard.library/2.0.3",
-      "hashPath": "netstandard.library.2.0.3.nupkg.sha512"
     },
     "Newtonsoft.Json/12.0.2": {
       "type": "package",

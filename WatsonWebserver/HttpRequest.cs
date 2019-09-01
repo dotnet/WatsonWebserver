@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -8,9 +9,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-
-using ChunkDecoder;
-using Newtonsoft;
+ 
 using Newtonsoft.Json;
 
 namespace WatsonWebserver
@@ -158,12 +157,10 @@ namespace WatsonWebserver
 
         #region Private-Members
          
-        private Uri _Uri;
+        private Uri _Uri; 
         private static int _TimeoutDataReadMs = 2000;
         private static int _DataReadSleepMs = 10;
-
-        private ChunkDecoder.Decoder _Decoder = new ChunkDecoder.Decoder();
-
+        
         #endregion
 
         #region Constructors-and-Factories
@@ -520,7 +517,103 @@ namespace WatsonWebserver
 
             return null;
         }
-         
+        
+        /// <summary>
+        /// For chunked transfer-encoded requests, read the next chunk.
+        /// </summary>
+        /// <returns>Chunk.</returns>
+        public async Task<Chunk> ReadChunk()
+        {
+            if (!ChunkedTransfer) throw new IOException("Request is not chunk transfer-encoded.");
+
+            Chunk chunk = new Chunk();
+             
+            #region Get-Length-and-Metadata
+
+            byte[] buffer = new byte[1];
+            byte[] lenBytes = null;
+            int bytesRead = 0;
+
+            while (true)
+            {
+                bytesRead = await Data.ReadAsync(buffer, 0, buffer.Length);
+                if (bytesRead > 0)
+                {
+                    lenBytes = Common.AppendBytes(lenBytes, buffer);  
+                    string lenStr = Encoding.UTF8.GetString(lenBytes); 
+
+                    if (lenBytes[lenBytes.Length - 1] == 10)
+                    {
+                        lenStr = lenStr.Trim();
+
+                        if (lenStr.Contains(";"))
+                        {
+                            string[] lenStrParts = lenStr.Split(new char[] { ';' }, 2);
+                            lenStr = lenStrParts[0];
+
+                            if (lenStrParts.Length == 2)
+                            {
+                                chunk.Metadata = lenStrParts[1];
+                            }
+                        }
+                        else
+                        {
+                            chunk.Length = int.Parse(lenStr, NumberStyles.HexNumber);
+                        }
+
+                        // Console.WriteLine("- Chunk length determined: " + chunk.Length); 
+                        break;
+                    }
+                }
+            }
+
+            #endregion
+
+            #region Get-Data
+
+            // Console.WriteLine("- Reading " + chunk.Length + " bytes");
+
+            if (chunk.Length > 0)
+            {
+                chunk.IsFinalChunk = false;
+                buffer = new byte[chunk.Length];
+                bytesRead = await Data.ReadAsync(buffer, 0, buffer.Length);
+                if (bytesRead == chunk.Length)
+                {
+                    chunk.Data = new byte[chunk.Length];
+                    Buffer.BlockCopy(buffer, 0, chunk.Data, 0, chunk.Length);
+                    // Console.WriteLine("- Data: " + Encoding.UTF8.GetString(buffer));
+                }
+                else
+                {
+                    throw new IOException("Expected " + chunk.Length + " bytes but only read " + bytesRead + " bytes in chunk.");
+                }
+            }
+            else
+            {
+                chunk.IsFinalChunk = true;
+            }
+
+            #endregion
+
+            #region Get-Trailing-CRLF
+
+            buffer = new byte[1];
+
+            while (true)
+            {
+                bytesRead = await Data.ReadAsync(buffer, 0, buffer.Length);
+                if (bytesRead > 0)
+                {
+                    if (buffer[0] == 10) break;
+                }
+            }
+
+            #endregion
+
+            return chunk; 
+        }
+
         /// <summary>
         /// Create an HttpRequest object from a Stream.
         /// </summary>

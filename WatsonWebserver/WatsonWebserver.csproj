@@ -20,7 +20,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ChunkDecoder" Version="1.0.3" />
     <PackageReference Include="IpMatcher" Version="1.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
     <PackageReference Include="RegexMatcher" Version="1.0.2" />

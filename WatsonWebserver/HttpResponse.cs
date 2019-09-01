@@ -43,10 +43,15 @@ namespace WatsonWebserver
         /// </summary>
         public long ContentLength = 0;
 
+        /// <summary>
+        /// Indicates whether or not chunked transfer encoding should be indicated in the response. 
+        /// </summary>
+        public bool ChunkedTransfer = false;
+
         #endregion
 
         #region Private-Members
-         
+
         private int _StreamBufferSize = 65536;
 
         private HttpRequest _Request;
@@ -88,10 +93,11 @@ namespace WatsonWebserver
             string ret = "";
   
             ret += "--- HTTP Response ---" + Environment.NewLine;
-            ret += "  Content     : " + ContentType + " (" + ContentLength + " bytes)" + Environment.NewLine;
+            ret += "  Content          : " + ContentType + " (" + ContentLength + " bytes)" + Environment.NewLine;
+            ret += "  Chunked Transfer : " + ChunkedTransfer + Environment.NewLine;
             if (Headers != null && Headers.Count > 0)
             {
-                ret += "  Headers     : " + Environment.NewLine;
+                ret += "  Headers          : " + Environment.NewLine;
                 foreach (KeyValuePair<string, string> curr in Headers)
                 {
                     ret += "  - " + curr.Key + ": " + curr.Value + Environment.NewLine;
@@ -99,7 +105,7 @@ namespace WatsonWebserver
             }
             else
             {
-                ret += "  Headers     : none" + Environment.NewLine;
+                ret += "  Headers          : none" + Environment.NewLine;
             }
              
             return ret;
@@ -111,6 +117,7 @@ namespace WatsonWebserver
         /// <returns>True if successful.</returns>
         public async Task<bool> Send()
         {
+            if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and SendFinalChunk().");
             if (!_HeadersSent) SendHeaders();
 
             await _OutputStream.FlushAsync();
@@ -126,6 +133,7 @@ namespace WatsonWebserver
         /// <returns>True if successful.</returns>
         public async Task<bool> Send(long contentLength)
         {
+            if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and SendFinalChunk().");
             ContentLength = contentLength;
             if (!_HeadersSent) SendHeaders();
 
@@ -143,6 +151,7 @@ namespace WatsonWebserver
         /// <returns>True if successful.</returns>
         public async Task<bool> Send(string data)
         {
+            if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and SendFinalChunk().");
             if (!_HeadersSent) SendHeaders();
 
             byte[] bytes = null;
@@ -194,6 +203,7 @@ namespace WatsonWebserver
         /// <returns>True if successful.</returns>
         public async Task<bool> Send(byte[] data)
         {
+            if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and SendFinalChunk().");
             if (!_HeadersSent) SendHeaders();
 
             if (data != null && data.Length > 0) _Response.ContentLength64 = data.Length;
@@ -238,6 +248,7 @@ namespace WatsonWebserver
         /// <returns>True if successful.</returns>
         public async Task<bool> Send(long contentLength, Stream stream)
         {
+            if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and SendFinalChunk().");
             ContentLength = contentLength;
             if (!_HeadersSent) SendHeaders();
              
@@ -293,15 +304,16 @@ namespace WatsonWebserver
         /// <returns>True if successful.</returns>
         public async Task<bool> SendChunk(byte[] chunk)
         {
+            if (!ChunkedTransfer) throw new IOException("Response is not configured to use chunked transfer-encoding.  Set ChunkedTransfer to true first, otherwise use Send().");
             if (!_HeadersSent) SendHeaders();
 
             try
             {
-                if (chunk != null && chunk.Length > 0)
-                {
-                    byte[] packagedChunk = PackageChunk(chunk);
-                    await _OutputStream.WriteAsync(packagedChunk, 0, packagedChunk.Length);
-                }
+                if (chunk == null || chunk.Length < 1) chunk = new byte[0];
+
+                // byte[] packagedChunk = PackageChunk(chunk);
+                // await _OutputStream.WriteAsync(packagedChunk, 0, packagedChunk.Length);
+                await _OutputStream.WriteAsync(chunk, 0, chunk.Length);
             }
             catch (OperationCanceledException)
             {
@@ -329,17 +341,17 @@ namespace WatsonWebserver
         /// <returns>True if successful.</returns>
         public async Task<bool> SendFinalChunk(byte[] chunk)
         {
+            if (!ChunkedTransfer) throw new IOException("Response is not configured to use chunked transfer-encoding.  Set ChunkedTransfer to true first, otherwise use Send().");
             if (!_HeadersSent) SendHeaders();
 
             try
-            {
+            { 
                 if (chunk != null && chunk.Length > 0)
                 {
-                    byte[] packagedChunk = PackageChunk(chunk);
-                    await _OutputStream.WriteAsync(packagedChunk, 0, packagedChunk.Length);
+                    await _OutputStream.WriteAsync(chunk, 0, chunk.Length);
                 }
 
-                byte[] endChunk = PackageChunk(null);
+                byte[] endChunk = new byte[0];
                 await _OutputStream.WriteAsync(endChunk, 0, endChunk.Length);
             }
             catch (OperationCanceledException)
@@ -374,6 +386,7 @@ namespace WatsonWebserver
             _Response.ContentLength64 = ContentLength;
             _Response.StatusCode = StatusCode;
             _Response.StatusDescription = GetStatusDescription(StatusCode);
+            _Response.SendChunked = ChunkedTransfer;
             _Response.AddHeader("Access-Control-Allow-Origin", "*");
             _Response.ContentType = ContentType;
 
@@ -434,12 +447,12 @@ namespace WatsonWebserver
             }
              
             MemoryStream ms = new MemoryStream();
-
+             
             string newlineStr = "\r\n";
             byte[] newline = Encoding.UTF8.GetBytes(newlineStr);
 
             string chunkLenHex = chunk.Length.ToString("X");
-            byte[] chunkLen = Encoding.UTF8.GetBytes(chunkLenHex);
+            byte[] chunkLen = Encoding.UTF8.GetBytes(chunkLenHex); 
 
             ms.Write(chunkLen, 0, chunkLen.Length);
             ms.Write(newline, 0, newline.Length);
@@ -448,6 +461,7 @@ namespace WatsonWebserver
             ms.Seek(0, SeekOrigin.Begin);
 
             byte[] ret = ms.ToArray();
+             
             return ret;
         }
 
