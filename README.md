@@ -13,6 +13,7 @@ Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS reque
 - Improved support for both sending and receiving data/payloads using ```Transfer-Encoding: chunked```
 - Routes and callbacks now use ```Task MyRouteHandler(HttpContext ctx)```
 - All request data is now either accessible through ```HttpRequest.Data``` (stream) or ```HttpRequest.ReadChunk``` (for chunked transfers only)
+- Huge thanks to @winkmichael and @xmike402 for their help, guidance, and contribution to the project!
 
 ## Key Changes from v2.x
 
