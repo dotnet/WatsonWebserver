@@ -23,13 +23,8 @@ namespace WatsonWebserver
         #endregion
 
         #region Constructors-and-Factories
-
-        /// <summary>
-        /// Instantiate the object.
-        /// </summary>
-        /// <param name="logging">Logging instance.</param>
-        /// <param name="debug">Enable or disable debugging.</param>
-        public ContentRouteProcessor(ContentRouteManager routes)
+         
+        internal ContentRouteProcessor(ContentRouteManager routes)
         { 
             if (routes == null) throw new ArgumentNullException(nameof(routes));
              
@@ -38,9 +33,9 @@ namespace WatsonWebserver
 
         #endregion
 
-        #region Public-Methods
+        #region Internal-Methods
 
-        public async Task Process(HttpContext ctx)
+        internal async Task Process(HttpContext ctx)
         {
             if (ctx == null) throw new ArgumentNullException(nameof(ctx));
             if (ctx.Request == null) throw new ArgumentNullException(nameof(ctx.Request));

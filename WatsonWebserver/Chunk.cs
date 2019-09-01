@@ -5,7 +5,7 @@ using System.Text;
 namespace WatsonWebserver
 {
     /// <summary>
-    /// A chunk of data, used when reading from a request using chunked transfer-encoding.
+    /// A chunk of data, used when reading from a request where the Transfer-Encoding header includes 'chunked'.
     /// </summary>
     public class Chunk
     {

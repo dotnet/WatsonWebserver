@@ -15,8 +15,21 @@ namespace WatsonWebserver
     {
         #region Public-Members
 
+        /// <summary>
+        /// Matcher to match blacklisted addresses.
+        /// </summary>
         public Matcher Blacklist;
+
+        /// <summary>
+        /// Matcher to match whitelisted addresses.
+        /// </summary>
         public Matcher Whitelist;
+
+        /// <summary>
+        /// Access control mode, either DefaultPermit or DefaultDeny.
+        /// DefaultPermit: allow everything, except for those explicitly blacklisted.
+        /// DefaultDeny: deny everything, except for those explicitly whitelisted.
+        /// </summary>
         public AccessControlMode Mode;
 
         #endregion

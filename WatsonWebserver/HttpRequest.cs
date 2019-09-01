@@ -164,23 +164,16 @@ namespace WatsonWebserver
         #endregion
 
         #region Constructors-and-Factories
-
-        /// <summary>
-        /// Construct a new HTTP request.
-        /// </summary>
-        public HttpRequest()
+         
+        internal HttpRequest()
         {
             ThreadId = Thread.CurrentThread.ManagedThreadId;
             TimestampUtc = DateTime.Now.ToUniversalTime();
             QuerystringEntries = new Dictionary<string, string>();
             Headers = new Dictionary<string, string>();
         }
-
-        /// <summary>
-        /// Construct a new HTTP request from a given HttpListenerContext.
-        /// </summary>
-        /// <param name="ctx">The HttpListenerContext for the request.</param>
-        public HttpRequest(HttpListenerContext ctx)
+         
+        internal HttpRequest(HttpListenerContext ctx)
         {
             #region Check-for-Null-Values
 
@@ -323,7 +316,7 @@ namespace WatsonWebserver
                                     inVal = 0;
 
                                     tempKey = WebUtility.UrlDecode(tempKey);
-                                    QuerystringEntries = Common.AddToDict(tempKey, null, QuerystringEntries);
+                                    QuerystringEntries = AddToDict(tempKey, null, QuerystringEntries);
 
                                     tempKey = "";
                                     tempVal = "";
@@ -356,7 +349,7 @@ namespace WatsonWebserver
 
                                 tempKey = WebUtility.UrlDecode(tempKey);
                                 if (!String.IsNullOrEmpty(tempVal)) tempVal = WebUtility.UrlDecode(tempVal);
-                                QuerystringEntries = Common.AddToDict(tempKey, tempVal, QuerystringEntries);
+                                QuerystringEntries = AddToDict(tempKey, tempVal, QuerystringEntries);
 
                                 tempKey = "";
                                 tempVal = "";
@@ -372,7 +365,7 @@ namespace WatsonWebserver
                         if (!String.IsNullOrEmpty(tempKey))
                         {
                             tempKey = WebUtility.UrlDecode(tempKey);
-                            QuerystringEntries = Common.AddToDict(tempKey, null, QuerystringEntries);
+                            QuerystringEntries = AddToDict(tempKey, null, QuerystringEntries);
                         } 
                     }
 
@@ -382,7 +375,7 @@ namespace WatsonWebserver
                         {
                             tempKey = WebUtility.UrlDecode(tempKey);
                             if (!String.IsNullOrEmpty(tempVal)) tempVal = WebUtility.UrlDecode(tempVal);
-                            QuerystringEntries = Common.AddToDict(tempKey, tempVal, QuerystringEntries);
+                            QuerystringEntries = AddToDict(tempKey, tempVal, QuerystringEntries);
                         }
                     }
                 }
@@ -423,7 +416,7 @@ namespace WatsonWebserver
             {
                 string key = String.Copy(ctx.Request.Headers.GetKey(i));
                 string val = String.Copy(ctx.Request.Headers.Get(i));
-                Headers = Common.AddToDict(key, val, Headers);
+                Headers = AddToDict(key, val, Headers);
             }
 
             foreach (KeyValuePair<string, string> curr in Headers)
@@ -451,10 +444,537 @@ namespace WatsonWebserver
             #endregion
         }
 
+        internal static HttpRequest FromStream(Stream stream)
+        {
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+
+            try
+            {
+                #region Variables
+
+                HttpRequest ret;
+                byte[] headerBytes = null;
+                byte[] lastFourBytes = new byte[4];
+                lastFourBytes[0] = 0x00;
+                lastFourBytes[1] = 0x00;
+                lastFourBytes[2] = 0x00;
+                lastFourBytes[3] = 0x00;
+
+                #endregion
+
+                #region Check-Stream
+
+                if (!stream.CanRead)
+                {
+                    throw new IOException("Unable to read from stream.");
+                }
+
+                #endregion
+
+                #region Read-Headers
+
+                using (MemoryStream headerMs = new MemoryStream())
+                {
+                    #region Read-Header-Bytes
+
+                    byte[] headerBuffer = new byte[1];
+                    int read = 0;
+                    int headerBytesRead = 0;
+
+                    while ((read = stream.Read(headerBuffer, 0, headerBuffer.Length)) > 0)
+                    {
+                        if (read > 0)
+                        {
+                            #region Initialize-Header-Bytes-if-Needed
+
+                            headerBytesRead += read;
+                            if (headerBytes == null) headerBytes = new byte[1];
+
+                            #endregion
+
+                            #region Update-Last-Four
+
+                            if (read == 1)
+                            {
+                                lastFourBytes[0] = lastFourBytes[1];
+                                lastFourBytes[1] = lastFourBytes[2];
+                                lastFourBytes[2] = lastFourBytes[3];
+                                lastFourBytes[3] = headerBuffer[0];
+                            }
+
+                            #endregion
+
+                            #region Append-to-Header-Buffer
+
+                            byte[] tempHeader = new byte[headerBytes.Length + 1];
+                            Buffer.BlockCopy(headerBytes, 0, tempHeader, 0, headerBytes.Length);
+                            tempHeader[headerBytes.Length] = headerBuffer[0];
+                            headerBytes = tempHeader;
+
+                            #endregion
+
+                            #region Check-for-End-of-Headers
+
+                            if ((int)(lastFourBytes[0]) == 13
+                                && (int)(lastFourBytes[1]) == 10
+                                && (int)(lastFourBytes[2]) == 13
+                                && (int)(lastFourBytes[3]) == 10)
+                            {
+                                break;
+                            }
+
+                            #endregion
+                        }
+                    }
+
+                    #endregion
+                }
+
+                #endregion
+
+                #region Process-Headers
+
+                if (headerBytes == null || headerBytes.Length < 1) throw new IOException("No header data read from the stream.");
+                ret = BuildHeaders(headerBytes);
+
+                #endregion
+
+                #region Read-Data
+
+                ret.Data = null;
+                if (ret.ContentLength > 0)
+                {
+                    #region Read-from-Stream
+
+                    ret.Data = new MemoryStream();
+
+                    long bytesRemaining = ret.ContentLength;
+                    long bytesRead = 0;
+                    bool timeout = false;
+                    int currentTimeout = 0;
+
+                    int read = 0;
+                    byte[] buffer;
+                    long bufferSize = 2048;
+                    if (bufferSize > bytesRemaining) bufferSize = bytesRemaining;
+                    buffer = new byte[bufferSize];
+
+                    while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
+                    {
+                        if (read > 0)
+                        {
+                            ret.Data.Write(buffer, 0, read);
+                            bytesRead = bytesRead + read;
+                            bytesRemaining = bytesRemaining - read;
+
+                            // reduce buffer size if number of bytes remaining is
+                            // less than the pre-defined buffer size of 2KB
+                            if (bytesRemaining < bufferSize)
+                            {
+                                bufferSize = bytesRemaining;
+                            }
+
+                            buffer = new byte[bufferSize];
+
+                            // check if read fully
+                            if (bytesRemaining == 0) break;
+                            if (bytesRead == ret.ContentLength) break;
+                        }
+                        else
+                        {
+                            if (currentTimeout >= _TimeoutDataReadMs)
+                            {
+                                timeout = true;
+                                break;
+                            }
+                            else
+                            {
+                                currentTimeout += _DataReadSleepMs;
+                                Thread.Sleep(_DataReadSleepMs);
+                            }
+                        }
+                    }
+
+                    if (timeout)
+                    {
+                        throw new IOException("Timeout reading data from stream.");
+                    }
+
+                    ret.Data.Seek(0, SeekOrigin.Begin);
+
+                    #endregion
+                }
+                else
+                {
+                    // do nothing
+                }
+
+                #endregion
+
+                return ret;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        internal static HttpRequest FromStream(NetworkStream stream)
+        {
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+
+            try
+            {
+                #region Variables
+
+                HttpRequest ret;
+                byte[] headerBytes = null;
+                byte[] lastFourBytes = new byte[4];
+                lastFourBytes[0] = 0x00;
+                lastFourBytes[1] = 0x00;
+                lastFourBytes[2] = 0x00;
+                lastFourBytes[3] = 0x00;
+
+                #endregion
+
+                #region Check-Stream
+
+                if (!stream.CanRead)
+                {
+                    throw new IOException("Unable to read from stream.");
+                }
+
+                #endregion
+
+                #region Read-Headers
+
+                using (MemoryStream headerMs = new MemoryStream())
+                {
+                    #region Read-Header-Bytes
+
+                    byte[] headerBuffer = new byte[1];
+                    int read = 0;
+                    int headerBytesRead = 0;
+
+                    while ((read = stream.Read(headerBuffer, 0, headerBuffer.Length)) > 0)
+                    {
+                        if (read > 0)
+                        {
+                            #region Initialize-Header-Bytes-if-Needed
+
+                            headerBytesRead += read;
+                            if (headerBytes == null) headerBytes = new byte[1];
+
+                            #endregion
+
+                            #region Update-Last-Four
+
+                            if (read == 1)
+                            {
+                                lastFourBytes[0] = lastFourBytes[1];
+                                lastFourBytes[1] = lastFourBytes[2];
+                                lastFourBytes[2] = lastFourBytes[3];
+                                lastFourBytes[3] = headerBuffer[0];
+                            }
+
+                            #endregion
+
+                            #region Append-to-Header-Buffer
+
+                            byte[] tempHeader = new byte[headerBytes.Length + 1];
+                            Buffer.BlockCopy(headerBytes, 0, tempHeader, 0, headerBytes.Length);
+                            tempHeader[headerBytes.Length] = headerBuffer[0];
+                            headerBytes = tempHeader;
+
+                            #endregion
+
+                            #region Check-for-End-of-Headers
+
+                            if ((int)(lastFourBytes[0]) == 13
+                                && (int)(lastFourBytes[1]) == 10
+                                && (int)(lastFourBytes[2]) == 13
+                                && (int)(lastFourBytes[3]) == 10)
+                            {
+                                break;
+                            }
+
+                            #endregion
+                        }
+                    }
+
+                    #endregion
+                }
+
+                #endregion
+
+                #region Process-Headers
+
+                if (headerBytes == null || headerBytes.Length < 1) throw new IOException("No header data read from the stream.");
+                ret = BuildHeaders(headerBytes);
+
+                #endregion
+
+                #region Read-Data
+
+                ret.Data = null;
+                if (ret.ContentLength > 0)
+                {
+                    #region Read-from-Stream
+
+                    ret.Data = new MemoryStream();
+
+                    long bytesRemaining = ret.ContentLength;
+                    long bytesRead = 0;
+                    bool timeout = false;
+                    int currentTimeout = 0;
+
+                    int read = 0;
+                    byte[] buffer;
+                    long bufferSize = 2048;
+                    if (bufferSize > bytesRemaining) bufferSize = bytesRemaining;
+                    buffer = new byte[bufferSize];
+
+                    while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
+                    {
+                        if (read > 0)
+                        {
+                            ret.Data.Write(buffer, 0, read);
+                            bytesRead = bytesRead + read;
+                            bytesRemaining = bytesRemaining - read;
+
+                            // reduce buffer size if number of bytes remaining is
+                            // less than the pre-defined buffer size of 2KB
+                            if (bytesRemaining < bufferSize)
+                            {
+                                bufferSize = bytesRemaining;
+                            }
+
+                            buffer = new byte[bufferSize];
+
+                            // check if read fully
+                            if (bytesRemaining == 0) break;
+                            if (bytesRead == ret.ContentLength) break;
+                        }
+                        else
+                        {
+                            if (currentTimeout >= _TimeoutDataReadMs)
+                            {
+                                timeout = true;
+                                break;
+                            }
+                            else
+                            {
+                                currentTimeout += _DataReadSleepMs;
+                                Thread.Sleep(_DataReadSleepMs);
+                            }
+                        }
+                    }
+
+                    if (timeout)
+                    {
+                        throw new IOException("Timeout reading data from stream.");
+                    }
+
+                    ret.Data.Seek(0, SeekOrigin.Begin);
+
+                    #endregion
+                }
+                else
+                {
+                    // do nothing
+                }
+
+                #endregion
+
+                return ret;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        internal static HttpRequest FromTcpClient(TcpClient client)
+        {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+
+            try
+            {
+                #region Variables
+
+                HttpRequest ret;
+                byte[] headerBytes = null;
+                byte[] lastFourBytes = new byte[4];
+                lastFourBytes[0] = 0x00;
+                lastFourBytes[1] = 0x00;
+                lastFourBytes[2] = 0x00;
+                lastFourBytes[3] = 0x00;
+
+                #endregion
+
+                #region Attach-Stream
+
+                NetworkStream stream = client.GetStream();
+
+                if (!stream.CanRead)
+                {
+                    throw new IOException("Unable to read from stream.");
+                }
+
+                #endregion
+
+                #region Read-Headers
+
+                using (MemoryStream headerMs = new MemoryStream())
+                {
+                    #region Read-Header-Bytes
+
+                    byte[] headerBuffer = new byte[1];
+                    int read = 0;
+                    int headerBytesRead = 0;
+
+                    while ((read = stream.Read(headerBuffer, 0, headerBuffer.Length)) > 0)
+                    {
+                        if (read > 0)
+                        {
+                            #region Initialize-Header-Bytes-if-Needed
+
+                            headerBytesRead += read;
+                            if (headerBytes == null) headerBytes = new byte[1];
+
+                            #endregion
+
+                            #region Update-Last-Four
+
+                            if (read == 1)
+                            {
+                                lastFourBytes[0] = lastFourBytes[1];
+                                lastFourBytes[1] = lastFourBytes[2];
+                                lastFourBytes[2] = lastFourBytes[3];
+                                lastFourBytes[3] = headerBuffer[0];
+                            }
+
+                            #endregion
+
+                            #region Append-to-Header-Buffer
+
+                            byte[] tempHeader = new byte[headerBytes.Length + 1];
+                            Buffer.BlockCopy(headerBytes, 0, tempHeader, 0, headerBytes.Length);
+                            tempHeader[headerBytes.Length] = headerBuffer[0];
+                            headerBytes = tempHeader;
+
+                            #endregion
+
+                            #region Check-for-End-of-Headers
+
+                            if ((int)(lastFourBytes[0]) == 13
+                                && (int)(lastFourBytes[1]) == 10
+                                && (int)(lastFourBytes[2]) == 13
+                                && (int)(lastFourBytes[3]) == 10)
+                            {
+                                break;
+                            }
+
+                            #endregion
+                        }
+                    }
+
+                    #endregion
+                }
+
+                #endregion
+
+                #region Process-Headers
+
+                if (headerBytes == null || headerBytes.Length < 1) throw new IOException("No header data read from the stream.");
+                ret = BuildHeaders(headerBytes);
+
+                #endregion
+
+                #region Read-Data
+
+                ret.Data = null;
+                if (ret.ContentLength > 0)
+                {
+                    #region Read-from-Stream
+
+                    ret.Data = new MemoryStream();
+
+                    long bytesRemaining = ret.ContentLength;
+                    long bytesRead = 0;
+                    bool timeout = false;
+                    int currentTimeout = 0;
+
+                    int read = 0;
+                    byte[] buffer;
+                    long bufferSize = 2048;
+                    if (bufferSize > bytesRemaining) bufferSize = bytesRemaining;
+                    buffer = new byte[bufferSize];
+
+                    while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
+                    {
+                        if (read > 0)
+                        {
+                            ret.Data.Write(buffer, 0, read);
+                            bytesRead = bytesRead + read;
+                            bytesRemaining = bytesRemaining - read;
+
+                            // reduce buffer size if number of bytes remaining is
+                            // less than the pre-defined buffer size of 2KB
+                            if (bytesRemaining < bufferSize)
+                            {
+                                bufferSize = bytesRemaining;
+                            }
+
+                            buffer = new byte[bufferSize];
+
+                            // check if read fully
+                            if (bytesRemaining == 0) break;
+                            if (bytesRead == ret.ContentLength) break;
+                        }
+                        else
+                        {
+                            if (currentTimeout >= _TimeoutDataReadMs)
+                            {
+                                timeout = true;
+                                break;
+                            }
+                            else
+                            {
+                                currentTimeout += _DataReadSleepMs;
+                                Thread.Sleep(_DataReadSleepMs);
+                            }
+                        }
+                    }
+
+                    if (timeout)
+                    {
+                        throw new IOException("Timeout reading data from stream.");
+                    }
+
+                    ret.Data.Seek(0, SeekOrigin.Begin);
+
+                    #endregion
+                }
+                else
+                {
+                    // do nothing
+                }
+
+                #endregion
+
+                return ret;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
         #endregion
-        
+
         #region Public-Methods
-         
+
         /// <summary>
         /// Retrieve a string-formatted, human-readable copy of the HttpRequest instance.
         /// </summary>
@@ -539,7 +1059,7 @@ namespace WatsonWebserver
                 bytesRead = await Data.ReadAsync(buffer, 0, buffer.Length);
                 if (bytesRead > 0)
                 {
-                    lenBytes = Common.AppendBytes(lenBytes, buffer);  
+                    lenBytes = AppendBytes(lenBytes, buffer);  
                     string lenStr = Encoding.UTF8.GetString(lenBytes); 
 
                     if (lenBytes[lenBytes.Length - 1] == 10)
@@ -613,549 +1133,7 @@ namespace WatsonWebserver
 
             return chunk; 
         }
-
-        /// <summary>
-        /// Create an HttpRequest object from a Stream.
-        /// </summary>
-        /// <param name="stream">Stream.</param>
-        /// <returns>A populated HttpRequest.</returns>
-        public static HttpRequest FromStream(Stream stream)
-        {
-            if (stream == null) throw new ArgumentNullException(nameof(stream));
-
-            try
-            {
-                #region Variables
-
-                HttpRequest ret;
-                byte[] headerBytes = null;
-                byte[] lastFourBytes = new byte[4];
-                lastFourBytes[0] = 0x00;
-                lastFourBytes[1] = 0x00;
-                lastFourBytes[2] = 0x00;
-                lastFourBytes[3] = 0x00;
-
-                #endregion
-
-                #region Check-Stream
-
-                if (!stream.CanRead)
-                {
-                    throw new IOException("Unable to read from stream.");
-                }
-
-                #endregion
-
-                #region Read-Headers
-
-                using (MemoryStream headerMs = new MemoryStream())
-                {
-                    #region Read-Header-Bytes
-
-                    byte[] headerBuffer = new byte[1];
-                    int read = 0;
-                    int headerBytesRead = 0;
-
-                    while ((read = stream.Read(headerBuffer, 0, headerBuffer.Length)) > 0)
-                    {
-                        if (read > 0)
-                        {
-                            #region Initialize-Header-Bytes-if-Needed
-
-                            headerBytesRead += read;
-                            if (headerBytes == null) headerBytes = new byte[1];
-
-                            #endregion
-
-                            #region Update-Last-Four
-
-                            if (read == 1)
-                            {
-                                lastFourBytes[0] = lastFourBytes[1];
-                                lastFourBytes[1] = lastFourBytes[2];
-                                lastFourBytes[2] = lastFourBytes[3];
-                                lastFourBytes[3] = headerBuffer[0];
-                            }
-
-                            #endregion
-
-                            #region Append-to-Header-Buffer
-
-                            byte[] tempHeader = new byte[headerBytes.Length + 1];
-                            Buffer.BlockCopy(headerBytes, 0, tempHeader, 0, headerBytes.Length);
-                            tempHeader[headerBytes.Length] = headerBuffer[0];
-                            headerBytes = tempHeader;
-
-                            #endregion
-
-                            #region Check-for-End-of-Headers
-
-                            if ((int)(lastFourBytes[0]) == 13
-                                && (int)(lastFourBytes[1]) == 10
-                                && (int)(lastFourBytes[2]) == 13
-                                && (int)(lastFourBytes[3]) == 10)
-                            {
-                                break;
-                            }
-
-                            #endregion
-                        }
-                    }
-
-                    #endregion
-                }
-
-                #endregion
-
-                #region Process-Headers
-
-                if (headerBytes == null || headerBytes.Length < 1) throw new IOException("No header data read from the stream.");
-                ret = BuildHeaders(headerBytes);
-
-                #endregion
-
-                #region Read-Data
-
-                ret.Data = null;
-                if (ret.ContentLength > 0)
-                {
-                    #region Read-from-Stream
-
-                    ret.Data = new MemoryStream();
-
-                    long bytesRemaining = ret.ContentLength;
-                    long bytesRead = 0;
-                    bool timeout = false;
-                    int currentTimeout = 0;
-
-                    int read = 0;
-                    byte[] buffer;
-                    long bufferSize = 2048;
-                    if (bufferSize > bytesRemaining) bufferSize = bytesRemaining;
-                    buffer = new byte[bufferSize];
-
-                    while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
-                    {
-                        if (read > 0)
-                        {
-                            ret.Data.Write(buffer, 0, read);
-                            bytesRead = bytesRead + read;
-                            bytesRemaining = bytesRemaining - read;
-
-                            // reduce buffer size if number of bytes remaining is
-                            // less than the pre-defined buffer size of 2KB
-                            if (bytesRemaining < bufferSize)
-                            {
-                                bufferSize = bytesRemaining;
-                            }
-
-                            buffer = new byte[bufferSize];
-
-                            // check if read fully
-                            if (bytesRemaining == 0) break;
-                            if (bytesRead == ret.ContentLength) break;
-                        }
-                        else
-                        {
-                            if (currentTimeout >= _TimeoutDataReadMs)
-                            {
-                                timeout = true;
-                                break;
-                            }
-                            else
-                            {
-                                currentTimeout += _DataReadSleepMs;
-                                Thread.Sleep(_DataReadSleepMs);
-                            }
-                        }
-                    }
-
-                    if (timeout)
-                    {
-                        throw new IOException("Timeout reading data from stream.");
-                    }
-
-                    ret.Data.Seek(0, SeekOrigin.Begin);
-                     
-                    #endregion 
-                }
-                else
-                {
-                    // do nothing
-                }
-
-                #endregion
-
-                return ret;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// Create an HttpRequest object from a NetworkStream.
-        /// </summary>
-        /// <param name="stream">NetworkStream.</param>
-        /// <returns>A populated HttpRequest.</returns>
-        public static HttpRequest FromStream(NetworkStream stream)
-        {
-            if (stream == null) throw new ArgumentNullException(nameof(stream));
-
-            try
-            {
-                #region Variables
-
-                HttpRequest ret;
-                byte[] headerBytes = null;
-                byte[] lastFourBytes = new byte[4];
-                lastFourBytes[0] = 0x00;
-                lastFourBytes[1] = 0x00;
-                lastFourBytes[2] = 0x00;
-                lastFourBytes[3] = 0x00;
-
-                #endregion
-
-                #region Check-Stream
-                 
-                if (!stream.CanRead)
-                {
-                    throw new IOException("Unable to read from stream.");
-                }
-
-                #endregion
-
-                #region Read-Headers
-
-                using (MemoryStream headerMs = new MemoryStream())
-                {
-                    #region Read-Header-Bytes
-
-                    byte[] headerBuffer = new byte[1];
-                    int read = 0;
-                    int headerBytesRead = 0;
-
-                    while ((read = stream.Read(headerBuffer, 0, headerBuffer.Length)) > 0)
-                    {
-                        if (read > 0)
-                        {
-                            #region Initialize-Header-Bytes-if-Needed
-
-                            headerBytesRead += read;
-                            if (headerBytes == null) headerBytes = new byte[1];
-
-                            #endregion
-
-                            #region Update-Last-Four
-
-                            if (read == 1)
-                            {
-                                lastFourBytes[0] = lastFourBytes[1];
-                                lastFourBytes[1] = lastFourBytes[2];
-                                lastFourBytes[2] = lastFourBytes[3];
-                                lastFourBytes[3] = headerBuffer[0];
-                            }
-
-                            #endregion
-
-                            #region Append-to-Header-Buffer
-
-                            byte[] tempHeader = new byte[headerBytes.Length + 1];
-                            Buffer.BlockCopy(headerBytes, 0, tempHeader, 0, headerBytes.Length);
-                            tempHeader[headerBytes.Length] = headerBuffer[0];
-                            headerBytes = tempHeader;
-
-                            #endregion
-
-                            #region Check-for-End-of-Headers
-
-                            if ((int)(lastFourBytes[0]) == 13
-                                && (int)(lastFourBytes[1]) == 10
-                                && (int)(lastFourBytes[2]) == 13
-                                && (int)(lastFourBytes[3]) == 10)
-                            {
-                                break;
-                            }
-
-                            #endregion
-                        }
-                    }
-
-                    #endregion
-                }
-
-                #endregion
-
-                #region Process-Headers
-
-                if (headerBytes == null || headerBytes.Length < 1) throw new IOException("No header data read from the stream.");
-                ret = BuildHeaders(headerBytes);
-
-                #endregion
-
-                #region Read-Data
-
-                ret.Data = null;
-                if (ret.ContentLength > 0)
-                {
-                    #region Read-from-Stream
-
-                    ret.Data = new MemoryStream();
-
-                    long bytesRemaining = ret.ContentLength;
-                    long bytesRead = 0;
-                    bool timeout = false;
-                    int currentTimeout = 0;
-
-                    int read = 0;
-                    byte[] buffer;
-                    long bufferSize = 2048;
-                    if (bufferSize > bytesRemaining) bufferSize = bytesRemaining;
-                    buffer = new byte[bufferSize];
-
-                    while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
-                    {
-                        if (read > 0)
-                        {
-                            ret.Data.Write(buffer, 0, read);
-                            bytesRead = bytesRead + read;
-                            bytesRemaining = bytesRemaining - read;
-
-                            // reduce buffer size if number of bytes remaining is
-                            // less than the pre-defined buffer size of 2KB
-                            if (bytesRemaining < bufferSize)
-                            {
-                                bufferSize = bytesRemaining;
-                            }
-
-                            buffer = new byte[bufferSize];
-
-                            // check if read fully
-                            if (bytesRemaining == 0) break;
-                            if (bytesRead == ret.ContentLength) break;
-                        }
-                        else
-                        {
-                            if (currentTimeout >= _TimeoutDataReadMs)
-                            {
-                                timeout = true;
-                                break;
-                            }
-                            else
-                            {
-                                currentTimeout += _DataReadSleepMs;
-                                Thread.Sleep(_DataReadSleepMs);
-                            }
-                        }
-                    }
-
-                    if (timeout)
-                    {
-                        throw new IOException("Timeout reading data from stream.");
-                    }
-
-                    ret.Data.Seek(0, SeekOrigin.Begin);
-
-                    #endregion
-                }
-                else
-                {
-                    // do nothing
-                }
-
-                #endregion
-
-                return ret;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// Create an HttpRequest object from a TcpClient.
-        /// </summary>
-        /// <param name="client">TcpClient.</param>
-        /// <returns>A populated HttpRequest.</returns>
-        public static HttpRequest FromTcpClient(TcpClient client)
-        {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-
-            try
-            {
-                #region Variables
-
-                HttpRequest ret;
-                byte[] headerBytes = null;
-                byte[] lastFourBytes = new byte[4];
-                lastFourBytes[0] = 0x00;
-                lastFourBytes[1] = 0x00;
-                lastFourBytes[2] = 0x00;
-                lastFourBytes[3] = 0x00;
-
-                #endregion
-
-                #region Attach-Stream
-
-                NetworkStream stream = client.GetStream();
-
-                if (!stream.CanRead)
-                {
-                    throw new IOException("Unable to read from stream.");
-                }
-
-                #endregion
-
-                #region Read-Headers
-
-                using (MemoryStream headerMs = new MemoryStream())
-                {
-                    #region Read-Header-Bytes
-
-                    byte[] headerBuffer = new byte[1];
-                    int read = 0;
-                    int headerBytesRead = 0;
-
-                    while ((read = stream.Read(headerBuffer, 0, headerBuffer.Length)) > 0)
-                    {
-                        if (read > 0)
-                        {
-                            #region Initialize-Header-Bytes-if-Needed
-
-                            headerBytesRead += read; 
-                            if (headerBytes == null) headerBytes = new byte[1];
-
-                            #endregion
-
-                            #region Update-Last-Four
-
-                            if (read == 1)
-                            {
-                                lastFourBytes[0] = lastFourBytes[1];
-                                lastFourBytes[1] = lastFourBytes[2];
-                                lastFourBytes[2] = lastFourBytes[3];
-                                lastFourBytes[3] = headerBuffer[0];
-                            }
-
-                            #endregion
-
-                            #region Append-to-Header-Buffer
-                             
-                            byte[] tempHeader = new byte[headerBytes.Length + 1];
-                            Buffer.BlockCopy(headerBytes, 0, tempHeader, 0, headerBytes.Length);
-                            tempHeader[headerBytes.Length] = headerBuffer[0];
-                            headerBytes = tempHeader;
-
-                            #endregion
-
-                            #region Check-for-End-of-Headers
-                             
-                            if ((int)(lastFourBytes[0]) == 13
-                                && (int)(lastFourBytes[1]) == 10
-                                && (int)(lastFourBytes[2]) == 13
-                                && (int)(lastFourBytes[3]) == 10)
-                            { 
-                                break;
-                            }
-
-                            #endregion
-                        }
-                    }
-
-                    #endregion
-                }
-
-                #endregion
-
-                #region Process-Headers
-
-                if (headerBytes == null || headerBytes.Length < 1) throw new IOException("No header data read from the stream."); 
-                ret = BuildHeaders(headerBytes);
-
-                #endregion
-
-                #region Read-Data
-
-                ret.Data = null;
-                if (ret.ContentLength > 0)
-                {
-                    #region Read-from-Stream
-
-                    ret.Data = new MemoryStream();
-
-                    long bytesRemaining = ret.ContentLength;
-                    long bytesRead = 0;
-                    bool timeout = false;
-                    int currentTimeout = 0;
-
-                    int read = 0;
-                    byte[] buffer;
-                    long bufferSize = 2048;
-                    if (bufferSize > bytesRemaining) bufferSize = bytesRemaining;
-                    buffer = new byte[bufferSize];
-
-                    while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
-                    {
-                        if (read > 0)
-                        {
-                            ret.Data.Write(buffer, 0, read);
-                            bytesRead = bytesRead + read;
-                            bytesRemaining = bytesRemaining - read;
-
-                            // reduce buffer size if number of bytes remaining is
-                            // less than the pre-defined buffer size of 2KB
-                            if (bytesRemaining < bufferSize)
-                            {
-                                bufferSize = bytesRemaining;
-                            }
-
-                            buffer = new byte[bufferSize];
-
-                            // check if read fully
-                            if (bytesRemaining == 0) break;
-                            if (bytesRead == ret.ContentLength) break;
-                        }
-                        else
-                        {
-                            if (currentTimeout >= _TimeoutDataReadMs)
-                            {
-                                timeout = true;
-                                break;
-                            }
-                            else
-                            {
-                                currentTimeout += _DataReadSleepMs;
-                                Thread.Sleep(_DataReadSleepMs);
-                            }
-                        }
-                    }
-
-                    if (timeout)
-                    {
-                        throw new IOException("Timeout reading data from stream.");
-                    }
-
-                    ret.Data.Seek(0, SeekOrigin.Begin);
-
-                    #endregion
-                }
-                else
-                {
-                    // do nothing
-                }
-
-                #endregion
-
-                return ret;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-        }
-
+         
         #endregion
 
         #region Private-Methods
@@ -1273,7 +1251,7 @@ namespace WatsonWebserver
                         }
                         else
                         {
-                            ret.Headers = Common.AddToDict(key, val, ret.Headers);
+                            ret.Headers = AddToDict(key, val, ret.Headers);
                         }
                     }
 
@@ -1388,7 +1366,7 @@ namespace WatsonWebserver
                         inVal = 0;
 
                         if (!String.IsNullOrEmpty(tempVal)) tempVal = WebUtility.UrlEncode(tempVal);
-                        ret = Common.AddToDict(tempKey, tempVal, ret);
+                        ret = AddToDict(tempKey, tempVal, ret);
 
                         tempKey = "";
                         tempVal = "";
@@ -1400,10 +1378,66 @@ namespace WatsonWebserver
                 if (inVal == 1)
                 {
                     if (!String.IsNullOrEmpty(tempVal)) tempVal = WebUtility.UrlEncode(tempVal);
-                    ret = Common.AddToDict(tempKey, tempVal, ret);
+                    ret = AddToDict(tempKey, tempVal, ret);
                 }
             }
 
+            return ret;
+        }
+
+        private static Dictionary<string, string> AddToDict(string key, string val, Dictionary<string, string> existing)
+        {
+            if (String.IsNullOrEmpty(key)) return existing;
+
+            Dictionary<string, string> ret = new Dictionary<string, string>();
+
+            if (existing == null)
+            {
+                ret.Add(key, val);
+                return ret;
+            }
+            else
+            {
+                if (existing.ContainsKey(key))
+                {
+                    if (String.IsNullOrEmpty(val)) return existing;
+                    string tempVal = existing[key];
+                    tempVal += "," + val;
+                    existing.Remove(key);
+                    existing.Add(key, tempVal);
+                    return existing;
+                }
+                else
+                {
+                    existing.Add(key, val);
+                    return existing;
+                }
+            }
+        }
+
+        private static byte[] AppendBytes(byte[] orig, byte[] append)
+        {
+            if (orig == null && append == null) return null;
+
+            byte[] ret = null;
+
+            if (append == null)
+            {
+                ret = new byte[orig.Length];
+                Buffer.BlockCopy(orig, 0, ret, 0, orig.Length);
+                return ret;
+            }
+
+            if (orig == null)
+            {
+                ret = new byte[append.Length];
+                Buffer.BlockCopy(append, 0, ret, 0, append.Length);
+                return ret;
+            }
+
+            ret = new byte[orig.Length + append.Length];
+            Buffer.BlockCopy(orig, 0, ret, 0, orig.Length);
+            Buffer.BlockCopy(append, 0, ret, orig.Length, append.Length);
             return ret;
         }
 

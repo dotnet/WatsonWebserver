@@ -7,33 +7,72 @@
 
 Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS requests, written in C#.
 
-## New in v2.1.x
+## New in v3.0.x
 
-- Pre-routing handler, i.e. a callback used for all requests prior to routing
-- Automatic decoding of incoming requests that have ```Transfer-Encoding: chunked``` in the headers
-- Does not validate chunk signatures or decompress using gzip/deflate yet
-- Better support for HEAD requests where content-length header is required (separate constructor for HttpResponse)
-- Added stream support to content route processor for better large object support
-- Bugfixes (content type not being set)
+- BREAKING CHANGE from previous versions, major refactor!
+- Improved support for both sending and receiving data/payloads using ```Transfer-Encoding: chunked```
+- Routes and callbacks now use ```Task MyRouteHandler(HttpContext ctx)```
+- All request data is now either accessible through ```HttpRequest.Data``` (stream) or ```HttpRequest.ReadChunk``` (for chunked transfers only)
+
+## Key Changes from v2.x
+
+Developers familiar with v2.x will notice that v3.x introduces a major breaking change.  This change will allow us to integrate a series of future capabilities and enhancements that were not previously possible with v2.x.  
+
+Previously, callbacks and routes would have the signature: ```HttpResponse MyRouteHandler(HttpRequest req)```.  Now, callbacks and routes have the signature ```Task MyRouteHandler(HttpContext ctx)```.
+
+The ```HttpContext``` object contains two members, ```HttpRequest Request``` and ```HttpResponse Response```.  ```Request``` is largely unchanged from v2.x.  However, ```Response``` comes prepopulated and should be modified directly in your code.
+
+The following v2.x code:
+
+```
+static HttpResponse MyRouteHandler(HttpRequest req)
+{
+  return new HttpResponse(req, 200, null, "text/plain", Encoding.UTF8.GetBytes("Hello world!"));
+}
+```
+
+Would become the following in v3.x:
+
+```
+static Task MyRouteHandler(HttpContext ctx)
+{
+  ctx.Response.StatusCode = 200;
+  await ctx.Response.Send("Hello world!"); 
+}
+```
 
 ## Test App
 
-A test project is included which will help you exercise the class library.
+A variety of test projects are included which will help you exercise the class library for a variety of scenarios:
+
+- Routing using:
+  - Pre-routing - useful for centralized authentication and logging
+  - Content routes - useful for hosting static content (web sites, images)
+  - Static routes - useful for cases where the URL is fixed
+  - Dynamic routes - useful for cases where the URL may vary (i.e. regular expression match)
+  - Default route - catch-all route when no other route is matched
+- Events
+- Streams
+- Chunked transfer encoding
 
 ## Important Notes
 
-- Using Watson may require elevation (administrative privileges) if binding an IP other than 127.0.0.1
+- Using Watson may require elevation (administrative privileges) if binding an IP other than 127.0.0.1 or localhost
 - The HTTP HOST header must match the specified binding
-- .NET Framework supports multiple bindings, .NET Core does not (yet)
+- Multiple bindings are supported in .NET Framework, but not (yet) in .NET Core 
 - Watson Webserver will always check routes in the following order:
-  - If the request is GET or HEAD, content routes will first be checked
-  - Then static routes will be evaluated
-  - Then dynamic (regex) routes will be evaluated
-  - Then the default route
-- When defining dynamic routes (regular expressions), be sure to add the most specific routes first.  Dynamic routes are evaluated in-order and the first match is used.
+  - All requests are marshaled through the pre-routing handler
+  - If the request is GET or HEAD, content routes will be evaluated next
+  - Followed by static routes (any HTTP method)
+  - Then dynamic (regex) routes (any HTTP method)
+  - Then the default route (any HTTP method)
+- When defining dynamic routes (regex), add the most specific routes first.  Dynamic routes are evaluated in-order; the first match is used.
 - If a matching content route exists:
   - And the content does not exist, a standard 404 is sent
   - And the content cannot be read, a standard 500 is sent
+- When using a pre-routing handler, your handler should return:
+  - ```True``` if the connection should be terminated
+  - ```False``` if the connection should continue with further routing
 - By default, Watson will permit all inbound connections
   - If you want to block certain IPs or networks, use ```Server.AccessControl.Blacklist.Add(ip, netmask)```
   - If you only want to allow certain IPs or networks, and block all others, use:
@@ -41,6 +80,7 @@ A test project is included which will help you exercise the class library.
     - ```Server.AccessControl.Whitelist.Add(ip, netmask)```
     
 ## Example using Routes
+
 ```
 using System.IO;
 using System.Text;
@@ -63,58 +103,102 @@ static void Main(string[] args)
    s.ContentRoutes.Add("/img/watson.jpg", false);
 
    // add static routes
-   s.StaticRoutes.Add(HttpMethod.GET, "/hello/", GetHelloRoute);
-   s.StaticRoutes.Add(HttpMethod.GET, "/world/", GetWorldRoute);
+   s.StaticRoutes.Add(HttpMethod.GET, "/hello/", GetHelloRoute); 
 
    // add dynamic routes
-   s.DynamicRoutes.Add(HttpMethod.GET, new Regex("^/foo/\\d+$"), GetFooWithId);
-   s.DynamicRoutes.Add(HttpMethod.GET, new Regex("^/foo/(.*?)/(.*?)/?$"), GetFooMultipleChildren);
-   s.DynamicRoutes.Add(HttpMethod.GET, new Regex("^/foo/(.*?)/?$"), GetFooOneChild);
+   s.DynamicRoutes.Add(HttpMethod.GET, new Regex("^/foo/\\d+$"), GetFooWithId);  
    s.DynamicRoutes.Add(HttpMethod.GET, new Regex("^/foo/?$"), GetFoo); 
 
    Console.WriteLine("Press ENTER to exit");
    Console.ReadLine();
 }
 
-static HttpResponse GetHelloRoute(HttpRequest req)
+static Task GetHelloRoute(HttpContext ctx)
 {
-   return new HttpResponse(req, 200, null, "text/plain", Encoding.UTF8.GetBytes("Hello!  GET /hello static route");
+  ctx.Response.StatusCode = 200;
+  await ctx.Response.Send("Hello from the GET /hello static route!");
 }
-
-static HttpResponse GetWorldRoute(HttpRequest req)
-{
-   return new HttpResponse(req, 200, null, "text/plain", Encoding.UTF8.GetBytes("Hello!  GET /world static route");
-}
-
+ 
 static HttpResponse GetFooWithId(HttpRequest req)
 {
-   return new HttpResponse(req, 200, null, "text/plain", Encoding.UTF8.GetBytes("Hello!  GET /foo with ID dynamic route");
+  ctx.Response.StatusCode = 200;
+  await ctx.Response.Send("Hello from the GET /foo/[id] dynamic route!");
 }
-
-static HttpResponse GetFooMultipleChildren(HttpRequest req)
-{ 
-   return new HttpResponse(req, 200, null, "text/plain", Encoding.UTF8.GetBytes("Hello!  GET /foo with multiple children dynamic route"));
-}
-
-static HttpResponse GetFooOneChild(HttpRequest req)
-{ 
-   return new HttpResponse(req, 200, null, "text/plain", Encoding.UTF8.GetBytes("Hello!  GET /foo with one child dynamic route"));
-}
-
+ 
 static HttpResponse GetFoo(HttpRequest req)
 { 
-   return new HttpResponse(req, 200, null, "text/plain", Encoding.UTF8.GetBytes("Hello!  GET /foo dynamic route"));
+  ctx.Response.StatusCode = 200;
+  await ctx.Response.Send("Hello from the GET /foo/ dynamic route!");
 }
 
 static HttpResponse DefaultRoute(HttpRequest req)
 {
-   return new HttpResponse(req, 200, null, "text/plain", Encoding.UTF8.GetBytes("Hello!  Default route"));
+  ctx.Response.StatusCode = 200;
+  await ctx.Response.Send("Hello from the default route!");
 }
 ```
- 
+
+## Chunked Transfer-Encoding
+
+Effective v3.0.x, Watson now has excellent support for both receiving chunked data and sending chunked data (indicated by the header ```Transfer-Encoding: chunked```).
+
+### Receiving Chunked Data
+
+```
+static Task UploadData(HttpContext ctx)
+{
+  if (ctx.Request.ChunkedTransfer)
+  {
+    bool finalChunk = false;
+    while (!finalChunk)
+    {
+      Chunk chunk = await ctx.Request.ReadChunk();
+      // work with chunk.Length and chunk.Data (byte[])
+      finalChunk = chunk.IsFinalChunk;
+    }
+  }
+  else
+  {
+    // read from ctx.Request.Data stream   
+  }
+}
+```
+
+### Sending Chunked Data
+
+```
+static Task DownloadChunkedFile(HttpContext ctx)
+{
+  using (FileStream fs = new FileStream("./img/watson.jpg", , FileMode.Open, FileAccess.Read))
+  {
+    ctx.Response.StatusCode = 200;
+    ctx.Response.ChunkedTransfer = true;
+
+    byte[] buffer = new byte[65536];
+    int bytesRead = await fs.ReadAsync(buffer, 0, buffer.Length);
+    if (bytesRead > 0)
+      // you'll want to check bytesRead vs buffer.Length, of course!
+      ctx.Response.SendChunk(buffer);
+    else
+      ctx.Response.SendFinalChunk(buffer);
+  }
+
+  return;
+}
+```
+
 ## Version History
 
 Notes from previous versions are shown below:
+
+v2.1.x 
+
+- Pre-routing handler, i.e. a callback used for all requests prior to routing
+- Automatic decoding of incoming requests that have ```Transfer-Encoding: chunked``` in the headers
+- Does not validate chunk signatures or decompress using gzip/deflate yet
+- Better support for HEAD requests where content-length header is required (separate constructor for HttpResponse)
+- Added stream support to content route processor for better large object support
+- Bugfixes (content type not being set)
 
 v2.0.x
 

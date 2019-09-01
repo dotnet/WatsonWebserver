@@ -52,7 +52,7 @@ namespace WatsonWebserver
         /// <summary>
         /// Function to call when an OPTIONS request is received.  Often used to handle CORS.  Leave as 'null' to use the default OPTIONS handler.
         /// </summary>
-        public Func<HttpContext, Task<bool>> OptionsRoute = null;
+        public Func<HttpContext, Task> OptionsRoute = null;
 
         /// <summary>
         /// Function to call prior to routing.  
