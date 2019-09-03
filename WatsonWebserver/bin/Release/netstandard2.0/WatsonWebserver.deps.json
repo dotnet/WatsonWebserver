@@ -1,15 +1,14 @@
 {
   "runtimeTarget": {
     "name": ".NETStandard,Version=v2.0/",
-    "signature": "bc894e7314be5023e47843a41d4b2e7b0dc907a4"
+    "signature": "3c8382b150a6c05606c8f2fe30b994b8545bb933"
   },
   "compilationOptions": {},
   "targets": {
     ".NETStandard,Version=v2.0": {},
     ".NETStandard,Version=v2.0/": {
-      "WatsonWebserver/2.1.7": {
+      "WatsonWebserver/3.0.1": {
         "dependencies": {
-          "ChunkDecoder": "1.0.3",
           "IpMatcher": "1.0.1",
           "NETStandard.Library": "2.0.3",
           "Newtonsoft.Json": "12.0.2",
@@ -17,14 +16,6 @@
         },
         "runtime": {
           "WatsonWebserver.dll": {}
-        }
-      },
-      "ChunkDecoder/1.0.3": {
-        "runtime": {
-          "lib/netstandard2.0/ChunkDecoder.dll": {
-            "assemblyVersion": "1.0.3.0",
-            "fileVersion": "1.0.3.0"
-          }
         }
       },
       "IpMatcher/1.0.1": {
@@ -60,17 +51,10 @@
     }
   },
   "libraries": {
-    "WatsonWebserver/2.1.7": {
+    "WatsonWebserver/3.0.1": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
-    },
-    "ChunkDecoder/1.0.3": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-asHFIIEKA1osWR52HC62b96dYOrdphZb70v/6anI4m20Hpb4Pp9yLTmlwn39aNPcyezPBt1AtxUKhf81BVo0Xw==",
-      "path": "chunkdecoder/1.0.3",
-      "hashPath": "chunkdecoder.1.0.3.nupkg.sha512"
     },
     "IpMatcher/1.0.1": {
       "type": "package",
