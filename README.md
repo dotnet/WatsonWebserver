@@ -14,6 +14,7 @@ Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS reque
 - Routes and callbacks now use ```Task MyRouteHandler(HttpContext ctx)```
 - All request data is now either accessible through ```HttpRequest.Data``` (stream) or ```HttpRequest.ReadChunk``` (for chunked transfers only)
 - Huge thanks to @winkmichael and @xmike402 for their help, guidance, and contribution to the project!
+- XML documentation
 
 ## Key Changes from v2.x
 
@@ -61,6 +62,7 @@ A variety of test projects are included which will help you exercise the class l
 - Using Watson may require elevation (administrative privileges) if binding an IP other than 127.0.0.1 or localhost
 - The HTTP HOST header must match the specified binding
 - Multiple bindings are supported in .NET Framework, but not (yet) in .NET Core 
+- When using SSL, Watson will interact with certificates in the computer certificate store.  Refer to the wiki for details
 - Watson Webserver will always check routes in the following order:
   - All requests are marshaled through the pre-routing handler
   - If the request is GET or HEAD, content routes will be evaluated next
@@ -188,50 +190,6 @@ static Task DownloadChunkedFile(HttpContext ctx)
 }
 ```
 
-## Version History
-
-Notes from previous versions are shown below:
-
-v2.1.x 
-
-- Pre-routing handler, i.e. a callback used for all requests prior to routing
-- Automatic decoding of incoming requests that have ```Transfer-Encoding: chunked``` in the headers
-- Does not validate chunk signatures or decompress using gzip/deflate yet
-- Better support for HEAD requests where content-length header is required (separate constructor for HttpResponse)
-- Added stream support to content route processor for better large object support
-- Bugfixes (content type not being set)
-
-v2.0.x
-
-- Support for Stream in ```HttpRequest``` and ```HttpResponse```.  To use, set ```Server.ReadInputStream``` to ```false```.  Refer to the ```TestStreamServer``` project for a full example
-- Simplified constructors, removed pre-defined JSON packaging for responses
-- ```HttpResponse``` now only accepts byte arrays for ```Data``` for simplicity
-
-v1.x
-
-- Fix URL encoding (using System.Net.WebUtility.UrlDecode instead of Uri.EscapeString)
-- Refactored content routes, static routes, and dynamic routes (breaking change)
-- Added default permit/deny operation along with whitelist and blacklist
-- Added a new constructor allowing Watson to support multiple listener hostnames
-- Retarget to support both .NET Core 2.0 and .NET Framework 4.6.2.
-- Fix for attaching request body data to the HttpRequest object (thanks @user4000!)
-- Retarget to .NET Framework 4.6.2
-- Enum for HTTP method instead of string (breaking change)
-- Bugfix for content routes that have spaces or ```+``` (thanks @Linqx)
-- Support for passing an object as Data to HttpResponse (will be JSON serialized)
-- Support for implementing your own OPTIONS handler (for CORS and other use cases)
-- Bugfix for dispose (thank you @AChmieletzki)
-- Static methods for building HttpRequest from various sources and conversion
-- Static input methods
-- Better initialization of object members
-- More HTTP status codes (see https://en.wikipedia.org/wiki/List_of_HTTP_status_codes)
-- Fix for content routes (thank you @KKoustas!)
-- Fix for Xamarin IOS and Android (thank you @Tutch!)
-- Added content routes for serving static files.
-- Dynamic route support using C#/.NET regular expressions (see RegexMatcher library https://github.com/jchristn/RegexMatcher).
-- IsListening property
-- Added support for static routes.  The default handler can be used for cases where a matching route isn't available, for instance, to build a custom 404 response.
-
 ## Running under Mono
 
 While .NET Core is always preferred for non-Windows environments, Watson compiled using .NET Framework works well in Mono environments to the extent that we have tested it. It is recommended that when running under Mono, you execute the containing EXE using --server and after using the Mono Ahead-of-Time Compiler (AOT).
@@ -242,3 +200,7 @@ NOTE: Windows accepts '0.0.0.0' as an IP address representing any interface.  On
 mono --aot=nrgctx-trampolines=8096,nimt-trampolines=8096,ntrampolines=4048 --server myapp.exe
 mono --server myapp.exe
 ```
+
+## Version History
+
+Refer to CHANGELOG.md for version history.

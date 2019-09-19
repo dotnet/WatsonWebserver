@@ -3,26 +3,38 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net462</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>3.0.1</Version>
+    <Version>3.0.2</Version>
     <Description>Simple async C# web server for handling REST requests with SSL support, targeted to both .NET Core 2.0 and .NET Framework 4.6.2.</Description>
     <Authors>Joel Christner</Authors>
     <Company>Joel Christner</Company>
     <Copyright>(c)2019 Joel Christner</Copyright>
     <PackageProjectUrl>https://github.com/jchristn/WatsonWebserver</PackageProjectUrl>
-    <PackageLicenseUrl>https://github.com/jchristn/WatsonWebserver/blob/master/LICENSE.txt</PackageLicenseUrl>
+    <PackageLicenseUrl></PackageLicenseUrl>
     <RepositoryUrl>https://github.com/jchristn/WatsonWebserver</RepositoryUrl>
     <RepositoryType>Github</RepositoryType>
     <PackageTags>web server rest restful http https api async ssl</PackageTags>
-    <PackageReleaseNotes>** Breaking changes ** Please refer to the README on the project site for changes required to upgrade to v3.0.</PackageReleaseNotes>
+    <PackageReleaseNotes>XML documentation</PackageReleaseNotes>
     <PackageId>Watson</PackageId>
     <Product>Watson</Product>
     <PackageIconUrl>https://raw.githubusercontent.com/jchristn/WatsonWebserver/master/assets/watson.ico</PackageIconUrl>
+    <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
+    <DocumentationFile>C:\Code\Watson\WatsonWebserver-3.0\WatsonWebserver\WatsonWebserver.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="IpMatcher" Version="1.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
     <PackageReference Include="RegexMatcher" Version="1.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\..\KVPbase\storageserver-4.0\LICENSE.md">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>

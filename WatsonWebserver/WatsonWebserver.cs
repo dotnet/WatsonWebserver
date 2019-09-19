@@ -187,11 +187,14 @@ namespace WatsonWebserver
         {
             Dispose(true);
         }
-         
+
         #endregion
 
         #region Private-Methods
 
+        /// <summary>
+        /// Tear down the server and dispose of background workers.
+        /// </summary>
         protected virtual void Dispose(bool disposing)
         {
             if (disposing)

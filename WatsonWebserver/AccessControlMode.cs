@@ -17,8 +17,14 @@ namespace WatsonWebserver
     [JsonConverter(typeof(StringEnumConverter))]
     public enum AccessControlMode
     {
+        /// <summary>
+        /// Permit requests from any endpoint by default.
+        /// </summary>
         [EnumMember(Value = "DefaultPermit")]
         DefaultPermit,
+        /// <summary>
+        /// Deny requests from any endpoint by default.
+        /// </summary>
         [EnumMember(Value = "DefaultDeny")]
         DefaultDeny
     }
