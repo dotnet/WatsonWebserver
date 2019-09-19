@@ -131,9 +131,7 @@ namespace WatsonWebserver
             _TokenSource = new CancellationTokenSource();
             _Token = _TokenSource.Token;
             _ContentRouteProcessor = new ContentRouteProcessor(ContentRoutes);
-
-            Welcome();
-
+             
             Task.Run(() => StartServer(_Token), _Token);
         }
 
@@ -170,9 +168,7 @@ namespace WatsonWebserver
             _TokenSource = new CancellationTokenSource();
             _Token = _TokenSource.Token;
             _ContentRouteProcessor = new ContentRouteProcessor(ContentRoutes);
-
-            Welcome();
-
+             
             Task.Run(() => StartServer(_Token), _Token);
         }
 
@@ -210,18 +206,7 @@ namespace WatsonWebserver
 
             Events.ServerDisposed();
         }
-         
-        private void Welcome()
-        {
-            Console.Write("Starting Watson Webserver on: ");
-            foreach (string curr in _ListenerHostnames)
-            {
-                if (_ListenerSsl) Console.Write("https://" + curr + ":" + _ListenerPort + " ");
-                else Console.Write("http://" + curr + ":" + _ListenerPort + " ");
-            }
-            Console.WriteLine("");
-        }
-
+          
         private void StartServer(CancellationToken token)
         {
             Task.Run(() => AcceptConnections(token), token);

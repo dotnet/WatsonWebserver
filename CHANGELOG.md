@@ -2,11 +2,15 @@
 
 ## Current Version
 
-v3.0.2
+v3.0.3
 
-- XML documentation.
+- Removed welcome message
 
 ## Previous Versions
+
+v3.0.2
+
+- XML documentation
 
 v3.0.1
 
