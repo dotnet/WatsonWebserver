@@ -165,7 +165,10 @@ namespace WatsonWebserver
 
         #region Constructors-and-Factories
          
-        internal HttpRequest()
+        /// <summary>
+        /// Instantiate the object.
+        /// </summary>
+        public HttpRequest()
         {
             ThreadId = Thread.CurrentThread.ManagedThreadId;
             TimestampUtc = DateTime.Now.ToUniversalTime();
@@ -173,7 +176,11 @@ namespace WatsonWebserver
             Headers = new Dictionary<string, string>();
         }
          
-        internal HttpRequest(HttpListenerContext ctx)
+        /// <summary>
+        /// Instantiate the object using an HttpListenerContext.
+        /// </summary>
+        /// <param name="ctx">HttpListenerContext.</param>
+        public HttpRequest(HttpListenerContext ctx)
         {
             #region Check-for-Null-Values
 
@@ -444,7 +451,12 @@ namespace WatsonWebserver
             #endregion
         }
 
-        internal static HttpRequest FromStream(Stream stream)
+        /// <summary>
+        /// Instantiate the object using a generic stream.
+        /// </summary>
+        /// <param name="stream">Stream.</param>
+        /// <returns>HttpRequest.</returns>
+        public static HttpRequest FromStream(Stream stream)
         {
             if (stream == null) throw new ArgumentNullException(nameof(stream));
 
@@ -619,7 +631,12 @@ namespace WatsonWebserver
             }
         }
 
-        internal static HttpRequest FromStream(NetworkStream stream)
+        /// <summary>
+        /// Instantiate the object using a network stream.
+        /// </summary>
+        /// <param name="stream">NetworkStream.</param>
+        /// <returns>HttpRequest.</returns>
+        public static HttpRequest FromStream(NetworkStream stream)
         {
             if (stream == null) throw new ArgumentNullException(nameof(stream));
 
@@ -794,7 +811,12 @@ namespace WatsonWebserver
             }
         }
 
-        internal static HttpRequest FromTcpClient(TcpClient client)
+        /// <summary>
+        /// Instantiate the object using a TCP client.
+        /// </summary>
+        /// <param name="client">TcpClient.</param>
+        /// <returns>HttpRequest.</returns>
+        public static HttpRequest FromTcpClient(TcpClient client)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));
 

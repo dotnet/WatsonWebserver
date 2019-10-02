@@ -464,6 +464,38 @@
             The original HttpListenerContext from which the HttpRequest was constructed.
             </summary>
         </member>
+        <member name="M:WatsonWebserver.HttpRequest.#ctor">
+            <summary>
+            Instantiate the object.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.HttpRequest.#ctor(System.Net.HttpListenerContext)">
+            <summary>
+            Instantiate the object using an HttpListenerContext.
+            </summary>
+            <param name="ctx">HttpListenerContext.</param>
+        </member>
+        <member name="M:WatsonWebserver.HttpRequest.FromStream(System.IO.Stream)">
+            <summary>
+            Instantiate the object using a generic stream.
+            </summary>
+            <param name="stream">Stream.</param>
+            <returns>HttpRequest.</returns>
+        </member>
+        <member name="M:WatsonWebserver.HttpRequest.FromStream(System.Net.Sockets.NetworkStream)">
+            <summary>
+            Instantiate the object using a network stream.
+            </summary>
+            <param name="stream">NetworkStream.</param>
+            <returns>HttpRequest.</returns>
+        </member>
+        <member name="M:WatsonWebserver.HttpRequest.FromTcpClient(System.Net.Sockets.TcpClient)">
+            <summary>
+            Instantiate the object using a TCP client.
+            </summary>
+            <param name="client">TcpClient.</param>
+            <returns>HttpRequest.</returns>
+        </member>
         <member name="M:WatsonWebserver.HttpRequest.ToString">
             <summary>
             Retrieve a string-formatted, human-readable copy of the HttpRequest instance.

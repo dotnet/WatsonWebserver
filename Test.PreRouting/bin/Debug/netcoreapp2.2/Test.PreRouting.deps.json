@@ -8,7 +8,7 @@
     ".NETCoreApp,Version=v2.2": {
       "Test.PreRouting/1.0.0": {
         "dependencies": {
-          "Watson": "3.0.3"
+          "Watson": "3.0.4"
         },
         "runtime": {
           "Test.PreRouting.dll": {}
@@ -38,7 +38,7 @@
           }
         }
       },
-      "Watson/3.0.3": {
+      "Watson/3.0.4": {
         "dependencies": {
           "IpMatcher": "1.0.1",
           "Newtonsoft.Json": "12.0.2",
@@ -77,7 +77,7 @@
       "path": "regexmatcher/1.0.2",
       "hashPath": "regexmatcher.1.0.2.nupkg.sha512"
     },
-    "Watson/3.0.3": {
+    "Watson/3.0.4": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

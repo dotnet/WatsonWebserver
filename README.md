@@ -7,14 +7,9 @@
 
 Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS requests, written in C#.
 
-## New in v3.0.x
+## New in v3.0.4
 
-- BREAKING CHANGE from previous versions, major refactor!
-- Improved support for both sending and receiving data/payloads using ```Transfer-Encoding: chunked```
-- Routes and callbacks now use ```Task MyRouteHandler(HttpContext ctx)```
-- All request data is now either accessible through ```HttpRequest.Data``` (stream) or ```HttpRequest.ReadChunk``` (for chunked transfers only)
-- Huge thanks to @winkmichael and @xmike402 for their help, guidance, and contribution to the project!
-- XML documentation
+- Exposed certain HttpRequest factories to support 3rd-party apps built using Watson.
 
 ## Key Changes from v2.x
 

@@ -2,11 +2,15 @@
 
 ## Current Version
 
+v3.0.4
+
+- Exposed certain HttpRequest factories to support 3rd-party apps built using Watson.
+
+## Previous Versions
+
 v3.0.3
 
 - Removed welcome message
-
-## Previous Versions
 
 v3.0.2
 
