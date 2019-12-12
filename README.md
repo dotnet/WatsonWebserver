@@ -185,6 +185,20 @@ static Task DownloadChunkedFile(HttpContext ctx)
 }
 ```
 
+## Accessing from Outside Localhost
+
+When you configure Watson to listen on ```127.0.0.1``` or ```localhost```, it will only respond to requests received from within the local machine.
+
+To configure access from other nodes outside of localhost, use the following:
+
+- Specify the exact DNS hostname upon which Watson should listen in the ```Server``` constructor.  The HOST header on incoming HTTP requests MUST match this value (this is an operating system limitation)
+- If you want to listen on more than one hostname or IP address, use ```*``` or ```+```.  You MUST run Watson as administrator for this to work (this is an operating system limitation)
+- If you want to use a port number less than 1024, you MUST run Watson as administrator (this is an operating system limitation)
+- Open a port on your firewall to permit traffic on the TCP port upon which Watson is listening
+- If you are using SSL on Windows, follow the guide here: https://github.com/jchristn/WatsonWebserver/wiki/Using-SSL-on-Windows
+
+If you're still having problems, please do not hesitate to file an issue here, and I will do my best to help and update the documentation.
+
 ## Running under Mono
 
 While .NET Core is always preferred for non-Windows environments, Watson compiled using .NET Framework works well in Mono environments to the extent that we have tested it. It is recommended that when running under Mono, you execute the containing EXE using --server and after using the Mono Ahead-of-Time Compiler (AOT).

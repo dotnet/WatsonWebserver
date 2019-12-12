@@ -65,7 +65,15 @@ namespace WatsonWebserver
         #endregion
 
         #region Constructors-and-Factories
-         
+
+        /// <summary>
+        /// Instantiate the object.
+        /// </summary>
+        public HttpResponse()
+        {
+
+        }
+
         internal HttpResponse(HttpRequest req, HttpListenerContext ctx, EventCallbacks events, int bufferSize)
         {
             if (req == null) throw new ArgumentNullException(nameof(req));
@@ -93,11 +101,14 @@ namespace WatsonWebserver
             string ret = "";
   
             ret += "--- HTTP Response ---" + Environment.NewLine;
-            ret += "  Content          : " + ContentType + " (" + ContentLength + " bytes)" + Environment.NewLine;
-            ret += "  Chunked Transfer : " + ChunkedTransfer + Environment.NewLine;
+            ret += "  Status Code        : " + StatusCode + Environment.NewLine;
+            ret += "  Status Description : " + StatusDescription + Environment.NewLine;
+            ret += "  Content            : " + ContentType + Environment.NewLine;
+            ret += "  Content Length     : " + ContentLength + " bytes" + Environment.NewLine;
+            ret += "  Chunked Transfer   : " + ChunkedTransfer + Environment.NewLine;
             if (Headers != null && Headers.Count > 0)
             {
-                ret += "  Headers          : " + Environment.NewLine;
+                ret += "  Headers            : " + Environment.NewLine;
                 foreach (KeyValuePair<string, string> curr in Headers)
                 {
                     ret += "  - " + curr.Key + ": " + curr.Value + Environment.NewLine;
@@ -374,7 +385,7 @@ namespace WatsonWebserver
 
             return true;
         }
-
+         
         #endregion
 
         #region Private-Methods

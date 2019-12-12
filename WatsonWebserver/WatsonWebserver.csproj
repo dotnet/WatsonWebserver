@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net462</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>3.0.4</Version>
+    <Version>3.0.4.1</Version>
     <Description>Simple async C# web server for handling REST requests with SSL support, targeted to both .NET Core 2.0 and .NET Framework 4.6.2.</Description>
     <Authors>Joel Christner</Authors>
     <Company>Joel Christner</Company>
