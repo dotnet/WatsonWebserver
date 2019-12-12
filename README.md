@@ -76,7 +76,29 @@ A variety of test projects are included which will help you exercise the class l
   - If you only want to allow certain IPs or networks, and block all others, use:
     - ```Server.AccessControl.Mode = AccessControlMode.DefaultDeny```
     - ```Server.AccessControl.Whitelist.Add(ip, netmask)```
-    
+
+## Simple Example
+
+```
+using System.IO;
+using System.Text;
+using WatsonWebserver;
+
+static void Main(string[] args)
+{
+   Server s = new Server("127.0.0.1", 9000, false, DefaultRoute);
+   Console.ReadLine();
+}
+
+static HttpResponse DefaultRoute(HttpRequest req)
+{
+  ctx.Response.StatusCode = 200;
+  await ctx.Response.Send("Hello from the default route!");
+}
+```
+
+Then, open your browser to ```http://127.0.0.1:9000/```.
+
 ## Example using Routes
 
 ```
