@@ -31,7 +31,7 @@ static HttpResponse MyRouteHandler(HttpRequest req)
 Would become the following in v3.x:
 
 ```
-static Task MyRouteHandler(HttpContext ctx)
+static async Task MyRouteHandler(HttpContext ctx)
 {
   ctx.Response.StatusCode = 200;
   await ctx.Response.Send("Hello world!"); 
