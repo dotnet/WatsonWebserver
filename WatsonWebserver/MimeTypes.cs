@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace WatsonWebserver
 {
@@ -612,6 +613,16 @@ namespace WatsonWebserver
         public MimeTypes()
         {
 
+        }
+
+        /// <summary>
+        /// Retrieve MIME type from file extension.
+        /// </summary>
+        /// <param name="path">File path.</param>
+        /// <returns>String containing MIME type.</returns>
+        public static string GetFromPath(string path)
+        {
+            return data.TryGetValue(Path.GetExtension(path)?.ToLower() ?? "", out var mime) ? mime : "application/octet-stream";
         }
 
         /// <summary>
