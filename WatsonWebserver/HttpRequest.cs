@@ -1176,6 +1176,7 @@ namespace WatsonWebserver
           }
         }
 
+        /* ToDo
         /// <summary>
         ///   Return Data send as GET-Parameter
         /// </summary>
@@ -1222,6 +1223,7 @@ namespace WatsonWebserver
         ///   The querystring attached to the URL.
         /// </summary>
         public string GetDataAsString => Querystring;
+        */
 
     #endregion
 

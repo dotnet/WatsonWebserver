@@ -8,7 +8,8 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
- 
+using Newtonsoft.Json;
+
 namespace WatsonWebserver
 {
     /// <summary>
@@ -43,11 +44,6 @@ namespace WatsonWebserver
         /// </summary>
         public long ContentLength = 0;
 
-        /// <summary>
-        /// Indicates whether or not chunked transfer encoding should be indicated in the response. 
-        /// </summary>
-        public bool ChunkedTransfer = false;
-
         #endregion
 
         #region Private-Members
@@ -67,28 +63,24 @@ namespace WatsonWebserver
         /// <summary>
         /// Instantiate the object.
         /// </summary>
-        public HttpResponse()
+        private HttpResponse()
         {
 
         }
 
         internal HttpResponse(HttpRequest req, HttpListenerContext ctx, EventCallbacks events)
         {
-            if (req == null) throw new ArgumentNullException(nameof(req));
-            if (ctx == null) throw new ArgumentNullException(nameof(ctx));
-            if (events == null) throw new ArgumentNullException(nameof(events));
-
-            _Request = req;
-            _Context = ctx;
+            _Request = req ?? throw new ArgumentNullException(nameof(req));
+            _Context = ctx ?? throw new ArgumentNullException(nameof(ctx));
             _Response = _Context.Response;
-            _Events = events;
+            _Events = events ?? throw new ArgumentNullException(nameof(events));
             _OutputStream = _Response.OutputStream;
         }
 
         #endregion
 
         #region Public-Methods
-         
+
         /// <summary>
         /// Retrieve a string-formatted, human-readable copy of the HttpResponse instance.
         /// </summary>
@@ -96,13 +88,13 @@ namespace WatsonWebserver
         public override string ToString()
         {
             string ret = "";
-  
+
             ret += "--- HTTP Response ---" + Environment.NewLine;
             ret += "  Status Code        : " + StatusCode + Environment.NewLine;
             ret += "  Status Description : " + StatusDescription + Environment.NewLine;
             ret += "  Content            : " + ContentType + Environment.NewLine;
             ret += "  Content Length     : " + ContentLength + " bytes" + Environment.NewLine;
-            ret += "  Chunked Transfer   : " + ChunkedTransfer + Environment.NewLine;
+            ret += "  Chunked Transfer   : " + true + Environment.NewLine;
             if (Headers != null && Headers.Count > 0)
             {
                 ret += "  Headers            : " + Environment.NewLine;
@@ -115,261 +107,213 @@ namespace WatsonWebserver
             {
                 ret += "  Headers          : none" + Environment.NewLine;
             }
-             
+
             return ret;
         }
 
         /// <summary>
-        /// Send headers and no data to the requestor and terminate the connection.
+        ///   Send headers and no data to the requestor and terminate the connection.
         /// </summary>
         /// <returns>True if successful.</returns>
         public async Task<bool> Send()
         {
-            if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and SendFinalChunk().");
             if (!_HeadersSent) SendHeaders();
 
             await _OutputStream.FlushAsync();
             _OutputStream.Close();
 
-            if (_Response != null) _Response.Close();
+            _Response?.Close();
             return true;
         }
 
         /// <summary>
-        /// Send headers with a specified content length and no data to the requestor and terminate the connection.  Useful for HEAD requests where the content length must be set.
+        /// Send headers (statusCode) and no data to the requestor and terminate the connection.
+        /// </summary>
+        /// <param name="statusCode">StatusCode</param>
+        /// <returns>True if successful.</returns>
+        public Task<bool> Send(int statusCode)
+        {
+            StatusCode = statusCode;
+            return Send();
+        }
+
+        /// <summary>
+        /// Send headers (statusCode) and a error message to the requestor and terminate the connection.
+        /// </summary>
+        /// <param name="statusCode">StatusCode</param>
+        /// <param name="errorMessage">Plaintext error message</param>
+        /// <returns>True if successful.</returns>
+        public Task<bool> Send(int statusCode, string errorMessage)
+        {
+            StatusCode = statusCode;
+            ContentType = "text/plain";
+            using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(errorMessage)))
+                return Send(ms.Length, ms);
+        }
+
+        /// <summary>
+        ///   Send headers and data to the requestor and terminate the connection.
+        /// </summary>
+        /// <param name="obj">Object.</param>
+        /// <returns>True if successful.</returns>
+        public Task<bool> Send(object obj)
+        {
+            using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(obj))))
+                return Send(ms.Length, ms);
+        }
+
+        /// <summary>
+        ///   Send headers with a specified content length and no data to the requestor and terminate the connection.  Useful for
+        ///   HEAD requests where the content length must be set.
         /// </summary>
         /// <returns>True if successful.</returns>
         public async Task<bool> Send(long contentLength)
         {
-            if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and SendFinalChunk().");
-            ContentLength = contentLength;
-            if (!_HeadersSent) SendHeaders();
-
-            await _OutputStream.FlushAsync();
-            _OutputStream.Close();
-
-            if (_Response != null) _Response.Close();
-            return true;
+          ContentLength = contentLength;
+          return await Send();
         }
 
         /// <summary>
-        /// Send headers and data to the requestor and terminate the connection.
+        ///   Send headers and data to the requestor and terminate the connection.
         /// </summary>
         /// <param name="data">Data.</param>
+        /// <param name="mimeType">Force a special MIME-Type</param>
         /// <returns>True if successful.</returns>
-        public async Task<bool> Send(string data)
+        public async Task<bool> Send(string data, string mimeType = "application/json")
         {
-            if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and SendFinalChunk().");
-            if (!_HeadersSent) SendHeaders();
-
-            byte[] bytes = null;
-            if (!String.IsNullOrEmpty(data))
-            {
-                bytes = Encoding.UTF8.GetBytes(data);
-                _Response.ContentLength64 = bytes.Length;
-            }
-            else
-            {
-                _Response.ContentLength64 = 0;
-            }
-
-            try
-            {
-                if (_Request.Method != HttpMethod.HEAD)
-                {
-                    if (bytes != null && bytes.Length > 0)
-                    {
-                        await _OutputStream.WriteAsync(bytes, 0, bytes.Length);
-                    }
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                // do nothing
-                return false;
-            }
-            catch (Exception eInner)
-            {
-                _Events.ExceptionEncountered(_Request.SourceIp, _Request.SourcePort, eInner);
-                return false;
-            }
-            finally
-            {
-                await _OutputStream.FlushAsync();
-                _OutputStream.Close();
-
-                if (_Response != null) _Response.Close();
-            }
-
-            return true;
+            ContentType = mimeType;
+            return await Send(Encoding.UTF8.GetBytes(data));
         }
 
         /// <summary>
-        /// Send headers and data to the requestor and terminate the connection.
+        ///   Send headers and data to the requestor and terminate the connection.
         /// </summary>
         /// <param name="data">Data.</param>
         /// <returns>True if successful.</returns>
         public async Task<bool> Send(byte[] data)
         {
-            if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and SendFinalChunk().");
-            if (!_HeadersSent) SendHeaders();
-
-            if (data != null && data.Length > 0) _Response.ContentLength64 = data.Length;
-            else _Response.ContentLength64 = 0;
-
             try
             {
-                if (_Request.Method != HttpMethod.HEAD)
-                {
-                    if (data != null && data.Length > 0)
-                    {
-                        await _OutputStream.WriteAsync(data, 0, (int)_Response.ContentLength64);
-                    }
-                }
+                using (var ms = new MemoryStream(data))
+                    await Send(data.Length, ms);
+                return true;
             }
-            catch (OperationCanceledException)
+            catch
             {
                 // do nothing
                 return false;
             }
-            catch (Exception eInner)
-            {
-                _Events.ExceptionEncountered(_Request.SourceIp, _Request.SourcePort, eInner);
-                return false;
-            }
-            finally
-            {
-                await _OutputStream.FlushAsync();
-                _OutputStream.Close();
-
-                if (_Response != null) _Response.Close();
-            }
-
-            return true;
         }
 
+        private const int _bufferSize = 1024 * 1024;
+
         /// <summary>
-        /// Send headers and data to the requestor and terminate.
+        ///   Send headers and data to the requestor and terminate.
         /// </summary>
         /// <param name="contentLength">Number of bytes to send.</param>
         /// <param name="stream">Stream containing the data.</param>
         /// <returns>True if successful.</returns>
         public async Task<bool> Send(long contentLength, Stream stream)
         {
-            if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and SendFinalChunk().");
+            if (!_HeadersSent)
+                SendHeaders();
             ContentLength = contentLength;
-            if (!_HeadersSent) SendHeaders();
-             
+
             try
             {
-                if (_Request.Method != HttpMethod.HEAD)
+                if (stream != null && stream.CanRead && contentLength > 0)
                 {
-                    if (stream != null && stream.CanRead && contentLength > 0)
+                    var buffer = new byte[_bufferSize];
+                    var read = 0;
+                    do
                     {
-                        long bytesRemaining = contentLength;
-
-                        while (bytesRemaining > 0)
-                        {
-                            int bytesRead = 0;
-                            byte[] buffer = new byte[4096];
-                            bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
-                            if (bytesRead > 0)
-                            {
-                                await _OutputStream.WriteAsync(buffer, 0, bytesRead);
-                                bytesRemaining -= bytesRead;
-                            }
-                        }
-
-                        stream.Close();
-                        stream.Dispose();
-                    }
+                        read = stream.Read(buffer, 0, buffer.Length);
+                        if (read > 0)
+                            await SendChunk(buffer, read);
+                    } while (read != 0);
                 }
             }
-            catch (OperationCanceledException)
+            catch
             {
-                return false;
-            }
-            catch (Exception eInner)
-            {
-                _Events.ExceptionEncountered(_Request.SourceIp, _Request.SourcePort, eInner);
+                // do nothing
                 return false;
             }
             finally
             {
-                await _OutputStream.FlushAsync();
-                _OutputStream.Close();
-
-                if (_Response != null) _Response.Close();
+                await SendFinalChunk(null, 0);
             }
 
             return true;
         }
 
         /// <summary>
-        /// Send headers (if not already sent) and a chunk of data using chunked transfer-encoding, and keep the connection in-tact.
+        ///   Send headers (if not already sent) and a chunk of data using chunked transfer-encoding, and keep the connection
+        ///   in-tact.
         /// </summary>
         /// <param name="chunk">Chunk of data.</param>
         /// <returns>True if successful.</returns>
         public async Task<bool> SendChunk(byte[] chunk)
         {
-            if (!ChunkedTransfer) throw new IOException("Response is not configured to use chunked transfer-encoding.  Set ChunkedTransfer to true first, otherwise use Send().");
-            if (!_HeadersSent) SendHeaders();
+            if (!_HeadersSent)
+                SendHeaders();
+            return await SendChunk(chunk, chunk.Length);
+        }
 
+        /// <summary>
+        ///   Send headers (if not already sent) and a chunk of data using chunked transfer-encoding, and keep the connection
+        ///   in-tact.
+        /// </summary>
+        /// <param name="chunk">Chunk of data.</param>
+        /// <returns>True if successful.</returns>
+        private async Task<bool> SendChunk(byte[] chunk, int length)
+        {
             try
             {
-                if (chunk == null || chunk.Length < 1) chunk = new byte[0];
-
-                // byte[] packagedChunk = PackageChunk(chunk);
-                // await _OutputStream.WriteAsync(packagedChunk, 0, packagedChunk.Length);
-                await _OutputStream.WriteAsync(chunk, 0, chunk.Length);
+                if (chunk == null || chunk.Length < 1)
+                    chunk = new byte[0];
+                _OutputStream.Write(chunk, 0, length);
             }
-            catch (OperationCanceledException)
+            catch
             {
                 // do nothing
                 return false;
-            }
-            catch (Exception eInner)
-            {
-                _Events.ExceptionEncountered(_Request.SourceIp, _Request.SourcePort, eInner);
-                return false;
-            }
-            finally
-            {
-                await _OutputStream.FlushAsync();
-                // do not close or dispose
             }
 
             return true;
         }
 
         /// <summary>
-        /// Send headers (if not already sent) and the final chunk of data using chunked transfer-encoding and terminate the connection.
+        ///   Send headers (if not already sent) and the final chunk of data using chunked transfer-encoding and terminate the
+        ///   connection.
         /// </summary>
         /// <param name="chunk">Chunk of data.</param>
         /// <returns>True if successful.</returns>
         public async Task<bool> SendFinalChunk(byte[] chunk)
         {
-            if (!ChunkedTransfer) throw new IOException("Response is not configured to use chunked transfer-encoding.  Set ChunkedTransfer to true first, otherwise use Send().");
-            if (!_HeadersSent) SendHeaders();
+            if (!_HeadersSent)
+                SendHeaders();
 
+            return await SendFinalChunk(chunk, chunk.Length);
+        }
+
+        /// <summary>
+        ///   Send headers (if not already sent) and the final chunk of data using chunked transfer-encoding and terminate the
+        ///   connection.
+        /// </summary>
+        /// <param name="chunk">Chunk of data.</param>
+        /// <returns>True if successful.</returns>
+        private async Task<bool> SendFinalChunk(byte[] chunk, int length)
+        {
             try
-            { 
-                if (chunk != null && chunk.Length > 0)
-                {
-                    await _OutputStream.WriteAsync(chunk, 0, chunk.Length);
-                }
+            {
+                if (chunk != null && length > 0) await _OutputStream.WriteAsync(chunk, 0, length);
 
-                byte[] endChunk = new byte[0];
+                var endChunk = new byte[0];
                 await _OutputStream.WriteAsync(endChunk, 0, endChunk.Length);
             }
-            catch (OperationCanceledException)
+            catch
             {
                 // do nothing
-                return false;
-            }
-            catch (Exception eInner)
-            {
-                _Events.ExceptionEncountered(_Request.SourceIp, _Request.SourcePort, eInner);
                 return false;
             }
             finally
@@ -377,12 +321,12 @@ namespace WatsonWebserver
                 await _OutputStream.FlushAsync();
                 _OutputStream.Close();
 
-                if (_Response != null) _Response.Close();
+                _Response?.Close();
             }
 
             return true;
         }
-         
+
         #endregion
 
         #region Private-Methods
@@ -394,7 +338,7 @@ namespace WatsonWebserver
             _Response.ContentLength64 = ContentLength;
             _Response.StatusCode = StatusCode;
             _Response.StatusDescription = GetStatusDescription(StatusCode);
-            _Response.SendChunked = ChunkedTransfer;
+            _Response.SendChunked = true;
             _Response.AddHeader("Access-Control-Allow-Origin", "*");
             _Response.ContentType = ContentType;
 
@@ -453,14 +397,14 @@ namespace WatsonWebserver
             {
                 return Encoding.UTF8.GetBytes("0\r\n\r\n");
             }
-             
+
             MemoryStream ms = new MemoryStream();
-             
+
             string newlineStr = "\r\n";
             byte[] newline = Encoding.UTF8.GetBytes(newlineStr);
 
             string chunkLenHex = chunk.Length.ToString("X");
-            byte[] chunkLen = Encoding.UTF8.GetBytes(chunkLenHex); 
+            byte[] chunkLen = Encoding.UTF8.GetBytes(chunkLenHex);
 
             ms.Write(chunkLen, 0, chunkLen.Length);
             ms.Write(newline, 0, newline.Length);
@@ -469,7 +413,7 @@ namespace WatsonWebserver
             ms.Seek(0, SeekOrigin.Begin);
 
             byte[] ret = ms.ToArray();
-             
+
             return ret;
         }
 
