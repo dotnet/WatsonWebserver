@@ -9,7 +9,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
- 
+using System.Web;
 using Newtonsoft.Json;
 
 namespace WatsonWebserver
@@ -1155,12 +1155,79 @@ namespace WatsonWebserver
 
             return chunk; 
         }
-         
-        #endregion
 
-        #region Private-Methods
-         
-        private static HttpRequest BuildHeaders(byte[] bytes)
+        /// <summary>
+        ///   Return Post-Data as T
+        /// </summary>
+        /// <returns>Post-Data as T</returns>
+        public T PostData<T>()
+        {
+          return JsonConvert.DeserializeObject<T>(PostDataAsString);
+        }
+
+        public string PostDataAsString
+        {
+          get
+          {
+            using (var reader = new StreamReader(Data, Encoding.UTF8))
+            {
+              return reader.ReadToEnd();
+            }
+          }
+        }
+
+        /// <summary>
+        ///   Return Data send as GET-Parameter
+        /// </summary>
+        /// <returns></returns>
+        public Dictionary<string, string> GetData(bool keyToLowercase = true)
+        {
+          try
+          {
+            if (string.IsNullOrEmpty(GetDataAsString))
+              return new Dictionary<string, string>();
+
+            var split = GetDataAsString.Split(new[] { "&" }, StringSplitOptions.RemoveEmptyEntries);
+            var res = new Dictionary<string, string>();
+            foreach (var x in split)
+              try
+              {
+                var entry = x.Split(new[] { "=" }, StringSplitOptions.RemoveEmptyEntries);
+                if (entry.Length != 2)
+                  continue;
+
+                var key = HttpUtility.UrlDecode(entry[0]);
+                if (keyToLowercase)
+                  key = key.ToLower();
+
+                if (res.ContainsKey(key))
+                  res[key] = HttpUtility.UrlDecode(entry[1]);
+                else
+                  res.Add(key, HttpUtility.UrlDecode(entry[1]));
+              }
+              catch
+              {
+                // ignore
+              }
+
+            return res;
+          }
+          catch
+          {
+            return new Dictionary<string, string>();
+          }
+        }
+
+        /// <summary>
+        ///   The querystring attached to the URL.
+        /// </summary>
+        public string GetDataAsString => Querystring;
+
+    #endregion
+
+    #region Private-Methods
+
+    private static HttpRequest BuildHeaders(byte[] bytes)
         {
             if (bytes == null) throw new ArgumentNullException(nameof(bytes));
 
