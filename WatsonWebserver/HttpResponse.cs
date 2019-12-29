@@ -52,8 +52,6 @@ namespace WatsonWebserver
 
         #region Private-Members
 
-        private int _StreamBufferSize = 65536;
-
         private HttpRequest _Request;
         private HttpListenerContext _Context;
         private HttpListenerResponse _Response;
@@ -74,7 +72,7 @@ namespace WatsonWebserver
 
         }
 
-        internal HttpResponse(HttpRequest req, HttpListenerContext ctx, EventCallbacks events, int bufferSize)
+        internal HttpResponse(HttpRequest req, HttpListenerContext ctx, EventCallbacks events)
         {
             if (req == null) throw new ArgumentNullException(nameof(req));
             if (ctx == null) throw new ArgumentNullException(nameof(ctx));
@@ -84,7 +82,6 @@ namespace WatsonWebserver
             _Context = ctx;
             _Response = _Context.Response;
             _Events = events;
-            _StreamBufferSize = bufferSize;
             _OutputStream = _Response.OutputStream;
         }
 
@@ -274,7 +271,7 @@ namespace WatsonWebserver
                         while (bytesRemaining > 0)
                         {
                             int bytesRead = 0;
-                            byte[] buffer = new byte[_StreamBufferSize];
+                            byte[] buffer = new byte[4096];
                             bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
                             if (bytesRead > 0)
                             {
