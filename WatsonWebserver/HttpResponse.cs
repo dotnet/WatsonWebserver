@@ -138,12 +138,23 @@ namespace WatsonWebserver
         }
 
         /// <summary>
-        /// Send headers (statusCode) and a error message to the requestor and terminate the connection.
+        /// Send headers (statusCode) and no data to the requestor and terminate the connection.
         /// </summary>
         /// <param name="statusCode">StatusCode</param>
-        /// <param name="errorMessage">Plaintext error message</param>
         /// <returns>True if successful.</returns>
-        public Task<bool> Send(int statusCode, string errorMessage)
+        public Task<bool> Send(HttpStatusCode statusCode)
+        {
+          StatusCode = (int)statusCode;
+          return Send();
+        }
+
+    /// <summary>
+    /// Send headers (statusCode) and a error message to the requestor and terminate the connection.
+    /// </summary>
+    /// <param name="statusCode">StatusCode</param>
+    /// <param name="errorMessage">Plaintext error message</param>
+    /// <returns>True if successful.</returns>
+    public Task<bool> Send(int statusCode, string errorMessage)
         {
             StatusCode = statusCode;
             ContentType = "text/plain";
