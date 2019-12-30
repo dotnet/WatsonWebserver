@@ -60,7 +60,6 @@ namespace Test
                         Console.WriteLine("- User requested /img/watson.jpg");
                         ctx.Response.StatusCode = 200;
                         ctx.Response.ContentType = "image/jpeg";
-                        ctx.Response.ChunkedTransfer = true;
                         ctx.Response.Headers.Add("Cache-Control", "no-cache");
 
                         long fileSize = new FileInfo("./img/watson.jpg").Length;
@@ -126,7 +125,6 @@ namespace Test
                         Console.WriteLine("- User requested /txt/test.txt");
                         ctx.Response.StatusCode = 200;
                         ctx.Response.ContentType = "text/html; charset=utf-8";
-                        ctx.Response.ChunkedTransfer = true;
                         ctx.Response.Headers.Add("Cache-Control", "no-cache");
 
                         long fileSize = new FileInfo("./txt/test.txt").Length;
