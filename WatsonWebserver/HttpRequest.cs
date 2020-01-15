@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using Newtonsoft.Json;
+using Tfres;
 
 namespace WatsonWebserver
 {
@@ -1176,7 +1177,6 @@ namespace WatsonWebserver
           }
         }
 
-        /* ToDo
         /// <summary>
         ///   Return Data send as GET-Parameter
         /// </summary>
@@ -1223,13 +1223,72 @@ namespace WatsonWebserver
         ///   The querystring attached to the URL.
         /// </summary>
         public string GetDataAsString => Querystring;
-        */
 
-    #endregion
+        /// <summary>
+        /// If a JavaScript/Webbrowser sends multiple files - you can read all files at once
+        /// </summary>
+        /// <param name="uploadLimit">Maximal complete size of all files</param>
+        /// <param name="encoding">Set file encoding</param>
+        public IEnumerable<HttpRequestFile> GetUploadedFiles(int uploadLimit = int.MaxValue, Encoding encoding = null)
+        {
+          if (encoding == null)
+            encoding = Encoding.UTF8;
 
-    #region Private-Methods
+          try
+          {
+            var res = new List<HttpRequestFile>();
+            HttpRequestFile current = null;
 
-    private static HttpRequest BuildHeaders(byte[] bytes)
+            using (var reader = new StreamReader(Data))
+            {
+              string end = null;
+              while (!reader.EndOfStream)
+              {
+                var line = reader.ReadLine();
+                if (end == null)
+                  end = line;
+
+                if (line.StartsWith(end))
+                {
+                  if (current != null)
+                  {
+                    current.Finalize(encoding);
+                    res.Add(current);
+                  }
+
+                  // Checking EndOfStream seems to be nasty and redundant
+                  // But: works well with different browser implementations and nasty clients.
+                  if (reader.EndOfStream)
+                    break;
+                  var head1 = reader.ReadLine();
+                  if (reader.EndOfStream)
+                    break;
+                  var head2 = reader.ReadLine();
+                  if (reader.EndOfStream)
+                    break;
+
+                  current = new HttpRequestFile(head1, head2);
+                  reader.ReadLine();
+                  continue;
+                }
+
+                current?.AddLine(line);
+              }
+            }
+
+            return res;
+          }
+          catch
+          {
+            return null;
+          }
+        }
+
+        #endregion
+
+        #region Private-Methods
+
+        private static HttpRequest BuildHeaders(byte[] bytes)
         {
             if (bytes == null) throw new ArgumentNullException(nameof(bytes));
 
