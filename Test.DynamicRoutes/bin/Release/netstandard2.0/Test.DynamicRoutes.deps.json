@@ -1,7 +1,7 @@
 {
   "runtimeTarget": {
     "name": ".NETStandard,Version=v2.0/",
-    "signature": "3c8382b150a6c05606c8f2fe30b994b8545bb933"
+    "signature": ""
   },
   "compilationOptions": {},
   "targets": {
@@ -10,7 +10,7 @@
       "Test.DynamicRoutes/1.0.0": {
         "dependencies": {
           "NETStandard.Library": "2.0.3",
-          "Watson": "3.0.4"
+          "Watson": "3.0.5"
         },
         "runtime": {
           "Test.DynamicRoutes.dll": {}
@@ -46,7 +46,7 @@
           }
         }
       },
-      "Watson/3.0.4": {
+      "Watson/3.0.5": {
         "dependencies": {
           "IpMatcher": "1.0.1",
           "Newtonsoft.Json": "12.0.2",
@@ -67,14 +67,14 @@
     "IpMatcher/1.0.1": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-ASdqz1wygrLi6biivalAsxORk24DI5ZMyfgyRazsEqqXsVSDqzEBUt9IqxVdGhY6le2P0TX3eQqUzaokNXCpog==",
+      "sha512": "sha512-uj4yFtK2myFRbqpxB+QKvGvMw9fLXHyvyypdQdd3JKDG6C1HvSSemPugf/N+tvtH3swHQPj5JM45s5+1SOdziQ==",
       "path": "ipmatcher/1.0.1",
       "hashPath": "ipmatcher.1.0.1.nupkg.sha512"
     },
     "Microsoft.NETCore.Platforms/1.1.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-z+iFuMBeiHMRqvMNUri6Y6zIH8WWYBJwyYtgRnNzp12VWVbbQ8y+xqeAJgrtWRaX7p7qEzrC1OqOQNBTEHoB8A==",
+      "sha512": "sha512-kz0PEW2lhqygehI/d6XsPCQzD7ff7gUJaVGPVETX611eadGsA3A877GdSlU0LRVMCTH/+P3o2iDTak+S08V2+A==",
       "path": "microsoft.netcore.platforms/1.1.0",
       "hashPath": "microsoft.netcore.platforms.1.1.0.nupkg.sha512"
     },
@@ -88,18 +88,18 @@
     "Newtonsoft.Json/12.0.2": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-mtweBXPWhp1CMQATtBT7ZfMZrbZBTKfjGwz6Y75NwGjx/GztDaUnfw8GK9KZ2T4fDIqKJyDjc9Rxlw5+G2FcVA==",
+      "sha512": "sha512-rTK0s2EKlfHsQsH6Yx2smvcTCeyoDNgCW7FEYyV01drPlh2T243PR2DiDXqtC5N4GDm4Ma/lkxfW5a/4793vbA==",
       "path": "newtonsoft.json/12.0.2",
       "hashPath": "newtonsoft.json.12.0.2.nupkg.sha512"
     },
     "RegexMatcher/1.0.2": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-gbNpAHo+3HjiX4YSirmR7ujsURje2pk3moWmb64aB2SXfa75BUFf0ffDld6zJ5KmubO9ST+86O/bejBU5y4eWg==",
+      "sha512": "sha512-t+gA+bsDoISfPP80GfkC9CrR0GC9+lzoSAF+T9YZAdiy8lL1DcBHdwIYEpgPNJkVmPglM+RWFokXnuZ1MypBvQ==",
       "path": "regexmatcher/1.0.2",
       "hashPath": "regexmatcher.1.0.2.nupkg.sha512"
     },
-    "Watson/3.0.4": {
+    "Watson/3.0.5": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

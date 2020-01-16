@@ -222,26 +222,45 @@
         <member name="P:WatsonWebserver.EventCallbacks.ConnectionReceived">
             <summary>
             Callback/action to call when a connection is received.
+            string: IP address of the client.
+            int: Source TCP port of the client.
             </summary>
         </member>
         <member name="P:WatsonWebserver.EventCallbacks.RequestReceived">
             <summary>
             Callback/action to call when a request is received.
+            string: IP address of the client.
+            int: Source TCP port of the client.
+            string: HTTP method.
+            string: Full URL.
             </summary>
         </member>
         <member name="P:WatsonWebserver.EventCallbacks.AccessControlDenied">
             <summary>
             Callback/action to call when a request is denied due to access control.
+            string: IP address of the client.
+            int: Source TCP port of the client.
+            string: HTTP method.
+            string: Full URL.
             </summary>
         </member>
         <member name="P:WatsonWebserver.EventCallbacks.ResponseSent">
             <summary>
             Callback/action to call when a response is sent.
+            string: IP address of the client.
+            int: Source TCP port of the client.
+            string: HTTP method.
+            string: Full URL.
+            int: Response status code.
+            double: Number of milliseconds.
             </summary>
         </member>
         <member name="P:WatsonWebserver.EventCallbacks.ExceptionEncountered">
             <summary>
             Callback/action to call when an exception is encountered.
+            string: IP address of the client.
+            int: Source TCP port of the client.
+            Exception: Exception encountered.
             </summary>
         </member>
         <member name="P:WatsonWebserver.EventCallbacks.ServerStopped">
@@ -548,6 +567,11 @@
         <member name="F:WatsonWebserver.HttpResponse.ChunkedTransfer">
             <summary>
             Indicates whether or not chunked transfer encoding should be indicated in the response. 
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.HttpResponse.#ctor">
+            <summary>
+            Instantiate the object.
             </summary>
         </member>
         <member name="M:WatsonWebserver.HttpResponse.ToString">

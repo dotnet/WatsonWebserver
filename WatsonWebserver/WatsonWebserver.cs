@@ -204,16 +204,16 @@ namespace WatsonWebserver
                 _TokenSource.Cancel();
             }
 
-            Events.ServerDisposed();
+            Events.ServerDisposed?.Invoke();
         }
           
         private void StartServer(CancellationToken token)
         {
             Task.Run(() => AcceptConnections(token), token);
-            _Terminator.WaitOne();
+            // _Terminator.WaitOne();
         }
 
-        private void AcceptConnections(CancellationToken token)
+        private async void AcceptConnections(CancellationToken token)
         {
             try
             {
@@ -231,78 +231,74 @@ namespace WatsonWebserver
 
                 #endregion
 
+                #region Listen-and-Process-Requests
+
                 while (_HttpListener.IsListening)
                 {
-                    ThreadPool.QueueUserWorkItem((c) => 
-                    { 
-                        if (token.IsCancellationRequested) throw new OperationCanceledException();
+                    HttpListenerContext listenerContext = await _HttpListener.GetContextAsync();
+                    HttpContext ctx = null;
 
-                        HttpListenerContext listenerContext = c as HttpListenerContext;
-                        HttpContext ctx = null; 
+                    Task unawaited = Task.Run(() =>
+                    {
+                        DateTime startTime = DateTime.Now;
 
                         try
                         {
-                            #region Build-Context-and-Send-Notification
+                            #region Build-Context
 
-                            Events.ConnectionReceived(
-                                listenerContext.Request.RemoteEndPoint.Address.ToString(),
-                                listenerContext.Request.RemoteEndPoint.Port);
+                            Events.ConnectionReceived?.Invoke(
+                                    listenerContext.Request.RemoteEndPoint.Address.ToString(),
+                                    listenerContext.Request.RemoteEndPoint.Port);
 
-                            ctx = new HttpContext(listenerContext, Events);
+                                ctx = new HttpContext(listenerContext, Events);
 
-                            Events.RequestReceived(
-                                ctx.Request.SourceIp, 
-                                ctx.Request.SourcePort, 
-                                ctx.Request.Method.ToString(), 
-                                ctx.Request.FullUrl);
+                                Events.RequestReceived?.Invoke(
+                                    ctx.Request.SourceIp,
+                                    ctx.Request.SourcePort,
+                                    ctx.Request.Method.ToString(),
+                                    ctx.Request.FullUrl);
 
                             #endregion
 
                             #region Check-Access-Control
 
                             if (!AccessControl.Permit(ctx.Request.SourceIp))
-                            {
-                                Events.AccessControlDenied(
-                                    ctx.Request.SourceIp,
-                                    ctx.Request.SourcePort,
-                                    ctx.Request.Method.ToString(),
-                                    ctx.Request.FullUrl);
+                                {
+                                    Events.AccessControlDenied?.Invoke(
+                                        ctx.Request.SourceIp,
+                                        ctx.Request.SourcePort,
+                                        ctx.Request.Method.ToString(),
+                                        ctx.Request.FullUrl);
 
-                                listenerContext.Response.Close();
-                                return;
-                            }
+                                    listenerContext.Response.Close();
+                                    return;
+                                }
 
                             #endregion
 
                             #region Process-Preflight-Requests
-                             
+
                             if (ctx.Request.Method == HttpMethod.OPTIONS
-                                && OptionsRoute != null)
-                            { 
-                                OptionsProcessor(listenerContext, ctx.Request);
-                                return;
-                            }
+                                    && OptionsRoute != null)
+                                {
+                                    OptionsProcessor(listenerContext, ctx.Request);
+                                    return;
+                                }
 
                             #endregion
 
-                            #region Process-Via-Routing
+                            #region Pre-Routing-Handler
 
-                            Task.Run(() =>  
-                            {
-                                Func<HttpContext, Task> handler = null;
-
-                                #region Pre-Routing-Handler
-
-                                if (PreRoutingHandler != null)
+                            if (PreRoutingHandler != null)
                                 {
                                     if (PreRoutingHandler(ctx).Result) return;
                                 }
 
-                                #endregion
+                            #endregion
 
-                                #region Content-Routes
+                            #region Content-Routes
 
-                                if (ctx.Request.Method == HttpMethod.GET || ctx.Request.Method == HttpMethod.HEAD)
+                            if (ctx.Request.Method == HttpMethod.GET || ctx.Request.Method == HttpMethod.HEAD)
                                 {
                                     if (ContentRoutes.Exists(ctx.Request.RawUrlWithoutQuery))
                                     {
@@ -311,61 +307,78 @@ namespace WatsonWebserver
                                     }
                                 }
 
-                                #endregion
+                            #endregion
 
-                                #region Static-Routes
-                                 
-                                handler = StaticRoutes.Match(ctx.Request.Method, ctx.Request.RawUrlWithoutQuery);
+                            #region Static-Routes
+
+                            Func<HttpContext, Task> handler = StaticRoutes.Match(ctx.Request.Method, ctx.Request.RawUrlWithoutQuery);
                                 if (handler != null)
                                 {
                                     handler(ctx).RunSynchronously();
                                     return;
                                 }
 
-                                #endregion
+                            #endregion
 
-                                #region Dynamic-Routes
+                            #region Dynamic-Routes
 
-                                handler = DynamicRoutes.Match(ctx.Request.Method, ctx.Request.RawUrlWithoutQuery);
+                            handler = DynamicRoutes.Match(ctx.Request.Method, ctx.Request.RawUrlWithoutQuery);
                                 if (handler != null)
                                 {
                                     handler(ctx).RunSynchronously();
                                     return;
                                 }
 
-                                #endregion
+                            #endregion
 
-                                #region Default-Route
+                            #region Default-Route
 
-                                _DefaultRoute(ctx).RunSynchronously();
-                                return; 
-
-                                #endregion 
-                            });
+                            _DefaultRoute(ctx).Wait();
+                                return;
 
                             #endregion
                         }
                         catch (Exception eInner)
                         {
-                            if (ctx == null || ctx.Request == null) Events.ExceptionEncountered(null, 0, eInner);
-                            else Events.ExceptionEncountered(ctx.Request.SourceIp, ctx.Request.SourcePort, eInner);
-                        } 
+                            if (ctx == null || ctx.Request == null) Events.ExceptionEncountered?.Invoke(null, 0, eInner);
+                            else Events.ExceptionEncountered?.Invoke(ctx.Request.SourceIp, ctx.Request.SourcePort, eInner);
+                        }
+                        finally
+                        {
+                            if (ctx != null && ctx.Response != null && ctx.Response.ResponseSent)
+                            {
+                                Events.ResponseSent?.Invoke(
+                                    ctx.Request.SourceIp,
+                                    ctx.Request.SourcePort,
+                                    ctx.Request.Method.ToString(),
+                                    ctx.Request.FullUrl,
+                                    ctx.Response.StatusCode,
+                                    TotalMsFrom(startTime));
+                            }
+                        }
 
-                    }, _HttpListener.GetContext());
+                    }, token);
                 }
+
+                #endregion
             }
             catch (HttpListenerException)
             {
-                Events.ServerStopped();
+                // Do nothing, server is stopping, ServerStopped will be fired in finally block
+                // Events.ServerStopped?.Invoke();
             }
             catch (OperationCanceledException)
             {
-                Events.ServerStopped();
+                Events.ServerDisposed?.Invoke();
             }
             catch (Exception eOuter)
             {
-                Events.ExceptionEncountered(null, 0, eOuter);
+                Events.ExceptionEncountered?.Invoke(null, 0, eOuter);
             } 
+            finally
+            {
+                Events.ServerStopped?.Invoke();
+            }
         }
          
         private void OptionsProcessor(HttpListenerContext context, HttpRequest req)
@@ -418,6 +431,20 @@ namespace WatsonWebserver
             response.ContentLength64 = 0;
             response.Close(); 
             return;
+        }
+
+        private double TotalMsFrom(DateTime startTime)
+        {
+            try
+            {
+                DateTime endTime = DateTime.Now;
+                TimeSpan totalTime = (endTime - startTime);
+                return totalTime.TotalMilliseconds;
+            }
+            catch (Exception)
+            {
+                return -1;
+            }
         }
 
         #endregion

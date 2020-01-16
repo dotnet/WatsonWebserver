@@ -2,11 +2,19 @@
 
 ## Current Version
 
+v3.0.5
+
+- Removed ThreadPool.QueueUserWorkItem in favor of unawaited Tasks
+- Removed .RunSynchronously in favor of .Wait for the default route, thereby eliminating an InvalidOperationException (thank you @at1993)
+- Properly firing ResponseSent events when the event callback is defined (thank you @at1993)
+- Fixed an issue where the file path for content routes was not properly constructed (thank you @zaksnet)
+- Added better documentation on event callbacks
+
+## Previous Versions
+
 v3.0.4
 
 - Exposed certain HttpRequest factories to support 3rd-party apps built using Watson.
-
-## Previous Versions
 
 v3.0.3
 

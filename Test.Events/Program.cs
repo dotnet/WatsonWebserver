@@ -68,6 +68,14 @@ namespace Test.Events
         {
             Console.WriteLine(ctx.Request.ToString());
 
+            if (ctx.Request.Method == HttpMethod.GET)
+            {
+                if (ctx.Request.RawUrlWithoutQuery.Equals("/delay"))
+                {
+                    await Task.Delay(10000);
+                }
+            }
+
             if ((ctx.Request.Method == HttpMethod.POST
                 || ctx.Request.Method == HttpMethod.PUT)
                 && ctx.Request.Data != null
@@ -134,9 +142,9 @@ namespace Test.Events
             return true;
         }
 
-        static bool ResponseSent(string ip, int port, string method, string url, int status)
+        static bool ResponseSent(string ip, int port, string method, string url, int status, double totalTimeMs)
         {
-            Console.WriteLine("ResponseSent [" + ip + ":" + port + "] " + method + " " + url + " status " + status);
+            Console.WriteLine("ResponseSent [" + ip + ":" + port + "] " + method + " " + url + " status " + status + " " + totalTimeMs + "ms");
             return true;
         }
 

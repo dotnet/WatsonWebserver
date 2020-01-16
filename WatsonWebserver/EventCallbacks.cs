@@ -13,6 +13,8 @@ namespace WatsonWebserver
 
         /// <summary>
         /// Callback/action to call when a connection is received.
+        /// string: IP address of the client.
+        /// int: Source TCP port of the client.
         /// </summary>
         public Func<string, int, bool> ConnectionReceived
         {
@@ -28,6 +30,10 @@ namespace WatsonWebserver
 
         /// <summary>
         /// Callback/action to call when a request is received.
+        /// string: IP address of the client.
+        /// int: Source TCP port of the client.
+        /// string: HTTP method.
+        /// string: Full URL.
         /// </summary>
         public Func<string, int, string, string, bool> RequestReceived
         {
@@ -43,6 +49,10 @@ namespace WatsonWebserver
 
         /// <summary>
         /// Callback/action to call when a request is denied due to access control.
+        /// string: IP address of the client.
+        /// int: Source TCP port of the client.
+        /// string: HTTP method.
+        /// string: Full URL.
         /// </summary>
         public Func<string, int, string, string, bool> AccessControlDenied
         {
@@ -58,8 +68,14 @@ namespace WatsonWebserver
 
         /// <summary>
         /// Callback/action to call when a response is sent.
+        /// string: IP address of the client.
+        /// int: Source TCP port of the client.
+        /// string: HTTP method.
+        /// string: Full URL.
+        /// int: Response status code.
+        /// double: Number of milliseconds.
         /// </summary>
-        public Func<string, int, string, string, int, bool> ResponseSent
+        public Func<string, int, string, string, int, double, bool> ResponseSent
         {
             get
             {
@@ -73,6 +89,9 @@ namespace WatsonWebserver
 
         /// <summary>
         /// Callback/action to call when an exception is encountered.
+        /// string: IP address of the client.
+        /// int: Source TCP port of the client.
+        /// Exception: Exception encountered.
         /// </summary>
         public Func<string, int, Exception, bool> ExceptionEncountered
         {
@@ -123,7 +142,7 @@ namespace WatsonWebserver
         private Func<string, int, bool> _ConnectionReceived = null;
         private Func<string, int, string, string, bool> _RequestReceived = null;
         private Func<string, int, string, string, bool> _AccessControlDenied = null;
-        private Func<string, int, string, string, int, bool> _ResponseSent = null;
+        private Func<string, int, string, string, int, double, bool> _ResponseSent = null;
         private Func<string, int, Exception, bool> _ExceptionEncountered = null;
         private Func<bool> _ServerStopped = null;
         private Func<bool> _ServerDisposed = null;
@@ -169,7 +188,7 @@ namespace WatsonWebserver
             return true;
         }
 
-        private bool ResponseSentInternal(string ip, int port, string method, string url, int status)
+        private bool ResponseSentInternal(string ip, int port, string method, string url, int status, double totalTimeMs)
         {
             return true;
         }

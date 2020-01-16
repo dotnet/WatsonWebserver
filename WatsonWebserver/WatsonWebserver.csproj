@@ -3,17 +3,17 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net462</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>3.0.4.1</Version>
+    <Version>3.0.5</Version>
     <Description>Simple async C# web server for handling REST requests with SSL support, targeted to both .NET Core 2.0 and .NET Framework 4.6.2.</Description>
     <Authors>Joel Christner</Authors>
     <Company>Joel Christner</Company>
-    <Copyright>(c)2019 Joel Christner</Copyright>
+    <Copyright>(c)2020 Joel Christner</Copyright>
     <PackageProjectUrl>https://github.com/jchristn/WatsonWebserver</PackageProjectUrl>
     <PackageLicenseUrl></PackageLicenseUrl>
     <RepositoryUrl>https://github.com/jchristn/WatsonWebserver</RepositoryUrl>
     <RepositoryType>Github</RepositoryType>
     <PackageTags>web server rest restful http https api async ssl</PackageTags>
-    <PackageReleaseNotes>Make certain HttpRequest static methods public to support third-party applications built using Watson.</PackageReleaseNotes>
+    <PackageReleaseNotes>Fix to allow ResponseSent to fire correctly (thank you @at1993), fix for exception in main connection loop (thank you @at1993), fix to content route processor not correctly forming file paths (thank you @zaksnet)</PackageReleaseNotes>
     <PackageId>Watson</PackageId>
     <Product>Watson</Product>
     <PackageIconUrl>https://raw.githubusercontent.com/jchristn/WatsonWebserver/master/assets/watson.ico</PackageIconUrl>

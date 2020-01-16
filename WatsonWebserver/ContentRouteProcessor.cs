@@ -48,19 +48,20 @@ namespace WatsonWebserver
                 await ctx.Response.Send();
                 return;
             }
-
+             
             string filePath = ctx.Request.RawUrlWithoutQuery;
             if (!String.IsNullOrEmpty(filePath))
             {
-                while (filePath.StartsWith("/"))
-                {
-                    filePath = filePath.Substring(1);
-                }
+                while (filePath.StartsWith("/")) filePath = filePath.Substring(1); 
             }
 
-            filePath = AppDomain.CurrentDomain.BaseDirectory + filePath;
-            filePath = filePath.Replace("+", " ").Replace("%20", " ");
+            string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            baseDirectory = baseDirectory.Replace("\\", "/");
+            if (!baseDirectory.EndsWith("/")) baseDirectory += "/";
 
+            filePath = baseDirectory + filePath;
+            filePath = filePath.Replace("+", " ").Replace("%20", " ");
+             
             string contentType = GetContentType(filePath);
 
             if (!File.Exists(filePath))

@@ -50,6 +50,18 @@ namespace WatsonWebserver
 
         #endregion
 
+        #region Internal-Members
+
+        internal bool ResponseSent
+        {
+            get
+            {
+                return _ResponseSent;
+            } 
+        }
+
+        #endregion
+        
         #region Private-Members
 
         private int _StreamBufferSize = 65536;
@@ -59,8 +71,9 @@ namespace WatsonWebserver
         private HttpListenerResponse _Response;
         private Stream _OutputStream;
         private bool _HeadersSent = false;
+        private bool _ResponseSent = false;
 
-        private EventCallbacks _Events;
+        private EventCallbacks _Events = new EventCallbacks();
 
         #endregion
 
@@ -100,7 +113,7 @@ namespace WatsonWebserver
         {
             string ret = "";
   
-            ret += "--- HTTP Response ---" + Environment.NewLine;
+            ret += "--- HTTP Response ---" + Environment.NewLine; 
             ret += "  Status Code        : " + StatusCode + Environment.NewLine;
             ret += "  Status Description : " + StatusDescription + Environment.NewLine;
             ret += "  Content            : " + ContentType + Environment.NewLine;
@@ -135,6 +148,8 @@ namespace WatsonWebserver
             _OutputStream.Close();
 
             if (_Response != null) _Response.Close();
+
+            _ResponseSent = true;
             return true;
         }
 
@@ -152,6 +167,8 @@ namespace WatsonWebserver
             _OutputStream.Close();
 
             if (_Response != null) _Response.Close();
+
+            _ResponseSent = true;
             return true;
         }
 
@@ -169,6 +186,7 @@ namespace WatsonWebserver
             if (!String.IsNullOrEmpty(data))
             {
                 bytes = Encoding.UTF8.GetBytes(data);
+                ContentLength = bytes.Length;
                 _Response.ContentLength64 = bytes.Length;
             }
             else
@@ -193,7 +211,7 @@ namespace WatsonWebserver
             }
             catch (Exception eInner)
             {
-                _Events.ExceptionEncountered(_Request.SourceIp, _Request.SourcePort, eInner);
+                _Events.ExceptionEncountered?.Invoke(_Request.SourceIp, _Request.SourcePort, eInner);
                 return false;
             }
             finally
@@ -204,6 +222,7 @@ namespace WatsonWebserver
                 if (_Response != null) _Response.Close();
             }
 
+            _ResponseSent = true;
             return true;
         }
 
@@ -217,8 +236,15 @@ namespace WatsonWebserver
             if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and SendFinalChunk().");
             if (!_HeadersSent) SendHeaders();
 
-            if (data != null && data.Length > 0) _Response.ContentLength64 = data.Length;
-            else _Response.ContentLength64 = 0;
+            if (data != null && data.Length > 0)
+            {
+                ContentLength = data.Length;
+                _Response.ContentLength64 = data.Length;
+            }
+            else
+            {
+                _Response.ContentLength64 = 0;
+            }
 
             try
             {
@@ -237,7 +263,7 @@ namespace WatsonWebserver
             }
             catch (Exception eInner)
             {
-                _Events.ExceptionEncountered(_Request.SourceIp, _Request.SourcePort, eInner);
+                _Events.ExceptionEncountered?.Invoke(_Request.SourceIp, _Request.SourcePort, eInner);
                 return false;
             }
             finally
@@ -248,6 +274,7 @@ namespace WatsonWebserver
                 if (_Response != null) _Response.Close();
             }
 
+            _ResponseSent = true;
             return true;
         }
 
@@ -294,7 +321,7 @@ namespace WatsonWebserver
             }
             catch (Exception eInner)
             {
-                _Events.ExceptionEncountered(_Request.SourceIp, _Request.SourcePort, eInner);
+                _Events.ExceptionEncountered?.Invoke(_Request.SourceIp, _Request.SourcePort, eInner);
                 return false;
             }
             finally
@@ -305,6 +332,7 @@ namespace WatsonWebserver
                 if (_Response != null) _Response.Close();
             }
 
+            _ResponseSent = true;
             return true;
         }
 
@@ -317,6 +345,11 @@ namespace WatsonWebserver
         {
             if (!ChunkedTransfer) throw new IOException("Response is not configured to use chunked transfer-encoding.  Set ChunkedTransfer to true first, otherwise use Send().");
             if (!_HeadersSent) SendHeaders();
+
+            if (chunk != null && chunk.Length > 0)
+            {
+                ContentLength += chunk.Length;
+            }
 
             try
             {
@@ -333,14 +366,14 @@ namespace WatsonWebserver
             }
             catch (Exception eInner)
             {
-                _Events.ExceptionEncountered(_Request.SourceIp, _Request.SourcePort, eInner);
+                _Events.ExceptionEncountered?.Invoke(_Request.SourceIp, _Request.SourcePort, eInner);
                 return false;
             }
             finally
             {
                 await _OutputStream.FlushAsync();
                 // do not close or dispose
-            }
+            } 
 
             return true;
         }
@@ -354,6 +387,11 @@ namespace WatsonWebserver
         {
             if (!ChunkedTransfer) throw new IOException("Response is not configured to use chunked transfer-encoding.  Set ChunkedTransfer to true first, otherwise use Send().");
             if (!_HeadersSent) SendHeaders();
+
+            if (chunk != null && chunk.Length > 0)
+            {
+                ContentLength += chunk.Length;
+            }
 
             try
             { 
@@ -372,7 +410,7 @@ namespace WatsonWebserver
             }
             catch (Exception eInner)
             {
-                _Events.ExceptionEncountered(_Request.SourceIp, _Request.SourcePort, eInner);
+                _Events.ExceptionEncountered?.Invoke(_Request.SourceIp, _Request.SourcePort, eInner);
                 return false;
             }
             finally
@@ -383,6 +421,7 @@ namespace WatsonWebserver
                 if (_Response != null) _Response.Close();
             }
 
+            _ResponseSent = true;
             return true;
         }
          
