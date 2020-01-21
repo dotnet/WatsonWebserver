@@ -2,6 +2,12 @@
 
 ## Current Version
 
+v3.0.6
+
+- Async/await change in main request look to fix InvalidOperationException (thank you @zaksnet)
+
+## Previous Versions
+
 v3.0.5
 
 - Removed ThreadPool.QueueUserWorkItem in favor of unawaited Tasks
@@ -9,8 +15,6 @@ v3.0.5
 - Properly firing ResponseSent events when the event callback is defined (thank you @at1993)
 - Fixed an issue where the file path for content routes was not properly constructed (thank you @zaksnet)
 - Added better documentation on event callbacks
-
-## Previous Versions
 
 v3.0.4
 

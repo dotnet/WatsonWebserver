@@ -7,13 +7,9 @@
 
 Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS requests, written in C#.
 
-## New in v3.0.5
+## New in v3.0.6
 
-- Removed ThreadPool.QueueUserWorkItem in favor of unawaited Tasks
-- Removed .RunSynchronously in favor of .Wait for the default route, thereby eliminating an InvalidOperationException (thank you @at1993)
-- Properly firing ResponseSent events when the event callback is defined (thank you @at1993)
-- Fixed an issue where the file path for content routes was not properly constructed (thank you @zaksnet)
-- Added better documentation on event callbacks
+- Async/await change in main request look to fix InvalidOperationException (thank you @zaksnet)
 
 ## Key Changes from v2.x
 
@@ -23,8 +19,7 @@ Previously, callbacks and routes would have the signature: ```HttpResponse MyRou
 
 The ```HttpContext``` object contains two members, ```HttpRequest Request``` and ```HttpResponse Response```.  ```Request``` is largely unchanged from v2.x.  However, ```Response``` comes prepopulated and should be modified directly in your code.
 
-The following v2.x code:
-
+The following v2.x code: 
 ```
 static HttpResponse MyRouteHandler(HttpRequest req)
 {
@@ -32,8 +27,7 @@ static HttpResponse MyRouteHandler(HttpRequest req)
 }
 ```
 
-Would become the following in v3.x:
-
+Would become the following in v3.x: 
 ```
 static async Task MyRouteHandler(HttpContext ctx)
 {
@@ -90,12 +84,12 @@ using WatsonWebserver;
 
 static void Main(string[] args)
 {
-   Server s = new Server("127.0.0.1", 9000, false, DefaultRoute);
-   Console.ReadLine();
+  Server s = new Server("127.0.0.1", 9000, false, DefaultRoute);
+  Console.ReadLine();
 }
 
 static HttpResponse DefaultRoute(HttpRequest req)
-{
+{  
   ctx.Response.StatusCode = 200;
   await ctx.Response.Send("Hello from the default route!");
 }
@@ -112,50 +106,50 @@ using WatsonWebserver;
 
 static void Main(string[] args)
 {
-   Server s = new Server("127.0.0.1", 9000, false, DefaultRoute);
+  Server s = new Server("127.0.0.1", 9000, false, DefaultRoute);
 
-   // set default permit (permit any) with blacklist to block specific IP addresses or networks
-   s.AccessControl.Mode = AccessControlMode.DefaultPermit;
-   s.AccessControl.Blacklist.Add("127.0.0.1", "255.255.255.255");  
+  // set default permit (permit any) with blacklist to block specific IP addresses or networks
+  s.AccessControl.Mode = AccessControlMode.DefaultPermit;
+  s.AccessControl.Blacklist.Add("127.0.0.1", "255.255.255.255");  
 
-   // set default deny (deny all) with whitelist to permit specific IP addresses or networks
-   s.AccessControl.Mode = AccessControlMode.DefaultDeny;
-   s.AccessControl.Whitelist.Add("127.0.0.1", "255.255.255.255");
+  // set default deny (deny all) with whitelist to permit specific IP addresses or networks
+  s.AccessControl.Mode = AccessControlMode.DefaultDeny;
+  s.AccessControl.Whitelist.Add("127.0.0.1", "255.255.255.255");
 
-   // add content routes
-   s.ContentRoutes.Add("/html/", true);
-   s.ContentRoutes.Add("/img/watson.jpg", false);
+  // add content routes
+  s.ContentRoutes.Add("/html/", true);
+  s.ContentRoutes.Add("/img/watson.jpg", false);
 
-   // add static routes
-   s.StaticRoutes.Add(HttpMethod.GET, "/hello/", GetHelloRoute); 
+  // add static routes
+  s.StaticRoutes.Add(HttpMethod.GET, "/hello/", GetHelloRoute); 
 
-   // add dynamic routes
-   s.DynamicRoutes.Add(HttpMethod.GET, new Regex("^/foo/\\d+$"), GetFooWithId);  
-   s.DynamicRoutes.Add(HttpMethod.GET, new Regex("^/foo/?$"), GetFoo); 
+  // add dynamic routes
+  s.DynamicRoutes.Add(HttpMethod.GET, new Regex("^/foo/\\d+$"), GetFooWithId);  
+  s.DynamicRoutes.Add(HttpMethod.GET, new Regex("^/foo/?$"), GetFoo); 
 
-   Console.WriteLine("Press ENTER to exit");
-   Console.ReadLine();
+  Console.WriteLine("Press ENTER to exit");
+  Console.ReadLine();
 }
 
-static Task GetHelloRoute(HttpContext ctx)
+static async Task GetHelloRoute(HttpContext ctx)
 {
   ctx.Response.StatusCode = 200;
   await ctx.Response.Send("Hello from the GET /hello static route!");
 }
  
-static HttpResponse GetFooWithId(HttpRequest req)
+static async Task GetFooWithId(HttpContext ctx)
 {
   ctx.Response.StatusCode = 200;
   await ctx.Response.Send("Hello from the GET /foo/[id] dynamic route!");
 }
  
-static HttpResponse GetFoo(HttpRequest req)
+static async Task GetFoo(HttpContext ctx)
 { 
   ctx.Response.StatusCode = 200;
   await ctx.Response.Send("Hello from the GET /foo/ dynamic route!");
 }
 
-static HttpResponse DefaultRoute(HttpRequest req)
+static async Task DefaultRoute(HttpContext ctx)
 {
   ctx.Response.StatusCode = 200;
   await ctx.Response.Send("Hello from the default route!");
@@ -169,7 +163,7 @@ Effective v3.0.x, Watson now has excellent support for both receiving chunked da
 ### Receiving Chunked Data
 
 ```
-static Task UploadData(HttpContext ctx)
+static async Task UploadData(HttpContext ctx)
 {
   if (ctx.Request.ChunkedTransfer)
   {
@@ -201,10 +195,14 @@ static Task DownloadChunkedFile(HttpContext ctx)
     byte[] buffer = new byte[65536];
     int bytesRead = await fs.ReadAsync(buffer, 0, buffer.Length);
     if (bytesRead > 0)
+    {
       // you'll want to check bytesRead vs buffer.Length, of course!
       ctx.Response.SendChunk(buffer);
+    }
     else
+    {
       ctx.Response.SendFinalChunk(buffer);
+    }
   }
 
   return;

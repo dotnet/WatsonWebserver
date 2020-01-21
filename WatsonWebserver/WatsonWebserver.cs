@@ -238,7 +238,7 @@ namespace WatsonWebserver
                     HttpListenerContext listenerContext = await _HttpListener.GetContextAsync();
                     HttpContext ctx = null;
 
-                    Task unawaited = Task.Run(() =>
+                    Task unawaited = Task.Run(async () =>
                     {
                         DateTime startTime = DateTime.Now;
 
@@ -247,94 +247,96 @@ namespace WatsonWebserver
                             #region Build-Context
 
                             Events.ConnectionReceived?.Invoke(
-                                    listenerContext.Request.RemoteEndPoint.Address.ToString(),
-                                    listenerContext.Request.RemoteEndPoint.Port);
+                                listenerContext.Request.RemoteEndPoint.Address.ToString(),
+                                listenerContext.Request.RemoteEndPoint.Port);
 
-                                ctx = new HttpContext(listenerContext, Events);
+                            ctx = new HttpContext(listenerContext, Events);
 
-                                Events.RequestReceived?.Invoke(
-                                    ctx.Request.SourceIp,
-                                    ctx.Request.SourcePort,
-                                    ctx.Request.Method.ToString(),
-                                    ctx.Request.FullUrl);
+                            Events.RequestReceived?.Invoke(
+                                ctx.Request.SourceIp,
+                                ctx.Request.SourcePort,
+                                ctx.Request.Method.ToString(),
+                                ctx.Request.FullUrl);
 
                             #endregion
 
                             #region Check-Access-Control
 
                             if (!AccessControl.Permit(ctx.Request.SourceIp))
-                                {
-                                    Events.AccessControlDenied?.Invoke(
-                                        ctx.Request.SourceIp,
-                                        ctx.Request.SourcePort,
-                                        ctx.Request.Method.ToString(),
-                                        ctx.Request.FullUrl);
+                            {
+                                Events.AccessControlDenied?.Invoke(
+                                    ctx.Request.SourceIp,
+                                    ctx.Request.SourcePort,
+                                    ctx.Request.Method.ToString(),
+                                    ctx.Request.FullUrl);
 
-                                    listenerContext.Response.Close();
-                                    return;
-                                }
+                                listenerContext.Response.Close();
+                                return;
+                            }
 
                             #endregion
 
                             #region Process-Preflight-Requests
 
                             if (ctx.Request.Method == HttpMethod.OPTIONS
-                                    && OptionsRoute != null)
-                                {
-                                    OptionsProcessor(listenerContext, ctx.Request);
-                                    return;
-                                }
+                                && OptionsRoute != null)
+                            {
+                                OptionsProcessor(listenerContext, ctx.Request);
+                                return;
+                            }
 
                             #endregion
 
                             #region Pre-Routing-Handler
 
+                            bool terminate = false;
                             if (PreRoutingHandler != null)
-                                {
-                                    if (PreRoutingHandler(ctx).Result) return;
-                                }
+                            {
+                                terminate = await PreRoutingHandler(ctx);
+                                if (terminate) return;
+                            }
 
                             #endregion
 
                             #region Content-Routes
 
                             if (ctx.Request.Method == HttpMethod.GET || ctx.Request.Method == HttpMethod.HEAD)
+                            {
+                                if (ContentRoutes.Exists(ctx.Request.RawUrlWithoutQuery))
                                 {
-                                    if (ContentRoutes.Exists(ctx.Request.RawUrlWithoutQuery))
-                                    {
-                                        _ContentRouteProcessor.Process(ctx).RunSynchronously();
-                                        return;
-                                    }
+                                    await _ContentRouteProcessor.Process(ctx);
+                                    return;
                                 }
+                            }
 
                             #endregion
 
                             #region Static-Routes
 
                             Func<HttpContext, Task> handler = StaticRoutes.Match(ctx.Request.Method, ctx.Request.RawUrlWithoutQuery);
-                                if (handler != null)
-                                {
-                                    handler(ctx).RunSynchronously();
-                                    return;
-                                }
+                            if (handler != null)
+                            {
+                                await handler(ctx);
+                                return;
+                            }
 
                             #endregion
 
                             #region Dynamic-Routes
 
                             handler = DynamicRoutes.Match(ctx.Request.Method, ctx.Request.RawUrlWithoutQuery);
-                                if (handler != null)
-                                {
-                                    handler(ctx).RunSynchronously();
-                                    return;
-                                }
+                            if (handler != null)
+                            {
+                                await handler(ctx);
+                                return;
+                            }
 
                             #endregion
 
                             #region Default-Route
 
-                            _DefaultRoute(ctx).Wait();
-                                return;
+                            await _DefaultRoute(ctx);
+                            return;
 
                             #endregion
                         }
