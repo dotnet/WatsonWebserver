@@ -9,6 +9,7 @@ Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS reque
 
 ## New in v3.0.6
 
+- Fix for content routes causing 500 (thank you @zaksnet)
 - Async/await change in main request look to fix InvalidOperationException (thank you @zaksnet)
 
 ## Key Changes from v2.x

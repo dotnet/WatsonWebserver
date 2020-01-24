@@ -23,4 +23,8 @@
     <ProjectReference Include="..\WatsonWebserver\WatsonWebserver.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="large\" />
+  </ItemGroup>
+
 </Project>

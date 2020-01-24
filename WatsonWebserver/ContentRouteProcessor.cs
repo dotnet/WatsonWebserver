@@ -78,7 +78,7 @@ namespace WatsonWebserver
                   
                 if (ctx.Request.Method == HttpMethod.GET)
                 {
-                    FileStream fs = new FileStream(filePath, FileMode.Open);
+                    FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
                     ctx.Response.StatusCode = 200;
                     ctx.Response.ContentLength = contentLength;
                     ctx.Response.ContentType = GetContentType(filePath);

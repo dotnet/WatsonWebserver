@@ -2,11 +2,15 @@
 
 ## Current Version
 
+v3.0.6.1
+
+- Fix for content routes causing 500 (thank you @zaksnet)
+
+## Previous Versions
+
 v3.0.6
 
 - Async/await change in main request look to fix InvalidOperationException (thank you @zaksnet)
-
-## Previous Versions
 
 v3.0.5
 

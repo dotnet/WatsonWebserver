@@ -10,7 +10,7 @@
       "Test.DynamicRoutes/1.0.0": {
         "dependencies": {
           "NETStandard.Library": "2.0.3",
-          "Watson": "3.0.6"
+          "Watson": "3.0.6.1"
         },
         "runtime": {
           "Test.DynamicRoutes.dll": {}
@@ -46,7 +46,7 @@
           }
         }
       },
-      "Watson/3.0.6": {
+      "Watson/3.0.6.1": {
         "dependencies": {
           "IpMatcher": "1.0.1",
           "Newtonsoft.Json": "12.0.2",
@@ -99,7 +99,7 @@
       "path": "regexmatcher/1.0.2",
       "hashPath": "regexmatcher.1.0.2.nupkg.sha512"
     },
-    "Watson/3.0.6": {
+    "Watson/3.0.6.1": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

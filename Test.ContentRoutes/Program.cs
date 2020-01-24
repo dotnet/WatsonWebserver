@@ -16,6 +16,7 @@ namespace Test
             Server s = new Server("127.0.0.1", 9000, false, DefaultRoute); 
             s.ContentRoutes.Add("/", true);
             s.ContentRoutes.Add("/html/", true);
+            s.ContentRoutes.Add("/large/", true);
             s.ContentRoutes.Add("/img/watson.jpg", false);
             
             Console.WriteLine("Press ENTER to exit");
