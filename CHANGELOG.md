@@ -2,11 +2,19 @@
 
 ## Current Version
 
+v3.0.7
+
+- Breaking changes to event callbacks (now using Action instead of Func to allow return type of void)
+- RequestorDisconnected event callback
+- Consistent exception handling across all response .Send methods
+- Removed exception catching from ContentRouteProcessor to allow main request handler to handle
+- Thank you @zaksnet for suggestions, help, and troubleshooting!
+
+## Previous Versions
+
 v3.0.6.1
 
 - Fix for content routes causing 500 (thank you @zaksnet)
-
-## Previous Versions
 
 v3.0.6
 

@@ -75,7 +75,7 @@ namespace WatsonWebserver
         /// Content routes; i.e. routes to specific files or folders for GET and HEAD requests.
         /// </summary>
         public ContentRouteManager ContentRoutes = new ContentRouteManager();
-
+         
         /// <summary>
         /// Access control manager, i.e. default mode of operation, white list, and black list.
         /// </summary>

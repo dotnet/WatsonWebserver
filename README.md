@@ -7,10 +7,13 @@
 
 Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS requests, written in C#.
 
-## New in v3.0.6
+## New in v3.0.7
 
-- Fix for content routes causing 500 (thank you @zaksnet)
-- Async/await change in main request look to fix InvalidOperationException (thank you @zaksnet)
+- Breaking changes to event callbacks (now using Action instead of Func to allow return type of void)
+- RequestorDisconnected event callback
+- Consistent exception handling across all response .Send methods
+- Removed exception catching from ContentRouteProcessor to allow main request handler to handle
+- Thank you @zaksnet for suggestions, help, and troubleshooting!
 
 ## Key Changes from v2.x
 
