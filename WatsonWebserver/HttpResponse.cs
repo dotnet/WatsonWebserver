@@ -142,12 +142,51 @@ namespace WatsonWebserver
         public async Task<bool> Send()
         {
             if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and SendFinalChunk().");
-            if (!_HeadersSent) SendHeaders();
 
-            await _OutputStream.FlushAsync();
-            _OutputStream.Close();
+            try
+            {
+                if (!_HeadersSent) SendHeaders();
 
-            if (_Response != null) _Response.Close();
+                await _OutputStream.FlushAsync();
+                _OutputStream.Close();
+
+                if (_Response != null) _Response.Close();
+            }
+            catch (OperationCanceledException)
+            {
+                // do nothing
+                return false;
+            }
+            catch (HttpListenerException)
+            {
+                _Events.RequestorDisconnected?.Invoke(_Request.SourceIp, _Request.SourcePort, _Request.Method.ToString(), _Request.FullUrl);
+                return false;
+            }
+            catch (IOException ioe)
+            {
+                if (ioe.InnerException is SocketException)
+                {
+                    _Events.RequestorDisconnected?.Invoke(_Request.SourceIp, _Request.SourcePort, _Request.Method.ToString(), _Request.FullUrl);
+                    return false;
+                }
+                else
+                {
+                    _Events.ExceptionEncountered?.Invoke(_Request.SourceIp, _Request.SourcePort, ioe);
+                    return false;
+                }
+            }
+            catch (Exception eInner)
+            {
+                _Events.ExceptionEncountered?.Invoke(_Request.SourceIp, _Request.SourcePort, eInner);
+                return false;
+            }
+            finally
+            {
+                await _OutputStream.FlushAsync();
+                _OutputStream.Close();
+
+                if (_Response != null) _Response.Close();
+            }
 
             _ResponseSent = true;
             return true;
@@ -161,12 +200,51 @@ namespace WatsonWebserver
         {
             if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and SendFinalChunk().");
             ContentLength = contentLength;
-            if (!_HeadersSent) SendHeaders();
 
-            await _OutputStream.FlushAsync();
-            _OutputStream.Close();
+            try
+            {
+                if (!_HeadersSent) SendHeaders();
 
-            if (_Response != null) _Response.Close();
+                await _OutputStream.FlushAsync();
+                _OutputStream.Close();
+
+                if (_Response != null) _Response.Close();
+            }
+            catch (OperationCanceledException)
+            {
+                // do nothing
+                return false;
+            }
+            catch (HttpListenerException)
+            {
+                _Events.RequestorDisconnected?.Invoke(_Request.SourceIp, _Request.SourcePort, _Request.Method.ToString(), _Request.FullUrl);
+                return false;
+            }
+            catch (IOException ioe)
+            {
+                if (ioe.InnerException is SocketException)
+                {
+                    _Events.RequestorDisconnected?.Invoke(_Request.SourceIp, _Request.SourcePort, _Request.Method.ToString(), _Request.FullUrl);
+                    return false;
+                }
+                else
+                {
+                    _Events.ExceptionEncountered?.Invoke(_Request.SourceIp, _Request.SourcePort, ioe);
+                    return false;
+                }
+            }
+            catch (Exception eInner)
+            {
+                _Events.ExceptionEncountered?.Invoke(_Request.SourceIp, _Request.SourcePort, eInner);
+                return false;
+            }
+            finally
+            {
+                await _OutputStream.FlushAsync();
+                _OutputStream.Close();
+
+                if (_Response != null) _Response.Close();
+            }
 
             _ResponseSent = true;
             return true;
@@ -208,6 +286,24 @@ namespace WatsonWebserver
             {
                 // do nothing
                 return false;
+            }
+            catch (HttpListenerException)
+            {
+                _Events.RequestorDisconnected?.Invoke(_Request.SourceIp, _Request.SourcePort, _Request.Method.ToString(), _Request.FullUrl);
+                return false;
+            }
+            catch (IOException ioe)
+            {
+                if (ioe.InnerException is SocketException)
+                {
+                    _Events.RequestorDisconnected?.Invoke(_Request.SourceIp, _Request.SourcePort, _Request.Method.ToString(), _Request.FullUrl);
+                    return false;
+                }
+                else
+                {
+                    _Events.ExceptionEncountered?.Invoke(_Request.SourceIp, _Request.SourcePort, ioe);
+                    return false;
+                }
             }
             catch (Exception eInner)
             {
@@ -261,6 +357,24 @@ namespace WatsonWebserver
                 // do nothing
                 return false;
             }
+            catch (HttpListenerException)
+            {
+                _Events.RequestorDisconnected?.Invoke(_Request.SourceIp, _Request.SourcePort, _Request.Method.ToString(), _Request.FullUrl);
+                return false;
+            }
+            catch (IOException ioe)
+            {
+                if (ioe.InnerException is SocketException)
+                {
+                    _Events.RequestorDisconnected?.Invoke(_Request.SourceIp, _Request.SourcePort, _Request.Method.ToString(), _Request.FullUrl);
+                    return false;
+                }
+                else
+                {
+                    _Events.ExceptionEncountered?.Invoke(_Request.SourceIp, _Request.SourcePort, ioe);
+                    return false;
+                }
+            }
             catch (Exception eInner)
             {
                 _Events.ExceptionEncountered?.Invoke(_Request.SourceIp, _Request.SourcePort, eInner);
@@ -289,7 +403,7 @@ namespace WatsonWebserver
             if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and SendFinalChunk().");
             ContentLength = contentLength;
             if (!_HeadersSent) SendHeaders();
-             
+
             try
             {
                 if (_Request.Method != HttpMethod.HEAD)
@@ -317,10 +431,29 @@ namespace WatsonWebserver
             }
             catch (OperationCanceledException)
             {
+                // do nothing
                 return false;
             }
-            catch (Exception eInner)
+            catch (HttpListenerException)
             {
+                _Events.RequestorDisconnected?.Invoke(_Request.SourceIp, _Request.SourcePort, _Request.Method.ToString(), _Request.FullUrl);
+                return false;
+            }
+            catch (IOException ioe)
+            {
+                if (ioe.InnerException is SocketException)
+                {
+                    _Events.RequestorDisconnected?.Invoke(_Request.SourceIp, _Request.SourcePort, _Request.Method.ToString(), _Request.FullUrl);
+                    return false;
+                }
+                else
+                {
+                    _Events.ExceptionEncountered?.Invoke(_Request.SourceIp, _Request.SourcePort, ioe);
+                    return false;
+                }
+            }
+            catch (Exception eInner)
+            { 
                 _Events.ExceptionEncountered?.Invoke(_Request.SourceIp, _Request.SourcePort, eInner);
                 return false;
             }
@@ -363,6 +496,24 @@ namespace WatsonWebserver
             {
                 // do nothing
                 return false;
+            }
+            catch (HttpListenerException)
+            {
+                _Events.RequestorDisconnected?.Invoke(_Request.SourceIp, _Request.SourcePort, _Request.Method.ToString(), _Request.FullUrl);
+                return false;
+            }
+            catch (IOException ioe)
+            {
+                if (ioe.InnerException is SocketException)
+                {
+                    _Events.RequestorDisconnected?.Invoke(_Request.SourceIp, _Request.SourcePort, _Request.Method.ToString(), _Request.FullUrl);
+                    return false;
+                }
+                else
+                {
+                    _Events.ExceptionEncountered?.Invoke(_Request.SourceIp, _Request.SourcePort, ioe);
+                    return false;
+                }
             }
             catch (Exception eInner)
             {
@@ -407,6 +558,24 @@ namespace WatsonWebserver
             {
                 // do nothing
                 return false;
+            }
+            catch (HttpListenerException)
+            {
+                _Events.RequestorDisconnected?.Invoke(_Request.SourceIp, _Request.SourcePort, _Request.Method.ToString(), _Request.FullUrl);
+                return false;
+            }
+            catch (IOException ioe)
+            {
+                if (ioe.InnerException is SocketException)
+                {
+                    _Events.RequestorDisconnected?.Invoke(_Request.SourceIp, _Request.SourcePort, _Request.Method.ToString(), _Request.FullUrl);
+                    return false;
+                }
+                else
+                {
+                    _Events.ExceptionEncountered?.Invoke(_Request.SourceIp, _Request.SourcePort, ioe);
+                    return false;
+                }
             }
             catch (Exception eInner)
             {

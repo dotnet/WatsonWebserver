@@ -16,6 +16,8 @@ namespace WatsonWebserver
     /// </summary>
     public class HttpContext 
     {
+        #region Public-Members
+
         /// <summary>
         /// The HTTP request that was received.
         /// </summary>
@@ -41,7 +43,10 @@ namespace WatsonWebserver
                 _StreamBufferSize = value;
             }
         }
-         
+
+        #endregion
+
+
         private int _StreamBufferSize = 65536;
         private HttpListenerContext _Context;
         private EventCallbacks _Events;

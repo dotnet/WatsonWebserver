@@ -16,7 +16,7 @@ namespace WatsonWebserver
         /// string: IP address of the client.
         /// int: Source TCP port of the client.
         /// </summary>
-        public Func<string, int, bool> ConnectionReceived
+        public Action<string, int> ConnectionReceived
         {
             get
             {
@@ -35,7 +35,7 @@ namespace WatsonWebserver
         /// string: HTTP method.
         /// string: Full URL.
         /// </summary>
-        public Func<string, int, string, string, bool> RequestReceived
+        public Action<string, int, string, string> RequestReceived
         {
             get
             {
@@ -54,7 +54,7 @@ namespace WatsonWebserver
         /// string: HTTP method.
         /// string: Full URL.
         /// </summary>
-        public Func<string, int, string, string, bool> AccessControlDenied
+        public Action<string, int, string, string> AccessControlDenied
         {
             get
             {
@@ -67,6 +67,25 @@ namespace WatsonWebserver
         }
 
         /// <summary>
+        /// Callback/action to call when a requestor disconnected unexpectedly.
+        /// string: IP address of the client.
+        /// int: Source TCP port of the client.
+        /// string: HTTP method.
+        /// string Full URL.
+        /// </summary>
+        public Action<string, int, string, string> RequestorDisconnected
+        {
+            get
+            {
+                return _RequestorDisconnected;
+            }
+            set
+            {
+                _RequestorDisconnected = value ?? throw new ArgumentNullException(nameof(RequestorDisconnected));
+            }
+        }
+
+        /// <summary>
         /// Callback/action to call when a response is sent.
         /// string: IP address of the client.
         /// int: Source TCP port of the client.
@@ -75,7 +94,7 @@ namespace WatsonWebserver
         /// int: Response status code.
         /// double: Number of milliseconds.
         /// </summary>
-        public Func<string, int, string, string, int, double, bool> ResponseSent
+        public Action<string, int, string, string, int, double> ResponseSent
         {
             get
             {
@@ -93,7 +112,7 @@ namespace WatsonWebserver
         /// int: Source TCP port of the client.
         /// Exception: Exception encountered.
         /// </summary>
-        public Func<string, int, Exception, bool> ExceptionEncountered
+        public Action<string, int, Exception> ExceptionEncountered
         {
             get
             {
@@ -108,7 +127,7 @@ namespace WatsonWebserver
         /// <summary>
         /// Callback/action to call when the server is stopped.
         /// </summary>
-        public Func<bool> ServerStopped
+        public Action ServerStopped
         {
             get
             {
@@ -123,7 +142,7 @@ namespace WatsonWebserver
         /// <summary>
         /// Callback/action to call when the server is disposed.
         /// </summary>
-        public Func<bool> ServerDisposed
+        public Action ServerDisposed
         {
             get
             {
@@ -139,13 +158,14 @@ namespace WatsonWebserver
 
         #region Private-Members
 
-        private Func<string, int, bool> _ConnectionReceived = null;
-        private Func<string, int, string, string, bool> _RequestReceived = null;
-        private Func<string, int, string, string, bool> _AccessControlDenied = null;
-        private Func<string, int, string, string, int, double, bool> _ResponseSent = null;
-        private Func<string, int, Exception, bool> _ExceptionEncountered = null;
-        private Func<bool> _ServerStopped = null;
-        private Func<bool> _ServerDisposed = null;
+        private Action<string, int> _ConnectionReceived = null;
+        private Action<string, int, string, string> _RequestReceived = null;
+        private Action<string, int, string, string> _AccessControlDenied = null;
+        private Action<string, int, string, string> _RequestorDisconnected = null;
+        private Action<string, int, string, string, int, double> _ResponseSent = null;
+        private Action<string, int, Exception> _ExceptionEncountered = null;
+        private Action _ServerStopped = null;
+        private Action _ServerDisposed = null;
 
         #endregion
 
@@ -173,39 +193,32 @@ namespace WatsonWebserver
 
         #region Private-Methods
 
-        private bool ConnectionReceivedInternal(string ip, int port)
+        private void ConnectionReceivedInternal(string ip, int port)
         {
-            return true;
         }
 
-        private bool RequestReceivedInternal(string ip, int port, string method, string url)
+        private void RequestReceivedInternal(string ip, int port, string method, string url)
         {
-            return true;
         }
 
-        private bool AccessControlDeniedInternal(string ip, int port, string method, string url)
+        private void AccessControlDeniedInternal(string ip, int port, string method, string url)
         {
-            return true;
         }
 
-        private bool ResponseSentInternal(string ip, int port, string method, string url, int status, double totalTimeMs)
+        private void ResponseSentInternal(string ip, int port, string method, string url, int status, double totalTimeMs)
         {
-            return true;
         }
 
-        private bool ExceptionEncounteredInternal(string ip, int port, Exception e)
+        private void ExceptionEncounteredInternal(string ip, int port, Exception e)
         {
-            return true;
         }
          
-        private bool ServerStoppedInternal()
+        private void ServerStoppedInternal()
         {
-            return true;
         }
 
-        private bool ServerDisposedInternal()
+        private void ServerDisposedInternal()
         {
-            return true;
         }
 
         #endregion

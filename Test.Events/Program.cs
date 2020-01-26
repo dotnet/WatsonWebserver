@@ -18,6 +18,7 @@ namespace Test.Events
 
             server.Events.AccessControlDenied = AccessControlDenied;
             server.Events.ConnectionReceived = ConnectionReceived;
+            server.Events.RequestorDisconnected = RequestorDisconnected;
             server.Events.ExceptionEncountered = ExceptionEncountered;
             server.Events.RequestReceived = RequestReceived;
             server.Events.ResponseSent = ResponseSent;
@@ -118,46 +119,44 @@ namespace Test.Events
             }
         }
 
-        static bool AccessControlDenied(string ip, int port, string method, string url)
+        static void AccessControlDenied(string ip, int port, string method, string url)
         {
-            Console.WriteLine("AccessControlDenied [" + ip + ":" + port + "] " + method + " " + url);
-            return true;
+            Console.WriteLine("AccessControlDenied [" + ip + ":" + port + "] " + method + " " + url); 
         }
 
-        static bool ConnectionReceived(string ip, int port)
+        static void RequestorDisconnected(string ip, int port, string method, string url)
         {
-            Console.WriteLine("ConnectionReceived [" + ip + ":" + port + "]");
-            return true;
+            Console.WriteLine("RequestorDisconnected [" + ip + ":" + port + "] " + method + " " + url); 
         }
 
-        static bool ExceptionEncountered(string ip, int port, Exception e)
+        static void ConnectionReceived(string ip, int port)
         {
-            Console.WriteLine("ExceptionEncountered [" + ip + ":" + port + "]: " + Environment.NewLine + e.ToString());
-            return true;
+            Console.WriteLine("ConnectionReceived [" + ip + ":" + port + "]"); 
         }
 
-        static bool RequestReceived(string ip, int port, string method, string url)
+        static void ExceptionEncountered(string ip, int port, Exception e)
         {
-            Console.WriteLine("RequestReceived [" + ip + ":" + port + "] " + method + " " + url);
-            return true;
+            Console.WriteLine("ExceptionEncountered [" + ip + ":" + port + "]: " + Environment.NewLine + e.ToString()); 
         }
 
-        static bool ResponseSent(string ip, int port, string method, string url, int status, double totalTimeMs)
+        static void RequestReceived(string ip, int port, string method, string url)
         {
-            Console.WriteLine("ResponseSent [" + ip + ":" + port + "] " + method + " " + url + " status " + status + " " + totalTimeMs + "ms");
-            return true;
+            Console.WriteLine("RequestReceived [" + ip + ":" + port + "] " + method + " " + url); 
         }
 
-        static bool ServerDisposed()
+        static void ResponseSent(string ip, int port, string method, string url, int status, double totalTimeMs)
         {
-            Console.WriteLine("ServerDisposed");
-            return true;
+            Console.WriteLine("ResponseSent [" + ip + ":" + port + "] " + method + " " + url + " status " + status + " " + totalTimeMs + "ms"); 
         }
 
-        static bool ServerStopped()
+        static void ServerDisposed()
         {
-            Console.WriteLine("ServerStopped");
-            return true;
+            Console.WriteLine("ServerDisposed"); 
+        }
+
+        static void ServerStopped()
+        {
+            Console.WriteLine("ServerStopped"); 
         }
     }
 }

@@ -1,0 +1,7 @@
+{
+  "profiles": {
+    "Test.ContentRoutes": {
+      "commandName": "Project"
+    }
+  }
+}

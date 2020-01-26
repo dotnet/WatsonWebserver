@@ -145,6 +145,21 @@
             Content route processor.  Handles GET and HEAD requests to content routes for files and directories. 
             </summary>
         </member>
+        <member name="F:WatsonWebserver.ContentRouteProcessor.ContentFileMode">
+            <summary>
+            The FileMode value to use when accessing files within a content route via a FileStream.  Default is FileMode.Open.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.ContentRouteProcessor.ContentFileAccess">
+            <summary>
+            The FileAccess value to use when accessing files within a content route via a FileStream.  Default is FileAccess.Read.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.ContentRouteProcessor.ContentFileShare">
+            <summary>
+            The FileShare value to use when accessing files within a content route via a FileStream.  Default is FileShare.Read.
+            </summary>
+        </member>
         <member name="T:WatsonWebserver.DynamicRoute">
             <summary>
             Assign a method handler for when requests are received matching the supplied method and path regex.
@@ -242,6 +257,15 @@
             int: Source TCP port of the client.
             string: HTTP method.
             string: Full URL.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.EventCallbacks.RequestorDisconnected">
+            <summary>
+            Callback/action to call when a requestor disconnected unexpectedly.
+            string: IP address of the client.
+            int: Source TCP port of the client.
+            string: HTTP method.
+            string Full URL.
             </summary>
         </member>
         <member name="P:WatsonWebserver.EventCallbacks.ResponseSent">

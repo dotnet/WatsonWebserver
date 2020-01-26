@@ -18,7 +18,10 @@ namespace Test
             s.ContentRoutes.Add("/html/", true);
             s.ContentRoutes.Add("/large/", true);
             s.ContentRoutes.Add("/img/watson.jpg", false);
-            
+
+            s.Events.ExceptionEncountered = ExceptionEncountered;
+            s.Events.RequestorDisconnected = RequestorDisconnected;
+
             Console.WriteLine("Press ENTER to exit");
             Console.ReadLine();
         }
@@ -28,6 +31,16 @@ namespace Test
             ctx.Response.StatusCode = 404;
             await ctx.Response.Send();
             return; 
+        }
+
+        static void ExceptionEncountered(string ip, int port, Exception e)
+        {
+            Console.WriteLine("ExceptionEncountered [" + ip + ":" + port + "]: " + Environment.NewLine + e.ToString());
+        }
+
+        static void RequestorDisconnected(string ip, int port, string method, string url)
+        {
+            Console.WriteLine("RequestorDisconnected [" + ip + ":" + port + "]: " + method + " " + url);
         }
     }
 }

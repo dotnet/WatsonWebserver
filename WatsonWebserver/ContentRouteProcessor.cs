@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -10,9 +11,24 @@ namespace WatsonWebserver
     /// <summary>
     /// Content route processor.  Handles GET and HEAD requests to content routes for files and directories. 
     /// </summary>
-    internal class ContentRouteProcessor
+    public class ContentRouteProcessor
     {
         #region Public-Members
+
+        /// <summary>
+        /// The FileMode value to use when accessing files within a content route via a FileStream.  Default is FileMode.Open.
+        /// </summary>
+        public FileMode ContentFileMode = FileMode.Open;
+
+        /// <summary>
+        /// The FileAccess value to use when accessing files within a content route via a FileStream.  Default is FileAccess.Read.
+        /// </summary>
+        public FileAccess ContentFileAccess = FileAccess.Read;
+
+        /// <summary>
+        /// The FileShare value to use when accessing files within a content route via a FileStream.  Default is FileShare.Read.
+        /// </summary>
+        public FileShare ContentFileShare = FileShare.Read;
 
         #endregion
 
@@ -70,42 +86,33 @@ namespace WatsonWebserver
                 await ctx.Response.Send();
                 return;
             }
-
-            try
-            {
-                FileInfo fi = new FileInfo(filePath);
-                long contentLength = fi.Length;
+             
+            FileInfo fi = new FileInfo(filePath);
+            long contentLength = fi.Length;
                   
-                if (ctx.Request.Method == HttpMethod.GET)
-                {
-                    FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-                    ctx.Response.StatusCode = 200;
-                    ctx.Response.ContentLength = contentLength;
-                    ctx.Response.ContentType = GetContentType(filePath);
-                    await ctx.Response.Send(contentLength, fs);
-                    return;
-                }
-                else if (ctx.Request.Method == HttpMethod.HEAD)
-                {
-                    ctx.Response.StatusCode = 200;
-                    ctx.Response.ContentLength = contentLength;
-                    ctx.Response.ContentType = GetContentType(filePath);
-                    await ctx.Response.Send(contentLength);
-                    return;
-                }
-                else
-                {
-                    Set500Response(ctx);
-                    await ctx.Response.Send();
-                    return;
-                } 
+            if (ctx.Request.Method == HttpMethod.GET)
+            {
+                FileStream fs = new FileStream(filePath, ContentFileMode, ContentFileAccess, ContentFileShare);
+                ctx.Response.StatusCode = 200;
+                ctx.Response.ContentLength = contentLength;
+                ctx.Response.ContentType = GetContentType(filePath);
+                await ctx.Response.Send(contentLength, fs);
+                return;
             }
-            catch (Exception)
+            else if (ctx.Request.Method == HttpMethod.HEAD)
+            {
+                ctx.Response.StatusCode = 200;
+                ctx.Response.ContentLength = contentLength;
+                ctx.Response.ContentType = GetContentType(filePath);
+                await ctx.Response.Send(contentLength);
+                return;
+            }
+            else
             {
                 Set500Response(ctx);
                 await ctx.Response.Send();
                 return;
-            }
+            }  
         }
 
         #endregion
