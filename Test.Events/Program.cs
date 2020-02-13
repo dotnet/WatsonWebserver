@@ -24,7 +24,7 @@ namespace Test.Events
             server.Events.ResponseSent = ResponseSent;
             server.Events.ServerDisposed = ServerDisposed;
             server.Events.ServerStopped = ServerStopped;
-
+             
             bool runForever = true;
             while (runForever)
             {

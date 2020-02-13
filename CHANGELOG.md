@@ -2,6 +2,12 @@
 
 ## Current Version
 
+v3.0.8
+
+- New constructor allowing multiple URIs to be supplied on which to listen.  Refer to the Test.MultiUri project.  Thank you @winkmichael!
+
+## Previous Versions
+
 v3.0.7
 
 - Breaking changes to event callbacks (now using Action instead of Func to allow return type of void)
@@ -9,8 +15,6 @@ v3.0.7
 - Consistent exception handling across all response .Send methods
 - Removed exception catching from ContentRouteProcessor to allow main request handler to handle
 - Thank you @zaksnet for suggestions, help, and troubleshooting!
-
-## Previous Versions
 
 v3.0.6.1
 

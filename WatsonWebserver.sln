@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26403.7
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29411.108
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WatsonWebserver", "WatsonWebserver\WatsonWebserver.csproj", "{62003A3E-AB59-4B91-AFBF-4545ACD2A8D9}"
 EndProject
@@ -20,6 +20,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.PreRouting", "Test.PreRouting\Test.PreRouting.csproj", "{27B647F0-94EF-46CE-A1FC-2E3FBBA4F989}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.ChunkServer", "Test.ChunkServer\Test.ChunkServer.csproj", "{8CDBA284-772D-49B1-823D-CD796AE1F888}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.MultiUri", "Test.MultiUri\Test.MultiUri.csproj", "{677A31AB-E9F0-4995-8731-CBCC7A5769AB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -63,6 +65,10 @@ Global
 		{8CDBA284-772D-49B1-823D-CD796AE1F888}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8CDBA284-772D-49B1-823D-CD796AE1F888}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8CDBA284-772D-49B1-823D-CD796AE1F888}.Release|Any CPU.Build.0 = Release|Any CPU
+		{677A31AB-E9F0-4995-8731-CBCC7A5769AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{677A31AB-E9F0-4995-8731-CBCC7A5769AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{677A31AB-E9F0-4995-8731-CBCC7A5769AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{677A31AB-E9F0-4995-8731-CBCC7A5769AB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

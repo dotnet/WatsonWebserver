@@ -816,6 +816,15 @@
             <param name="ssl">Specify whether or not SSL should be used (HTTPS).</param>
             <param name="defaultRoute">Method used when a request is received and no matching routes are found.  Commonly used as the 404 handler when routes are used.</param>
         </member>
+        <member name="M:WatsonWebserver.Server.#ctor(System.Collections.Generic.List{System.String},System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task})">
+            <summary>
+            Creates a new instance of the Watson Webserver.
+            </summary>
+            <param name="uris">URIs on which to listen.  
+            URIs should be of the form: http://[hostname]:[port]/[url]
+            Note: multiple listener endpoints is not supported on all platforms.</param>
+            <param name="defaultRoute">Method used when a request is received and no matching routes are found.  Commonly used as the 404 handler when routes are used.</param>
+        </member>
         <member name="M:WatsonWebserver.Server.Dispose">
             <summary>
             Tear down the server and dispose of background workers.

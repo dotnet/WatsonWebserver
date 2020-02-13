@@ -92,16 +92,17 @@ namespace WatsonWebserver
 
         private readonly EventWaitHandle _Terminator = new EventWaitHandle(false, EventResetMode.ManualReset);
 
-        private HttpListener _HttpListener;
-        private List<string> _ListenerHostnames;
+        private HttpListener _HttpListener = null;
+        private List<string> _ListenerUris = null;
+        private List<string> _ListenerHostnames = null;
         private int _ListenerPort;
-        private bool _ListenerSsl;
+        private bool _ListenerSsl = false;
         private int _StreamReadBufferSize = 65536; 
 
         private ContentRouteProcessor _ContentRouteProcessor;
-        private Func<HttpContext, Task> _DefaultRoute;
-        
-        private CancellationTokenSource _TokenSource;
+        private Func<HttpContext, Task> _DefaultRoute = null;
+
+        private CancellationTokenSource _TokenSource = new CancellationTokenSource();
         private CancellationToken _Token;
 
         #endregion
@@ -127,8 +128,7 @@ namespace WatsonWebserver
             _ListenerHostnames.Add(hostname); 
             _ListenerPort = port;
             _ListenerSsl = ssl; 
-            _DefaultRoute = defaultRoute;
-            _TokenSource = new CancellationTokenSource();
+            _DefaultRoute = defaultRoute; 
             _Token = _TokenSource.Token;
             _ContentRouteProcessor = new ContentRouteProcessor(ContentRoutes);
              
@@ -164,11 +164,33 @@ namespace WatsonWebserver
             
             _ListenerPort = port;
             _ListenerSsl = ssl;
-            _DefaultRoute = defaultRoute; 
-            _TokenSource = new CancellationTokenSource();
+            _DefaultRoute = defaultRoute;  
             _Token = _TokenSource.Token;
             _ContentRouteProcessor = new ContentRouteProcessor(ContentRoutes);
              
+            Task.Run(() => StartServer(_Token), _Token);
+        }
+
+        /// <summary>
+        /// Creates a new instance of the Watson Webserver.
+        /// </summary>
+        /// <param name="uris">URIs on which to listen.  
+        /// URIs should be of the form: http://[hostname]:[port]/[url]
+        /// Note: multiple listener endpoints is not supported on all platforms.</param>
+        /// <param name="defaultRoute">Method used when a request is received and no matching routes are found.  Commonly used as the 404 handler when routes are used.</param>
+        public Server(List<string> uris, Func<HttpContext, Task> defaultRoute)
+        {
+            if (defaultRoute == null) throw new ArgumentNullException(nameof(defaultRoute));
+            if (uris == null) throw new ArgumentNullException(nameof(uris));
+            if (uris.Count < 1) throw new ArgumentException("At least one URI must be supplied.");
+
+            _HttpListener = new HttpListener(); 
+            _ListenerUris = new List<string>(uris); 
+              
+            _DefaultRoute = defaultRoute; 
+            _Token = _TokenSource.Token;
+            _ContentRouteProcessor = new ContentRouteProcessor(ContentRoutes);
+
             Task.Run(() => StartServer(_Token), _Token);
         }
 
@@ -219,12 +241,22 @@ namespace WatsonWebserver
             {
                 #region Start-Listeners
 
-                foreach (string curr in _ListenerHostnames)
+                if (_ListenerHostnames != null)
                 {
-                    string prefix = null;
-                    if (_ListenerSsl) prefix = "https://" + curr + ":" + _ListenerPort + "/";
-                    else prefix = "http://" + curr + ":" + _ListenerPort + "/";
-                    _HttpListener.Prefixes.Add(prefix);
+                    foreach (string curr in _ListenerHostnames)
+                    {
+                        string prefix = null;
+                        if (_ListenerSsl) prefix = "https://" + curr + ":" + _ListenerPort + "/";
+                        else prefix = "http://" + curr + ":" + _ListenerPort + "/";
+                        _HttpListener.Prefixes.Add(prefix);
+                    }
+                }
+                else if (_ListenerUris != null)
+                {
+                    foreach (string curr in _ListenerUris)
+                    {
+                        _HttpListener.Prefixes.Add(curr);
+                    }
                 }
 
                 _HttpListener.Start();
