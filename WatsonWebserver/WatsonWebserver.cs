@@ -86,6 +86,17 @@ namespace WatsonWebserver
         /// </summary>
         public EventCallbacks Events = new EventCallbacks();
 
+        /// <summary>
+        /// Watson webserver statistics.
+        /// </summary>
+        public Statistics Stats
+        {
+            get
+            {
+                return _Stats;
+            }
+        }
+
         #endregion
 
         #region Private-Members
@@ -104,6 +115,8 @@ namespace WatsonWebserver
 
         private CancellationTokenSource _TokenSource = new CancellationTokenSource();
         private CancellationToken _Token;
+
+        private Statistics _Stats = new Statistics();
 
         #endregion
 
@@ -290,6 +303,9 @@ namespace WatsonWebserver
                                 ctx.Request.Method.ToString(),
                                 ctx.Request.FullUrl);
 
+                            _Stats.IncrementRequestCounter(ctx.Request.Method);
+                            _Stats.ReceivedPayloadBytes += ctx.Request.ContentLength;
+
                             #endregion
 
                             #region Check-Access-Control
@@ -336,7 +352,7 @@ namespace WatsonWebserver
                             {
                                 if (ContentRoutes.Exists(ctx.Request.RawUrlWithoutQuery))
                                 {
-                                    await _ContentRouteProcessor.Process(ctx);
+                                    await _ContentRouteProcessor.Process(ctx); 
                                     return;
                                 }
                             }
@@ -388,6 +404,8 @@ namespace WatsonWebserver
                                     ctx.Request.FullUrl,
                                     ctx.Response.StatusCode,
                                     TotalMsFrom(startTime));
+
+                                _Stats.SentPayloadBytes += ctx.Response.ContentLength;
                             }
                         }
 

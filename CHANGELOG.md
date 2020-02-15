@@ -2,11 +2,15 @@
 
 ## Current Version
 
+v3.0.9
+
+- Added Statistics object.
+
+## Previous Versions
+
 v3.0.8
 
 - New constructor allowing multiple URIs to be supplied on which to listen.  Refer to the Test.MultiUri project.  Thank you @winkmichael!
-
-## Previous Versions
 
 v3.0.7
 

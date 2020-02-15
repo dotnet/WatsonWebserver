@@ -746,6 +746,54 @@
             <param name="path">URL path.</param>
             <returns>Method to invoke.</returns>
         </member>
+        <member name="T:WatsonWebserver.Statistics">
+            <summary>
+            Watson webserver statistics.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Statistics.StartTime">
+            <summary>
+            The time at which the client or server was started.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Statistics.UpTime">
+            <summary>
+            The amount of time which the client or server has been up.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Statistics.ReceivedPayloadBytes">
+            <summary>
+            The number of payload bytes received (incoming request body).
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Statistics.SentPayloadBytes">
+            <summary>
+            The number of payload bytes sent (outgoing request body).
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Statistics.#ctor">
+            <summary>
+            Initialize the statistics object.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Statistics.ToString">
+            <summary>
+            Human-readable version of the object.
+            </summary>
+            <returns>String.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Statistics.Reset">
+            <summary>
+            Reset statistics other than StartTime and UpTime.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Statistics.RequestCountByMethod(WatsonWebserver.HttpMethod)">
+            <summary>
+            Retrieve the number of requests received using a specific HTTP method.
+            </summary>
+            <param name="method">HTTP method.</param>
+            <returns>Number of requests received using this method.</returns>
+        </member>
         <member name="T:WatsonWebserver.Server">
             <summary>
             Watson webserver.
@@ -796,6 +844,11 @@
         <member name="F:WatsonWebserver.Server.Events">
             <summary>
             Set specific actions/callbacks to use when events are raised.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Server.Stats">
+            <summary>
+            Watson webserver statistics.
             </summary>
         </member>
         <member name="M:WatsonWebserver.Server.#ctor(System.String,System.Int32,System.Boolean,System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task})">

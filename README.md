@@ -7,9 +7,9 @@
 
 Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS requests, written in C#.
 
-## New in v3.0.8
+## New in v3.0.9
 
-- New constructor allowing multiple URIs to be supplied on which to listen.  Refer to the Test.MultiUri project.  Thank you @winkmichael!
+- Added Statistics object.
 
 ## Key Changes from v2.x
 

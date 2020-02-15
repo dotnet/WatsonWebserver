@@ -45,6 +45,14 @@ namespace Test
                     case "dispose":
                         server.Dispose();
                         break;
+
+                    case "stats":
+                        Console.WriteLine(server.Stats.ToString());
+                        break;
+
+                    case "stats reset":
+                        server.Stats.Reset();
+                        break;
                 }
             }
         }
@@ -52,11 +60,13 @@ namespace Test
         static void Menu()
         {
             Console.WriteLine("---");
-            Console.WriteLine("  ?        help, this menu");
-            Console.WriteLine("  q        quit the application");
-            Console.WriteLine("  cls      clear the screen");
-            Console.WriteLine("  state    indicate whether or not the server is listening");
-            Console.WriteLine("  dispose  dispose the server object");
+            Console.WriteLine("  ?              help, this menu");
+            Console.WriteLine("  q              quit the application");
+            Console.WriteLine("  cls            clear the screen");
+            Console.WriteLine("  state          indicate whether or not the server is listening");
+            Console.WriteLine("  dispose        dispose the server object");
+            Console.WriteLine("  stats          display webserver statistics");
+            Console.WriteLine("  stats reset    reset webserver statistics");
         }
 
         static async Task DefaultRoute(HttpContext ctx)
