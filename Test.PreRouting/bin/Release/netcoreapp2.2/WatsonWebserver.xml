@@ -558,6 +558,28 @@
             </summary>
             <returns>Chunk.</returns>
         </member>
+        <member name="M:WatsonWebserver.HttpRequest.DataAsBytes">
+            <summary>
+            Read the data stream fully and retrieve the byte data contained within.
+            Note: if you use this method, you will not be able to read from the data stream afterward.
+            </summary>
+            <returns>Byte array.</returns>
+        </member>
+        <member name="M:WatsonWebserver.HttpRequest.DataAsString">
+            <summary>
+            Read the data stream fully and retrieve the string data contained within.
+            Note: if you use this method, you will not be able to read from the data stream afterward.
+            </summary>
+            <returns>String.</returns>
+        </member>
+        <member name="M:WatsonWebserver.HttpRequest.DataAsJsonObject``1">
+            <summary>
+            Read the data stream fully and convert the data to the object type specified using JSON deserialization.
+            Note: if you use this method, you will not be able to read from the data stream afterward.
+            </summary>
+            <typeparam name="T">Type.</typeparam>
+            <returns>Object of type specified.</returns>
+        </member>
         <member name="T:WatsonWebserver.HttpResponse">
             <summary>
             Response to an HTTP request.

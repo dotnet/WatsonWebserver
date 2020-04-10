@@ -21,7 +21,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.PreRouting", "Test.Pre
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.ChunkServer", "Test.ChunkServer\Test.ChunkServer.csproj", "{8CDBA284-772D-49B1-823D-CD796AE1F888}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.MultiUri", "Test.MultiUri\Test.MultiUri.csproj", "{677A31AB-E9F0-4995-8731-CBCC7A5769AB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.MultiUri", "Test.MultiUri\Test.MultiUri.csproj", "{677A31AB-E9F0-4995-8731-CBCC7A5769AB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.DataReader", "Test.DataReader\Test.DataReader.csproj", "{B4676A8C-51B9-4F6D-881F-6F1B8F02C2D8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -69,6 +71,10 @@ Global
 		{677A31AB-E9F0-4995-8731-CBCC7A5769AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{677A31AB-E9F0-4995-8731-CBCC7A5769AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{677A31AB-E9F0-4995-8731-CBCC7A5769AB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B4676A8C-51B9-4F6D-881F-6F1B8F02C2D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B4676A8C-51B9-4F6D-881F-6F1B8F02C2D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B4676A8C-51B9-4F6D-881F-6F1B8F02C2D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B4676A8C-51B9-4F6D-881F-6F1B8F02C2D8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

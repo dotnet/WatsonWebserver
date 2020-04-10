@@ -2,11 +2,15 @@
 
 ## Current Version
 
+v3.0.10
+
+- Added methods to retrieve data as bytes, string, or object (using JSON or XML deserialization) - thanks @notesjor and the TFRES project for the contribution!
+
+## Previous Versions
+
 v3.0.9
 
 - Added Statistics object.
-
-## Previous Versions
 
 v3.0.8
 

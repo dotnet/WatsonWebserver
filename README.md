@@ -7,9 +7,9 @@
 
 Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS requests, written in C#.
 
-## New in v3.0.9
+## New in v3.0.10
 
-- Added Statistics object.
+- Added methods to retrieve data as bytes, string, or object (using JSON or XML deserialization) - thanks @notesjor and the TFRES project for the contribution!
 
 ## Special Thanks
 

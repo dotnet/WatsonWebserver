@@ -146,7 +146,7 @@ namespace WatsonWebserver
         /// </summary>
         [JsonIgnore]
         public Stream Data;
-
+         
         /// <summary>
         /// The original HttpListenerContext from which the HttpRequest was constructed.
         /// </summary>
@@ -160,6 +160,7 @@ namespace WatsonWebserver
         private Uri _Uri; 
         private static int _TimeoutDataReadMs = 2000;
         private static int _DataReadSleepMs = 10;
+        private byte[] _DataBytes = null;
         
         #endregion
 
@@ -1156,6 +1157,42 @@ namespace WatsonWebserver
             return chunk; 
         }
          
+        /// <summary>
+        /// Read the data stream fully and retrieve the byte data contained within.
+        /// Note: if you use this method, you will not be able to read from the data stream afterward.
+        /// </summary>
+        /// <returns>Byte array.</returns>
+        public byte[] DataAsBytes()
+        {
+            ReadStreamFully();
+            return _DataBytes;
+        }
+
+        /// <summary>
+        /// Read the data stream fully and retrieve the string data contained within.
+        /// Note: if you use this method, you will not be able to read from the data stream afterward.
+        /// </summary>
+        /// <returns>String.</returns>
+        public string DataAsString()
+        {
+            ReadStreamFully();
+            if (_DataBytes == null) return null;
+            else return Encoding.UTF8.GetString(_DataBytes);
+        }
+
+        /// <summary>
+        /// Read the data stream fully and convert the data to the object type specified using JSON deserialization.
+        /// Note: if you use this method, you will not be able to read from the data stream afterward.
+        /// </summary>
+        /// <typeparam name="T">Type.</typeparam>
+        /// <returns>Object of type specified.</returns>
+        public T DataAsJsonObject<T>() where T : class
+        {
+            string json = DataAsString();
+            if (String.IsNullOrEmpty(json)) return null;
+            return SerializationHelper.DeserializeJson<T>(json);
+        }
+         
         #endregion
 
         #region Private-Methods
@@ -1461,6 +1498,48 @@ namespace WatsonWebserver
             Buffer.BlockCopy(orig, 0, ret, 0, orig.Length);
             Buffer.BlockCopy(append, 0, ret, orig.Length, append.Length);
             return ret;
+        }
+
+        private byte[] StreamToBytes(Stream input)
+        {
+            if (input == null) throw new ArgumentNullException(nameof(input));
+            if (!input.CanRead) throw new InvalidOperationException("Input stream is not readable");
+
+            byte[] buffer = new byte[16 * 1024];
+            using (MemoryStream ms = new MemoryStream())
+            {
+                int read;
+
+                while ((read = input.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    ms.Write(buffer, 0, read);
+                }
+
+                return ms.ToArray();
+            }
+        }
+
+        private void ReadStreamFully()
+        {
+            if (Data == null) return;
+            if (!Data.CanRead) return;
+
+            if (_DataBytes == null)
+            {
+                if (!ChunkedTransfer)
+                {
+                    _DataBytes = StreamToBytes(Data);
+                }
+                else
+                {
+                    while (true)
+                    {
+                        Chunk chunk = ReadChunk().Result;
+                        if (chunk.Data != null && chunk.Data.Length > 0) _DataBytes = AppendBytes(_DataBytes, chunk.Data);
+                        if (chunk.IsFinalChunk) break;
+                    }
+                }
+            }
         }
 
         #endregion
