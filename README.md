@@ -11,30 +11,15 @@ Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS reque
 
 - Added Statistics object.
 
-## Key Changes from v2.x
+## Special Thanks
 
-Developers familiar with v2.x will notice that v3.x introduces a major breaking change.  This change will allow us to integrate a series of future capabilities and enhancements that were not previously possible with v2.x.  
+I'd like to extend a special thanks to those that have helped make Watson Webserver better.
 
-Previously, callbacks and routes would have the signature: ```HttpResponse MyRouteHandler(HttpRequest req)```.  Now, callbacks and routes have the signature ```Task MyRouteHandler(HttpContext ctx)```.
-
-The ```HttpContext``` object contains two members, ```HttpRequest Request``` and ```HttpResponse Response```.  ```Request``` is largely unchanged from v2.x.  However, ```Response``` comes prepopulated and should be modified directly in your code.
-
-The following v2.x code: 
-```
-static HttpResponse MyRouteHandler(HttpRequest req)
-{
-  return new HttpResponse(req, 200, null, "text/plain", Encoding.UTF8.GetBytes("Hello world!"));
-}
-```
-
-Would become the following in v3.x: 
-```
-static async Task MyRouteHandler(HttpContext ctx)
-{
-  ctx.Response.StatusCode = 200;
-  await ctx.Response.Send("Hello world!"); 
-}
-```
+- @notesjor
+- @shdwp
+- @Tutch
+- @GeoffMcGrath
+- @jurkovic-nikola
 
 ## Test App
 
