@@ -1,5 +1,7 @@
 # Running Watson in Docker (Windows)
 
+Keywords: docker dotnet httplistener http.sys http c#
+
 Getting an ```HttpListener``` application (such as any application using Watson) up and running in Docker on Windows can be rather tricky given how 1) Docker acts as a network proxy and 2) HttpListener isn't friendly to ```HOST``` header mismatches.  Thus, it is **critical** in Windows environments that you run your containers using ```--user ContainerAdministrator``` to bypass the ```HttpListener``` restrictions.  There are likely ways around this, but I have been unable to find them.  
 
 ## Steps to Run Watson Application in Docker (Windows)

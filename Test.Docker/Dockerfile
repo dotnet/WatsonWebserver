@@ -1,16 +1,12 @@
 #
-#
-# IMPORTANT
 # Built using Docker Desktop with Windows containers
-# 
 # See: https://docs.docker.com/engine/examples/dotnetcore/
-#
 #
 
 # Use SDK
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build
 
-# Set the local working directory and copy in the source
+# Set the local working directory, copy in the project file, and perform a restore
 WORKDIR /app
 COPY *.csproj .
 RUN dotnet restore
