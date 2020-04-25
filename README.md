@@ -211,7 +211,11 @@ To configure access from other nodes outside of ```localhost```, use the followi
   - Refer to https://github.com/jchristn/WatsonWebserver/wiki/Using-SSL-on-Windows for more information, or if you are using SSL
 - If you're still having problems, please do not hesitate to file an issue here, and I will do my best to help and update the documentation.
 
-## Running under Mono
+## Running in Docker
+
+Please refer to the ```Test.Docker``` project and the ```Docker.md``` file therein.
+
+## Running in Mono
 
 While .NET Core is always preferred for non-Windows environments, Watson compiled using .NET Framework works well in Mono environments to the extent that we have tested it. It is recommended that when running under Mono, you execute the containing EXE using --server and after using the Mono Ahead-of-Time Compiler (AOT).
 

@@ -23,7 +23,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.ChunkServer", "Test.Ch
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.MultiUri", "Test.MultiUri\Test.MultiUri.csproj", "{677A31AB-E9F0-4995-8731-CBCC7A5769AB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.DataReader", "Test.DataReader\Test.DataReader.csproj", "{B4676A8C-51B9-4F6D-881F-6F1B8F02C2D8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.DataReader", "Test.DataReader\Test.DataReader.csproj", "{B4676A8C-51B9-4F6D-881F-6F1B8F02C2D8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Docker", "Test.Docker\Test.Docker.csproj", "{DB3A183E-BF8A-4155-8376-899A0050AF1A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -75,6 +77,10 @@ Global
 		{B4676A8C-51B9-4F6D-881F-6F1B8F02C2D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B4676A8C-51B9-4F6D-881F-6F1B8F02C2D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B4676A8C-51B9-4F6D-881F-6F1B8F02C2D8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DB3A183E-BF8A-4155-8376-899A0050AF1A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DB3A183E-BF8A-4155-8376-899A0050AF1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DB3A183E-BF8A-4155-8376-899A0050AF1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DB3A183E-BF8A-4155-8376-899A0050AF1A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
