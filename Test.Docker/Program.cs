@@ -17,7 +17,7 @@ namespace Test.Docker
             _Server = new Server(_Hostname, _Port, false, DefaultRoute);
             Console.WriteLine("Watson Webserver started on http://*:8000");
 
-            EventWaitHandle waitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, Guid.NewGuid().ToString());
+            EventWaitHandle waitHandle = new EventWaitHandle(false, EventResetMode.AutoReset);
             bool signal = false;
             do
             {
