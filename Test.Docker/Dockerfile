@@ -13,8 +13,8 @@ RUN dotnet restore
 
 # Copy everything else and build
 COPY . ./
-RUN dotnet build -c Release
-RUN dotnet publish -c Release -o out
+RUN dotnet build   -f netcoreapp3.1 -c Release
+RUN dotnet publish -f netcoreapp3.1 -c Release -o out
 
 # Build runtime image
 FROM mcr.microsoft.com/dotnet/core/runtime:3.1
