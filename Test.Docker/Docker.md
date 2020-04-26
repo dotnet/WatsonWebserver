@@ -59,11 +59,6 @@ While attempting to get Watson up and running in Docker on Windows, I stumbled u
 
 Here is the ```Dockerfile``` used in the ```Test.Docker``` project:
 ```
-#
-# Built using Docker Desktop with Windows containers
-# See: https://docs.docker.com/engine/examples/dotnetcore/
-#
-
 # Use SDK
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build
 
