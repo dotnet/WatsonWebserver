@@ -8,12 +8,12 @@ Getting an ```HttpListener``` application (such as any application using Watson)
 
 1) View and modify the ```Dockerfile``` as appropriate for your application.
 
-2) Execute the Docker build process using the command found in ```DockerBuild```, i.e.:
+2) Execute the Docker build process:
 ```
 $ docker build -t watsontest -f Dockerfile .
 ```
 
-3) Verify the image exists using the command found in ```DockerImages```, i.e.:
+3) Verify the image exists:
 ```
 $ docker images
 REPOSITORY                              TAG                 IMAGE ID            CREATED             SIZE
@@ -22,9 +22,13 @@ mcr.microsoft.com/dotnet/core/sdk       3.1                 abbb476b7b81        
 mcr.microsoft.com/dotnet/core/runtime   3.1                 4b555235dfc0        11 days ago         327MB
 ```
  
-4) Execute the container using the command found in ```DockerRun```, i.e.:
+4) Execute the container:
 ```
+Windows:
 $ docker run --user ContainerAdministrator -d -p 8000:8000 watsontest 
+
+Linux or Mac:
+$ docker run --user root -d -p 8000:8000 watsontest
 ```
 
 5) Connect to Watson in your browser: 
@@ -32,7 +36,7 @@ $ docker run --user ContainerAdministrator -d -p 8000:8000 watsontest
 http://localhost:8000
 ```
 
-6) Get the container name using the command found in ```DockerProcesses```, i.e.:
+6) Get the container name:
 ```
 $ docker ps
 CONTAINER ID        IMAGE               COMMAND                  CREATED              STATUS              PORTS                    NAMES
