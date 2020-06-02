@@ -71,7 +71,7 @@ namespace WatsonWebserver
                 while (filePath.StartsWith("/")) filePath = filePath.Substring(1); 
             }
 
-            string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            string baseDirectory = _Routes.BaseDirectory;
             baseDirectory = baseDirectory.Replace("\\", "/");
             if (!baseDirectory.EndsWith("/")) baseDirectory += "/";
 

@@ -14,12 +14,33 @@ namespace WatsonWebserver
     {
         #region Public-Members
 
+        /// <summary>
+        /// Base directory for files and directories accessible via content routes.
+        /// </summary>
+        public string BaseDirectory
+        {
+            get
+            {
+                return _BaseDirectory;
+            }
+            set
+            {
+                if (String.IsNullOrEmpty(value)) _BaseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+                else
+                {
+                    if (!Directory.Exists(value)) throw new DirectoryNotFoundException("The requested directory '" + value + "' was not found or not accessible.");
+                    _BaseDirectory = value;
+                }
+            }
+        }
+
         #endregion
 
         #region Private-Members
           
         private List<ContentRoute> _Routes;
         private readonly object _Lock;
+        private string _BaseDirectory = AppDomain.CurrentDomain.BaseDirectory;
 
         #endregion
 

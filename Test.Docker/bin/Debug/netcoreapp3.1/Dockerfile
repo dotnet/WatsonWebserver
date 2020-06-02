@@ -1,8 +1,3 @@
-#
-# Built using Docker Desktop with Windows containers
-# See: https://docs.docker.com/engine/examples/dotnetcore/
-#
-
 # Use SDK
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build
 

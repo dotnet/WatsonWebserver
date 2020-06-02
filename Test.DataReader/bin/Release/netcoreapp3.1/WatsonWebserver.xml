@@ -108,6 +108,11 @@
             Content route manager.  Content routes are used for GET and HEAD requests to specific files or entire directories.
             </summary>
         </member>
+        <member name="P:WatsonWebserver.ContentRouteManager.BaseDirectory">
+            <summary>
+            Base directory for files and directories accessible via content routes.
+            </summary>
+        </member>
         <member name="M:WatsonWebserver.ContentRouteManager.#ctor">
             <summary>
             Instantiate the object.

@@ -71,7 +71,7 @@ namespace WatsonWebserver
         private long _ReceivedPayloadBytes = 0; 
         private long _SentPayloadBytes = 0;
         private readonly object _DictionaryLock = new object();
-        private Dictionary<HttpMethod, long> _IncomingRequests = new Dictionary<HttpMethod, long>();
+        private Dictionary<HttpMethod, long> _RequestsByMethod = new Dictionary<HttpMethod, long>();
 
         #endregion
 
@@ -105,9 +105,9 @@ namespace WatsonWebserver
 
             lock (_DictionaryLock)
             {
-                if (_IncomingRequests.Count > 0)
+                if (_RequestsByMethod.Count > 0)
                 {
-                    foreach (KeyValuePair<HttpMethod, long> curr in _IncomingRequests)
+                    foreach (KeyValuePair<HttpMethod, long> curr in _RequestsByMethod)
                     {
                         ret +=
                             "        " + curr.Key.ToString().PadRight(18) + " : " + curr.Value + Environment.NewLine;
@@ -131,7 +131,7 @@ namespace WatsonWebserver
             {
                 _ReceivedPayloadBytes = 0;
                 _SentPayloadBytes = 0;
-                _IncomingRequests = new Dictionary<HttpMethod, long>();
+                _RequestsByMethod = new Dictionary<HttpMethod, long>();
             }
         }
 
@@ -144,7 +144,7 @@ namespace WatsonWebserver
         {
             lock (_DictionaryLock)
             {
-                if (_IncomingRequests.ContainsKey(method)) return _IncomingRequests[method];
+                if (_RequestsByMethod.ContainsKey(method)) return _RequestsByMethod[method];
                 else return 0;
             }
         }
@@ -157,16 +157,16 @@ namespace WatsonWebserver
         {
             lock (_DictionaryLock)
             {
-                if (_IncomingRequests.ContainsKey(method))
+                if (_RequestsByMethod.ContainsKey(method))
                 {
-                    long val = _IncomingRequests[method];
+                    long val = _RequestsByMethod[method];
                     val = val + 1;
-                    _IncomingRequests.Remove(method);
-                    _IncomingRequests.Add(method, val);
+                    _RequestsByMethod.Remove(method);
+                    _RequestsByMethod.Add(method, val);
                 }
                 else
                 {
-                    _IncomingRequests.Add(method, 1);
+                    _RequestsByMethod.Add(method, 1);
                 }
             }
         }

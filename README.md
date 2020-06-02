@@ -6,9 +6,9 @@
 
 Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS requests, written in C#.
 
-## New in v3.0.10
+## New in v3.0.11
 
-- Added methods to retrieve data as bytes, string, or object (using JSON or XML deserialization) - thanks @notesjor and the TFRES project for the contribution!
+- Expose BaseDirectory via ContentRoutes (thank you @joreg)
 
 ## Special Thanks
 
