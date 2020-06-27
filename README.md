@@ -6,9 +6,9 @@
 
 Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS requests, written in C#.
 
-## New in v3.0.11
+## New in v3.0.12
 
-- Expose BaseDirectory via ContentRoutes (thank you @joreg)
+- Fix for Querystring
 
 ## Special Thanks
 
@@ -19,6 +19,7 @@ I'd like to extend a special thanks to those that have helped make Watson Webser
 - @Tutch
 - @GeoffMcGrath
 - @jurkovic-nikola
+- @joreg
 
 ## Test App
 

@@ -37,9 +37,9 @@ namespace WatsonWebserver
         #endregion
 
         #region Private-Members
-          
-        private List<ContentRoute> _Routes;
-        private readonly object _Lock;
+
+        private List<ContentRoute> _Routes = new List<ContentRoute>();
+        private readonly object _Lock = new object();
         private string _BaseDirectory = AppDomain.CurrentDomain.BaseDirectory;
 
         #endregion
@@ -51,8 +51,7 @@ namespace WatsonWebserver
         /// </summary> 
         public ContentRouteManager()
         { 
-            _Routes = new List<ContentRoute>();
-            _Lock = new object();
+
         }
 
         #endregion
@@ -66,10 +65,8 @@ namespace WatsonWebserver
         /// <param name="isDirectory">True if the path represents a directory.</param>
         public void Add(string path, bool isDirectory)
         {
-            if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
-
-            ContentRoute r = new ContentRoute(path, isDirectory);
-            Add(r);
+            if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path)); 
+            Add(new ContentRoute(path, isDirectory));
         }
 
         /// <summary>
@@ -81,19 +78,14 @@ namespace WatsonWebserver
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
 
             ContentRoute r = Get(path);
-            if (r == null || r == default(ContentRoute))
-            { 
-                return;
-            }
-            else
+            if (r == null) return;
+
+            lock (_Lock)
             {
-                lock (_Lock)
-                {
-                    _Routes.Remove(r);
-                }
-                 
-                return;
+                _Routes.Remove(r);
             }
+                 
+            return;
         }
 
         /// <summary>

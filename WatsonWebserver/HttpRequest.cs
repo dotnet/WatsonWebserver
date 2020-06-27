@@ -1012,6 +1012,15 @@ namespace WatsonWebserver
             ret += "  Full URL    : " + FullUrl + Environment.NewLine;
             ret += "  Raw URL     : " + RawUrlWithoutQuery + Environment.NewLine;
             ret += "  Querystring : " + Querystring + Environment.NewLine;
+
+            if (QuerystringEntries != null && QuerystringEntries.Count > 0)
+            {
+                foreach (KeyValuePair<string, string> curr in QuerystringEntries)
+                {
+                    ret += "    " + curr.Key + ": " + curr.Value + Environment.NewLine;
+                }
+            }
+
             ret += "  Useragent   : " + Useragent + " (Keepalive " + Keepalive + ")" + Environment.NewLine;
             ret += "  Content     : " + ContentType + " (" + ContentLength + " bytes)" + Environment.NewLine;
             ret += "  Destination : " + DestHostname + ":" + DestHostPort + Environment.NewLine;
@@ -1332,7 +1341,7 @@ namespace WatsonWebserver
 
         private static List<string> ExtractRawUrlEntries(string rawUrlWithoutQuery)
         {
-            if (String.IsNullOrEmpty(rawUrlWithoutQuery)) return null;
+            if (String.IsNullOrEmpty(rawUrlWithoutQuery)) return new List<string>();
 
             int position = 0;
             string tempString = "";
@@ -1387,57 +1396,30 @@ namespace WatsonWebserver
 
         private static Dictionary<string, string> ExtractQuerystringEntries(string query)
         {
-            if (String.IsNullOrEmpty(query)) return null;
+            if (String.IsNullOrEmpty(query)) return new Dictionary<string, string>();
 
             Dictionary<string, string> ret = new Dictionary<string, string>();
-             
-            int inKey = 1;
-            int inVal = 0;
-            int position = 0;
-            string tempKey = "";
-            string tempVal = "";
 
-            foreach (char c in query)
+            string[] entries = query.Split('&');
+
+            if (entries != null && entries.Length > 0)
             {
-                if (inKey == 1)
+                foreach (string entry in entries)
                 {
-                    if (c != '=')
-                    {
-                        tempKey += c;
-                    }
-                    else
-                    {
-                        inKey = 0;
-                        inVal = 1;
-                        continue;
-                    }
-                }
+                    string[] entryParts = entry.Split(new[] { '=' }, 2);
 
-                if (inVal == 1)
-                {
-                    if (c != '&')
+                    if (entryParts != null && entryParts.Length > 0)
                     {
-                        tempVal += c;
-                    }
-                    else
-                    {
-                        inKey = 1;
-                        inVal = 0;
+                        string key = entryParts[0];
+                        string val = null;
 
-                        if (!String.IsNullOrEmpty(tempVal)) tempVal = WebUtility.UrlEncode(tempVal);
-                        ret = AddToDict(tempKey, tempVal, ret);
+                        if (entryParts.Length == 2)
+                        {
+                            val = entryParts[1];
+                        }
 
-                        tempKey = "";
-                        tempVal = "";
-                        position++;
-                        continue;
+                        ret = AddToDict(key, val, ret);
                     }
-                }
-                
-                if (inVal == 1)
-                {
-                    if (!String.IsNullOrEmpty(tempVal)) tempVal = WebUtility.UrlEncode(tempVal);
-                    ret = AddToDict(tempKey, tempVal, ret);
                 }
             }
 
@@ -1474,7 +1456,7 @@ namespace WatsonWebserver
             }
         }
 
-        private static byte[] AppendBytes(byte[] orig, byte[] append)
+        private byte[] AppendBytes(byte[] orig, byte[] append)
         {
             if (orig == null && append == null) return null;
 

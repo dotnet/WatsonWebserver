@@ -2,11 +2,15 @@
 
 ## Current Version
 
+v3.0.12
+
+- Fix for Querystring
+
+## Previous Versions
+
 v3.0.11
 
 - Expose BaseDirectory via ContentRoutes (thank you @joreg)
-
-## Previous Versions
 
 v3.0.10
 
