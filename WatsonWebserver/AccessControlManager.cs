@@ -16,19 +16,19 @@ namespace WatsonWebserver
         #region Public-Members
 
         /// <summary>
-        /// Matcher to match blacklisted addresses.
+        /// Matcher to match denied addresses.
         /// </summary>
-        public Matcher Blacklist;
+        public Matcher DenyList;
 
         /// <summary>
-        /// Matcher to match whitelisted addresses.
+        /// Matcher to match permitted addresses.
         /// </summary>
-        public Matcher Whitelist;
+        public Matcher PermitList;
 
         /// <summary>
         /// Access control mode, either DefaultPermit or DefaultDeny.
-        /// DefaultPermit: allow everything, except for those explicitly blacklisted.
-        /// DefaultDeny: deny everything, except for those explicitly whitelisted.
+        /// DefaultPermit: allow everything, except for those explicitly denied.
+        /// DefaultDeny: deny everything, except for those explicitly permitted.
         /// </summary>
         public AccessControlMode Mode;
 
@@ -46,8 +46,8 @@ namespace WatsonWebserver
         /// <param name="mode">Access control mode.</param>
         public AccessControlManager(AccessControlMode mode)
         {
-            Blacklist = new Matcher();
-            Whitelist = new Matcher();
+            DenyList = new Matcher();
+            PermitList = new Matcher();
             Mode = mode;
         }
 
@@ -57,8 +57,8 @@ namespace WatsonWebserver
         
         /// <summary>
         /// Permit or deny a request based on IP address.  
-        /// When operating in 'default deny', only white listed entries are permitted. 
-        /// When operating in 'default permit', everything is allowed unless explicitly blacklisted.
+        /// When operating in 'default deny', only specified entries are permitted. 
+        /// When operating in 'default permit', everything is allowed unless explicitly denied.
         /// </summary>
         /// <param name="ip">The IP address to evaluate.</param>
         /// <returns>True if permitted.</returns>
@@ -69,10 +69,10 @@ namespace WatsonWebserver
             switch (Mode)
             {
                 case AccessControlMode.DefaultDeny:
-                    return Whitelist.MatchExists(ip);
+                    return PermitList.MatchExists(ip);
 
                 case AccessControlMode.DefaultPermit:
-                    if (Blacklist.MatchExists(ip)) return false;
+                    if (DenyList.MatchExists(ip)) return false;
                     return true;
 
                 default:

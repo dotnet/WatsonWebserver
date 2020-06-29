@@ -48,6 +48,11 @@ namespace WatsonWebserver
         /// </summary>
         public bool ChunkedTransfer = false;
 
+        /// <summary>
+        /// Access-Control-Allow-Origin header value.
+        /// </summary>
+        public string AccessControlAllowOriginHeader = "*";
+
         #endregion
 
         #region Internal-Members
@@ -606,8 +611,10 @@ namespace WatsonWebserver
             _Response.StatusCode = StatusCode;
             _Response.StatusDescription = GetStatusDescription(StatusCode);
             _Response.SendChunked = ChunkedTransfer;
-            _Response.AddHeader("Access-Control-Allow-Origin", "*");
             _Response.ContentType = ContentType;
+
+            if (!String.IsNullOrEmpty(AccessControlAllowOriginHeader)) 
+                _Response.AddHeader("Access-Control-Allow-Origin", AccessControlAllowOriginHeader);
 
             if (Headers != null && Headers.Count > 0)
             {

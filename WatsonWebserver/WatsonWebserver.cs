@@ -77,7 +77,7 @@ namespace WatsonWebserver
         public ContentRouteManager ContentRoutes = new ContentRouteManager();
          
         /// <summary>
-        /// Access control manager, i.e. default mode of operation, white list, and black list.
+        /// Access control manager, i.e. default mode of operation, permit list, and deny list.
         /// </summary>
         public AccessControlManager AccessControl = new AccessControlManager(AccessControlMode.DefaultPermit);
 
@@ -96,6 +96,11 @@ namespace WatsonWebserver
                 return _Stats;
             }
         }
+
+        /// <summary>
+        /// Access-Control-Allow-Origin header value.
+        /// </summary>
+        public string AccessControlAllowOriginHeader = "*";
 
         #endregion
 
@@ -474,7 +479,10 @@ namespace WatsonWebserver
             response.AddHeader("Access-Control-Allow-Methods", "OPTIONS, HEAD, GET, PUT, POST, DELETE");
             response.AddHeader("Access-Control-Allow-Headers", "*, Content-Type, X-Requested-With, " + headers);
             response.AddHeader("Access-Control-Expose-Headers", "Content-Type, X-Requested-With, " + headers);
-            response.AddHeader("Access-Control-Allow-Origin", "*");
+            
+            if (!String.IsNullOrEmpty(AccessControlAllowOriginHeader))
+                response.AddHeader("Access-Control-Allow-Origin", AccessControlAllowOriginHeader);
+
             response.AddHeader("Accept", "*/*");
             response.AddHeader("Accept-Language", "en-US, en");
             response.AddHeader("Accept-Charset", "ISO-8859-1, utf-8");
