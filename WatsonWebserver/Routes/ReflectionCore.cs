@@ -24,7 +24,7 @@ namespace WatsonWebserver.Routes
             foreach (var route in routes)
             {
                 var attribute = route.GetCustomAttributes().OfType<Route>().First();
-                server.StaticRoutes.Add(attribute.HttpMethod, attribute.RouteName, route.ToRouteMethod());
+                server.StaticRoutes.Add(attribute.Method, attribute.Path, route.ToRouteMethod());
             }
 
             return server;

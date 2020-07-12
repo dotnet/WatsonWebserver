@@ -9,8 +9,11 @@ namespace Test.Routes
         static async Task Main()
         {
             // Create server and load all routes with the Route attribute in current assembly
-            using var server = new Server("127.0.0.1", 8080, false, DefaultRoute).LoadRoutes();
-            await Task.Delay(-1);
+            using (var server = new Server("127.0.0.1", 8080, false, DefaultRoute))
+            {
+                server.LoadRoutes();
+                await Task.Delay(-1);
+            }
             
             // Load all methods with Route attribute from custom assembly
             // server.LoadRoutes(Assembly.GetExecutingAssembly());

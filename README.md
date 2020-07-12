@@ -6,9 +6,9 @@
 
 Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS requests, written in C#.
 
-## New in v3.0.12
+## New in v3.0.13
 
-- Fix for Querystring
+- Static routes defined by method attributes (thank you @Job79 for the awesome PR)
 
 ## Special Thanks
 
@@ -20,6 +20,7 @@ I'd like to extend a special thanks to those that have helped make Watson Webser
 - @GeoffMcGrath
 - @jurkovic-nikola
 - @joreg
+- @Job79
 
 ## Test App
 

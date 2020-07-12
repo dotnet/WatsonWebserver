@@ -3,21 +3,28 @@ using System;
 namespace WatsonWebserver.Routes
 {
     /// <summary>
-    /// Attribute that is used to mark methods as route-methods
+    /// Attribute that is used to mark methods as route methods.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method)]
     public sealed class Route : Attribute
     {
-        public string RouteName { get; }
-        public HttpMethod HttpMethod { get; }
-        
-        /// <summary></summary>
-        /// <param name="routeName"></param>
-        /// <param name="httpMethod"></param>
-        public Route(string routeName, HttpMethod httpMethod = HttpMethod.GET)
+        /// <summary>
+        /// The raw URL, i.e. /foo/bar/.  Be sure this begins and ends with '/'.
+        /// </summary>
+        public string Path { get; }
+
+        /// <summary>
+        /// The HTTP method, i.e. GET, PUT, POST, DELETE, etc.
+        /// </summary>
+        public HttpMethod Method { get; }
+
+        /// <summary>Instantiate the object.</summary>
+        /// <param name="path">The raw URL, i.e. /foo/bar/.  Be sure this begins and ends with '/'.</param>
+        /// <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE, etc.</param>
+        public Route(string path, HttpMethod method = HttpMethod.GET)
         {
-            RouteName = routeName;
-            HttpMethod = httpMethod;
+            Path = path;
+            Method = method;
         }
     }
 }
