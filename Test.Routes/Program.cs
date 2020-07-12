@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
-using WatsonWebserver;
-using WatsonWebserver.Routes;
+using WatsonWebserver; 
 
 namespace Test.Routes
 {
@@ -24,13 +23,13 @@ namespace Test.Routes
             await context.Response.Send("Welcome to the default route!");
         }
         
-        [Route("hello")]
+        [RouteAttribute("hello")]
         public async Task HelloRoute(HttpContext context)
         {
             await context.Response.Send("Welcome to the hello route!");
         }
         
-        [Route("post", HttpMethod.POST)]
+        [RouteAttribute("post", HttpMethod.POST)]
         public async Task PostRoute(HttpContext context)
         {
             await context.Response.Send("Welcome to the post route!");

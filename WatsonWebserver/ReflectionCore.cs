@@ -3,17 +3,20 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace WatsonWebserver.Routes
-{
+namespace WatsonWebserver
+{ 
+    /// <summary>
+    /// Helper methods for reflection.
+    /// </summary>
     public static class ReflectionCore
     {
         /// <summary>
-        /// Load routes from assembly
+        /// Load routes for the server.
         /// </summary>
-        /// <param name="server"></param>
-        /// <param name="assembly"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
+        /// <typeparam name="T">Server.</typeparam>
+        /// <param name="server">Server.</param>
+        /// <param name="assembly">Assembly.</param>
+        /// <returns>Server.</returns>
         public static T LoadRoutes<T>(this T server, Assembly assembly = null) where T : Server
         {
             var routes = (assembly ?? Assembly.GetCallingAssembly())
@@ -23,29 +26,19 @@ namespace WatsonWebserver.Routes
 
             foreach (var route in routes)
             {
-                var attribute = route.GetCustomAttributes().OfType<Route>().First();
+                var attribute = route.GetCustomAttributes().OfType<RouteAttribute>().First();
                 server.StaticRoutes.Add(attribute.Method, attribute.Path, route.ToRouteMethod());
             }
 
             return server;
         }
-
-        /// <summary>
-        /// Determines whether method is a valid route-method
-        /// </summary>
-        /// <param name="method"></param>
-        /// <returns>true when method is valid</returns>
+         
         private static bool IsValidRoute(MethodInfo method)
-            => method.GetCustomAttributes().OfType<Route>().Any() // Must have the Route attribute
+            => method.GetCustomAttributes().OfType<RouteAttribute>().Any() // Must have the Route attribute
                && method.ReturnType == typeof(Task)
                && method.GetParameters().Length == 1
                && method.GetParameters().First().ParameterType == typeof(HttpContext); 
-
-        /// <summary>
-        /// Create delegate method from methodInfo
-        /// </summary>
-        /// <param name="method"></param>
-        /// <returns>static route method</returns>
+         
         private static Func<HttpContext, Task> ToRouteMethod(this MethodInfo method)
         {
             if (method.IsStatic)
