@@ -165,6 +165,61 @@
             The FileShare value to use when accessing files within a content route via a FileStream.  Default is FileShare.Read.
             </summary>
         </member>
+        <member name="T:WatsonWebserver.DefaultHeaderValues">
+            <summary>
+            Values for commonly-used headers.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.DefaultHeaderValues.AccessControlAllowOrigin">
+            <summary>
+            Access-Control-Allow-Origin header.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.DefaultHeaderValues.AccessControlAllowMethods">
+            <summary>
+            Access-Control-Allow-Methods header.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.DefaultHeaderValues.AccessControlAllowHeaders">
+            <summary>
+            Access-Control-Allow-Headers header.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.DefaultHeaderValues.AccessControlExposeHeaders">
+            <summary>
+            Access-Control-Expose-Headers header.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.DefaultHeaderValues.Accept">
+            <summary>
+            Accept header.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.DefaultHeaderValues.AcceptLanguage">
+            <summary>
+            Accept-Language header.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.DefaultHeaderValues.AcceptCharset">
+            <summary>
+            Accept-Charset header.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.DefaultHeaderValues.Connection">
+            <summary>
+            Connection header.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.DefaultHeaderValues.Host">
+            <summary>
+            Host header.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.DefaultHeaderValues.#ctor">
+            <summary>
+            Instantiate the object.
+            </summary> 
+        </member>
         <member name="T:WatsonWebserver.DynamicRoute">
             <summary>
             Assign a method handler for when requests are received matching the supplied method and path regex.
@@ -701,45 +756,36 @@
             <param name="extension">File extension.</param>
             <returns>String containing MIME type.</returns>
         </member>
-        <member name="M:WatsonWebserver.Routes.ReflectionCore.LoadRoutes``1(``0,System.Reflection.Assembly)">
+        <member name="T:WatsonWebserver.ReflectionCore">
             <summary>
-            Load routes from assembly
+            Helper methods for reflection.
             </summary>
-            <param name="server"></param>
-            <param name="assembly"></param>
-            <typeparam name="T"></typeparam>
-            <returns></returns>
         </member>
-        <member name="M:WatsonWebserver.Routes.ReflectionCore.IsValidRoute(System.Reflection.MethodInfo)">
+        <member name="M:WatsonWebserver.ReflectionCore.LoadRoutes``1(``0,System.Reflection.Assembly)">
             <summary>
-            Determines whether method is a valid route-method
+            Load routes for the server.
             </summary>
-            <param name="method"></param>
-            <returns>true when method is valid</returns>
+            <typeparam name="T">Server.</typeparam>
+            <param name="server">Server.</param>
+            <param name="assembly">Assembly.</param>
+            <returns>Server.</returns>
         </member>
-        <member name="M:WatsonWebserver.Routes.ReflectionCore.ToRouteMethod(System.Reflection.MethodInfo)">
-            <summary>
-            Create delegate method from methodInfo
-            </summary>
-            <param name="method"></param>
-            <returns>static route method</returns>
-        </member>
-        <member name="T:WatsonWebserver.Routes.Route">
+        <member name="T:WatsonWebserver.RouteAttribute">
             <summary>
             Attribute that is used to mark methods as route methods.
             </summary>
         </member>
-        <member name="P:WatsonWebserver.Routes.Route.Path">
+        <member name="P:WatsonWebserver.RouteAttribute.Path">
             <summary>
             The raw URL, i.e. /foo/bar/.  Be sure this begins and ends with '/'.
             </summary>
         </member>
-        <member name="P:WatsonWebserver.Routes.Route.Method">
+        <member name="P:WatsonWebserver.RouteAttribute.Method">
             <summary>
             The HTTP method, i.e. GET, PUT, POST, DELETE, etc.
             </summary>
         </member>
-        <member name="M:WatsonWebserver.Routes.Route.#ctor(System.String,WatsonWebserver.HttpMethod)">
+        <member name="M:WatsonWebserver.RouteAttribute.#ctor(System.String,WatsonWebserver.HttpMethod)">
             <summary>Instantiate the object.</summary>
             <param name="path">The raw URL, i.e. /foo/bar/.  Be sure this begins and ends with '/'.</param>
             <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE, etc.</param>
@@ -924,11 +970,6 @@
         <member name="P:WatsonWebserver.Server.Stats">
             <summary>
             Watson webserver statistics.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.Server.AccessControlAllowOriginHeader">
-            <summary>
-            Access-Control-Allow-Origin header value.
             </summary>
         </member>
         <member name="M:WatsonWebserver.Server.#ctor(System.String,System.Int32,System.Boolean,System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task})">

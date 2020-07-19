@@ -2,11 +2,15 @@
 
 ## Current Version
 
+v3.1.0
+
+- Default header values for pre-flight requests (minor breaking change)
+
+## Previous Versions
+
 v3.0.13
 
 - Static routes defined by method attributes (thank you @Job79 for the awesome PR)
-
-## Previous Versions
 
 v3.0.12
 

@@ -6,9 +6,9 @@
 
 Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS requests, written in C#.
 
-## New in v3.0.13
+## New in v3.1.0
 
-- Static routes defined by method attributes (thank you @Job79 for the awesome PR)
+- Default header values for pre-flight requests (minor breaking change)
 
 ## Special Thanks
 

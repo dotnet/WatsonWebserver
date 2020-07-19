@@ -49,6 +49,19 @@ namespace WatsonWebserver
             }
         }
 
+        public DefaultHeaderValues HeaderValues
+        {
+            get
+            {
+                return _HeaderValues;
+            }
+            set
+            {
+                if (value == null) _HeaderValues = new DefaultHeaderValues();
+                else _HeaderValues = value;
+            }
+        }
+
         /// <summary>
         /// Function to call when an OPTIONS request is received.  Often used to handle CORS.  Leave as 'null' to use the default OPTIONS handler.
         /// </summary>
@@ -96,18 +109,14 @@ namespace WatsonWebserver
                 return _Stats;
             }
         }
-
-        /// <summary>
-        /// Access-Control-Allow-Origin header value.
-        /// </summary>
-        public string AccessControlAllowOriginHeader = "*";
-
+         
         #endregion
 
         #region Private-Members
 
         private readonly EventWaitHandle _Terminator = new EventWaitHandle(false, EventResetMode.ManualReset);
 
+        private DefaultHeaderValues _HeaderValues = new DefaultHeaderValues();
         private HttpListener _HttpListener = null;
         private List<string> _ListenerUris = null;
         private List<string> _ListenerHostnames = null;
@@ -472,22 +481,33 @@ namespace WatsonWebserver
                 }
             }
 
-            string listenerPrefix = null;
-            if (_ListenerSsl) listenerPrefix = "https://" + req.DestHostname + ":" + req.DestPort + "/";
-            else listenerPrefix = "http://" + req.DestHostname + ":" + req.DestPort + "/";
+            if (!String.IsNullOrEmpty(_HeaderValues.Host)) response.AddHeader("Host", _HeaderValues.Host);
+            else response.AddHeader("Host", req.DestHostname + ":" + req.DestPort);
 
-            response.AddHeader("Access-Control-Allow-Methods", "OPTIONS, HEAD, GET, PUT, POST, DELETE");
-            response.AddHeader("Access-Control-Allow-Headers", "*, Content-Type, X-Requested-With, " + headers);
-            response.AddHeader("Access-Control-Expose-Headers", "Content-Type, X-Requested-With, " + headers);
-            
-            if (!String.IsNullOrEmpty(AccessControlAllowOriginHeader))
-                response.AddHeader("Access-Control-Allow-Origin", AccessControlAllowOriginHeader);
+            if (!String.IsNullOrEmpty(_HeaderValues.AccessControlAllowMethods)) response.AddHeader("Access-Control-Allow-Methods", _HeaderValues.AccessControlAllowMethods);
+            else response.AddHeader("Access-Control-Allow-Methods", "OPTIONS, HEAD, GET, PUT, POST, DELETE");
 
-            response.AddHeader("Accept", "*/*");
-            response.AddHeader("Accept-Language", "en-US, en");
-            response.AddHeader("Accept-Charset", "ISO-8859-1, utf-8");
-            response.AddHeader("Connection", "keep-alive");
-            response.AddHeader("Host", listenerPrefix);
+            if (!String.IsNullOrEmpty(_HeaderValues.AccessControlAllowHeaders)) response.AddHeader("Access-Control-Allow-Headers", _HeaderValues.AccessControlAllowHeaders);
+            else response.AddHeader("Access-Control-Allow-Headers", "*, Content-Type, X-Requested-With, " + headers);
+
+            if (!String.IsNullOrEmpty(_HeaderValues.AccessControlExposeHeaders)) response.AddHeader("Access-Control-Expose-Headers", _HeaderValues.AccessControlExposeHeaders);
+            else response.AddHeader("Access-Control-Expose-Headers", "Content-Type, X-Requested-With, " + headers);
+
+            if (!String.IsNullOrEmpty(_HeaderValues.AccessControlAllowOrigin)) response.AddHeader("Access-Control-Allow-Origin", _HeaderValues.AccessControlAllowOrigin);
+            else response.AddHeader("Access-Control-Allow-Origin", "*");
+
+            if (!String.IsNullOrEmpty(_HeaderValues.Accept)) response.AddHeader("Accept", _HeaderValues.Accept);
+            else response.AddHeader("Accept", "*/*");
+
+            if (!String.IsNullOrEmpty(_HeaderValues.AcceptLanguage)) response.AddHeader("Accept-Language", _HeaderValues.AcceptLanguage);
+            else response.AddHeader("Accept-Language", "en-US, en");
+
+            if (!String.IsNullOrEmpty(_HeaderValues.AcceptCharset)) response.AddHeader("Accept-Charset", _HeaderValues.AcceptCharset);
+            else response.AddHeader("Accept-Charset", "ISO-8859-1, utf-8");
+
+            if (!String.IsNullOrEmpty(_HeaderValues.Connection)) response.AddHeader("Connection", _HeaderValues.Connection);
+            else response.AddHeader("Connection", "keep-alive"); 
+
             response.ContentLength64 = 0;
             response.Close(); 
             return;
