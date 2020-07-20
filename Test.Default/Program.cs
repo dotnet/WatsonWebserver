@@ -14,7 +14,7 @@ namespace Test
             List<string> hostnames = new List<string>();
             hostnames.Add("127.0.0.1");
 
-            Server server = new Server(hostnames, 9000, false, DefaultRoute);
+            Server server = new Server(hostnames, 9000, false, DefaultRoute); 
             Console.WriteLine("Listening on http://127.0.0.1:9000");
 
             // server.AccessControl.Mode = AccessControlMode.DefaultDeny;

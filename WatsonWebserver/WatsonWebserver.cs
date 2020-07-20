@@ -340,11 +340,18 @@ namespace WatsonWebserver
 
                             #region Process-Preflight-Requests
 
-                            if (ctx.Request.Method == HttpMethod.OPTIONS
-                                && OptionsRoute != null)
+                            if (ctx.Request.Method == HttpMethod.OPTIONS)
                             {
-                                OptionsProcessor(listenerContext, ctx.Request);
-                                return;
+                                if (OptionsRoute != null)
+                                {
+                                    await OptionsRoute(ctx);
+                                    return;
+                                }
+                                else
+                                {
+                                    OptionsProcessor(listenerContext, ctx.Request);
+                                    return;
+                                }
                             }
 
                             #endregion
