@@ -1071,6 +1071,64 @@ namespace WatsonWebserver
         }
         
         /// <summary>
+        /// Determine if a header exists.
+        /// </summary>
+        /// <param name="key">Header key.</param>
+        /// <param name="caseSensitive">Specify whether a case sensitive search should be used.</param>
+        /// <returns>True if exists.</returns>
+        public bool HeaderExists(string key, bool caseSensitive)
+        {
+            if (String.IsNullOrEmpty(key)) throw new ArgumentNullException(nameof(key));
+
+            if (caseSensitive)
+            {
+                return Headers.ContainsKey(key);
+            }
+            else
+            {
+                if (Headers != null && Headers.Count > 0)
+                {
+                    foreach (KeyValuePair<string, string> header in Headers)
+                    {
+                        if (String.IsNullOrEmpty(header.Key)) continue;
+                        if (header.Key.ToLower().Trim().Equals(key)) return true;
+                    }
+                }
+
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Determine if a querystring entry exists.
+        /// </summary>
+        /// <param name="key">Querystring key.</param>
+        /// <param name="caseSensitive">Specify whether a case sensitive search should be used.</param>
+        /// <returns>True if exists.</returns>
+        public bool QuerystringExists(string key, bool caseSensitive)
+        {
+            if (String.IsNullOrEmpty(key)) throw new ArgumentNullException(nameof(key));
+
+            if (caseSensitive)
+            {
+                return QuerystringEntries.ContainsKey(key);
+            }
+            else
+            {
+                if (QuerystringEntries != null && QuerystringEntries.Count > 0)
+                {
+                    foreach (KeyValuePair<string, string> queryElement in QuerystringEntries)
+                    {
+                        if (String.IsNullOrEmpty(queryElement.Key)) continue;
+                        if (queryElement.Key.ToLower().Trim().Equals(key)) return true;
+                    }
+                }
+
+                return false;
+            }
+        }
+
+        /// <summary>
         /// For chunked transfer-encoded requests, read the next chunk.
         /// </summary>
         /// <returns>Chunk.</returns>
