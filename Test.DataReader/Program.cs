@@ -22,7 +22,8 @@ namespace Test
         {
             List<string> hostnames = new List<string>();
             hostnames.Add("127.0.0.1"); 
-            Server server = new Server(hostnames, 9000, false, DefaultRoute); 
+            Server server = new Server(hostnames, 9000, false, DefaultRoute);
+            server.Start();
 
             bool runForever = true;
             while (runForever)

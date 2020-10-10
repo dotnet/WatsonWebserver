@@ -11,6 +11,8 @@ namespace Test.Routes
             using (var server = new Server("127.0.0.1", 8080, false, DefaultRoute))
             {
                 server.LoadRoutes();
+                server.Start();
+
                 await Task.Delay(-1);
             }
             

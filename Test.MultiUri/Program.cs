@@ -20,6 +20,8 @@ namespace Test.MultiUri
             };
 
             _Server = new Server(uris, DefaultRoute);
+            _Server.Start();
+
             Console.WriteLine("Press ENTER to exit");
             Console.ReadLine();
         }

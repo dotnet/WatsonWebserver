@@ -17,6 +17,7 @@ namespace Test
             hostnames.Add("127.0.0.1");
 
             Server server = new Server(hostnames, 9000, false, DefaultRoute);
+            server.Start();
 
             Console.WriteLine("Press ENTER to exit");
             Console.ReadLine();

@@ -9,22 +9,26 @@ namespace Test.Events
 {
     static class Program
     {
+        static Server _Server = null;
+
         static void Main()
         {
-            Server server = new Server("127.0.0.1", 9000, false, DefaultRoute);
-            // server.AccessControl.Mode = AccessControlMode.DefaultDeny;
-            // server.AccessControl.Whitelist.Add("127.0.0.1", "255.255.255.255");
-            // server.AccessControl.Whitelist.Add("127.0.0.1", "255.255.255.255");
+            _Server = new Server("127.0.0.1", 9000, false, DefaultRoute);
+            // _Server.AccessControl.Mode = AccessControlMode.DefaultDeny;
+            // _Server.AccessControl.Whitelist.Add("127.0.0.1", "255.255.255.255");
+            // _Server.AccessControl.Whitelist.Add("127.0.0.1", "255.255.255.255");
 
-            server.Events.AccessControlDenied = AccessControlDenied;
-            server.Events.ConnectionReceived = ConnectionReceived;
-            server.Events.RequestorDisconnected = RequestorDisconnected;
-            server.Events.ExceptionEncountered = ExceptionEncountered;
-            server.Events.RequestReceived = RequestReceived;
-            server.Events.ResponseSent = ResponseSent;
-            server.Events.ServerDisposed = ServerDisposed;
-            server.Events.ServerStopped = ServerStopped;
-             
+            _Server.Events.AccessControlDenied = AccessControlDenied;
+            _Server.Events.ConnectionReceived = ConnectionReceived;
+            _Server.Events.RequestorDisconnected = RequestorDisconnected;
+            _Server.Events.ExceptionEncountered = ExceptionEncountered;
+            _Server.Events.RequestReceived = RequestReceived;
+            _Server.Events.ResponseSent = ResponseSent;
+            _Server.Events.ServerDisposed = ServerDisposed;
+            _Server.Events.ServerStopped = ServerStopped;
+
+            _Server.Start();
+
             bool runForever = true;
             while (runForever)
             {
@@ -45,11 +49,19 @@ namespace Test.Events
                         break;
 
                     case "state":
-                        Console.WriteLine("Listening: " + server.IsListening);
+                        Console.WriteLine("Listening: " + _Server.IsListening);
                         break;
 
+                    case "start":
+                        _Server.Start();
+                        break;
+
+                    case "stop":
+                        _Server.Stop();
+                        break;
+                         
                     case "dispose":
-                        server.Dispose();
+                        _Server.Dispose();
                         break;
                 }
             }
@@ -62,6 +74,8 @@ namespace Test.Events
             Console.WriteLine("  q        quit the application");
             Console.WriteLine("  cls      clear the screen");
             Console.WriteLine("  state    indicate whether or not the server is listening");
+            Console.WriteLine("  start    start listening for new connections (is listening: " + (_Server != null ? _Server.IsListening.ToString() : "False"));
+            Console.WriteLine("  stop     stop listening for new connections  (is listening: " + (_Server != null ? _Server.IsListening.ToString() : "False"));
             Console.WriteLine("  dispose  dispose the server object");
         }
 

@@ -946,6 +946,11 @@
             Indicate the buffer size to use when reading from a stream to send data to a requestor.
             </summary>
         </member>
+        <member name="P:WatsonWebserver.Server.HeaderValues">
+            <summary>
+            Default HTTP header values.
+            </summary>
+        </member>
         <member name="F:WatsonWebserver.Server.OptionsRoute">
             <summary>
             Function to call when an OPTIONS request is received.  Often used to handle CORS.  Leave as 'null' to use the default OPTIONS handler.
@@ -1018,6 +1023,22 @@
         <member name="M:WatsonWebserver.Server.Dispose">
             <summary>
             Tear down the server and dispose of background workers.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Server.Start">
+            <summary>
+            Start accepting new connections.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Server.StartAsync">
+            <summary>
+            Start accepting new connections.
+            </summary>
+            <returns>Task.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Server.Stop">
+            <summary>
+            Stop accepting new connections.
             </summary>
         </member>
         <member name="M:WatsonWebserver.Server.Dispose(System.Boolean)">

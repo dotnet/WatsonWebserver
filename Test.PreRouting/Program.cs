@@ -16,7 +16,9 @@ namespace Test
 
             Server server = new Server(hostnames, 9000, false, DefaultRoute);
             server.PreRoutingHandler = PreRoutingHandler;
-             
+
+            server.Start();
+
             bool runForever = true;
             while (runForever)
             {

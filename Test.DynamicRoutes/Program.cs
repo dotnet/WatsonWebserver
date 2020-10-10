@@ -17,6 +17,7 @@ namespace Test
             s.DynamicRoutes.Add(HttpMethod.GET, new Regex("^/foo/(.*?)/(.*?)/?$"), GetFooMultipleChildren);
             s.DynamicRoutes.Add(HttpMethod.GET, new Regex("^/foo/(.*?)/?$"), GetFooOneChild);
             s.DynamicRoutes.Add(HttpMethod.GET, new Regex("^/foo/?$"), GetFoo);
+            s.Start();
             Console.WriteLine("Press ENTER to exit");
             Console.ReadLine();
         }

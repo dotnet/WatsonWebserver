@@ -15,7 +15,9 @@ namespace Test
         static void Main(string[] args)
         {
             if (!Directory.Exists(_Directory)) Directory.CreateDirectory(_Directory);
-            _Server = new Server("127.0.0.1", 9000, false, DefaultRoute); 
+            _Server = new Server("127.0.0.1", 9000, false, DefaultRoute);
+            _Server.Start();
+
             Console.ReadLine();
         }
 

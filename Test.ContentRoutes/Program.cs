@@ -23,6 +23,8 @@ namespace Test
             s.Events.ExceptionEncountered = ExceptionEncountered;
             s.Events.RequestorDisconnected = RequestorDisconnected;
 
+            s.Start();
+
             Console.WriteLine("Press ENTER to exit");
             Console.ReadLine();
         }

@@ -9,17 +9,21 @@ namespace Test
 {
     static class Program
     {
+        static Server _Server = null;
+
         static void Main()
         {
             List<string> hostnames = new List<string>();
             hostnames.Add("127.0.0.1");
 
-            Server server = new Server(hostnames, 9000, false, DefaultRoute); 
+            _Server = new Server(hostnames, 9000, false, DefaultRoute);
+            _Server.Start();
+
             Console.WriteLine("Listening on http://127.0.0.1:9000");
 
-            // server.AccessControl.Mode = AccessControlMode.DefaultDeny;
-            // server.AccessControl.Whitelist.Add("127.0.0.1", "255.255.255.255");
-            // server.AccessControl.Whitelist.Add("127.0.0.1", "255.255.255.255");
+            // _Server.AccessControl.Mode = AccessControlMode.DefaultDeny;
+            // _Server.AccessControl.Whitelist.Add("127.0.0.1", "255.255.255.255");
+            // _Server.AccessControl.Whitelist.Add("127.0.0.1", "255.255.255.255");
 
             bool runForever = true;
             while (runForever)
@@ -41,19 +45,27 @@ namespace Test
                         break;
 
                     case "state":
-                        Console.WriteLine("Listening: " + server.IsListening);
+                        Console.WriteLine("Listening: " + _Server.IsListening);
+                        break;
+
+                    case "start":
+                        _Server.Start();
+                        break;
+
+                    case "stop":
+                        _Server.Stop();
                         break;
 
                     case "dispose":
-                        server.Dispose();
+                        _Server.Dispose();
                         break;
 
                     case "stats":
-                        Console.WriteLine(server.Stats.ToString());
+                        Console.WriteLine(_Server.Stats.ToString());
                         break;
 
                     case "stats reset":
-                        server.Stats.Reset();
+                        _Server.Stats.Reset();
                         break;
                 }
             }
@@ -66,6 +78,8 @@ namespace Test
             Console.WriteLine("  q              quit the application");
             Console.WriteLine("  cls            clear the screen");
             Console.WriteLine("  state          indicate whether or not the server is listening");
+            Console.WriteLine("  start          start listening for new connections (is listening: " + (_Server != null ? _Server.IsListening.ToString() : "False") + ")");
+            Console.WriteLine("  stop           stop listening for new connections  (is listening: " + (_Server != null ? _Server.IsListening.ToString() : "False") + ")");
             Console.WriteLine("  dispose        dispose the server object");
             Console.WriteLine("  stats          display webserver statistics");
             Console.WriteLine("  stats reset    reset webserver statistics");

@@ -1080,23 +1080,23 @@ namespace WatsonWebserver
         {
             if (String.IsNullOrEmpty(key)) throw new ArgumentNullException(nameof(key));
 
-            if (caseSensitive)
+            if (Headers != null && Headers.Count > 0)
             {
-                return Headers.ContainsKey(key);
-            }
-            else
-            {
-                if (Headers != null && Headers.Count > 0)
+                if (caseSensitive)
                 {
+                    return Headers.ContainsKey(key);
+                }
+                else
+                { 
                     foreach (KeyValuePair<string, string> header in Headers)
                     {
                         if (String.IsNullOrEmpty(header.Key)) continue;
                         if (header.Key.ToLower().Trim().Equals(key)) return true;
-                    }
+                    } 
                 }
-
-                return false;
             }
+
+            return false;
         }
 
         /// <summary>
@@ -1109,23 +1109,23 @@ namespace WatsonWebserver
         {
             if (String.IsNullOrEmpty(key)) throw new ArgumentNullException(nameof(key));
 
-            if (caseSensitive)
+            if (QuerystringEntries != null && QuerystringEntries.Count > 0)
             {
-                return QuerystringEntries.ContainsKey(key);
-            }
-            else
-            {
-                if (QuerystringEntries != null && QuerystringEntries.Count > 0)
+                if (caseSensitive)
                 {
+                    return QuerystringEntries.ContainsKey(key);
+                }
+                else
+                { 
                     foreach (KeyValuePair<string, string> queryElement in QuerystringEntries)
                     {
                         if (String.IsNullOrEmpty(queryElement.Key)) continue;
                         if (queryElement.Key.ToLower().Trim().Equals(key)) return true;
-                    }
+                    } 
                 }
-
-                return false;
             }
+
+            return false;
         }
 
         /// <summary>

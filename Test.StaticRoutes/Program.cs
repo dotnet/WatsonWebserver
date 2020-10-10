@@ -15,6 +15,8 @@ namespace Test
             s.StaticRoutes.Add(HttpMethod.GET, "/hello/", GetHelloRoute);
             s.StaticRoutes.Add(HttpMethod.GET, "/world/", GetWorldRoute);
             s.StaticRoutes.Add(HttpMethod.POST, "/data/", PostDataRoute);
+            s.Start();
+
             Console.WriteLine("Press ENTER to exit");
             Console.ReadLine();
         }

@@ -49,6 +49,9 @@ namespace WatsonWebserver
             }
         }
 
+        /// <summary>
+        /// Default HTTP header values.
+        /// </summary>
         public DefaultHeaderValues HeaderValues
         {
             get
@@ -134,7 +137,7 @@ namespace WatsonWebserver
 
         #endregion
 
-        #region Constructor
+        #region Constructors-and-Factories
 
         /// <summary>
         /// Creates a new instance of the Watson Webserver.
@@ -158,8 +161,6 @@ namespace WatsonWebserver
             _DefaultRoute = defaultRoute; 
             _Token = _TokenSource.Token;
             _ContentRouteProcessor = new ContentRouteProcessor(ContentRoutes);
-             
-            Task.Run(() => StartServer(_Token), _Token);
         }
 
         /// <summary>
@@ -194,8 +195,6 @@ namespace WatsonWebserver
             _DefaultRoute = defaultRoute;  
             _Token = _TokenSource.Token;
             _ContentRouteProcessor = new ContentRouteProcessor(ContentRoutes);
-             
-            Task.Run(() => StartServer(_Token), _Token);
         }
 
         /// <summary>
@@ -217,8 +216,6 @@ namespace WatsonWebserver
             _DefaultRoute = defaultRoute; 
             _Token = _TokenSource.Token;
             _ContentRouteProcessor = new ContentRouteProcessor(ContentRoutes);
-
-            Task.Run(() => StartServer(_Token), _Token);
         }
 
         #endregion
@@ -231,6 +228,46 @@ namespace WatsonWebserver
         public void Dispose()
         {
             Dispose(true);
+        }
+
+        /// <summary>
+        /// Start accepting new connections.
+        /// </summary>
+        public void Start()
+        {
+            if (_HttpListener != null && _HttpListener.IsListening) throw new InvalidOperationException("WatsonWebserver is already listening.");
+
+            _TokenSource = new CancellationTokenSource();
+            _Token = _TokenSource.Token;
+            _Stats = new Statistics();
+
+            Task.Run(() => AcceptConnections(), _Token);
+        }
+
+        /// <summary>
+        /// Start accepting new connections.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public Task StartAsync()
+        {
+            if (_HttpListener != null && _HttpListener.IsListening) throw new InvalidOperationException("WatsonWebserver is already listening.");
+
+            _TokenSource = new CancellationTokenSource();
+            _Token = _TokenSource.Token;
+            _Stats = new Statistics();
+
+            return AcceptConnections();
+        }
+
+        /// <summary>
+        /// Stop accepting new connections.
+        /// </summary>
+        public void Stop()
+        {
+            if (!_HttpListener.IsListening) throw new InvalidOperationException("WatsonWebserver is already stopped.");
+
+            _HttpListener.Stop();
+            _TokenSource.Cancel();
         }
 
         #endregion
@@ -255,14 +292,8 @@ namespace WatsonWebserver
 
             Events.ServerDisposed?.Invoke();
         }
-          
-        private void StartServer(CancellationToken token)
-        {
-            Task.Run(() => AcceptConnections(token), token);
-            // _Terminator.WaitOne();
-        }
-
-        private async void AcceptConnections(CancellationToken token)
+           
+        private async Task AcceptConnections()
         {
             try
             {
@@ -292,7 +323,7 @@ namespace WatsonWebserver
 
                 #region Listen-and-Process-Requests
 
-                while (_HttpListener.IsListening)
+                while (_HttpListener.IsListening && !_TokenSource.IsCancellationRequested)
                 {
                     HttpListenerContext listenerContext = await _HttpListener.GetContextAsync();
                     HttpContext ctx = null;
@@ -430,23 +461,14 @@ namespace WatsonWebserver
                             }
                         }
 
-                    }, token);
+                    }, _Token);
                 }
 
                 #endregion
-            }
-            catch (HttpListenerException)
+            } 
+            catch (Exception e)
             {
-                // Do nothing, server is stopping, ServerStopped will be fired in finally block
-                // Events.ServerStopped?.Invoke();
-            }
-            catch (OperationCanceledException)
-            {
-                Events.ServerDisposed?.Invoke();
-            }
-            catch (Exception eOuter)
-            {
-                Events.ExceptionEncountered?.Invoke(null, 0, eOuter);
+                Events.ExceptionEncountered?.Invoke(null, 0, e);
             } 
             finally
             {

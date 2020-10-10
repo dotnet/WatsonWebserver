@@ -2,11 +2,17 @@
 
 ## Current Version
 
+v3.2.0
+
+- Breaking change, ```Start()``` must be called to start listening for connections
+- ```Stop()``` API introduced
+- Exceptions now are sent via events when the listener is impacted
+
+## Previous Versions
+
 v3.1.0
 
 - Default header values for pre-flight requests (minor breaking change)
-
-## Previous Versions
 
 v3.0.13
 

@@ -6,21 +6,17 @@
 
 Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS requests, written in C#.
 
-## New in v3.1.0
+## New in v3.2.0
 
-- Default header values for pre-flight requests (minor breaking change)
+- Breaking change, ```Start()``` must be called to start listening for connections
+- ```Stop()``` API introduced
+- Exceptions now are sent via events when the listener is impacted
 
 ## Special Thanks
 
 I'd like to extend a special thanks to those that have helped make Watson Webserver better.
 
-- @notesjor
-- @shdwp
-- @Tutch
-- @GeoffMcGrath
-- @jurkovic-nikola
-- @joreg
-- @Job79
+- @notesjor @shdwp @Tutch @GeoffMcGrath @jurkovic-nikola @joreg @Job79 @at1993
 
 ## Test App
 
@@ -71,6 +67,7 @@ using WatsonWebserver;
 static void Main(string[] args)
 {
   Server s = new Server("127.0.0.1", 9000, false, DefaultRoute);
+  s.Start();
   Console.ReadLine();
 }
 
@@ -112,6 +109,9 @@ static void Main(string[] args)
   // add dynamic routes
   s.DynamicRoutes.Add(HttpMethod.GET, new Regex("^/foo/\\d+$"), GetFooWithId);  
   s.DynamicRoutes.Add(HttpMethod.GET, new Regex("^/foo/?$"), GetFoo); 
+
+  // start the server
+  s.Start();
 
   Console.WriteLine("Press ENTER to exit");
   Console.ReadLine();
