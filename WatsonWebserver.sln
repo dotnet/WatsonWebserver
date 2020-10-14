@@ -25,9 +25,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.MultiUri", "Test.Multi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.DataReader", "Test.DataReader\Test.DataReader.csproj", "{B4676A8C-51B9-4F6D-881F-6F1B8F02C2D8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Docker", "Test.Docker\Test.Docker.csproj", "{DB3A183E-BF8A-4155-8376-899A0050AF1A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Docker", "Test.Docker\Test.Docker.csproj", "{DB3A183E-BF8A-4155-8376-899A0050AF1A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Routes", "Test.Routes\Test.Routes.csproj", "{1A980EE5-542D-4002-B859-4FF18A3C265A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Routes", "Test.Routes\Test.Routes.csproj", "{1A980EE5-542D-4002-B859-4FF18A3C265A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.AutoRoutes", "Test.AutoRoutes\Test.AutoRoutes.csproj", "{88072BA1-E69F-468A-AF8C-44BCC9920667}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -87,6 +89,10 @@ Global
 		{1A980EE5-542D-4002-B859-4FF18A3C265A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1A980EE5-542D-4002-B859-4FF18A3C265A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1A980EE5-542D-4002-B859-4FF18A3C265A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{88072BA1-E69F-468A-AF8C-44BCC9920667}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88072BA1-E69F-468A-AF8C-44BCC9920667}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88072BA1-E69F-468A-AF8C-44BCC9920667}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88072BA1-E69F-468A-AF8C-44BCC9920667}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
