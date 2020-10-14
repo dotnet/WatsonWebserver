@@ -248,6 +248,28 @@
             <param name="path">The pattern against which the raw URL should be matched.</param>
             <param name="handler">The method that should be called to handle the request.</param>
         </member>
+        <member name="T:WatsonWebserver.DynamicRouteAttribute">
+            <summary>
+            Attribute that is used to mark methods as a dynamic route.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.DynamicRouteAttribute.Method">
+            <summary>
+            The HTTP method, i.e. GET, PUT, POST, DELETE, etc.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.DynamicRouteAttribute.Path">
+            <summary>
+            The pattern against which the raw URL should be matched. Must be convertible to a regular expression. 
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.DynamicRouteAttribute.#ctor(WatsonWebserver.HttpMethod,System.String)">
+            <summary>
+            Instantiate the object.
+            </summary>
+            <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE, etc.</param>
+            <param name="path">The regular expression pattern against which the raw URL should be matched.</param>
+        </member>
         <member name="T:WatsonWebserver.DynamicRouteManager">
             <summary>
             Dynamic route manager.  Dynamic routes are used for requests using any HTTP method to any path that can be matched by regular expression.
@@ -786,26 +808,6 @@
             <param name="assembly">Assembly.</param>
             <returns>Server.</returns>
         </member>
-        <member name="T:WatsonWebserver.RouteAttribute">
-            <summary>
-            Attribute that is used to mark methods as route methods.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.RouteAttribute.Path">
-            <summary>
-            The raw URL, i.e. /foo/bar/.  Be sure this begins and ends with '/'.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.RouteAttribute.Method">
-            <summary>
-            The HTTP method, i.e. GET, PUT, POST, DELETE, etc.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.RouteAttribute.#ctor(System.String,WatsonWebserver.HttpMethod)">
-            <summary>Instantiate the object.</summary>
-            <param name="path">The raw URL, i.e. /foo/bar/.  Be sure this begins and ends with '/'.</param>
-            <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE, etc.</param>
-        </member>
         <member name="T:WatsonWebserver.StaticRoute">
             <summary>
             Assign a method handler for when requests are received matching the supplied method and path.
@@ -833,6 +835,28 @@
             <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE, etc.</param>
             <param name="path">The raw URL, i.e. /foo/bar/.  Be sure this begins and ends with '/'.</param>
             <param name="handler">The method that should be called to handle the request.</param>
+        </member>
+        <member name="T:WatsonWebserver.StaticRouteAttribute">
+            <summary>
+            Attribute that is used to mark methods as a static route.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.StaticRouteAttribute.Path">
+            <summary>
+            The raw URL, i.e. /foo/bar/.  Be sure this begins and ends with '/'.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.StaticRouteAttribute.Method">
+            <summary>
+            The HTTP method, i.e. GET, PUT, POST, DELETE, etc.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.StaticRouteAttribute.#ctor(WatsonWebserver.HttpMethod,System.String)">
+            <summary>
+            Instantiate the object.
+            </summary>
+            <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE, etc.</param>
+            <param name="path">The raw URL, i.e. /foo/bar/.  Be sure this begins and ends with '/'.</param>
         </member>
         <member name="T:WatsonWebserver.StaticRouteManager">
             <summary>

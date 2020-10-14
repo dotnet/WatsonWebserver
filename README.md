@@ -6,11 +6,10 @@
 
 Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS requests, written in C#.
 
-## New in v3.2.0
+## New in v3.3.0
 
-- Breaking change, ```Start()``` must be called to start listening for connections
-- ```Stop()``` API introduced
-- Exceptions now are sent via events when the listener is impacted
+- Breaking change to route attributes
+- Route attributes now support both static routes and dynamic routes
 
 ## Special Thanks
 
@@ -91,14 +90,6 @@ static void Main(string[] args)
 {
   Server s = new Server("127.0.0.1", 9000, false, DefaultRoute);
 
-  // set default permit (permit any) with blacklist to block specific IP addresses or networks
-  s.AccessControl.Mode = AccessControlMode.DefaultPermit;
-  s.AccessControl.Blacklist.Add("127.0.0.1", "255.255.255.255");  
-
-  // set default deny (deny all) with whitelist to permit specific IP addresses or networks
-  s.AccessControl.Mode = AccessControlMode.DefaultDeny;
-  s.AccessControl.Whitelist.Add("127.0.0.1", "255.255.255.255");
-
   // add content routes
   s.ContentRoutes.Add("/html/", true);
   s.ContentRoutes.Add("/img/watson.jpg", false);
@@ -118,28 +109,80 @@ static void Main(string[] args)
 }
 
 static async Task GetHelloRoute(HttpContext ctx)
-{
-  ctx.Response.StatusCode = 200;
+{ 
   await ctx.Response.Send("Hello from the GET /hello static route!");
 }
  
 static async Task GetFooWithId(HttpContext ctx)
-{
-  ctx.Response.StatusCode = 200;
+{ 
   await ctx.Response.Send("Hello from the GET /foo/[id] dynamic route!");
 }
  
 static async Task GetFoo(HttpContext ctx)
-{ 
-  ctx.Response.StatusCode = 200;
+{  
   await ctx.Response.Send("Hello from the GET /foo/ dynamic route!");
 }
 
 static async Task DefaultRoute(HttpContext ctx)
-{
-  ctx.Response.StatusCode = 200;
+{ 
   await ctx.Response.Send("Hello from the default route!");
 }
+```
+
+## Example using Route Attributes
+
+You must call ```LoadRoutes()``` to add static and dynamic routes based on ```StaticRoute``` and ```DynamicRoute``` method attributes.
+
+```csharp
+using System.IO;
+using System.Text;
+using WatsonWebserver;
+
+static void Main(string[] args)
+{
+  Server s = new Server("127.0.0.1", 9000, false, DefaultRoute).LoadRoutes(); 
+  s.Start();
+
+  Console.WriteLine("Press ENTER to exit");
+  Console.ReadLine();
+}
+ 
+[StaticRoute(HttpMethod.GET, "/hello")]
+static async Task GetHelloRoute(HttpContext ctx)
+{ 
+  await ctx.Response.Send("Hello from the GET /hello static route!");
+}
+
+[DynamicRoute(HttpMethod.GET, "^/foo/\\d+$")]
+static async Task GetFooWithId(HttpContext ctx)
+{ 
+  await ctx.Response.Send("Hello from the GET /foo/[id] dynamic route!");
+}
+ 
+[DynamicRoute(HttpMethod.GET, "^/foo/")]
+static async Task GetFoo(HttpContext ctx)
+{  
+  await ctx.Response.Send("Hello from the GET /foo/ dynamic route!");
+}
+
+static async Task DefaultRoute(HttpContext ctx)
+{ 
+  await ctx.Response.Send("Hello from the default route!");
+}
+```
+
+## Permit or Deny by IP or Network
+
+```csharp
+Server s = new Server("127.0.0.1", 9000, false, DefaultRoute);
+
+// set default permit (permit any) with deny list to block specific IP addresses or networks
+s.AccessControl.Mode = AccessControlMode.DefaultPermit;
+s.AccessControl.DenyList.Add("127.0.0.1", "255.255.255.255");  
+
+// set default deny (deny all) with permit list to permit specific IP addresses or networks
+s.AccessControl.Mode = AccessControlMode.DefaultDeny;
+s.AccessControl.PermitList.Add("127.0.0.1", "255.255.255.255");
 ```
 
 ## Chunked Transfer-Encoding

@@ -2,13 +2,18 @@
 
 ## Current Version
 
+v3.3.0
+
+- Breaking change to route attributes
+- Route attributes now support both static routes and dynamic routes
+
+## Previous Versions
+
 v3.2.0
 
 - Breaking change, ```Start()``` must be called to start listening for connections
 - ```Stop()``` API introduced
 - Exceptions now are sent via events when the listener is impacted
-
-## Previous Versions
 
 v3.1.0
 

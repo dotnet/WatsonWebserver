@@ -160,7 +160,7 @@ namespace WatsonWebserver
             _ListenerSsl = ssl; 
             _DefaultRoute = defaultRoute; 
             _Token = _TokenSource.Token;
-            _ContentRouteProcessor = new ContentRouteProcessor(ContentRoutes);
+            _ContentRouteProcessor = new ContentRouteProcessor(ContentRoutes); 
         }
 
         /// <summary>
@@ -194,7 +194,7 @@ namespace WatsonWebserver
             _ListenerSsl = ssl;
             _DefaultRoute = defaultRoute;  
             _Token = _TokenSource.Token;
-            _ContentRouteProcessor = new ContentRouteProcessor(ContentRoutes);
+            _ContentRouteProcessor = new ContentRouteProcessor(ContentRoutes); 
         }
 
         /// <summary>
@@ -215,7 +215,7 @@ namespace WatsonWebserver
               
             _DefaultRoute = defaultRoute; 
             _Token = _TokenSource.Token;
-            _ContentRouteProcessor = new ContentRouteProcessor(ContentRoutes);
+            _ContentRouteProcessor = new ContentRouteProcessor(ContentRoutes); 
         }
 
         #endregion
@@ -555,7 +555,7 @@ namespace WatsonWebserver
                 return -1;
             }
         }
-
+         
         #endregion
     }
 }

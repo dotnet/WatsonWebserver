@@ -5,29 +5,29 @@ VisualStudioVersion = 16.0.29411.108
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WatsonWebserver", "WatsonWebserver\WatsonWebserver.csproj", "{62003A3E-AB59-4B91-AFBF-4545ACD2A8D9}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.AttributeRoutes", "Test.AttributeRoutes\Test.AttributeRoutes.csproj", "{1A980EE5-542D-4002-B859-4FF18A3C265A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.ChunkServer", "Test.ChunkServer\Test.ChunkServer.csproj", "{8CDBA284-772D-49B1-823D-CD796AE1F888}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.ContentRoutes", "Test.ContentRoutes\Test.ContentRoutes.csproj", "{B121C717-ECB2-4162-A0F5-906F6F63B6B0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.DataReader", "Test.DataReader\Test.DataReader.csproj", "{B4676A8C-51B9-4F6D-881F-6F1B8F02C2D8}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Default", "Test.Default\Test.Default.csproj", "{7C689D8A-EB85-480E-8244-7424A25B7B63}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Docker", "Test.Docker\Test.Docker.csproj", "{DB3A183E-BF8A-4155-8376-899A0050AF1A}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.DynamicRoutes", "Test.DynamicRoutes\Test.DynamicRoutes.csproj", "{101C08AE-1D13-4C4B-9A50-9DA1E866365C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Events", "Test.Events\Test.Events.csproj", "{7508FAF3-EF44-4F99-A309-E2C43D13B6C9}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.MultiUri", "Test.MultiUri\Test.MultiUri.csproj", "{677A31AB-E9F0-4995-8731-CBCC7A5769AB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.PreRouting", "Test.PreRouting\Test.PreRouting.csproj", "{27B647F0-94EF-46CE-A1FC-2E3FBBA4F989}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.StaticRoutes", "Test.StaticRoutes\Test.StaticRoutes.csproj", "{67E57F24-D1D0-4F0D-8DA4-4D8308691A8D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Stream", "Test.Stream\Test.Stream.csproj", "{7C529D27-EC2C-452C-AF71-CD2371D45DED}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Events", "Test.Events\Test.Events.csproj", "{7508FAF3-EF44-4F99-A309-E2C43D13B6C9}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.PreRouting", "Test.PreRouting\Test.PreRouting.csproj", "{27B647F0-94EF-46CE-A1FC-2E3FBBA4F989}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.ChunkServer", "Test.ChunkServer\Test.ChunkServer.csproj", "{8CDBA284-772D-49B1-823D-CD796AE1F888}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.MultiUri", "Test.MultiUri\Test.MultiUri.csproj", "{677A31AB-E9F0-4995-8731-CBCC7A5769AB}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.DataReader", "Test.DataReader\Test.DataReader.csproj", "{B4676A8C-51B9-4F6D-881F-6F1B8F02C2D8}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Docker", "Test.Docker\Test.Docker.csproj", "{DB3A183E-BF8A-4155-8376-899A0050AF1A}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Routes", "Test.Routes\Test.Routes.csproj", "{1A980EE5-542D-4002-B859-4FF18A3C265A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -3,6 +3,8 @@
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFramework>netcoreapp3.1</TargetFramework>
+        <AssemblyName>Test.AttributeRoutes</AssemblyName>
+        <RootNamespace>Test.AttributeRoutes</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
