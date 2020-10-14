@@ -15,11 +15,23 @@ namespace WatsonWebserver
     {
         #region Public-Members
 
+        /// <summary>
+        /// Directly access the underlying regular expression matching library.
+        /// This is helpful in case you want to specify the matching behavior should multiple matches exist.
+        /// </summary>
+        public Matcher Matcher
+        {
+            get
+            {
+                return _Matcher;
+            }
+        }
+
         #endregion
 
         #region Private-Members
-         
-        private Matcher _Matcher;
+
+        private Matcher _Matcher = new Matcher();
 
         #endregion
 
@@ -29,8 +41,8 @@ namespace WatsonWebserver
         /// Instantiate the object.
         /// </summary> 
         public DynamicRouteManager()
-        { 
-            _Matcher = new Matcher();
+        {
+            _Matcher.MatchPreference = MatchPreferenceType.LongestFirst;
         }
 
         #endregion

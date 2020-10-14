@@ -43,7 +43,8 @@ A variety of test projects are included which will help you exercise the class l
   - Followed by static routes (any HTTP method)
   - Then dynamic (regex) routes (any HTTP method)
   - Then the default route (any HTTP method)
-- When defining dynamic routes (regex), add the most specific routes first.  Dynamic routes are evaluated in-order; the first match is used.
+- When defining dynamic routes (regex), the longest match is used
+  - If you wish to use first match or shortest match, modify ```Server.DynamicRoutes.Matcher.MatchPreference``` 
 - If a matching content route exists:
   - And the content does not exist, a standard 404 is sent
   - And the content cannot be read, a standard 500 is sent
@@ -51,10 +52,10 @@ A variety of test projects are included which will help you exercise the class l
   - ```True``` if the connection should be terminated
   - ```False``` if the connection should continue with further routing
 - By default, Watson will permit all inbound connections
-  - If you want to block certain IPs or networks, use ```Server.AccessControl.Blacklist.Add(ip, netmask)```
+  - If you want to block certain IPs or networks, use ```Server.AccessControl.DenyList.Add(ip, netmask)```
   - If you only want to allow certain IPs or networks, and block all others, use:
     - ```Server.AccessControl.Mode = AccessControlMode.DefaultDeny```
-    - ```Server.AccessControl.Whitelist.Add(ip, netmask)```
+    - ```Server.AccessControl.PermitList.Add(ip, netmask)```
 
 ## Simple Example
 

@@ -14,7 +14,7 @@ namespace Test.AttributeRoutes
         static void Main(string[] args)
         { 
             using (var server = new Server(_Hostname, _Port, _Ssl, DefaultRoute).LoadRoutes())
-            { 
+            {
                 server.Start();
 
                 Console.Write("Listening on ");

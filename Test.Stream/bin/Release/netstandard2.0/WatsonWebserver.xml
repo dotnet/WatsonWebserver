@@ -275,6 +275,12 @@
             Dynamic route manager.  Dynamic routes are used for requests using any HTTP method to any path that can be matched by regular expression.
             </summary>
         </member>
+        <member name="P:WatsonWebserver.DynamicRouteManager.Matcher">
+            <summary>
+            Directly access the underlying regular expression matching library.
+            This is helpful in case you want to specify the matching behavior should multiple matches exist.
+            </summary>
+        </member>
         <member name="M:WatsonWebserver.DynamicRouteManager.#ctor">
             <summary>
             Instantiate the object.
