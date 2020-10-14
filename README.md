@@ -59,7 +59,7 @@ A variety of test projects are included which will help you exercise the class l
 
 ## Simple Example
 
-```
+```csharp
 using System.IO;
 using System.Text;
 using WatsonWebserver;
@@ -82,7 +82,7 @@ Then, open your browser to ```http://127.0.0.1:9000/```.
 
 ## Example using Routes
 
-```
+```csharp
 using System.IO;
 using System.Text;
 using WatsonWebserver;
@@ -148,7 +148,7 @@ Effective v3.0.x, Watson now has excellent support for both receiving chunked da
 
 ### Receiving Chunked Data
 
-```
+```csharp
 static async Task UploadData(HttpContext ctx)
 {
   if (ctx.Request.ChunkedTransfer)
@@ -170,8 +170,8 @@ static async Task UploadData(HttpContext ctx)
 
 ### Sending Chunked Data
 
-```
-static Task DownloadChunkedFile(HttpContext ctx)
+```csharp
+static async Task DownloadChunkedFile(HttpContext ctx)
 {
   using (FileStream fs = new FileStream("./img/watson.jpg", , FileMode.Open, FileAccess.Read))
   {
