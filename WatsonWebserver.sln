@@ -29,7 +29,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.StaticRoutes", "Test.S
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Stream", "Test.Stream\Test.Stream.csproj", "{7C529D27-EC2C-452C-AF71-CD2371D45DED}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Dispose", "Test.Dispose\Test.Dispose.csproj", "{B7C0FF94-8F61-491A-9911-C74A22FC8420}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Dispose", "Test.Dispose\Test.Dispose.csproj", "{B7C0FF94-8F61-491A-9911-C74A22FC8420}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.MaxConnections", "Test.MaxConnections\Test.MaxConnections.csproj", "{FCD7CBFD-2DE8-4119-981E-A83844EEBFFC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -93,6 +95,10 @@ Global
 		{B7C0FF94-8F61-491A-9911-C74A22FC8420}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B7C0FF94-8F61-491A-9911-C74A22FC8420}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B7C0FF94-8F61-491A-9911-C74A22FC8420}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FCD7CBFD-2DE8-4119-981E-A83844EEBFFC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FCD7CBFD-2DE8-4119-981E-A83844EEBFFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FCD7CBFD-2DE8-4119-981E-A83844EEBFFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FCD7CBFD-2DE8-4119-981E-A83844EEBFFC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

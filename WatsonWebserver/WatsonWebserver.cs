@@ -50,6 +50,33 @@ namespace WatsonWebserver
         }
 
         /// <summary>
+        /// Maximum number of concurrent requests.
+        /// </summary>
+        public int MaxRequests
+        {
+            get
+            {
+                return _MaxRequests;
+            }
+            set
+            {
+                if (value < 1) throw new ArgumentException("Maximum requests must be greater than zero.");
+                _MaxRequests = value;
+            }
+        }
+
+        /// <summary>
+        /// Number of requests being serviced currently.
+        /// </summary>
+        public int RequestCount
+        {
+            get
+            {
+                return _RequestCount;
+            }
+        }
+
+        /// <summary>
         /// Default HTTP header values.
         /// </summary>
         public DefaultHeaderValues HeaderValues
@@ -125,7 +152,9 @@ namespace WatsonWebserver
         private List<string> _ListenerHostnames = null;
         private int _ListenerPort;
         private bool _ListenerSsl = false;
-        private int _StreamReadBufferSize = 65536; 
+        private int _StreamReadBufferSize = 65536;
+        private int _MaxRequests = 1024;
+        private int _RequestCount = 0;
 
         private ContentRouteProcessor _ContentRouteProcessor;
         private Func<HttpContext, Task> _DefaultRoute = null;
@@ -325,7 +354,16 @@ namespace WatsonWebserver
 
                 while (_HttpListener.IsListening && !_TokenSource.IsCancellationRequested)
                 {
+                    if (_RequestCount >= _MaxRequests)
+                    {
+                        Task.Delay(100).Wait();
+                        continue;
+                    }
+
                     HttpListenerContext listenerContext = await _HttpListener.GetContextAsync();
+
+                    Interlocked.Increment(ref _RequestCount);
+                    
                     HttpContext ctx = null;
 
                     Task unawaited = Task.Run(async () =>
@@ -447,6 +485,8 @@ namespace WatsonWebserver
                         }
                         finally
                         {
+                            Interlocked.Decrement(ref _RequestCount);
+
                             if (ctx != null && ctx.Response != null && ctx.Response.ResponseSent)
                             {
                                 Events.ResponseSent?.Invoke(

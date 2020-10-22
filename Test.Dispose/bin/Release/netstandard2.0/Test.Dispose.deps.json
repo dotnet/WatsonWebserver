@@ -11,7 +11,7 @@
         "dependencies": {
           "NETStandard.Library": "2.0.3",
           "RestWrapper": "2.1.4.2",
-          "Watson": "3.3.0.1"
+          "Watson": "3.3.0.2"
         },
         "runtime": {
           "Test.Dispose.dll": {}
@@ -58,7 +58,7 @@
           }
         }
       },
-      "Watson/3.3.0.1": {
+      "Watson/3.3.0.2": {
         "dependencies": {
           "IpMatcher": "1.0.3",
           "Newtonsoft.Json": "12.0.3",
@@ -118,7 +118,7 @@
       "path": "restwrapper/2.1.4.2",
       "hashPath": "restwrapper.2.1.4.2.nupkg.sha512"
     },
-    "Watson/3.3.0.1": {
+    "Watson/3.3.0.2": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

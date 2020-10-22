@@ -976,6 +976,16 @@
             Indicate the buffer size to use when reading from a stream to send data to a requestor.
             </summary>
         </member>
+        <member name="P:WatsonWebserver.Server.MaxRequests">
+            <summary>
+            Maximum number of concurrent requests.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Server.RequestCount">
+            <summary>
+            Number of requests being serviced currently.
+            </summary>
+        </member>
         <member name="P:WatsonWebserver.Server.HeaderValues">
             <summary>
             Default HTTP header values.

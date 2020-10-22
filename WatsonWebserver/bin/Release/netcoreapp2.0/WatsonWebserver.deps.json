@@ -6,7 +6,7 @@
   "compilationOptions": {},
   "targets": {
     ".NETCoreApp,Version=v2.0": {
-      "WatsonWebserver/3.3.0.1": {
+      "WatsonWebserver/3.3.0.2": {
         "dependencies": {
           "IpMatcher": "1.0.3",
           "Newtonsoft.Json": "12.0.3",
@@ -43,7 +43,7 @@
     }
   },
   "libraries": {
-    "WatsonWebserver/3.3.0.1": {
+    "WatsonWebserver/3.3.0.2": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
