@@ -7,7 +7,7 @@
   "targets": {
     ".NETStandard,Version=v2.0": {},
     ".NETStandard,Version=v2.0/": {
-      "WatsonWebserver/3.3.0.2": {
+      "WatsonWebserver/3.3.0.3": {
         "dependencies": {
           "IpMatcher": "1.0.3",
           "NETStandard.Library": "2.0.3",
@@ -51,7 +51,7 @@
     }
   },
   "libraries": {
-    "WatsonWebserver/3.3.0.2": {
+    "WatsonWebserver/3.3.0.3": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

@@ -143,9 +143,7 @@ namespace WatsonWebserver
         #endregion
 
         #region Private-Members
-
-        private readonly EventWaitHandle _Terminator = new EventWaitHandle(false, EventResetMode.ManualReset);
-
+         
         private DefaultHeaderValues _HeaderValues = new DefaultHeaderValues();
         private HttpListener _HttpListener = null;
         private List<string> _ListenerUris = null;
@@ -161,6 +159,7 @@ namespace WatsonWebserver
 
         private CancellationTokenSource _TokenSource = new CancellationTokenSource();
         private CancellationToken _Token;
+        private Task _AcceptConnections = null;
 
         private Statistics _Stats = new Statistics();
 
@@ -253,10 +252,12 @@ namespace WatsonWebserver
 
         /// <summary>
         /// Tear down the server and dispose of background workers.
+        /// Do not use this object after disposal.
         /// </summary>
         public void Dispose()
         {
             Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         /// <summary>
@@ -269,8 +270,7 @@ namespace WatsonWebserver
             _TokenSource = new CancellationTokenSource();
             _Token = _TokenSource.Token;
             _Stats = new Statistics();
-
-            Task.Run(() => AcceptConnections(), _Token);
+            _AcceptConnections = Task.Run(() => AcceptConnections(), _Token);
         }
 
         /// <summary>
@@ -284,8 +284,9 @@ namespace WatsonWebserver
             _TokenSource = new CancellationTokenSource();
             _Token = _TokenSource.Token;
             _Stats = new Statistics();
+            _AcceptConnections = Task.Run(() => AcceptConnections(), _Token);
 
-            return AcceptConnections();
+            return _AcceptConnections;
         }
 
         /// <summary>
@@ -295,8 +296,15 @@ namespace WatsonWebserver
         {
             if (!_HttpListener.IsListening) throw new InvalidOperationException("WatsonWebserver is already stopped.");
 
-            _HttpListener.Stop();
-            _TokenSource.Cancel();
+            if (_HttpListener != null && _HttpListener.IsListening)
+            {
+                _HttpListener.Stop();
+            }
+
+            if (_TokenSource != null && !_TokenSource.IsCancellationRequested)
+            {
+                _TokenSource.Cancel();
+            }
         }
 
         #endregion
@@ -305,21 +313,30 @@ namespace WatsonWebserver
 
         /// <summary>
         /// Tear down the server and dispose of background workers.
+        /// Do not use this object after disposal.
         /// </summary>
         protected virtual void Dispose(bool disposing)
         {
             if (disposing)
             {
-                if (_HttpListener != null)
+                if (_HttpListener != null && _HttpListener.IsListening)
                 {
-                    if (_HttpListener.IsListening) _HttpListener.Stop();
+                    Stop(); 
                     _HttpListener.Close();
                 }
-                
-                _TokenSource.Cancel();
-            }
 
-            Events.ServerDisposed?.Invoke();
+                Events?.ServerDisposed?.Invoke();
+
+                _HeaderValues = null;
+                _HttpListener = null;
+                _ListenerUris = null;
+                _ListenerHostnames = null;
+                _ContentRouteProcessor = null;
+                _DefaultRoute = null;
+                _TokenSource = null;
+                _AcceptConnections = null;
+                _Stats = null; 
+            }
         }
            
         private async Task AcceptConnections()

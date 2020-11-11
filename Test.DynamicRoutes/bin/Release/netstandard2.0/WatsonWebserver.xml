@@ -1063,6 +1063,7 @@
         <member name="M:WatsonWebserver.Server.Dispose">
             <summary>
             Tear down the server and dispose of background workers.
+            Do not use this object after disposal.
             </summary>
         </member>
         <member name="M:WatsonWebserver.Server.Start">
@@ -1084,6 +1085,7 @@
         <member name="M:WatsonWebserver.Server.Dispose(System.Boolean)">
             <summary>
             Tear down the server and dispose of background workers.
+            Do not use this object after disposal.
             </summary>
         </member>
     </members>

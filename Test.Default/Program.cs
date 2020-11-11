@@ -73,13 +73,16 @@ namespace Test
 
         static void Menu()
         {
+            bool isListening = false;
+            if (_Server != null) isListening = _Server.IsListening;
+
             Console.WriteLine("---");
             Console.WriteLine("  ?              help, this menu");
             Console.WriteLine("  q              quit the application");
             Console.WriteLine("  cls            clear the screen");
             Console.WriteLine("  state          indicate whether or not the server is listening");
-            Console.WriteLine("  start          start listening for new connections (is listening: " + (_Server != null ? _Server.IsListening.ToString() : "False") + ")");
-            Console.WriteLine("  stop           stop listening for new connections  (is listening: " + (_Server != null ? _Server.IsListening.ToString() : "False") + ")");
+            Console.WriteLine("  start          start listening for new connections (is listening: " + isListening + ")");
+            Console.WriteLine("  stop           stop listening for new connections  (is listening: " + isListening + ")");
             Console.WriteLine("  dispose        dispose the server object");
             Console.WriteLine("  stats          display webserver statistics");
             Console.WriteLine("  stats reset    reset webserver statistics");
