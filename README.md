@@ -65,7 +65,7 @@ static void Main(string[] args)
   Console.ReadLine();
 }
 
-static HttpResponse DefaultRoute(HttpRequest req)
+static async Task DefaultRoute(HttpContext ctx)
 {  
   ctx.Response.StatusCode = 200;
   await ctx.Response.Send("Hello from the default route!");
