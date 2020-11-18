@@ -15,7 +15,7 @@ namespace Test
         static void Main(string[] args)
         {
             if (!Directory.Exists(_Directory)) Directory.CreateDirectory(_Directory);
-            _Server = new Server("127.0.0.1", 9000, false, DefaultRoute);
+            _Server = new Server("127.0.0.1", 8080, false, DefaultRoute);
             _Server.Start();
 
             Console.ReadLine();
@@ -23,7 +23,7 @@ namespace Test
 
         static async Task DefaultRoute(HttpContext ctx)
         {
-            Console.WriteLine(ctx.Request.Method + " " + ctx.Request.RawUrlWithoutQuery);
+            Console.WriteLine(ctx.Request.Method + " " + ctx.Request.Url.RawWithoutQuery);
 
             FileStream fs = null;
              
@@ -37,7 +37,7 @@ namespace Test
                     return; 
 
                 case HttpMethod.POST:
-                    if (ctx.Request.RawUrlEntries == null || ctx.Request.RawUrlEntries.Count != 1)
+                    if (ctx.Request.Url.Elements == null || ctx.Request.Url.Elements.Length != 1)
                     {
                         ctx.Response.StatusCode = 400;
                         await ctx.Response.Send("Bad request");
@@ -51,7 +51,7 @@ namespace Test
                     }
                     else
                     {
-                        fs = new FileStream(_Directory + "/" + ctx.Request.RawUrlEntries[0], FileMode.OpenOrCreate);
+                        fs = new FileStream(_Directory + "/" + ctx.Request.Url.Elements[0], FileMode.OpenOrCreate);
                         int bytesRead = 0;
                         byte[] buffer = new byte[2048];
                         while ((bytesRead = ctx.Request.Data.Read(buffer, 0, buffer.Length)) > 0)

@@ -8,14 +8,14 @@ namespace Test.MaxConnections
     class Program
     {
         static string _Hostname = "127.0.0.1";
-        static int _Port = 8000;
+        static int _Port = 8080;
         static int _MaxConcurrentRequests = 5;
         static Server _Server = null;
 
         static void Main(string[] args)
         {
             _Server = new Server(_Hostname, _Port, false, DefaultRoute);
-            _Server.MaxRequests = _MaxConcurrentRequests;
+            _Server.Settings.IO.MaxRequests = _MaxConcurrentRequests;
             _Server.Start();
 
             for (int i = 0; i < 25; i++)
@@ -37,9 +37,9 @@ namespace Test.MaxConnections
 
         static async Task DefaultRoute(HttpContext ctx)
         {
-            Console.WriteLine(ctx.Request.SourceIp + ":" + ctx.Request.SourcePort + " started");
+            Console.WriteLine(ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " started");
             Task.Delay(2000).Wait();
-            Console.WriteLine(ctx.Request.SourceIp + ":" + ctx.Request.SourcePort + " ended");
+            Console.WriteLine(ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " ended");
             await ctx.Response.Send();
             return;
         }

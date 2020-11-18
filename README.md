@@ -6,30 +6,24 @@
 
 Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS requests, written in C#.
 
-## New in v3.3.0
+## New in v4.0.0
 
-- Breaking change to route attributes
-- Route attributes now support both static routes and dynamic routes
+- Breaking changes to improve simplicity and reliability
+- Consolidated settings into the ```Settings``` property
+- Consolidated routing into the ```Routing``` property
+- Use of ```EventHandler``` for events instead of ```Action```
+- Use of ```ConfigureAwait``` for reliability within your application
+- Simplified constructors
+- ```Pages``` property to set how 404 and 500 responses should be sent, if not handled within your application
+- Consolidated test applications
+- Attribute-based routes now loaded automatically, removed ```LoadRoutes``` method
+- Restructured ```HttpContext```, ```HttpRequest```, and ```HttpResponse``` for better usability
 
 ## Special Thanks
 
 I'd like to extend a special thanks to those that have helped make Watson Webserver better.
 
 - @notesjor @shdwp @Tutch @GeoffMcGrath @jurkovic-nikola @joreg @Job79 @at1993
-
-## Test App
-
-A variety of test projects are included which will help you exercise the class library for a variety of scenarios:
-
-- Routing using:
-  - Pre-routing - useful for centralized authentication and logging
-  - Content routes - useful for hosting static content (web sites, images)
-  - Static routes - useful for cases where the URL is fixed
-  - Dynamic routes - useful for cases where the URL may vary (i.e. regular expression match)
-  - Default route - catch-all route when no other route is matched
-- Events
-- Streams
-- Chunked transfer encoding
 
 ## Important Notes
 
@@ -85,6 +79,7 @@ Then, open your browser to ```http://127.0.0.1:9000/```.
 ```csharp
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using WatsonWebserver;
 
 static void Main(string[] args)
@@ -92,15 +87,15 @@ static void Main(string[] args)
   Server s = new Server("127.0.0.1", 9000, false, DefaultRoute);
 
   // add content routes
-  s.ContentRoutes.Add("/html/", true);
-  s.ContentRoutes.Add("/img/watson.jpg", false);
+  s.Routes.Content.Add("/html/", true);
+  s.Routes.Content.Add("/img/watson.jpg", false);
 
   // add static routes
-  s.StaticRoutes.Add(HttpMethod.GET, "/hello/", GetHelloRoute); 
+  s.Routes.Static.Add(HttpMethod.GET, "/hello/", GetHelloRoute); 
 
   // add dynamic routes
-  s.DynamicRoutes.Add(HttpMethod.GET, new Regex("^/foo/\\d+$"), GetFooWithId);  
-  s.DynamicRoutes.Add(HttpMethod.GET, new Regex("^/foo/?$"), GetFoo); 
+  s.Routes.Dynamic.Add(HttpMethod.GET, new Regex("^/foo/\\d+$"), GetFooWithId);  
+  s.Routes.Dynamic.Add(HttpMethod.GET, new Regex("^/foo/?$"), GetFoo); 
 
   // start the server
   s.Start();
@@ -131,12 +126,11 @@ static async Task DefaultRoute(HttpContext ctx)
 ```
 
 ## Example using Route Attributes
-
-You must call ```LoadRoutes()``` to add static and dynamic routes based on ```StaticRoute``` and ```DynamicRoute``` method attributes.
-
+ 
 ```csharp
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using WatsonWebserver;
 
 static void Main(string[] args)
@@ -178,17 +172,17 @@ static async Task DefaultRoute(HttpContext ctx)
 Server s = new Server("127.0.0.1", 9000, false, DefaultRoute);
 
 // set default permit (permit any) with deny list to block specific IP addresses or networks
-s.AccessControl.Mode = AccessControlMode.DefaultPermit;
-s.AccessControl.DenyList.Add("127.0.0.1", "255.255.255.255");  
+s.Settings.AccessControl.Mode = AccessControlMode.DefaultPermit;
+s.Settings.AccessControl.DenyList.Add("127.0.0.1", "255.255.255.255");  
 
 // set default deny (deny all) with permit list to permit specific IP addresses or networks
-s.AccessControl.Mode = AccessControlMode.DefaultDeny;
-s.AccessControl.PermitList.Add("127.0.0.1", "255.255.255.255");
+s.Settings.AccessControl.Mode = AccessControlMode.DefaultDeny;
+s.Settings.AccessControl.PermitList.Add("127.0.0.1", "255.255.255.255");
 ```
 
 ## Chunked Transfer-Encoding
 
-Effective v3.0.x, Watson now has excellent support for both receiving chunked data and sending chunked data (indicated by the header ```Transfer-Encoding: chunked```).
+Watson supports both receiving chunked data and sending chunked data (indicated by the header ```Transfer-Encoding: chunked```).
 
 ### Receiving Chunked Data
 
@@ -227,11 +221,11 @@ static async Task DownloadChunkedFile(HttpContext ctx)
     if (bytesRead > 0)
     {
       // you'll want to check bytesRead vs buffer.Length, of course!
-      ctx.Response.SendChunk(buffer);
+      await ctx.Response.SendChunk(buffer);
     }
     else
     {
-      ctx.Response.SendFinalChunk(buffer);
+      await ctx.Response.SendFinalChunk(buffer);
     }
   }
 

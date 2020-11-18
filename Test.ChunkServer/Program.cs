@@ -16,7 +16,7 @@ namespace Test
             List<string> hostnames = new List<string>();
             hostnames.Add("127.0.0.1");
 
-            Server server = new Server(hostnames, 9000, false, DefaultRoute);
+            Server server = new Server(hostnames, 8080, false, DefaultRoute);
             server.Start();
 
             Console.WriteLine("Press ENTER to exit");
@@ -32,7 +32,7 @@ namespace Test
                     && ctx.Request.Data != null
                     && ctx.Request.ChunkedTransfer)
                 {
-                    Console.WriteLine("Received request for " + ctx.Request.Method.ToString() + " " + ctx.Request.RawUrlWithoutQuery);
+                    Console.WriteLine("Received request for " + ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
 
                     while (true)
                     {
@@ -56,7 +56,7 @@ namespace Test
                 }
                 else
                 {
-                    if (ctx.Request.RawUrlWithoutQuery.Equals("/img/watson.jpg"))
+                    if (ctx.Request.Url.RawWithoutQuery.Equals("/img/watson.jpg"))
                     {
                         Console.WriteLine("- User requested /img/watson.jpg");
                         ctx.Response.StatusCode = 200;
@@ -122,7 +122,7 @@ namespace Test
                         Console.WriteLine("Sent " + bytesSent + " bytes");
                         return;
                     }
-                    if (ctx.Request.RawUrlWithoutQuery.Equals("/txt/test.txt"))
+                    if (ctx.Request.Url.RawWithoutQuery.Equals("/txt/test.txt"))
                     {
                         Console.WriteLine("- User requested /txt/test.txt");
                         ctx.Response.StatusCode = 200;

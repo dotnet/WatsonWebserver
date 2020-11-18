@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netcoreapp2.0;netcoreapp3.0;netcoreapp3.1;netstandard2.0;netstandard2.1;net462;net5.0</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>3.3.0.4</Version>
+    <Version>4.0.0.1</Version>
     <Description>Simple, fast, async C# web server for handling REST requests with SSL support, targeted to .NET Core, .NET Standard, and .NET Framework.</Description>
     <Authors>Joel Christner</Authors>
     <Company>Joel Christner</Company>
@@ -13,15 +13,11 @@
     <RepositoryUrl>https://github.com/jchristn/WatsonWebserver</RepositoryUrl>
     <RepositoryType>Github</RepositoryType>
     <PackageTags>web server rest restful http https api async ssl</PackageTags>
-    <PackageReleaseNotes>Amended route attributes to support both static and dynamic routes (breaking change).</PackageReleaseNotes>
+    <PackageReleaseNotes>Breaking changes to improve simplicity and reliability; please see project README.</PackageReleaseNotes>
     <PackageId>Watson</PackageId>
     <Product>Watson</Product>
     <PackageIconUrl>https://raw.githubusercontent.com/jchristn/WatsonWebserver/master/assets/watson.ico</PackageIconUrl>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
-    <DocumentationFile>C:\Code\Watson\WatsonWebserver-3.0\WatsonWebserver\WatsonWebserver.xml</DocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp2.0|AnyCPU'">
@@ -43,7 +39,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\LICENSE.md">
+    <None Include="LICENSE.md">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>

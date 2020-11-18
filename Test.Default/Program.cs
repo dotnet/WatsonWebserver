@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using WatsonWebserver;
 
@@ -9,22 +10,33 @@ namespace Test
 {
     static class Program
     {
+        static string _Hostname = "127.0.0.1";
+        static int _Port = 8080;
+        static bool _Ssl = false;
         static Server _Server = null;
 
         static void Main()
         {
-            List<string> hostnames = new List<string>();
-            hostnames.Add("127.0.0.1");
+            _Server = new Server(_Hostname, _Port, false, DefaultRoute);
 
-            _Server = new Server(hostnames, 9000, false, DefaultRoute);
+            _Server.Settings.AccessControl.Mode = AccessControlMode.DefaultPermit;
+            _Server.Settings.AccessControl.DenyList.Add("1.1.1.1", "255.255.255.255");
+
+            _Server.Routes.PreRouting = PreRoutingHandler;
+
+            _Server.Routes.Content.Add("/html/", true);
+            _Server.Routes.Content.Add("/large/", true);
+            _Server.Routes.Content.Add("/img/watson.jpg", false);
+
+            _Server.Routes.Static.Add(HttpMethod.GET, "/hola", HolaRoute);
+
+            _Server.Routes.Dynamic.Add(HttpMethod.GET, new Regex("^/bar$"), BarRoute);
+             
             _Server.Start();
 
-            Console.WriteLine("Listening on http://127.0.0.1:9000");
-
-            // _Server.AccessControl.Mode = AccessControlMode.DefaultDeny;
-            // _Server.AccessControl.Whitelist.Add("127.0.0.1", "255.255.255.255");
-            // _Server.AccessControl.Whitelist.Add("127.0.0.1", "255.255.255.255");
-
+            if (_Ssl) Console.WriteLine("Listening on https://" + _Hostname + ":" + _Port);
+            else Console.WriteLine("Listening on http://" + _Hostname + ":" + _Port);
+             
             bool runForever = true;
             while (runForever)
             {
@@ -61,11 +73,11 @@ namespace Test
                         break;
 
                     case "stats":
-                        Console.WriteLine(_Server.Stats.ToString());
+                        Console.WriteLine(_Server.Statistics.ToString());
                         break;
 
                     case "stats reset":
-                        _Server.Stats.Reset();
+                        _Server.Statistics.Reset();
                         break;
                 }
             }
@@ -88,25 +100,69 @@ namespace Test
             Console.WriteLine("  stats reset    reset webserver statistics");
         }
 
+        [StaticRoute(HttpMethod.GET, "/mirror")]
+        static async Task MirrorRoute(HttpContext ctx)
+        {
+            ctx.Response.StatusCode = 200;
+            ctx.Response.ContentType = "application/json";
+            await ctx.Response.Send(ctx.Request.ToJson(true));
+            return;
+        }
+
+        [StaticRoute(HttpMethod.GET, "/hello")]
+        static async Task HelloRoute(HttpContext ctx)
+        {
+            ctx.Response.StatusCode = 200;
+            ctx.Response.ContentType = "text/plain";
+            await ctx.Response.Send("Hello static route, defined using attributes");
+            return;
+        }
+
+        static async Task HolaRoute(HttpContext ctx)
+        {
+            ctx.Response.StatusCode = 200;
+            ctx.Response.ContentType = "text/plain";
+            await ctx.Response.Send("Hola static route");
+            return;
+        }
+
+        [DynamicRoute(HttpMethod.PUT, "/foo")]
+        static async Task FooWithoutIdRoute(HttpContext ctx)
+        {
+            ctx.Response.StatusCode = 200;
+            ctx.Response.ContentType = "text/plain";
+            await ctx.Response.Send("Foo dynamic route, defined using attributes");
+            return;
+        }
+
+        [DynamicRoute(HttpMethod.GET, "^/foo/\\d+$")]
+        public static async Task FooWithIdRoute(HttpContext ctx)
+        { 
+            ctx.Response.StatusCode = 200;
+            ctx.Response.ContentType = "text/plain";
+            await ctx.Response.Send("Foo with ID dynamic route, defined using attributes");
+            return;
+        }
+
+        static async Task BarRoute(HttpContext ctx)
+        {
+            ctx.Response.StatusCode = 200;
+            ctx.Response.ContentType = "text/plain";
+            await ctx.Response.Send("Bar dynamic route");
+            return;
+        }
+
+        static async Task<bool> PreRoutingHandler(HttpContext ctx)
+        {
+            return false;
+        }
+
         static async Task DefaultRoute(HttpContext ctx)
         { 
-            Console.WriteLine(ctx.Request.ToString());
-
-            if ((ctx.Request.Method == HttpMethod.POST
-                || ctx.Request.Method == HttpMethod.PUT)
-                && ctx.Request.Data != null
-                && ctx.Request.ContentLength > 0)
-            {
-                ctx.Response.StatusCode = 200;
-                await ctx.Response.Send(ctx.Request.ContentLength, ctx.Request.Data);
-                return;
-            }
-            else
-            {
-                ctx.Response.StatusCode = 200;
-                await ctx.Response.Send("Watson says hello from the default route!");
-                return;
-            }
+            ctx.Response.StatusCode = 200;
+            ctx.Response.ContentType = "text/plain";
+            await ctx.Response.Send("Default route");
+            return; 
         }
 
         static string InputString(string question, string defaultAnswer, bool allowNull)

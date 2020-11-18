@@ -9,7 +9,7 @@
       "Test.MaxConnections/1.0.0": {
         "dependencies": {
           "RestWrapper": "2.1.5",
-          "Watson": "3.3.0.4"
+          "Watson": "4.0.0.1"
         },
         "runtime": {
           "Test.MaxConnections.dll": {}
@@ -50,7 +50,7 @@
           }
         }
       },
-      "Watson/3.3.0.4": {
+      "Watson/4.0.0.1": {
         "dependencies": {
           "IpMatcher": "1.0.4",
           "Newtonsoft.Json": "12.0.3",
@@ -96,7 +96,7 @@
       "path": "restwrapper/2.1.5",
       "hashPath": "restwrapper.2.1.5.nupkg.sha512"
     },
-    "Watson/3.3.0.4": {
+    "Watson/4.0.0.1": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

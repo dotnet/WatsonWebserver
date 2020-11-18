@@ -2,11 +2,29 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>netstandard2.0;net462</TargetFrameworks>
+    <TargetFrameworks>netcoreapp3.1;net462;net5.0</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="html\index.html" />
+    <None Remove="img\watson.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="html\index.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="img\watson.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\WatsonWebserver\WatsonWebserver.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="large\" />
   </ItemGroup>
 
 </Project>

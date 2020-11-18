@@ -8,139 +8,109 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
- 
+using System.Threading.Tasks; 
 using Newtonsoft.Json;
 
 namespace WatsonWebserver
 {
     /// <summary>
-    /// Data extracted from an incoming HTTP request.
+    /// HTTP request.
     /// </summary>
     public class HttpRequest
     {
         #region Public-Members
-        
+
         /// <summary>
         /// UTC timestamp from when the request was received.
         /// </summary>
-        public DateTime TimestampUtc;
+        [JsonProperty(Order = -10)]
+        public DateTime TimestampUtc { get; private set; } = DateTime.Now.ToUniversalTime();
 
         /// <summary>
         /// Thread ID on which the request exists.
         /// </summary>
-        public int ThreadId;
+        [JsonProperty(Order = -9)]
+        public int ThreadId { get; private set; } = Thread.CurrentThread.ManagedThreadId;
 
         /// <summary>
         /// The protocol and version.
         /// </summary>
-        public string ProtocolVersion;
+        [JsonProperty(Order = -8)]
+        public string ProtocolVersion { get; private set; } = null;
 
         /// <summary>
-        /// IP address of the requestor (client).
+        /// Source (requestor) IP and port information.
         /// </summary>
-        public string SourceIp;
+        [JsonProperty(Order = -7)]
+        public SourceDetails Source { get; private set; } = new SourceDetails();
 
         /// <summary>
-        /// TCP port from which the request originated on the requestor (client).
+        /// Destination IP and port information.
         /// </summary>
-        public int SourcePort;
-
-        /// <summary>
-        /// IP address of the recipient (server).
-        /// </summary>
-        public string DestIp;
-
-        /// <summary>
-        /// TCP port on which the request was received by the recipient (server).
-        /// </summary>
-        public int DestPort;
-
-        /// <summary>
-        /// The destination hostname as found in the request line, if present.
-        /// </summary>
-        public string DestHostname;
-
-        /// <summary>
-        /// The destination host port as found in the request line, if present.
-        /// </summary>
-        public int DestHostPort;
-
-        /// <summary>
-        /// Specifies whether or not the client requested HTTP keepalives.
-        /// </summary>
-        public bool Keepalive;
+        [JsonProperty(Order = -6)]
+        public DestinationDetails Destination { get; private set; } = new DestinationDetails();
 
         /// <summary>
         /// The HTTP method used in the request.
         /// </summary>
-        public HttpMethod Method;
+        [JsonProperty(Order = -5)]
+        public HttpMethod Method { get; private set; } = HttpMethod.GET;
 
         /// <summary>
-        /// Indicates whether or not chunked transfer encoding was detected.
+        /// URL details.
         /// </summary>
-        public bool ChunkedTransfer = false;
+        [JsonProperty(Order = -4)]
+        public UrlDetails Url { get; private set; } = new UrlDetails();
 
         /// <summary>
-        /// Indicates whether or not the payload has been gzip compressed.
+        /// Query details.
         /// </summary>
-        public bool Gzip = false;
-
-        /// <summary>
-        /// Indicates whether or not the payload has been deflate compressed.
-        /// </summary>
-        public bool Deflate = false;
-
-        /// <summary>
-        /// The full URL as sent by the requestor (client).
-        /// </summary>
-        public string FullUrl;
-
-        /// <summary>
-        /// The raw (relative) URL with the querystring attached.
-        /// </summary>
-        public string RawUrlWithQuery;
-
-        /// <summary>
-        /// The raw (relative) URL without the querystring attached.
-        /// </summary>
-        public string RawUrlWithoutQuery;
-
-        /// <summary>
-        /// List of items found in the raw URL.
-        /// </summary>
-        public List<string> RawUrlEntries;
-
-        /// <summary>
-        /// The querystring attached to the URL.
-        /// </summary>
-        public string Querystring;
-
-        /// <summary>
-        /// Dictionary containing key-value pairs from items found in the querystring.
-        /// </summary>
-        public Dictionary<string, string> QuerystringEntries;
-
-        /// <summary>
-        /// The useragent specified in the request.
-        /// </summary>
-        public string Useragent;
-
-        /// <summary>
-        /// The number of bytes in the request body.
-        /// </summary>
-        public long ContentLength;
-
-        /// <summary>
-        /// The content type as specified by the requestor (client).
-        /// </summary>
-        public string ContentType;
+        [JsonProperty(Order = -3)]
+        public QueryDetails Query { get; private set; } = new QueryDetails();
 
         /// <summary>
         /// The headers found in the request.
         /// </summary>
-        public Dictionary<string, string> Headers;
+        [JsonProperty(Order = -2)]
+        public Dictionary<string, string> Headers { get; private set; } = new Dictionary<string, string>();
+
+        /// <summary>
+        /// Specifies whether or not the client requested HTTP keepalives.
+        /// </summary>
+        public bool Keepalive { get; private set; } = false;
+
+        /// <summary>
+        /// Indicates whether or not chunked transfer encoding was detected.
+        /// </summary>
+        public bool ChunkedTransfer { get; private set; } = false;
+
+        /// <summary>
+        /// Indicates whether or not the payload has been gzip compressed.
+        /// </summary>
+        public bool Gzip { get; private set; } = false;
+
+        /// <summary>
+        /// Indicates whether or not the payload has been deflate compressed.
+        /// </summary>
+        public bool Deflate { get; private set; } = false;
          
+        /// <summary>
+        /// The useragent specified in the request.
+        /// </summary>
+        public string Useragent { get; private set; } = null;
+
+        /// <summary>
+        /// The content type as specified by the requestor (client).
+        /// </summary>
+        [JsonProperty(Order = 990)]
+        public string ContentType { get; private set; } = null;
+
+        /// <summary>
+        /// The number of bytes in the request body.
+        /// </summary>
+        [JsonProperty(Order = 991)]
+        public long ContentLength { get; private set; } = 0;
+
         /// <summary>
         /// The stream from which to read the request body sent by the requestor (client).
         /// </summary>
@@ -156,277 +126,56 @@ namespace WatsonWebserver
         #endregion
 
         #region Private-Members
-         
-        private Uri _Uri; 
-        private static int _TimeoutDataReadMs = 2000;
-        private static int _DataReadSleepMs = 10;
+
+        private Uri _Uri = null;
         private byte[] _DataBytes = null;
-        
+
         #endregion
 
         #region Constructors-and-Factories
-         
+
         /// <summary>
-        /// Instantiate the object.
+        /// HTTP request.
         /// </summary>
         public HttpRequest()
-        {
-            ThreadId = Thread.CurrentThread.ManagedThreadId;
-            TimestampUtc = DateTime.Now.ToUniversalTime();
-            QuerystringEntries = new Dictionary<string, string>();
-            Headers = new Dictionary<string, string>();
+        { 
         }
-         
+
         /// <summary>
+        /// HTTP request.
         /// Instantiate the object using an HttpListenerContext.
         /// </summary>
         /// <param name="ctx">HttpListenerContext.</param>
         public HttpRequest(HttpListenerContext ctx)
-        {
-            #region Check-for-Null-Values
-
+        { 
             if (ctx == null) throw new ArgumentNullException(nameof(ctx));
             if (ctx.Request == null) throw new ArgumentNullException(nameof(ctx.Request));
-
-            #endregion
-
-            #region Parse-Variables
-
-            int position = 0;
-            int inQuery = 0;
-            string tempString = "";
-            string queryString = "";
-
-            int inKey = 0;
-            int inVal = 0;
-            string tempKey = "";
-            string tempVal = "";
-
-            #endregion
-            
-            #region Standard-Request-Items
-
-            ThreadId = Thread.CurrentThread.ManagedThreadId;
-            TimestampUtc = DateTime.Now.ToUniversalTime();
-            ProtocolVersion = "HTTP/" + ctx.Request.ProtocolVersion.ToString();
-            SourceIp = ctx.Request.RemoteEndPoint.Address.ToString();
-            SourcePort = ctx.Request.RemoteEndPoint.Port;
-            DestIp = ctx.Request.LocalEndPoint.Address.ToString();
-            DestPort = ctx.Request.LocalEndPoint.Port;
-            Method = (HttpMethod)Enum.Parse(typeof(HttpMethod), ctx.Request.HttpMethod, true);
-            FullUrl = String.Copy(ctx.Request.Url.ToString().Trim());
-            RawUrlWithQuery = String.Copy(ctx.Request.RawUrl.ToString().Trim());
-            RawUrlWithoutQuery = String.Copy(ctx.Request.RawUrl.ToString().Trim());
+             
+            ListenerContext = ctx; 
             Keepalive = ctx.Request.KeepAlive;
             ContentLength = ctx.Request.ContentLength64;
             Useragent = ctx.Request.UserAgent;
             ContentType = ctx.Request.ContentType;
-            ListenerContext = ctx;
 
-            RawUrlEntries = new List<string>();
-            QuerystringEntries = new Dictionary<string, string>();
-            Headers = new Dictionary<string, string>();
+            _Uri = new Uri(ctx.Request.Url.ToString().Trim()); 
 
-            #endregion
-
-            #region Raw-URL-and-Querystring
-
-            if (!String.IsNullOrEmpty(RawUrlWithoutQuery))
-            {
-                #region Initialize-Variables
-
-                RawUrlEntries = new List<string>();
-                QuerystringEntries = new Dictionary<string, string>();
-
-                #endregion
-
-                #region Process-Raw-URL-and-Populate-Raw-URL-Elements
-
-                while (RawUrlWithoutQuery.Contains("//"))
-                {
-                    RawUrlWithoutQuery = RawUrlWithoutQuery.Replace("//", "/");
-                }
-
-                foreach (char c in RawUrlWithoutQuery)
-                {
-                    if (inQuery == 1)
-                    {
-                        queryString += c;
-                        continue;
-                    }
-
-                    if ((position == 0) &&
-                        (String.Compare(tempString, "") == 0) &&
-                        (c == '/'))
-                    {
-                        // skip the first slash
-                        continue;
-                    }
-
-                    if ((c != '/') && (c != '?'))
-                    {
-                        tempString += c;
-                    }
-
-                    if ((c == '/') || (c == '?'))
-                    {
-                        if (!String.IsNullOrEmpty(tempString))
-                        {
-                            // add to raw URL entries list
-                            RawUrlEntries.Add(tempString);
-                        }
-
-                        position++;
-                        tempString = "";
-                    }
-
-                    if (c == '?')
-                    {
-                        inQuery = 1;
-                    }
-                }
-
-                if (!String.IsNullOrEmpty(tempString))
-                {
-                    // add to raw URL entries list
-                    RawUrlEntries.Add(tempString);
-                }
-
-                #endregion
-
-                #region Populate-Querystring
-
-                if (queryString.Length > 0) Querystring = queryString;
-                else Querystring = null;
-
-                #endregion
-
-                #region Parse-Querystring
-
-                if (!String.IsNullOrEmpty(Querystring))
-                {
-                    inKey = 1;
-                    inVal = 0;
-                    position = 0;
-                    tempKey = "";
-                    tempVal = "";
-
-                    foreach (char c in Querystring)
-                    {
-                        if (inKey == 1)
-                        {
-                            if (c == '&')
-                            {
-                                // key with no value
-                                if (!String.IsNullOrEmpty(tempKey))
-                                {
-                                    inKey = 1;
-                                    inVal = 0;
-
-                                    tempKey = WebUtility.UrlDecode(tempKey);
-                                    QuerystringEntries = AddToDict(tempKey, null, QuerystringEntries);
-
-                                    tempKey = "";
-                                    tempVal = "";
-                                    position++;
-                                    continue;
-                                }
-                            }
-                            else if (c != '=')
-                            {
-                                tempKey += c;
-                            }
-                            else
-                            {
-                                inKey = 0;
-                                inVal = 1;
-                                continue;
-                            }
-                        }
-
-                        if (inVal == 1)
-                        {
-                            if (c != '&')
-                            {
-                                tempVal += c;
-                            }
-                            else
-                            {
-                                inKey = 1;
-                                inVal = 0;
-
-                                tempKey = WebUtility.UrlDecode(tempKey);
-                                if (!String.IsNullOrEmpty(tempVal)) tempVal = WebUtility.UrlDecode(tempVal);
-                                QuerystringEntries = AddToDict(tempKey, tempVal, QuerystringEntries);
-
-                                tempKey = "";
-                                tempVal = "";
-                                position++;
-                                continue;
-                            }
-                        }
-                    }
-
-                    if (inVal == 0)
-                    {
-                        // val will be null
-                        if (!String.IsNullOrEmpty(tempKey))
-                        {
-                            tempKey = WebUtility.UrlDecode(tempKey);
-                            QuerystringEntries = AddToDict(tempKey, null, QuerystringEntries);
-                        } 
-                    }
-
-                    if (inVal == 1)
-                    {
-                        if (!String.IsNullOrEmpty(tempKey))
-                        {
-                            tempKey = WebUtility.UrlDecode(tempKey);
-                            if (!String.IsNullOrEmpty(tempVal)) tempVal = WebUtility.UrlDecode(tempVal);
-                            QuerystringEntries = AddToDict(tempKey, tempVal, QuerystringEntries);
-                        }
-                    }
-                }
-
-                #endregion
-            }
-
-            #endregion
-
-            #region Remove-Querystring-from-Raw-URL
-
-            if (RawUrlWithoutQuery.Contains("?"))
-            {
-                RawUrlWithoutQuery = RawUrlWithoutQuery.Substring(0, RawUrlWithoutQuery.IndexOf("?"));
-            }
-
-            #endregion
-
-            #region Check-for-Full-URL
-
-            try
-            {
-                _Uri = new Uri(FullUrl);
-                DestHostname = _Uri.Host;
-                DestHostPort = _Uri.Port;
-            }
-            catch (Exception)
-            {
-
-            }
-
-            #endregion
-
-            #region Headers
-
+            ThreadId = Thread.CurrentThread.ManagedThreadId;
+            TimestampUtc = DateTime.Now.ToUniversalTime();
+            ProtocolVersion = "HTTP/" + ctx.Request.ProtocolVersion.ToString(); 
+            Source = new SourceDetails(ctx.Request.RemoteEndPoint.Address.ToString(), ctx.Request.RemoteEndPoint.Port);
+            Destination = new DestinationDetails(ctx.Request.LocalEndPoint.Address.ToString(), ctx.Request.LocalEndPoint.Port, _Uri.Host, _Uri.Port);
+            Method = (HttpMethod)Enum.Parse(typeof(HttpMethod), ctx.Request.HttpMethod, true); 
+            Url = new UrlDetails(ctx.Request.Url.ToString().Trim(), ctx.Request.RawUrl.ToString().Trim()); 
+            Query = new QueryDetails(Url.Full);
+              
             Headers = new Dictionary<string, string>();
             for (int i = 0; i < ctx.Request.Headers.Count; i++)
             {
-                string key = String.Copy(ctx.Request.Headers.GetKey(i));
-                string val = String.Copy(ctx.Request.Headers.Get(i));
+                string key = ctx.Request.Headers.GetKey(i);
+                string val = ctx.Request.Headers.Get(i);
                 Headers = AddToDict(key, val, Headers);
             }
-
+             
             foreach (KeyValuePair<string, string> curr in Headers)
             {
                 if (String.IsNullOrEmpty(curr.Key)) continue;
@@ -442,556 +191,8 @@ namespace WatsonWebserver
                         Deflate = true;
                 }
             }
-
-            #endregion
-
-            #region Payload
-             
-            Data = ctx.Request.InputStream;   
-
-            #endregion
-        }
-
-        /// <summary>
-        /// Instantiate the object using a generic stream.
-        /// </summary>
-        /// <param name="stream">Stream.</param>
-        /// <returns>HttpRequest.</returns>
-        public static HttpRequest FromStream(Stream stream)
-        {
-            if (stream == null) throw new ArgumentNullException(nameof(stream));
-
-            try
-            {
-                #region Variables
-
-                HttpRequest ret;
-                byte[] headerBytes = null;
-                byte[] lastFourBytes = new byte[4];
-                lastFourBytes[0] = 0x00;
-                lastFourBytes[1] = 0x00;
-                lastFourBytes[2] = 0x00;
-                lastFourBytes[3] = 0x00;
-
-                #endregion
-
-                #region Check-Stream
-
-                if (!stream.CanRead)
-                {
-                    throw new IOException("Unable to read from stream.");
-                }
-
-                #endregion
-
-                #region Read-Headers
-
-                using (MemoryStream headerMs = new MemoryStream())
-                {
-                    #region Read-Header-Bytes
-
-                    byte[] headerBuffer = new byte[1];
-                    int read = 0;
-                    int headerBytesRead = 0;
-
-                    while ((read = stream.Read(headerBuffer, 0, headerBuffer.Length)) > 0)
-                    {
-                        if (read > 0)
-                        {
-                            #region Initialize-Header-Bytes-if-Needed
-
-                            headerBytesRead += read;
-                            if (headerBytes == null) headerBytes = new byte[1];
-
-                            #endregion
-
-                            #region Update-Last-Four
-
-                            if (read == 1)
-                            {
-                                lastFourBytes[0] = lastFourBytes[1];
-                                lastFourBytes[1] = lastFourBytes[2];
-                                lastFourBytes[2] = lastFourBytes[3];
-                                lastFourBytes[3] = headerBuffer[0];
-                            }
-
-                            #endregion
-
-                            #region Append-to-Header-Buffer
-
-                            byte[] tempHeader = new byte[headerBytes.Length + 1];
-                            Buffer.BlockCopy(headerBytes, 0, tempHeader, 0, headerBytes.Length);
-                            tempHeader[headerBytes.Length] = headerBuffer[0];
-                            headerBytes = tempHeader;
-
-                            #endregion
-
-                            #region Check-for-End-of-Headers
-
-                            if ((int)(lastFourBytes[0]) == 13
-                                && (int)(lastFourBytes[1]) == 10
-                                && (int)(lastFourBytes[2]) == 13
-                                && (int)(lastFourBytes[3]) == 10)
-                            {
-                                break;
-                            }
-
-                            #endregion
-                        }
-                    }
-
-                    #endregion
-                }
-
-                #endregion
-
-                #region Process-Headers
-
-                if (headerBytes == null || headerBytes.Length < 1) throw new IOException("No header data read from the stream.");
-                ret = BuildHeaders(headerBytes);
-
-                #endregion
-
-                #region Read-Data
-
-                ret.Data = null;
-                if (ret.ContentLength > 0)
-                {
-                    #region Read-from-Stream
-
-                    ret.Data = new MemoryStream();
-
-                    long bytesRemaining = ret.ContentLength;
-                    long bytesRead = 0;
-                    bool timeout = false;
-                    int currentTimeout = 0;
-
-                    int read = 0;
-                    byte[] buffer;
-                    long bufferSize = 2048;
-                    if (bufferSize > bytesRemaining) bufferSize = bytesRemaining;
-                    buffer = new byte[bufferSize];
-
-                    while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
-                    {
-                        if (read > 0)
-                        {
-                            ret.Data.Write(buffer, 0, read);
-                            bytesRead = bytesRead + read;
-                            bytesRemaining = bytesRemaining - read;
-
-                            // reduce buffer size if number of bytes remaining is
-                            // less than the pre-defined buffer size of 2KB
-                            if (bytesRemaining < bufferSize)
-                            {
-                                bufferSize = bytesRemaining;
-                            }
-
-                            buffer = new byte[bufferSize];
-
-                            // check if read fully
-                            if (bytesRemaining == 0) break;
-                            if (bytesRead == ret.ContentLength) break;
-                        }
-                        else
-                        {
-                            if (currentTimeout >= _TimeoutDataReadMs)
-                            {
-                                timeout = true;
-                                break;
-                            }
-                            else
-                            {
-                                currentTimeout += _DataReadSleepMs;
-                                Thread.Sleep(_DataReadSleepMs);
-                            }
-                        }
-                    }
-
-                    if (timeout)
-                    {
-                        throw new IOException("Timeout reading data from stream.");
-                    }
-
-                    ret.Data.Seek(0, SeekOrigin.Begin);
-
-                    #endregion
-                }
-                else
-                {
-                    // do nothing
-                }
-
-                #endregion
-
-                return ret;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// Instantiate the object using a network stream.
-        /// </summary>
-        /// <param name="stream">NetworkStream.</param>
-        /// <returns>HttpRequest.</returns>
-        public static HttpRequest FromStream(NetworkStream stream)
-        {
-            if (stream == null) throw new ArgumentNullException(nameof(stream));
-
-            try
-            {
-                #region Variables
-
-                HttpRequest ret;
-                byte[] headerBytes = null;
-                byte[] lastFourBytes = new byte[4];
-                lastFourBytes[0] = 0x00;
-                lastFourBytes[1] = 0x00;
-                lastFourBytes[2] = 0x00;
-                lastFourBytes[3] = 0x00;
-
-                #endregion
-
-                #region Check-Stream
-
-                if (!stream.CanRead)
-                {
-                    throw new IOException("Unable to read from stream.");
-                }
-
-                #endregion
-
-                #region Read-Headers
-
-                using (MemoryStream headerMs = new MemoryStream())
-                {
-                    #region Read-Header-Bytes
-
-                    byte[] headerBuffer = new byte[1];
-                    int read = 0;
-                    int headerBytesRead = 0;
-
-                    while ((read = stream.Read(headerBuffer, 0, headerBuffer.Length)) > 0)
-                    {
-                        if (read > 0)
-                        {
-                            #region Initialize-Header-Bytes-if-Needed
-
-                            headerBytesRead += read;
-                            if (headerBytes == null) headerBytes = new byte[1];
-
-                            #endregion
-
-                            #region Update-Last-Four
-
-                            if (read == 1)
-                            {
-                                lastFourBytes[0] = lastFourBytes[1];
-                                lastFourBytes[1] = lastFourBytes[2];
-                                lastFourBytes[2] = lastFourBytes[3];
-                                lastFourBytes[3] = headerBuffer[0];
-                            }
-
-                            #endregion
-
-                            #region Append-to-Header-Buffer
-
-                            byte[] tempHeader = new byte[headerBytes.Length + 1];
-                            Buffer.BlockCopy(headerBytes, 0, tempHeader, 0, headerBytes.Length);
-                            tempHeader[headerBytes.Length] = headerBuffer[0];
-                            headerBytes = tempHeader;
-
-                            #endregion
-
-                            #region Check-for-End-of-Headers
-
-                            if ((int)(lastFourBytes[0]) == 13
-                                && (int)(lastFourBytes[1]) == 10
-                                && (int)(lastFourBytes[2]) == 13
-                                && (int)(lastFourBytes[3]) == 10)
-                            {
-                                break;
-                            }
-
-                            #endregion
-                        }
-                    }
-
-                    #endregion
-                }
-
-                #endregion
-
-                #region Process-Headers
-
-                if (headerBytes == null || headerBytes.Length < 1) throw new IOException("No header data read from the stream.");
-                ret = BuildHeaders(headerBytes);
-
-                #endregion
-
-                #region Read-Data
-
-                ret.Data = null;
-                if (ret.ContentLength > 0)
-                {
-                    #region Read-from-Stream
-
-                    ret.Data = new MemoryStream();
-
-                    long bytesRemaining = ret.ContentLength;
-                    long bytesRead = 0;
-                    bool timeout = false;
-                    int currentTimeout = 0;
-
-                    int read = 0;
-                    byte[] buffer;
-                    long bufferSize = 2048;
-                    if (bufferSize > bytesRemaining) bufferSize = bytesRemaining;
-                    buffer = new byte[bufferSize];
-
-                    while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
-                    {
-                        if (read > 0)
-                        {
-                            ret.Data.Write(buffer, 0, read);
-                            bytesRead = bytesRead + read;
-                            bytesRemaining = bytesRemaining - read;
-
-                            // reduce buffer size if number of bytes remaining is
-                            // less than the pre-defined buffer size of 2KB
-                            if (bytesRemaining < bufferSize)
-                            {
-                                bufferSize = bytesRemaining;
-                            }
-
-                            buffer = new byte[bufferSize];
-
-                            // check if read fully
-                            if (bytesRemaining == 0) break;
-                            if (bytesRead == ret.ContentLength) break;
-                        }
-                        else
-                        {
-                            if (currentTimeout >= _TimeoutDataReadMs)
-                            {
-                                timeout = true;
-                                break;
-                            }
-                            else
-                            {
-                                currentTimeout += _DataReadSleepMs;
-                                Thread.Sleep(_DataReadSleepMs);
-                            }
-                        }
-                    }
-
-                    if (timeout)
-                    {
-                        throw new IOException("Timeout reading data from stream.");
-                    }
-
-                    ret.Data.Seek(0, SeekOrigin.Begin);
-
-                    #endregion
-                }
-                else
-                {
-                    // do nothing
-                }
-
-                #endregion
-
-                return ret;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// Instantiate the object using a TCP client.
-        /// </summary>
-        /// <param name="client">TcpClient.</param>
-        /// <returns>HttpRequest.</returns>
-        public static HttpRequest FromTcpClient(TcpClient client)
-        {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-
-            try
-            {
-                #region Variables
-
-                HttpRequest ret;
-                byte[] headerBytes = null;
-                byte[] lastFourBytes = new byte[4];
-                lastFourBytes[0] = 0x00;
-                lastFourBytes[1] = 0x00;
-                lastFourBytes[2] = 0x00;
-                lastFourBytes[3] = 0x00;
-
-                #endregion
-
-                #region Attach-Stream
-
-                NetworkStream stream = client.GetStream();
-
-                if (!stream.CanRead)
-                {
-                    throw new IOException("Unable to read from stream.");
-                }
-
-                #endregion
-
-                #region Read-Headers
-
-                using (MemoryStream headerMs = new MemoryStream())
-                {
-                    #region Read-Header-Bytes
-
-                    byte[] headerBuffer = new byte[1];
-                    int read = 0;
-                    int headerBytesRead = 0;
-
-                    while ((read = stream.Read(headerBuffer, 0, headerBuffer.Length)) > 0)
-                    {
-                        if (read > 0)
-                        {
-                            #region Initialize-Header-Bytes-if-Needed
-
-                            headerBytesRead += read;
-                            if (headerBytes == null) headerBytes = new byte[1];
-
-                            #endregion
-
-                            #region Update-Last-Four
-
-                            if (read == 1)
-                            {
-                                lastFourBytes[0] = lastFourBytes[1];
-                                lastFourBytes[1] = lastFourBytes[2];
-                                lastFourBytes[2] = lastFourBytes[3];
-                                lastFourBytes[3] = headerBuffer[0];
-                            }
-
-                            #endregion
-
-                            #region Append-to-Header-Buffer
-
-                            byte[] tempHeader = new byte[headerBytes.Length + 1];
-                            Buffer.BlockCopy(headerBytes, 0, tempHeader, 0, headerBytes.Length);
-                            tempHeader[headerBytes.Length] = headerBuffer[0];
-                            headerBytes = tempHeader;
-
-                            #endregion
-
-                            #region Check-for-End-of-Headers
-
-                            if ((int)(lastFourBytes[0]) == 13
-                                && (int)(lastFourBytes[1]) == 10
-                                && (int)(lastFourBytes[2]) == 13
-                                && (int)(lastFourBytes[3]) == 10)
-                            {
-                                break;
-                            }
-
-                            #endregion
-                        }
-                    }
-
-                    #endregion
-                }
-
-                #endregion
-
-                #region Process-Headers
-
-                if (headerBytes == null || headerBytes.Length < 1) throw new IOException("No header data read from the stream.");
-                ret = BuildHeaders(headerBytes);
-
-                #endregion
-
-                #region Read-Data
-
-                ret.Data = null;
-                if (ret.ContentLength > 0)
-                {
-                    #region Read-from-Stream
-
-                    ret.Data = new MemoryStream();
-
-                    long bytesRemaining = ret.ContentLength;
-                    long bytesRead = 0;
-                    bool timeout = false;
-                    int currentTimeout = 0;
-
-                    int read = 0;
-                    byte[] buffer;
-                    long bufferSize = 2048;
-                    if (bufferSize > bytesRemaining) bufferSize = bytesRemaining;
-                    buffer = new byte[bufferSize];
-
-                    while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
-                    {
-                        if (read > 0)
-                        {
-                            ret.Data.Write(buffer, 0, read);
-                            bytesRead = bytesRead + read;
-                            bytesRemaining = bytesRemaining - read;
-
-                            // reduce buffer size if number of bytes remaining is
-                            // less than the pre-defined buffer size of 2KB
-                            if (bytesRemaining < bufferSize)
-                            {
-                                bufferSize = bytesRemaining;
-                            }
-
-                            buffer = new byte[bufferSize];
-
-                            // check if read fully
-                            if (bytesRemaining == 0) break;
-                            if (bytesRead == ret.ContentLength) break;
-                        }
-                        else
-                        {
-                            if (currentTimeout >= _TimeoutDataReadMs)
-                            {
-                                timeout = true;
-                                break;
-                            }
-                            else
-                            {
-                                currentTimeout += _DataReadSleepMs;
-                                Thread.Sleep(_DataReadSleepMs);
-                            }
-                        }
-                    }
-
-                    if (timeout)
-                    {
-                        throw new IOException("Timeout reading data from stream.");
-                    }
-
-                    ret.Data.Seek(0, SeekOrigin.Begin);
-
-                    #endregion
-                }
-                else
-                {
-                    // do nothing
-                }
-
-                #endregion
-
-                return ret;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+              
+            Data = ctx.Request.InputStream;
         }
 
         #endregion
@@ -999,46 +200,13 @@ namespace WatsonWebserver
         #region Public-Methods
 
         /// <summary>
-        /// Retrieve a string-formatted, human-readable copy of the HttpRequest instance.
+        /// Return a JSON string representation.
         /// </summary>
-        /// <returns>String-formatted, human-readable copy of the HttpRequest instance.</returns>
-        public override string ToString()
+        /// <param name="pretty"></param>
+        /// <returns></returns>
+        public string ToJson(bool pretty)
         {
-            string ret = ""; 
-
-            ret += "--- HTTP Request ---" + Environment.NewLine;
-            ret += TimestampUtc.ToString("MM/dd/yyyy HH:mm:ss") + " " + SourceIp + ":" + SourcePort + " to " + DestIp + ":" + DestPort + Environment.NewLine;
-            ret += "  " + Method + " " + RawUrlWithoutQuery + " " + ProtocolVersion + Environment.NewLine;
-            ret += "  Full URL    : " + FullUrl + Environment.NewLine;
-            ret += "  Raw URL     : " + RawUrlWithoutQuery + Environment.NewLine;
-            ret += "  Querystring : " + Querystring + Environment.NewLine;
-
-            if (QuerystringEntries != null && QuerystringEntries.Count > 0)
-            {
-                foreach (KeyValuePair<string, string> curr in QuerystringEntries)
-                {
-                    ret += "    " + curr.Key + ": " + curr.Value + Environment.NewLine;
-                }
-            }
-
-            ret += "  Useragent   : " + Useragent + " (Keepalive " + Keepalive + ")" + Environment.NewLine;
-            ret += "  Content     : " + ContentType + " (" + ContentLength + " bytes)" + Environment.NewLine;
-            ret += "  Destination : " + DestHostname + ":" + DestHostPort + Environment.NewLine;
-
-            if (Headers != null && Headers.Count > 0)
-            {
-                ret += "  Headers     : " + Environment.NewLine;
-                foreach (KeyValuePair<string, string> curr in Headers)
-                {
-                    ret += "    " + curr.Key + ": " + curr.Value + Environment.NewLine;
-                }
-            }
-            else
-            {
-                ret += "  Headers     : none" + Environment.NewLine;
-            }
-             
-            return ret;
+            return SerializationHelper.SerializeJson(this, pretty);
         }
 
         /// <summary>
@@ -1058,9 +226,9 @@ namespace WatsonWebserver
                 }
             }
 
-            if (QuerystringEntries != null && QuerystringEntries.Count > 0)
+            if (Query != null && Query.Elements != null && Query.Elements.Count > 0)
             {
-                foreach (KeyValuePair<string, string> curr in QuerystringEntries)
+                foreach (KeyValuePair<string, string> curr in Query.Elements)
                 {
                     if (String.IsNullOrEmpty(curr.Key)) continue;
                     if (String.Compare(curr.Key.ToLower(), key.ToLower()) == 0) return curr.Value;
@@ -1109,15 +277,15 @@ namespace WatsonWebserver
         {
             if (String.IsNullOrEmpty(key)) throw new ArgumentNullException(nameof(key));
 
-            if (QuerystringEntries != null && QuerystringEntries.Count > 0)
+            if (Query != null && Query.Elements != null && Query.Elements.Count > 0)
             {
                 if (caseSensitive)
                 {
-                    return QuerystringEntries.ContainsKey(key);
+                    return Query.Elements.ContainsKey(key);
                 }
                 else
                 { 
-                    foreach (KeyValuePair<string, string> queryElement in QuerystringEntries)
+                    foreach (KeyValuePair<string, string> queryElement in Query.Elements)
                     {
                         if (String.IsNullOrEmpty(queryElement.Key)) continue;
                         if (queryElement.Key.ToLower().Trim().Equals(key)) return true;
@@ -1131,8 +299,9 @@ namespace WatsonWebserver
         /// <summary>
         /// For chunked transfer-encoded requests, read the next chunk.
         /// </summary>
+        /// <param name="token">Cancellation token useful for canceling the request.</param>
         /// <returns>Chunk.</returns>
-        public async Task<Chunk> ReadChunk()
+        public async Task<Chunk> ReadChunk(CancellationToken token = default)
         {
             if (!ChunkedTransfer) throw new IOException("Request is not chunk transfer-encoded.");
 
@@ -1146,7 +315,7 @@ namespace WatsonWebserver
 
             while (true)
             {
-                bytesRead = await Data.ReadAsync(buffer, 0, buffer.Length);
+                bytesRead = await Data.ReadAsync(buffer, 0, buffer.Length, token).ConfigureAwait(false);
                 if (bytesRead > 0)
                 {
                     lenBytes = AppendBytes(lenBytes, buffer);  
@@ -1170,8 +339,7 @@ namespace WatsonWebserver
                         {
                             chunk.Length = int.Parse(lenStr, NumberStyles.HexNumber);
                         }
-
-                        // Console.WriteLine("- Chunk length determined: " + chunk.Length); 
+                         
                         break;
                     }
                 }
@@ -1180,19 +348,16 @@ namespace WatsonWebserver
             #endregion
 
             #region Get-Data
-
-            // Console.WriteLine("- Reading " + chunk.Length + " bytes");
-
+             
             if (chunk.Length > 0)
             {
                 chunk.IsFinalChunk = false;
                 buffer = new byte[chunk.Length];
-                bytesRead = await Data.ReadAsync(buffer, 0, buffer.Length);
+                bytesRead = await Data.ReadAsync(buffer, 0, buffer.Length, token).ConfigureAwait(false);
                 if (bytesRead == chunk.Length)
                 {
                     chunk.Data = new byte[chunk.Length];
-                    Buffer.BlockCopy(buffer, 0, chunk.Data, 0, chunk.Length);
-                    // Console.WriteLine("- Data: " + Encoding.UTF8.GetString(buffer));
+                    Buffer.BlockCopy(buffer, 0, chunk.Data, 0, chunk.Length); 
                 }
                 else
                 {
@@ -1212,7 +377,7 @@ namespace WatsonWebserver
 
             while (true)
             {
-                bytesRead = await Data.ReadAsync(buffer, 0, buffer.Length);
+                bytesRead = await Data.ReadAsync(buffer, 0, buffer.Length, token).ConfigureAwait(false);
                 if (bytesRead > 0)
                 {
                     if (buffer[0] == 10) break;
@@ -1263,227 +428,7 @@ namespace WatsonWebserver
         #endregion
 
         #region Private-Methods
-         
-        private static HttpRequest BuildHeaders(byte[] bytes)
-        {
-            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
-
-            #region Initial-Values
-
-            HttpRequest ret = new HttpRequest();
-            ret.TimestampUtc = DateTime.Now.ToUniversalTime();
-            ret.ThreadId = Thread.CurrentThread.ManagedThreadId;
-            ret.SourceIp = "unknown";
-            ret.SourcePort = 0;
-            ret.DestIp = "unknown";
-            ret.DestPort = 0;
-            ret.Headers = new Dictionary<string, string>();
-
-            #endregion
-
-            #region Convert-to-String-List
-
-            string str = Encoding.UTF8.GetString(bytes);
-            string[] headers = str.Split(new string[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-
-            #endregion
-
-            #region Process-Each-Line
-
-            for (int i = 0; i < headers.Length; i++)
-            {
-                if (i == 0)
-                {
-                    #region First-Line
-                     
-                    string[] requestLine = headers[i].Trim().Trim('\0').Split(' ');
-                    if (requestLine.Length < 3) throw new ArgumentException("Request line does not contain at least three parts (method, raw URL, protocol/version).");
-                      
-                    ret.Method = (HttpMethod)Enum.Parse(typeof(HttpMethod), requestLine[0], true);
-                    ret.FullUrl = requestLine[1];
-                    ret.ProtocolVersion = requestLine[2];
-                    ret.RawUrlWithQuery = ret.FullUrl;
-                    ret.RawUrlWithoutQuery = ExtractRawUrlWithoutQuery(ret.RawUrlWithQuery);
-                    ret.RawUrlEntries = ExtractRawUrlEntries(ret.RawUrlWithoutQuery);
-                    ret.Querystring = ExtractQuerystring(ret.RawUrlWithQuery);
-                    ret.QuerystringEntries = ExtractQuerystringEntries(ret.Querystring);
-
-                    try
-                    {
-                        Uri uri = new Uri(ret.FullUrl);
-                        ret.DestHostname = uri.Host;
-                        ret.DestHostPort = uri.Port;
-                    }
-                    catch (Exception)
-                    {
-                    }
-
-                    if (String.IsNullOrEmpty(ret.DestHostname))
-                    {
-                        if (!ret.FullUrl.Contains("://") & ret.FullUrl.Contains(":"))
-                        {
-                            string[] hostAndPort = ret.FullUrl.Split(':');
-                            if (hostAndPort.Length == 2)
-                            {
-                                ret.DestHostname = hostAndPort[0];
-                                if (!Int32.TryParse(hostAndPort[1], out ret.DestHostPort))
-                                {
-                                    throw new Exception("Unable to parse destination hostname and port.");
-                                }
-                            }
-                        } 
-                    }
-
-                    #endregion
-                }
-                else
-                {
-                    #region Subsequent-Line
-
-                    string[] headerLine = headers[i].Split(':');
-                    if (headerLine.Length == 2)
-                    {
-                        string key = headerLine[0].Trim();
-                        string val = headerLine[1].Trim();
-
-                        if (String.IsNullOrEmpty(key)) continue;
-                        string keyEval = key.ToLower();
-
-                        if (keyEval.Equals("keep-alive"))
-                        {
-                            ret.Keepalive = Convert.ToBoolean(val);
-                        }
-                        else if (keyEval.Equals("user-agent"))
-                        {
-                            ret.Useragent = val;
-                        }
-                        else if (keyEval.Equals("content-length"))
-                        {
-                            ret.ContentLength = Convert.ToInt64(val);
-                        }
-                        else if (keyEval.Equals("content-type"))
-                        {
-                            ret.ContentType = val;
-                        }
-                        else if (keyEval.Equals("transfer-encoding"))
-                        {
-                            if (String.IsNullOrEmpty(val)) continue;
-                            if (val.ToLower().Contains("chunked"))
-                                ret.ChunkedTransfer = true;
-                            if (val.ToLower().Contains("gzip"))
-                                ret.Gzip = true;
-                            if (val.ToLower().Contains("deflate"))
-                                ret.Deflate = true;
-                        }
-                        else
-                        {
-                            ret.Headers = AddToDict(key, val, ret.Headers);
-                        }
-                    }
-
-                    #endregion
-                }
-            }
-
-            #endregion
-             
-            return ret;
-        }
-
-        private static string ExtractRawUrlWithoutQuery(string rawUrlWithQuery)
-        {
-            if (String.IsNullOrEmpty(rawUrlWithQuery)) return null;
-            if (!rawUrlWithQuery.Contains("?")) return rawUrlWithQuery;
-            return rawUrlWithQuery.Substring(0, rawUrlWithQuery.IndexOf("?"));
-        }
-
-        private static List<string> ExtractRawUrlEntries(string rawUrlWithoutQuery)
-        {
-            if (String.IsNullOrEmpty(rawUrlWithoutQuery)) return new List<string>();
-
-            int position = 0;
-            string tempString = "";
-            List<string> ret = new List<string>();
-
-            foreach (char c in rawUrlWithoutQuery)
-            { 
-                if ((position == 0) &&
-                    (String.Compare(tempString, "") == 0) &&
-                    (c == '/'))
-                {
-                    // skip the first slash
-                    continue;
-                }
-
-                if ((c != '/') && (c != '?'))
-                {
-                    tempString += c;
-                }
-
-                if ((c == '/') || (c == '?'))
-                {
-                    if (!String.IsNullOrEmpty(tempString))
-                    {
-                        // add to raw URL entries list
-                        ret.Add(tempString);
-                    }
-
-                    position++;
-                    tempString = "";
-                }
-            }
-
-            if (!String.IsNullOrEmpty(tempString))
-            {
-                // add to raw URL entries list
-                ret.Add(tempString);
-            }
-
-            return ret;
-        }
-
-        private static string ExtractQuerystring(string rawUrlWithQuery)
-        {
-            if (String.IsNullOrEmpty(rawUrlWithQuery)) return null;
-            if (!rawUrlWithQuery.Contains("?")) return null;
-
-            int qsStartPos = rawUrlWithQuery.IndexOf("?");
-            if (qsStartPos >= (rawUrlWithQuery.Length - 1)) return null;
-            return rawUrlWithQuery.Substring(qsStartPos + 1);
-        }
-
-        private static Dictionary<string, string> ExtractQuerystringEntries(string query)
-        {
-            if (String.IsNullOrEmpty(query)) return new Dictionary<string, string>();
-
-            Dictionary<string, string> ret = new Dictionary<string, string>();
-
-            string[] entries = query.Split('&');
-
-            if (entries != null && entries.Length > 0)
-            {
-                foreach (string entry in entries)
-                {
-                    string[] entryParts = entry.Split(new[] { '=' }, 2);
-
-                    if (entryParts != null && entryParts.Length > 0)
-                    {
-                        string key = entryParts[0];
-                        string val = null;
-
-                        if (entryParts.Length == 2)
-                        {
-                            val = entryParts[1];
-                        }
-
-                        ret = AddToDict(key, val, ret);
-                    }
-                }
-            }
-
-            return ret;
-        }
-
+          
         private static Dictionary<string, string> AddToDict(string key, string val, Dictionary<string, string> existing)
         {
             if (String.IsNullOrEmpty(key)) return existing;
@@ -1580,6 +525,268 @@ namespace WatsonWebserver
                     }
                 }
             }
+        }
+
+        #endregion
+
+        #region Embedded-Classes
+
+        /// <summary>
+        /// Source details.
+        /// </summary>
+        public class SourceDetails
+        {
+            /// <summary>
+            /// IP address of the requestor.
+            /// </summary>
+            public string IpAddress { get; private set; } = null;
+
+            /// <summary>
+            /// TCP port from which the request originated on the requestor.
+            /// </summary>
+            public int Port { get; private set; } = 0;
+
+            /// <summary>
+            /// Source details.
+            /// </summary>
+            public SourceDetails()
+            {
+
+            }
+
+            /// <summary>
+            /// Source details.
+            /// </summary>
+            /// <param name="ip">IP address of the requestor.</param>
+            /// <param name="port">TCP port from which the request originated on the requestor.</param>
+            public SourceDetails(string ip, int port)
+            {
+                if (String.IsNullOrEmpty(ip)) throw new ArgumentNullException(nameof(ip));
+                if (port < 0) throw new ArgumentOutOfRangeException(nameof(port));
+
+                IpAddress = ip;
+                Port = port;
+            }
+        }
+
+        /// <summary>
+        /// Destination details.
+        /// </summary>
+        public class DestinationDetails
+        {
+            /// <summary>
+            /// IP address to which the request was made.
+            /// </summary>
+            public string IpAddress { get; private set; } = null;
+
+            /// <summary>
+            /// TCP port on which the request was received.
+            /// </summary>
+            public int Port { get; private set; } = 0;
+
+            /// <summary>
+            /// Hostname to which the request was directed.
+            /// </summary>
+            public string Hostname { get; private set; } = null;
+
+            /// <summary>
+            /// Host port to which the request was directed.
+            /// </summary>
+            public int HostPort { get; private set; } = 0;
+
+            /// <summary>
+            /// Destination details.
+            /// </summary>
+            public DestinationDetails()
+            {
+
+            }
+
+            /// <summary>
+            /// Source details.
+            /// </summary>
+            /// <param name="ip">IP address to which the request was made.</param>
+            /// <param name="port">TCP port on which the request was received.</param>
+            /// <param name="hostname">Hostname.</param>
+            /// <param name="hostPort">Host TCP port.</param>
+            public DestinationDetails(string ip, int port, string hostname, int hostPort)
+            {
+                if (String.IsNullOrEmpty(ip)) throw new ArgumentNullException(nameof(ip));
+                if (port < 0) throw new ArgumentOutOfRangeException(nameof(port));
+                if (String.IsNullOrEmpty(hostname)) throw new ArgumentNullException(nameof(hostname));
+                if (hostPort < 0) throw new ArgumentOutOfRangeException(nameof(hostPort));
+
+                IpAddress = ip;
+                Port = port;
+                Hostname = hostname;
+                HostPort = hostPort;
+            }
+        }
+
+        /// <summary>
+        /// URL details.
+        /// </summary>
+        public class UrlDetails
+        {
+            /// <summary>
+            /// Full URL.
+            /// </summary>
+            public string Full { get; private set; } = null;
+
+            /// <summary>
+            /// Raw URL with query.
+            /// </summary>
+            public string RawWithQuery { get; private set; } = null;
+
+            /// <summary>
+            /// Raw URL without query.
+            /// </summary>
+            public string RawWithoutQuery
+            {
+                get
+                {
+                    if (!String.IsNullOrEmpty(RawWithQuery))
+                    {
+                        if (RawWithQuery.Contains("?")) return RawWithQuery.Substring(0, RawWithQuery.IndexOf("?"));
+                        else return RawWithQuery;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Raw URL elements.
+            /// </summary>
+            public string[] Elements
+            {
+                get
+                { 
+                    string rawUrl = RawWithoutQuery;
+
+                    if (!String.IsNullOrEmpty(rawUrl))
+                    {
+                        while (rawUrl.Contains("//")) rawUrl = rawUrl.Replace("//", "/");
+                        while (rawUrl.StartsWith("/")) rawUrl = rawUrl.Substring(1);
+                        while (rawUrl.EndsWith("/")) rawUrl = rawUrl.Substring(0, rawUrl.Length - 1);
+                        string[] encoded = rawUrl.Split('/');
+                        if (encoded != null && encoded.Length > 0)
+                        {
+                            string[] decoded = new string[encoded.Length];
+                            for (int i = 0; i < encoded.Length; i++)
+                            {
+                                decoded[i] = WebUtility.UrlDecode(encoded[i]);
+                            }
+
+                            return decoded;
+                        }
+                    }
+
+                    return null;
+                }
+            }
+
+            /// <summary>
+            /// URL details.
+            /// </summary>
+            public UrlDetails()
+            {
+
+            }
+
+            /// <summary>
+            /// URL details.
+            /// </summary>
+            /// <param name="fullUrl">Full URL.</param>
+            /// <param name="rawUrl">Raw URL.</param>
+            public UrlDetails(string fullUrl, string rawUrl)
+            {
+                if (String.IsNullOrEmpty(fullUrl)) throw new ArgumentNullException(nameof(fullUrl));
+                if (String.IsNullOrEmpty(rawUrl)) throw new ArgumentNullException(nameof(rawUrl));
+
+                Full = fullUrl;
+                RawWithQuery = rawUrl;
+            }
+        }
+        
+        /// <summary>
+        /// Query details.
+        /// </summary>
+        public class QueryDetails
+        {
+            /// <summary>
+            /// Querystring, excluding the leading '?'.
+            /// </summary>
+            public string Querystring
+            {
+                get
+                {
+                    if (_FullUrl.Contains("?"))
+                    {
+                        return _FullUrl.Substring(_FullUrl.IndexOf("?") + 1, (_FullUrl.Length - _FullUrl.IndexOf("?") - 1));
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Query elements.
+            /// </summary>
+            public Dictionary<string, string> Elements
+            {
+                get
+                {
+                    Dictionary<string, string> ret = new Dictionary<string, string>();
+                    string qs = Querystring;
+                    if (!String.IsNullOrEmpty(qs))
+                    {
+                        string[] queries = qs.Split('&');
+                        if (queries.Length > 0)
+                        {
+                            for (int i = 0; i < queries.Length; i++)
+                            {
+                                string[] queryParts = queries[i].Split('=');
+                                if (queryParts != null && queryParts.Length == 2)
+                                {
+                                    ret = AddToDict(queryParts[0], queryParts[1], ret);
+                                }
+                                else if (queryParts != null && queryParts.Length == 1)
+                                {
+                                    ret = AddToDict(queryParts[0], null, ret);
+                                }
+                            }
+                        }
+                    }
+
+                    return ret;
+                }
+            }
+
+            /// <summary>
+            /// Query details.
+            /// </summary>
+            public QueryDetails()
+            {
+
+            }
+
+            /// <summary>
+            /// Query details.
+            /// </summary>
+            /// <param name="fullUrl">Full URL.</param>
+            public QueryDetails(string fullUrl)
+            {
+                if (String.IsNullOrEmpty(fullUrl)) throw new ArgumentNullException(nameof(fullUrl));
+
+                _FullUrl = fullUrl;
+            }
+
+            private string _FullUrl = null;
         }
 
         #endregion

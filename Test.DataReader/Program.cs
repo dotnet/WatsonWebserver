@@ -22,7 +22,7 @@ namespace Test
         {
             List<string> hostnames = new List<string>();
             hostnames.Add("127.0.0.1"); 
-            Server server = new Server(hostnames, 9000, false, DefaultRoute);
+            Server server = new Server(hostnames, 8080, false, DefaultRoute);
             server.Start();
 
             bool runForever = true;
@@ -53,11 +53,11 @@ namespace Test
                         break;
 
                     case "stats":
-                        Console.WriteLine(server.Stats.ToString());
+                        Console.WriteLine(server.Statistics.ToString());
                         break;
 
                     case "stats reset":
-                        server.Stats.Reset();
+                        server.Statistics.Reset();
                         break;
 
                     case "mode":

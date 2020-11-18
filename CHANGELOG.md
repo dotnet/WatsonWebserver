@@ -2,12 +2,25 @@
 
 ## Current Version
 
+v4.0.0
+
+- Breaking changes to improve simplicity and reliability
+- Consolidated settings into the ```Settings``` property
+- Consolidated routing into the ```Routing``` property
+- Use of ```EventHandler``` for events instead of ```Action```
+- Use of ```ConfigureAwait``` for reliability within your application
+- Simplified constructors
+- ```Pages``` property to set how 404 and 500 responses should be sent, if not handled within your application
+- Consolidated test applications
+- Attribute-based routes now loaded automatically, removed ```LoadRoutes``` method
+- Restructured ```HttpContext```, ```HttpRequest```, and ```HttpResponse``` for better usability
+
+## Previous Versions
+
 v3.3.0
 
 - Breaking change to route attributes
 - Route attributes now support both static routes and dynamic routes
-
-## Previous Versions
 
 v3.2.0
 

@@ -1,70 +1,74 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Net;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace WatsonWebserver
 {
     /// <summary>
     /// HTTP context including both request and response.
     /// </summary>
-    public class HttpContext 
+    public class HttpContext
     {
         #region Public-Members
 
         /// <summary>
         /// The HTTP request that was received.
         /// </summary>
-        public HttpRequest Request;
+        [JsonProperty(Order = -1)]
+        public HttpRequest Request { get; private set; } = null;
 
         /// <summary>
         /// The HTTP response that will be sent.  This object is preconstructed on your behalf and can be modified directly.
         /// </summary>
-        public HttpResponse Response;
-
-        /// <summary>
-        /// Buffer size to use while writing the response from a supplied stream. 
-        /// </summary>
-        public int StreamBufferSize
-        {
-            get
-            {
-                return _StreamBufferSize;
-            }
-            set
-            {
-                if (value < 1) throw new ArgumentException("StreamBufferSize must be greater than zero bytes.");
-                _StreamBufferSize = value;
-            }
-        }
+        public HttpResponse Response { get; private set; } = null;
 
         #endregion
 
+        #region Private-Members
 
-        private int _StreamBufferSize = 65536;
         private HttpListenerContext _Context;
-        private EventCallbacks _Events;
 
-        private HttpContext()
+        #endregion
+
+        #region Constructors-and-Factories
+
+        /// <summary>
+        /// Instantiate the object.
+        /// </summary>
+        public HttpContext()
         {
+
         }
 
-        internal HttpContext(HttpListenerContext ctx, EventCallbacks events)
+        internal HttpContext(HttpListenerContext ctx, WatsonWebserverSettings settings, WatsonWebserverEvents events)
         {
             if (ctx == null) throw new ArgumentNullException(nameof(ctx));
             if (events == null) throw new ArgumentNullException(nameof(events));
 
             _Context = ctx;
-            _Events = events;
 
-            Request = new HttpRequest(ctx);
-            Response = new HttpResponse(Request, _Context, _Events, _StreamBufferSize);
-        } 
+            Request = new HttpRequest(ctx); 
+            Response = new HttpResponse(Request, _Context, settings, events); 
+        }
+
+        #endregion
+
+        #region Public-Methods
+
+        /// <summary>
+        /// Return a JSON string representation.
+        /// </summary>
+        /// <param name="pretty"></param>
+        /// <returns></returns>
+        public string ToJson(bool pretty)
+        {
+            return SerializationHelper.SerializeJson(this, pretty);
+        }
+
+        #endregion
+
+        #region Private-Methods
+
+        #endregion
     }
 }

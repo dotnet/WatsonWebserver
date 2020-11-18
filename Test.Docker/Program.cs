@@ -9,15 +9,15 @@ namespace Test.Docker
     class Program
     {
         static Server _Server;
-        static string _Hostname = "*";
-        static int _Port = 8000;
+        static string _Hostname = "localhost";
+        static int _Port = 8080;
         
         static void Main(string[] args)
         {
             _Server= new Server(_Hostname, _Port, false, DefaultRoute);
             _Server.Start();
 
-            Console.WriteLine("Watson Webserver started on http://*:8000");
+            Console.WriteLine("Watson Webserver started on http://" + _Hostname + ":" + _Port);
 
             EventWaitHandle waitHandle = new EventWaitHandle(false, EventResetMode.AutoReset);
             bool signal = false;
@@ -32,16 +32,16 @@ namespace Test.Docker
         {
             if (ctx.Request.Method == HttpMethod.GET)
             {
-                if (ctx.Request.RawUrlEntries == null || ctx.Request.RawUrlEntries.Count == 0)
+                if (ctx.Request.Url.Elements == null || ctx.Request.Url.Elements.Length == 0)
                 {
                     ctx.Response.ContentType = "text/html";
-                    await ctx.Response.Send(Html(ctx));
+                    await ctx.Response.Send(Html);
                     return;
                 }
-                else if (ctx.Request.RawUrlEntries.Count == 1)
-                {
-                    if (ctx.Request.RawUrlEntries[0].Equals("watson.ico")
-                        || ctx.Request.RawUrlEntries[0].Equals("favicon.ico"))
+                else if (ctx.Request.Url.Elements.Length == 1)
+                { 
+                    if (ctx.Request.Url.Elements[0].Equals("watson.ico")
+                        || ctx.Request.Url.Elements[0].Equals("favicon.ico"))
                     {
                         ctx.Response.ContentType = "image/png";
                         await ctx.Response.Send(File.ReadAllBytes("./watson.ico"));
@@ -55,22 +55,18 @@ namespace Test.Docker
             return;
         }
 
-        static string Html(HttpContext ctx)
-        {
-            string html =
-                "<html>" + Environment.NewLine +
-                "  <head>" + Environment.NewLine +
-                "    <title>Hello from Watson Webserver</title>" + Environment.NewLine +
-                "  </head>" + Environment.NewLine +
-                "  <body>" + Environment.NewLine +
-                "    <div>" + Environment.NewLine +
-                "      <img src='./watson.ico' />" + Environment.NewLine +
-                "      <h2>Hello!</h2>" + Environment.NewLine +
-                "      <p>Hello from Watson Webserver!  Your request has been received." + Environment.NewLine +
-                "    </div>" + Environment.NewLine +
-                "  </body>" + Environment.NewLine +
-                "</html>";
-            return html;
-        }
+        static string Html = 
+            "<html>" + Environment.NewLine +
+            "  <head>" + Environment.NewLine +
+            "    <title>Hello from Watson Webserver</title>" + Environment.NewLine +
+            "  </head>" + Environment.NewLine +
+            "  <body>" + Environment.NewLine +
+            "    <div>" + Environment.NewLine +
+            "      <img src='./watson.ico' />" + Environment.NewLine +
+            "      <h2>Hello!</h2>" + Environment.NewLine +
+            "      <p>Hello from Watson Webserver!  Your request has been received." + Environment.NewLine +
+            "    </div>" + Environment.NewLine +
+            "  </body>" + Environment.NewLine +
+            "</html>";  
     }
 }

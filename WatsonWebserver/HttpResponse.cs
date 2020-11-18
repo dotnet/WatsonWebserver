@@ -8,11 +8,12 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
- 
+using Newtonsoft.Json;
+
 namespace WatsonWebserver
 {
     /// <summary>
-    /// Response to an HTTP request.
+    /// HTTP response.
     /// </summary>
     public class HttpResponse
     {
@@ -21,17 +22,31 @@ namespace WatsonWebserver
         /// <summary>
         /// The HTTP status code to return to the requestor (client).
         /// </summary>
+        [JsonProperty(Order = -3)]
         public int StatusCode = 200;
 
         /// <summary>
         /// The HTTP status description to return to the requestor (client).
         /// </summary>
+        [JsonProperty(Order = -2)]
         public string StatusDescription = "OK";
 
         /// <summary>
         /// User-supplied headers to include in the response.
         /// </summary>
-        public Dictionary<string, string> Headers = new Dictionary<string, string>();
+        [JsonProperty(Order = -1)]
+        public Dictionary<string, string> Headers
+        {
+            get
+            {
+                return _Headers;
+            }
+            set
+            {
+                if (value == null) _Headers = new Dictionary<string, string>();
+                else _Headers = value;
+            }
+        }
 
         /// <summary>
         /// User-supplied content-type to include in the response.
@@ -47,12 +62,7 @@ namespace WatsonWebserver
         /// Indicates whether or not chunked transfer encoding should be indicated in the response. 
         /// </summary>
         public bool ChunkedTransfer = false;
-
-        /// <summary>
-        /// Access-Control-Allow-Origin header value.
-        /// </summary>
-        public string AccessControlAllowOriginHeader = "*";
-
+         
         #endregion
 
         #region Internal-Members
@@ -68,9 +78,7 @@ namespace WatsonWebserver
         #endregion
         
         #region Private-Members
-
-        private int _StreamBufferSize = 65536;
-
+        
         private HttpRequest _Request;
         private HttpListenerContext _Context;
         private HttpListenerResponse _Response;
@@ -78,7 +86,10 @@ namespace WatsonWebserver
         private bool _HeadersSent = false;
         private bool _ResponseSent = false;
 
-        private EventCallbacks _Events = new EventCallbacks();
+        private WatsonWebserverSettings _Settings = new WatsonWebserverSettings();
+        private WatsonWebserverEvents _Events = new WatsonWebserverEvents();
+
+        private Dictionary<string, string> _Headers = new Dictionary<string, string>();
 
         #endregion
 
@@ -92,59 +103,42 @@ namespace WatsonWebserver
 
         }
 
-        internal HttpResponse(HttpRequest req, HttpListenerContext ctx, EventCallbacks events, int bufferSize)
+        internal HttpResponse(HttpRequest req, HttpListenerContext ctx, WatsonWebserverSettings settings, WatsonWebserverEvents events)
         {
             if (req == null) throw new ArgumentNullException(nameof(req));
             if (ctx == null) throw new ArgumentNullException(nameof(ctx));
+            if (settings == null) throw new ArgumentNullException(nameof(settings));
             if (events == null) throw new ArgumentNullException(nameof(events));
 
             _Request = req;
             _Context = ctx;
             _Response = _Context.Response;
-            _Events = events;
-            _StreamBufferSize = bufferSize;
+            _Settings = settings;
+            _Events = events; 
+
             _OutputStream = _Response.OutputStream;
         }
 
         #endregion
 
         #region Public-Methods
-         
+
         /// <summary>
-        /// Retrieve a string-formatted, human-readable copy of the HttpResponse instance.
+        /// Return a JSON string representation.
         /// </summary>
-        /// <returns>String-formatted, human-readable copy of the HttpResponse instance.</returns>
-        public override string ToString()
+        /// <param name="pretty"></param>
+        /// <returns></returns>
+        public string ToJson(bool pretty)
         {
-            string ret = "";
-  
-            ret += "--- HTTP Response ---" + Environment.NewLine; 
-            ret += "  Status Code        : " + StatusCode + Environment.NewLine;
-            ret += "  Status Description : " + StatusDescription + Environment.NewLine;
-            ret += "  Content            : " + ContentType + Environment.NewLine;
-            ret += "  Content Length     : " + ContentLength + " bytes" + Environment.NewLine;
-            ret += "  Chunked Transfer   : " + ChunkedTransfer + Environment.NewLine;
-            if (Headers != null && Headers.Count > 0)
-            {
-                ret += "  Headers            : " + Environment.NewLine;
-                foreach (KeyValuePair<string, string> curr in Headers)
-                {
-                    ret += "  - " + curr.Key + ": " + curr.Value + Environment.NewLine;
-                }
-            }
-            else
-            {
-                ret += "  Headers          : none" + Environment.NewLine;
-            }
-             
-            return ret;
+            return SerializationHelper.SerializeJson(this, pretty);
         }
 
         /// <summary>
         /// Send headers and no data to the requestor and terminate the connection.
         /// </summary>
+        /// <param name="token">Cancellation token useful for canceling the request.</param>
         /// <returns>True if successful.</returns>
-        public async Task<bool> Send()
+        public async Task<bool> Send(CancellationToken token = default)
         {
             if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and SendFinalChunk().");
 
@@ -152,56 +146,27 @@ namespace WatsonWebserver
             {
                 if (!_HeadersSent) SendHeaders();
 
-                await _OutputStream.FlushAsync();
+                await _OutputStream.FlushAsync(token).ConfigureAwait(false);
                 _OutputStream.Close();
 
                 if (_Response != null) _Response.Close();
-            }
-            catch (OperationCanceledException)
-            {
-                // do nothing
-                return false;
-            }
-            catch (HttpListenerException)
-            {
-                _Events.RequestorDisconnected?.Invoke(_Request.SourceIp, _Request.SourcePort, _Request.Method.ToString(), _Request.FullUrl);
-                return false;
-            }
-            catch (IOException ioe)
-            {
-                if (ioe.InnerException is SocketException)
-                {
-                    _Events.RequestorDisconnected?.Invoke(_Request.SourceIp, _Request.SourcePort, _Request.Method.ToString(), _Request.FullUrl);
-                    return false;
-                }
-                else
-                {
-                    _Events.ExceptionEncountered?.Invoke(_Request.SourceIp, _Request.SourcePort, ioe);
-                    return false;
-                }
-            }
-            catch (Exception eInner)
-            {
-                _Events.ExceptionEncountered?.Invoke(_Request.SourceIp, _Request.SourcePort, eInner);
-                return false;
-            }
-            finally
-            {
-                await _OutputStream.FlushAsync();
-                _OutputStream.Close();
 
-                if (_Response != null) _Response.Close();
-            }
-
-            _ResponseSent = true;
-            return true;
+                _ResponseSent = true;
+                return true;
+            } 
+            catch (Exception)
+            {
+                return false;
+            } 
         }
 
         /// <summary>
         /// Send headers with a specified content length and no data to the requestor and terminate the connection.  Useful for HEAD requests where the content length must be set.
         /// </summary>
+        /// <param name="token">Cancellation token useful for canceling the request.</param>
+        /// <param name="contentLength">Content length.</param>
         /// <returns>True if successful.</returns>
-        public async Task<bool> Send(long contentLength)
+        public async Task<bool> Send(long contentLength, CancellationToken token = default)
         {
             if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and SendFinalChunk().");
             ContentLength = contentLength;
@@ -210,57 +175,27 @@ namespace WatsonWebserver
             {
                 if (!_HeadersSent) SendHeaders();
 
-                await _OutputStream.FlushAsync();
+                await _OutputStream.FlushAsync(token).ConfigureAwait(false);
                 _OutputStream.Close();
 
                 if (_Response != null) _Response.Close();
-            }
-            catch (OperationCanceledException)
-            {
-                // do nothing
-                return false;
-            }
-            catch (HttpListenerException)
-            {
-                _Events.RequestorDisconnected?.Invoke(_Request.SourceIp, _Request.SourcePort, _Request.Method.ToString(), _Request.FullUrl);
-                return false;
-            }
-            catch (IOException ioe)
-            {
-                if (ioe.InnerException is SocketException)
-                {
-                    _Events.RequestorDisconnected?.Invoke(_Request.SourceIp, _Request.SourcePort, _Request.Method.ToString(), _Request.FullUrl);
-                    return false;
-                }
-                else
-                {
-                    _Events.ExceptionEncountered?.Invoke(_Request.SourceIp, _Request.SourcePort, ioe);
-                    return false;
-                }
-            }
-            catch (Exception eInner)
-            {
-                _Events.ExceptionEncountered?.Invoke(_Request.SourceIp, _Request.SourcePort, eInner);
-                return false;
-            }
-            finally
-            {
-                await _OutputStream.FlushAsync();
-                _OutputStream.Close();
 
-                if (_Response != null) _Response.Close();
+                _ResponseSent = true;
+                return true;
             }
-
-            _ResponseSent = true;
-            return true;
+            catch (Exception)
+            {
+                return false;
+            } 
         }
 
         /// <summary>
         /// Send headers and data to the requestor and terminate the connection.
         /// </summary>
         /// <param name="data">Data.</param>
+        /// <param name="token">Cancellation token useful for canceling the request.</param>
         /// <returns>True if successful.</returns>
-        public async Task<bool> Send(string data)
+        public async Task<bool> Send(string data, CancellationToken token = default)
         {
             if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and SendFinalChunk().");
             if (!_HeadersSent) SendHeaders();
@@ -283,56 +218,31 @@ namespace WatsonWebserver
                 {
                     if (bytes != null && bytes.Length > 0)
                     {
-                        await _OutputStream.WriteAsync(bytes, 0, bytes.Length);
+                        await _OutputStream.WriteAsync(bytes, 0, bytes.Length, token).ConfigureAwait(false);
                     }
                 }
-            }
-            catch (OperationCanceledException)
-            {
-                // do nothing
-                return false;
-            }
-            catch (HttpListenerException)
-            {
-                _Events.RequestorDisconnected?.Invoke(_Request.SourceIp, _Request.SourcePort, _Request.Method.ToString(), _Request.FullUrl);
-                return false;
-            }
-            catch (IOException ioe)
-            {
-                if (ioe.InnerException is SocketException)
-                {
-                    _Events.RequestorDisconnected?.Invoke(_Request.SourceIp, _Request.SourcePort, _Request.Method.ToString(), _Request.FullUrl);
-                    return false;
-                }
-                else
-                {
-                    _Events.ExceptionEncountered?.Invoke(_Request.SourceIp, _Request.SourcePort, ioe);
-                    return false;
-                }
-            }
-            catch (Exception eInner)
-            {
-                _Events.ExceptionEncountered?.Invoke(_Request.SourceIp, _Request.SourcePort, eInner);
-                return false;
-            }
-            finally
-            {
-                await _OutputStream.FlushAsync();
+
+                await _OutputStream.FlushAsync(token).ConfigureAwait(false);
                 _OutputStream.Close();
 
                 if (_Response != null) _Response.Close();
-            }
 
-            _ResponseSent = true;
-            return true;
+                _ResponseSent = true;
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         /// <summary>
         /// Send headers and data to the requestor and terminate the connection.
         /// </summary>
         /// <param name="data">Data.</param>
+        /// <param name="token">Cancellation token useful for canceling the request.</param>
         /// <returns>True if successful.</returns>
-        public async Task<bool> Send(byte[] data)
+        public async Task<bool> Send(byte[] data, CancellationToken token = default)
         {
             if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and SendFinalChunk().");
             if (!_HeadersSent) SendHeaders();
@@ -353,48 +263,22 @@ namespace WatsonWebserver
                 {
                     if (data != null && data.Length > 0)
                     {
-                        await _OutputStream.WriteAsync(data, 0, (int)_Response.ContentLength64);
+                        await _OutputStream.WriteAsync(data, 0, (int)_Response.ContentLength64, token).ConfigureAwait(false);
                     }
                 }
-            }
-            catch (OperationCanceledException)
-            {
-                // do nothing
-                return false;
-            }
-            catch (HttpListenerException)
-            {
-                _Events.RequestorDisconnected?.Invoke(_Request.SourceIp, _Request.SourcePort, _Request.Method.ToString(), _Request.FullUrl);
-                return false;
-            }
-            catch (IOException ioe)
-            {
-                if (ioe.InnerException is SocketException)
-                {
-                    _Events.RequestorDisconnected?.Invoke(_Request.SourceIp, _Request.SourcePort, _Request.Method.ToString(), _Request.FullUrl);
-                    return false;
-                }
-                else
-                {
-                    _Events.ExceptionEncountered?.Invoke(_Request.SourceIp, _Request.SourcePort, ioe);
-                    return false;
-                }
-            }
-            catch (Exception eInner)
-            {
-                _Events.ExceptionEncountered?.Invoke(_Request.SourceIp, _Request.SourcePort, eInner);
-                return false;
-            }
-            finally
-            {
-                await _OutputStream.FlushAsync();
+
+                await _OutputStream.FlushAsync(token).ConfigureAwait(false);
                 _OutputStream.Close();
 
                 if (_Response != null) _Response.Close();
-            }
 
-            _ResponseSent = true;
-            return true;
+                _ResponseSent = true;
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            } 
         }
 
         /// <summary>
@@ -402,8 +286,9 @@ namespace WatsonWebserver
         /// </summary>
         /// <param name="contentLength">Number of bytes to send.</param>
         /// <param name="stream">Stream containing the data.</param>
+        /// <param name="token">Cancellation token useful for canceling the request.</param>
         /// <returns>True if successful.</returns>
-        public async Task<bool> Send(long contentLength, Stream stream)
+        public async Task<bool> Send(long contentLength, Stream stream, CancellationToken token = default)
         {
             if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and SendFinalChunk().");
             ContentLength = contentLength;
@@ -420,11 +305,11 @@ namespace WatsonWebserver
                         while (bytesRemaining > 0)
                         {
                             int bytesRead = 0;
-                            byte[] buffer = new byte[_StreamBufferSize];
-                            bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
+                            byte[] buffer = new byte[_Settings.IO.StreamBufferSize];
+                            bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length, token).ConfigureAwait(false);
                             if (bytesRead > 0)
                             {
-                                await _OutputStream.WriteAsync(buffer, 0, bytesRead);
+                                await _OutputStream.WriteAsync(buffer, 0, bytesRead, token).ConfigureAwait(false);
                                 bytesRemaining -= bytesRead;
                             }
                         }
@@ -433,53 +318,28 @@ namespace WatsonWebserver
                         stream.Dispose();
                     }
                 }
-            }
-            catch (OperationCanceledException)
-            {
-                // do nothing
-                return false;
-            }
-            catch (HttpListenerException)
-            {
-                _Events.RequestorDisconnected?.Invoke(_Request.SourceIp, _Request.SourcePort, _Request.Method.ToString(), _Request.FullUrl);
-                return false;
-            }
-            catch (IOException ioe)
-            {
-                if (ioe.InnerException is SocketException)
-                {
-                    _Events.RequestorDisconnected?.Invoke(_Request.SourceIp, _Request.SourcePort, _Request.Method.ToString(), _Request.FullUrl);
-                    return false;
-                }
-                else
-                {
-                    _Events.ExceptionEncountered?.Invoke(_Request.SourceIp, _Request.SourcePort, ioe);
-                    return false;
-                }
-            }
-            catch (Exception eInner)
-            { 
-                _Events.ExceptionEncountered?.Invoke(_Request.SourceIp, _Request.SourcePort, eInner);
-                return false;
-            }
-            finally
-            {
-                await _OutputStream.FlushAsync();
+
+                await _OutputStream.FlushAsync(token).ConfigureAwait(false);
                 _OutputStream.Close();
 
                 if (_Response != null) _Response.Close();
-            }
 
-            _ResponseSent = true;
-            return true;
+                _ResponseSent = true;
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         /// <summary>
         /// Send headers (if not already sent) and a chunk of data using chunked transfer-encoding, and keep the connection in-tact.
         /// </summary>
         /// <param name="chunk">Chunk of data.</param>
+        /// <param name="token">Cancellation token useful for canceling the request.</param>
         /// <returns>True if successful.</returns>
-        public async Task<bool> SendChunk(byte[] chunk)
+        public async Task<bool> SendChunk(byte[] chunk, CancellationToken token = default)
         {
             if (!ChunkedTransfer) throw new IOException("Response is not configured to use chunked transfer-encoding.  Set ChunkedTransfer to true first, otherwise use Send().");
             if (!_HeadersSent) SendHeaders();
@@ -492,44 +352,13 @@ namespace WatsonWebserver
             try
             {
                 if (chunk == null || chunk.Length < 1) chunk = new byte[0];
-
-                // byte[] packagedChunk = PackageChunk(chunk);
-                // await _OutputStream.WriteAsync(packagedChunk, 0, packagedChunk.Length);
-                await _OutputStream.WriteAsync(chunk, 0, chunk.Length);
+                await _OutputStream.WriteAsync(chunk, 0, chunk.Length, token).ConfigureAwait(false);
+                await _OutputStream.FlushAsync(token).ConfigureAwait(false);
             }
-            catch (OperationCanceledException)
+            catch (Exception)
             {
-                // do nothing
                 return false;
             }
-            catch (HttpListenerException)
-            {
-                _Events.RequestorDisconnected?.Invoke(_Request.SourceIp, _Request.SourcePort, _Request.Method.ToString(), _Request.FullUrl);
-                return false;
-            }
-            catch (IOException ioe)
-            {
-                if (ioe.InnerException is SocketException)
-                {
-                    _Events.RequestorDisconnected?.Invoke(_Request.SourceIp, _Request.SourcePort, _Request.Method.ToString(), _Request.FullUrl);
-                    return false;
-                }
-                else
-                {
-                    _Events.ExceptionEncountered?.Invoke(_Request.SourceIp, _Request.SourcePort, ioe);
-                    return false;
-                }
-            }
-            catch (Exception eInner)
-            {
-                _Events.ExceptionEncountered?.Invoke(_Request.SourceIp, _Request.SourcePort, eInner);
-                return false;
-            }
-            finally
-            {
-                await _OutputStream.FlushAsync();
-                // do not close or dispose
-            } 
 
             return true;
         }
@@ -538,8 +367,9 @@ namespace WatsonWebserver
         /// Send headers (if not already sent) and the final chunk of data using chunked transfer-encoding and terminate the connection.
         /// </summary>
         /// <param name="chunk">Chunk of data.</param>
+        /// <param name="token">Cancellation token useful for canceling the request.</param>
         /// <returns>True if successful.</returns>
-        public async Task<bool> SendFinalChunk(byte[] chunk)
+        public async Task<bool> SendFinalChunk(byte[] chunk, CancellationToken token = default)
         {
             if (!ChunkedTransfer) throw new IOException("Response is not configured to use chunked transfer-encoding.  Set ChunkedTransfer to true first, otherwise use Send().");
             if (!_HeadersSent) SendHeaders();
@@ -553,50 +383,24 @@ namespace WatsonWebserver
             { 
                 if (chunk != null && chunk.Length > 0)
                 {
-                    await _OutputStream.WriteAsync(chunk, 0, chunk.Length);
+                    await _OutputStream.WriteAsync(chunk, 0, chunk.Length, token).ConfigureAwait(false);
                 }
 
                 byte[] endChunk = new byte[0];
-                await _OutputStream.WriteAsync(endChunk, 0, endChunk.Length);
-            }
-            catch (OperationCanceledException)
-            {
-                // do nothing
-                return false;
-            }
-            catch (HttpListenerException)
-            {
-                _Events.RequestorDisconnected?.Invoke(_Request.SourceIp, _Request.SourcePort, _Request.Method.ToString(), _Request.FullUrl);
-                return false;
-            }
-            catch (IOException ioe)
-            {
-                if (ioe.InnerException is SocketException)
-                {
-                    _Events.RequestorDisconnected?.Invoke(_Request.SourceIp, _Request.SourcePort, _Request.Method.ToString(), _Request.FullUrl);
-                    return false;
-                }
-                else
-                {
-                    _Events.ExceptionEncountered?.Invoke(_Request.SourceIp, _Request.SourcePort, ioe);
-                    return false;
-                }
-            }
-            catch (Exception eInner)
-            {
-                _Events.ExceptionEncountered?.Invoke(_Request.SourceIp, _Request.SourcePort, eInner);
-                return false;
-            }
-            finally
-            {
-                await _OutputStream.FlushAsync();
+                await _OutputStream.WriteAsync(endChunk, 0, endChunk.Length, token).ConfigureAwait(false);
+
+                await _OutputStream.FlushAsync(token).ConfigureAwait(false);
                 _OutputStream.Close();
 
                 if (_Response != null) _Response.Close();
-            }
 
-            _ResponseSent = true;
-            return true;
+                _ResponseSent = true;
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
          
         #endregion
@@ -613,15 +417,23 @@ namespace WatsonWebserver
             _Response.SendChunked = ChunkedTransfer;
             _Response.ContentType = ContentType;
 
-            if (!String.IsNullOrEmpty(AccessControlAllowOriginHeader)) 
-                _Response.AddHeader("Access-Control-Allow-Origin", AccessControlAllowOriginHeader);
-
             if (Headers != null && Headers.Count > 0)
             {
-                foreach (KeyValuePair<string, string> curr in Headers)
+                foreach (KeyValuePair<string, string> header in Headers)
                 {
-                    if (String.IsNullOrEmpty(curr.Key)) continue;
-                    _Response.AddHeader(curr.Key, curr.Value);
+                    if (String.IsNullOrEmpty(header.Key)) continue;
+                    _Response.AddHeader(header.Key, header.Value);
+                }
+            }
+
+            if (_Settings.Headers != null)
+            {
+                foreach (KeyValuePair<string, string> header in _Settings.Headers)
+                {
+                    if (!Headers.Any(h => h.Key.ToLower().Equals(header.Key.ToLower())))
+                    {
+                        _Response.AddHeader(header.Key, header.Value);
+                    }
                 }
             }
 
