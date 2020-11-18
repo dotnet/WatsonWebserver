@@ -1490,16 +1490,6 @@
             Enable or disable debug logging of routing.
             </summary>
         </member>
-        <member name="F:WatsonWebserver.WatsonWebserverSettings.DebugSettings.Connections">
-            <summary>
-            Enable or disable debug logging of connections.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.WatsonWebserverSettings.DebugSettings.Tcp">
-            <summary>
-            Enable or disable debug logging of the underlying TCP library.
-            </summary>
-        </member>
         <member name="F:WatsonWebserver.WatsonWebserverSettings.DebugSettings.Requests">
             <summary>
             Enable or disable debug logging of requests.

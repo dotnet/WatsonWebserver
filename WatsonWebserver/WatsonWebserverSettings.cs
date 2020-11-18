@@ -494,17 +494,7 @@ namespace WatsonWebserver
             /// Enable or disable debug logging of routing.
             /// </summary>
             public bool Routing = false;
-
-            /// <summary>
-            /// Enable or disable debug logging of connections.
-            /// </summary>
-            public bool Connections = false;
-
-            /// <summary>
-            /// Enable or disable debug logging of the underlying TCP library.
-            /// </summary>
-            public bool Tcp = false;
-
+              
             /// <summary>
             /// Enable or disable debug logging of requests.
             /// </summary>

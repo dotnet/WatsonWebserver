@@ -88,6 +88,7 @@ namespace WatsonWebserver
 
         #region Private-Members
 
+        private string _Header = "[Watson] ";
         private Assembly _Assembly = Assembly.GetCallingAssembly();
         private WatsonWebserverSettings _Settings = new WatsonWebserverSettings();
         private WatsonWebserverRoutes _Routes = new WatsonWebserverRoutes();
@@ -377,7 +378,14 @@ namespace WatsonWebserver
                             ctx = new HttpContext(listenerCtx, _Settings, Events);
 
                             Events.HandleRequestReceived(this, new RequestEventArgs(ctx));
-                             
+
+                            if (_Settings.Debug.Requests)
+                            {
+                                Events.Logger?.Invoke(
+                                    _Header + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
+                                    ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
+                            }
+
                             Statistics.IncrementRequestCounter(ctx.Request.Method);
                             Statistics.IncrementReceivedPayloadBytes(ctx.Request.ContentLength);
                              
@@ -388,6 +396,12 @@ namespace WatsonWebserver
                             if (!_Settings.AccessControl.Permit(ctx.Request.Source.IpAddress))
                             {
                                 Events.HandleRequestDenied(this, new RequestEventArgs(ctx));
+
+                                if (_Settings.Debug.AccessControl)
+                                {
+                                    Events.Logger?.Invoke(_Header + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " denied due to access control");
+                                }
+
                                 listenerCtx.Response.Close();
                                 return;
                             }
@@ -400,6 +414,13 @@ namespace WatsonWebserver
                             {
                                 if (_Routes.Preflight != null)
                                 {
+                                    if (_Settings.Debug.Routing)
+                                    {
+                                        Events.Logger?.Invoke(
+                                            _Header + "preflight route for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
+                                            ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
+                                    }
+
                                     await _Routes.Preflight(ctx).ConfigureAwait(false);
                                     return;
                                 } 
@@ -413,7 +434,17 @@ namespace WatsonWebserver
                             if (_Routes.PreRouting != null)
                             {
                                 terminate = await _Routes.PreRouting(ctx).ConfigureAwait(false);
-                                if (terminate) return;
+                                if (terminate)
+                                {
+                                    if (_Settings.Debug.Routing)
+                                    {
+                                        Events.Logger?.Invoke(
+                                            _Header + "prerouting terminated connection for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
+                                            ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
+                                    }
+
+                                    return;
+                                }
                             }
 
                             #endregion
@@ -423,7 +454,14 @@ namespace WatsonWebserver
                             if (ctx.Request.Method == HttpMethod.GET || ctx.Request.Method == HttpMethod.HEAD)
                             {
                                 if (_Routes.Content.Exists(ctx.Request.Url.RawWithoutQuery))
-                                { 
+                                {
+                                    if (_Settings.Debug.Routing)
+                                    {
+                                        Events.Logger?.Invoke(
+                                            _Header + "content route for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
+                                            ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
+                                    }
+
                                     await _Routes.ContentHandler.Process(ctx, token).ConfigureAwait(false); 
                                     return;
                                 } 
@@ -436,6 +474,13 @@ namespace WatsonWebserver
                             Func<HttpContext, Task> handler = _Routes.Static.Match(ctx.Request.Method, ctx.Request.Url.RawWithoutQuery);
                             if (handler != null)
                             {
+                                if (_Settings.Debug.Routing)
+                                {
+                                    Events.Logger?.Invoke(
+                                        _Header + "static route for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
+                                        ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
+                                }
+
                                 await handler(ctx).ConfigureAwait(false);
                                 return;
                             }
@@ -447,6 +492,13 @@ namespace WatsonWebserver
                             handler = _Routes.Dynamic.Match(ctx.Request.Method, ctx.Request.Url.RawWithoutQuery);
                             if (handler != null)
                             {
+                                if (_Settings.Debug.Routing)
+                                {
+                                    Events.Logger?.Invoke(
+                                        _Header + "dynamic route for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
+                                        ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
+                                }
+
                                 await handler(ctx).ConfigureAwait(false);
                                 return;
                             }
@@ -457,11 +509,25 @@ namespace WatsonWebserver
 
                             if (_Routes.Default != null)
                             {
+                                if (_Settings.Debug.Routing)
+                                {
+                                    Events.Logger?.Invoke(
+                                        _Header + "default route for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
+                                        ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
+                                }
+
                                 await _Routes.Default(ctx).ConfigureAwait(false);
                                 return;
                             }
                             else
                             {
+                                if (_Settings.Debug.Routing)
+                                {
+                                    Events.Logger?.Invoke(
+                                        _Header + "default route not found for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
+                                        ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
+                                }
+
                                 ctx.Response.StatusCode = 404;
                                 ctx.Response.ContentType = Pages.Default404Page.ContentType;
                                 await ctx.Response.Send(Pages.Default404Page.Content).ConfigureAwait(false);
