@@ -11,8 +11,9 @@ namespace Test.Loopback
     {
         static void Main()
         {
-            Server server = new Server("localhost", 9000, false, DefaultRoute);
-            Console.WriteLine("WatsonWebserver listening on http://localhost:9000");
+            Server server = new Server("localhost", 8080, false, DefaultRoute);
+            server.Start();
+            Console.WriteLine("WatsonWebserver listening on http://localhost:8080");
             Console.WriteLine("ENTER to exit");
             Console.ReadLine();
         }
