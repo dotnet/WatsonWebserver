@@ -23,7 +23,7 @@ Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS reque
 
 I'd like to extend a special thanks to those that have helped make Watson Webserver better.
 
-- @notesjor @shdwp @Tutch @GeoffMcGrath @jurkovic-nikola @joreg @Job79 @at1993
+- @notesjor @shdwp @Tutch @GeoffMcGrath @jurkovic-nikola @joreg @Job79 @at1993 @MartyIX
 
 ## Important Notes
 
