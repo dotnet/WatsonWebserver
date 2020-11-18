@@ -1,7 +1,0 @@
-This is a random test file.
-
-I'm going to send this in 16-byte chunks.
-
-Hopefully this works exactly the way we expect it to.
-
-Wish me luck...
