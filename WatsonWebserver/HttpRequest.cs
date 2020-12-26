@@ -671,7 +671,7 @@ namespace WatsonWebserver
                         while (rawUrl.Contains("//")) rawUrl = rawUrl.Replace("//", "/");
                         while (rawUrl.StartsWith("/")) rawUrl = rawUrl.Substring(1);
                         while (rawUrl.EndsWith("/")) rawUrl = rawUrl.Substring(0, rawUrl.Length - 1);
-                        string[] encoded = rawUrl.Split('/');
+                        string[] encoded = rawUrl.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
                         if (encoded != null && encoded.Length > 0)
                         {
                             string[] decoded = new string[encoded.Length];
@@ -745,7 +745,7 @@ namespace WatsonWebserver
                     string qs = Querystring;
                     if (!String.IsNullOrEmpty(qs))
                     {
-                        string[] queries = qs.Split('&');
+                        string[] queries = qs.Split(new char[] { '&' }, StringSplitOptions.RemoveEmptyEntries);
                         if (queries.Length > 0)
                         {
                             for (int i = 0; i < queries.Length; i++)
