@@ -64,6 +64,18 @@ namespace WatsonWebserver
         /// </summary>
         public Exception Exception { get; private set; } = null;
 
+        /// <summary>
+        /// JSON string of the Exception.
+        /// </summary>
+        public string Json
+        {
+            get
+            {
+                if (Exception != null) return Exception.ToJson(true);
+                return null;
+            }
+        }
+
         internal ExceptionEventArgs(HttpContext ctx, Exception e)
         {
             if (ctx != null)

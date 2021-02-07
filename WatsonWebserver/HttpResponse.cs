@@ -122,17 +122,7 @@ namespace WatsonWebserver
         #endregion
 
         #region Public-Methods
-
-        /// <summary>
-        /// Return a JSON string representation.
-        /// </summary>
-        /// <param name="pretty"></param>
-        /// <returns></returns>
-        public string ToJson(bool pretty)
-        {
-            return SerializationHelper.SerializeJson(this, pretty);
-        }
-
+         
         /// <summary>
         /// Send headers and no data to the requestor and terminate the connection.
         /// </summary>

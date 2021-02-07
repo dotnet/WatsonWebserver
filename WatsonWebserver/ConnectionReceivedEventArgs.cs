@@ -28,7 +28,6 @@ namespace WatsonWebserver
         {
             if (String.IsNullOrEmpty(ip)) throw new ArgumentNullException(nameof(ip));
             if (port < 0) throw new ArgumentOutOfRangeException(nameof(port));
-
             Ip = ip;
             Port = port;
         }

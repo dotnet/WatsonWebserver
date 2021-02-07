@@ -6,24 +6,20 @@
 
 Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS requests, written in C#.
 
-## New in v4.0.0
+## New in v4.1.0
 
-- Breaking changes to improve simplicity and reliability
-- Consolidated settings into the ```Settings``` property
-- Consolidated routing into the ```Routing``` property
-- Use of ```EventHandler``` for events instead of ```Action```
-- Use of ```ConfigureAwait``` for reliability within your application
-- Simplified constructors
-- ```Pages``` property to set how 404 and 500 responses should be sent, if not handled within your application
-- Consolidated test applications
-- Attribute-based routes now loaded automatically, removed ```LoadRoutes``` method
-- Restructured ```HttpContext```, ```HttpRequest```, and ```HttpResponse``` for better usability
+- Breaking changes
+- Removed constructors that use ```Uri``` objects
+- Directly adding prefixes to ```HttpListener``` instead of ```Uri``` due to issues with listening on all IP addresses and hostnames
+- Removed certain ```.ToJson()``` methods in favor of having a ```.ToJson()``` extension method for all classes
+- Added ```Json``` property to ```ExceptionEventArgs```
+- Updated dependencies to fix an issue with IP address matching
 
 ## Special Thanks
 
 I'd like to extend a special thanks to those that have helped make Watson Webserver better.
 
-- @notesjor @shdwp @Tutch @GeoffMcGrath @jurkovic-nikola @joreg @Job79 @at1993 @MartyIX
+- @notesjor @shdwp @Tutch @GeoffMcGrath @jurkovic-nikola @joreg @Job79 @at1993 @MartyIX @pocsuka
 
 ## Important Notes
 

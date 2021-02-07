@@ -2,6 +2,17 @@
 
 ## Current Version
 
+v4.1.0
+
+- Breaking changes
+- Removed constructors that use ```Uri``` objects
+- Directly adding prefixes to ```HttpListener``` instead of ```Uri``` due to issues with listening on all IP addresses and hostnames
+- Removed certain ```.ToJson()``` methods in favor of having a ```.ToJson()``` extension method for all classes
+- Added ```Json``` property to ```ExceptionEventArgs```
+- Updated dependencies to fix an issue with IP address matching
+
+## Previous Versions
+
 v4.0.0
 
 - Breaking changes to improve simplicity and reliability
@@ -14,8 +25,6 @@ v4.0.0
 - Consolidated test applications
 - Attribute-based routes now loaded automatically, removed ```LoadRoutes``` method
 - Restructured ```HttpContext```, ```HttpRequest```, and ```HttpResponse``` for better usability
-
-## Previous Versions
 
 v3.3.0
 

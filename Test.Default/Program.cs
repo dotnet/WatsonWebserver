@@ -10,7 +10,7 @@ namespace Test
 {
     static class Program
     {
-        static string _Hostname = "127.0.0.1";
+        static string _Hostname = "localhost";
         static int _Port = 8080;
         static bool _Ssl = false;
         static Server _Server = null;
@@ -21,16 +21,14 @@ namespace Test
 
             _Server.Settings.AccessControl.Mode = AccessControlMode.DefaultPermit;
             _Server.Settings.AccessControl.DenyList.Add("1.1.1.1", "255.255.255.255");
-
             _Server.Routes.PreRouting = PreRoutingHandler;
-
             _Server.Routes.Content.Add("/html/", true);
             _Server.Routes.Content.Add("/large/", true);
             _Server.Routes.Content.Add("/img/watson.jpg", false);
-
             _Server.Routes.Static.Add(HttpMethod.GET, "/hola", HolaRoute);
-
             _Server.Routes.Dynamic.Add(HttpMethod.GET, new Regex("^/bar$"), BarRoute);
+            _Server.Events.ExceptionEncountered += ExceptionEncountered;
+            _Server.Events.ServerStopped += ServerStopped;
              
             _Server.Start();
 
@@ -98,6 +96,16 @@ namespace Test
             Console.WriteLine("  dispose        dispose the server object");
             Console.WriteLine("  stats          display webserver statistics");
             Console.WriteLine("  stats reset    reset webserver statistics");
+        }
+
+        static void ExceptionEncountered(object sender, ExceptionEventArgs args)
+        {
+            Console.WriteLine(args.Exception.ToString());
+        }
+
+        static void ServerStopped(object sender, EventArgs args)
+        {
+            Console.WriteLine("*** Server stopped");
         }
 
         [StaticRoute(HttpMethod.GET, "/mirror")]

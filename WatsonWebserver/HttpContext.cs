@@ -26,7 +26,7 @@ namespace WatsonWebserver
 
         #region Private-Members
 
-        private HttpListenerContext _Context;
+        private HttpListenerContext _Context = null;
 
         #endregion
 
@@ -44,27 +44,15 @@ namespace WatsonWebserver
         {
             if (ctx == null) throw new ArgumentNullException(nameof(ctx));
             if (events == null) throw new ArgumentNullException(nameof(events));
-
             _Context = ctx;
-
             Request = new HttpRequest(ctx); 
-            Response = new HttpResponse(Request, _Context, settings, events); 
+            Response = new HttpResponse(Request, ctx, settings, events); 
         }
 
         #endregion
 
         #region Public-Methods
-
-        /// <summary>
-        /// Return a JSON string representation.
-        /// </summary>
-        /// <param name="pretty"></param>
-        /// <returns></returns>
-        public string ToJson(bool pretty)
-        {
-            return SerializationHelper.SerializeJson(this, pretty);
-        }
-
+         
         #endregion
 
         #region Private-Methods

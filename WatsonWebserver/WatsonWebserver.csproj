@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netcoreapp3.1;netstandard2.0;netstandard2.1;net462;net5.0</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>4.0.0.3</Version>
+    <Version>4.1.0</Version>
     <Description>Simple, fast, async C# web server for handling REST requests with SSL support, targeted to .NET Core, .NET Standard, and .NET Framework.</Description>
     <Authors>Joel Christner</Authors>
     <Company>Joel Christner</Company>
@@ -33,7 +33,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="IpMatcher" Version="1.0.4" />
+    <PackageReference Include="IpMatcher" Version="1.0.4.1" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="RegexMatcher" Version="1.0.7" />
   </ItemGroup>

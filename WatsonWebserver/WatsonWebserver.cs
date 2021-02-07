@@ -113,7 +113,6 @@ namespace WatsonWebserver
             if (settings == null) settings = new WatsonWebserverSettings();
 
             _Settings = settings;
-
             _Routes.Default = defaultRoute;
         }
 
@@ -127,12 +126,9 @@ namespace WatsonWebserver
         public Server(string hostname, int port, bool ssl = false, Func<HttpContext, Task> defaultRoute = null)
         {
             if (String.IsNullOrEmpty(hostname)) hostname = "localhost";
-            if (port < 1) throw new ArgumentOutOfRangeException(nameof(port)); 
+            if (port < 1) throw new ArgumentOutOfRangeException(nameof(port));
 
-            _Settings.Hostnames.Add(hostname);
-            _Settings.Port = port;
-            _Settings.Ssl.Enable = ssl;
-
+            _Settings = new WatsonWebserverSettings(hostname, port, ssl);
             _Routes.Default = defaultRoute;
         }
 
@@ -148,29 +144,10 @@ namespace WatsonWebserver
             if (hostnames == null || hostnames.Count < 1) hostnames = new List<string> { "localhost" };
             if (port < 1) throw new ArgumentOutOfRangeException(nameof(port));
 
-            _Settings.Hostnames = hostnames;
-            _Settings.Port = port;
-            _Settings.Ssl.Enable = ssl;
-
+            _Settings = new WatsonWebserverSettings(hostnames, port, ssl);
             _Routes.Default = defaultRoute;
         }
-
-        /// <summary>
-        /// Creates a new instance of the Watson webserver.
-        /// </summary>
-        /// <param name="uris">URIs on which to listen.  
-        /// URIs should be of the form: http://[hostname]:[port] or https://[hostname]:[port]
-        /// Note: multiple listener endpoints is not supported on all platforms.</param>
-        /// <param name="defaultRoute">Method used when a request is received and no matching routes are found.  Commonly used as the 404 handler when routes are used.</param>
-        public Server(List<Uri> uris, Func<HttpContext, Task> defaultRoute = null)
-        {
-            if (uris == null || uris.Count < 1) uris = new List<Uri> { new Uri("http://localhost:8080") };
-
-            _Settings.Uris = uris;
-
-            _Routes.Default = defaultRoute;
-        }
-
+        
         #endregion
 
         #region Public-Methods
@@ -340,9 +317,9 @@ namespace WatsonWebserver
             {
                 #region Start-Listeners
 
-                foreach (Uri uri in _Settings.Uris)
-                {
-                    _HttpListener.Prefixes.Add(uri.ToString());
+                foreach (string prefix in _Settings.Prefixes)
+                { 
+                    _HttpListener.Prefixes.Add(prefix);
                 }
 
                 _HttpListener.Start();

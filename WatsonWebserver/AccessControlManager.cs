@@ -18,19 +18,19 @@ namespace WatsonWebserver
         /// <summary>
         /// Matcher to match denied addresses.
         /// </summary>
-        public Matcher DenyList;
+        public Matcher DenyList = new Matcher();
 
         /// <summary>
         /// Matcher to match permitted addresses.
         /// </summary>
-        public Matcher PermitList;
+        public Matcher PermitList = new Matcher();
 
         /// <summary>
         /// Access control mode, either DefaultPermit or DefaultDeny.
         /// DefaultPermit: allow everything, except for those explicitly denied.
         /// DefaultDeny: deny everything, except for those explicitly permitted.
         /// </summary>
-        public AccessControlMode Mode;
+        public AccessControlMode Mode = AccessControlMode.DefaultPermit;
 
         #endregion
 
@@ -46,8 +46,6 @@ namespace WatsonWebserver
         /// <param name="mode">Access control mode.</param>
         public AccessControlManager(AccessControlMode mode)
         {
-            DenyList = new Matcher();
-            PermitList = new Matcher();
             Mode = mode;
         }
 
