@@ -23,12 +23,11 @@ mcr.microsoft.com/dotnet/core/runtime   3.1                 4b555235dfc0        
 ```
  
 4) Execute the container:
-```
-Windows:
-$ docker run --user ContainerAdministrator -d -p 8000:8000 watsontest 
 
-Linux or Mac:
-$ docker run --user root -d -p 8000:8000 watsontest
+Refer to *IMPORTANT* below for important security notes on this step.
+
+```
+$ docker run --user root -d -p 8000:8000 watsontest 
 ```
 
 5) Connect to Watson in your browser: 
@@ -53,9 +52,18 @@ $ docker kill [CONTAINER ID]
 $ docker rmi [IMAGE ID] -f
 ```
 
+## Important
+
+The example above shows running the process as ```root``` within the container.  This is not a recommended practice.
+
+1) Your Watson instance should be listening on a specific hostname or IP address.  Incoming HTTP request HOST header values MUST match this.  If you use a specific hostname or IP address, *you do not have to run as root*
+2) If you want to listen for ANY request, set your listener to ```*```, ```+```, or ```0.0.0.0```, but this will demand that you run as root
+
 ## Helpful Notes
 
 While attempting to get Watson up and running in Docker on Windows, I stumbled upon this **really cool** project called DockerProxy.  Check it out, may be helpful for you: https://github.com/Kymeric/DockerProxy.
+
+## Sample Dockerfile
 
 Here is the ```Dockerfile``` used in the ```Test.Docker``` project:
 ```
