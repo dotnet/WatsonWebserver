@@ -26,11 +26,13 @@ namespace Test
             _Server.Routes.Content.Add("/large/", true);
             _Server.Routes.Content.Add("/img/watson.jpg", false);
             _Server.Routes.Static.Add(HttpMethod.GET, "/hola", HolaRoute);
+            _Server.Routes.Parameter.Matcher.Logger = Console.WriteLine;
             _Server.Routes.Dynamic.Add(HttpMethod.GET, new Regex("^/bar$"), BarRoute);
             _Server.Events.ExceptionEncountered += ExceptionEncountered;
             _Server.Events.ServerStopped += ServerStopped;
-             
-            _Server.Start();
+            _Server.Events.Logger = Console.WriteLine;
+
+            StartServer();
 
             if (_Ssl) Console.WriteLine("Listening on https://" + _Hostname + ":" + _Port);
             else Console.WriteLine("Listening on http://" + _Hostname + ":" + _Port);
@@ -59,7 +61,7 @@ namespace Test
                         break;
 
                     case "start":
-                        _Server.Start();
+                        StartServer();
                         break;
 
                     case "stop":
@@ -98,6 +100,13 @@ namespace Test
             Console.WriteLine("  stats reset    reset webserver statistics");
         }
 
+        static async void StartServer()
+        {
+            Console.WriteLine("Starting server");
+            await _Server.StartAsync();
+            Console.WriteLine("Server started");
+        }
+
         static void ExceptionEncountered(object sender, ExceptionEventArgs args)
         {
             Console.WriteLine(args.Exception.ToString());
@@ -109,7 +118,7 @@ namespace Test
         }
 
         [StaticRoute(HttpMethod.GET, "/mirror")]
-        static async Task MirrorRoute(HttpContext ctx)
+        public static async Task MirrorRoute(HttpContext ctx)
         {
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "application/json";
@@ -118,7 +127,7 @@ namespace Test
         }
 
         [StaticRoute(HttpMethod.GET, "/hello")]
-        static async Task HelloRoute(HttpContext ctx)
+        public static async Task HelloRoute(HttpContext ctx)
         {
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "text/plain";
@@ -134,8 +143,17 @@ namespace Test
             return;
         }
 
+        [ParameterRoute(HttpMethod.GET, "/{version}/parameter/{id}")]
+        public static async Task ParameterRoute(HttpContext ctx)
+        {
+            ctx.Response.StatusCode = 200;
+            ctx.Response.ContentType = "text/plain";
+            await ctx.Response.Send("Parameter route, with version " + ctx.Request.Url.Parameters["version"] + " and ID " + ctx.Request.Url.Parameters["id"]);
+            return;
+        }
+
         [DynamicRoute(HttpMethod.PUT, "/foo")]
-        static async Task FooWithoutIdRoute(HttpContext ctx)
+        public static async Task FooWithoutIdRoute(HttpContext ctx)
         {
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "text/plain";

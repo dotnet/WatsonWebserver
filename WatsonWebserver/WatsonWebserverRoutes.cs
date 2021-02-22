@@ -87,6 +87,22 @@ namespace WatsonWebserver
         }
 
         /// <summary>
+        /// Parameter routes; i.e. routes with parameters embedded in the URL, such as /{version}/api/{id}.
+        /// </summary>
+        public ParameterRouteManager Parameter
+        {
+            get
+            {
+                return _Parameter;
+            }
+            set
+            {
+                if (value == null) throw new ArgumentNullException(nameof(Parameter));
+                _Parameter = value;
+            }
+        }
+
+        /// <summary>
         /// Dynamic routes; i.e. routes with regex matching and any HTTP method.
         /// </summary>
         public DynamicRouteManager Dynamic
@@ -126,6 +142,7 @@ namespace WatsonWebserver
         private ContentRouteHandler _ContentHandler = null;
 
         private StaticRouteManager _Static = new StaticRouteManager();
+        private ParameterRouteManager _Parameter = new ParameterRouteManager();
         private DynamicRouteManager _Dynamic = new DynamicRouteManager();
         private Func<HttpContext, Task> _Default = null;
         private Func<HttpContext, Task> _Preflight = null;

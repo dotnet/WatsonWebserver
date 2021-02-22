@@ -2,6 +2,12 @@
 
 ## Current Version
 
+v4.1.1
+
+- Parameter routes
+
+## Previous Versions
+
 v4.1.0
 
 - Breaking changes
@@ -10,8 +16,6 @@ v4.1.0
 - Removed certain ```.ToJson()``` methods in favor of having a ```.ToJson()``` extension method for all classes
 - Added ```Json``` property to ```ExceptionEventArgs```
 - Updated dependencies to fix an issue with IP address matching
-
-## Previous Versions
 
 v4.0.0
 

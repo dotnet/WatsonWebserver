@@ -6,14 +6,9 @@
 
 Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS requests, written in C#.
 
-## New in v4.1.0
+## New in v4.1.1
 
-- Breaking changes
-- Removed constructors that use ```Uri``` objects
-- Directly adding prefixes to ```HttpListener``` instead of ```Uri``` due to issues with listening on all IP addresses and hostnames
-- Removed certain ```.ToJson()``` methods in favor of having a ```.ToJson()``` extension method for all classes
-- Added ```Json``` property to ```ExceptionEventArgs```
-- Updated dependencies to fix an issue with IP address matching
+- Parameter routes
 
 ## Special Thanks
 
@@ -31,8 +26,12 @@ I'd like to extend a special thanks to those that have helped make Watson Webser
   - All requests are marshaled through the pre-routing handler
   - If the request is GET or HEAD, content routes will be evaluated next
   - Followed by static routes (any HTTP method)
+  - Then parameter routes (any HTTP method)
   - Then dynamic (regex) routes (any HTTP method)
   - Then the default route (any HTTP method)
+- When defining parameter routes, the first match is used
+  - Variables specified in the parameter route (i.e. ```/{version}/api```) will appear in ```HttpContext.HttpRequest.Url.Parameters```
+  - i.e. for ```/{version}/api```, the value for ```version``` will be in ```HttpContext.HttpRequest.Url.Parameters["version"]```
 - When defining dynamic routes (regex), the longest match is used
   - If you wish to use first match or shortest match, modify ```Server.DynamicRoutes.Matcher.MatchPreference``` 
 - If a matching content route exists:
@@ -89,6 +88,9 @@ static void Main(string[] args)
   // add static routes
   s.Routes.Static.Add(HttpMethod.GET, "/hello/", GetHelloRoute); 
 
+  // add parameter routes
+  s.Routes.Parameter.Add(HttpMethod.GET, "/{version}/bar", GetBarRoute);
+
   // add dynamic routes
   s.Routes.Dynamic.Add(HttpMethod.GET, new Regex("^/foo/\\d+$"), GetFooWithId);  
   s.Routes.Dynamic.Add(HttpMethod.GET, new Regex("^/foo/?$"), GetFoo); 
@@ -104,7 +106,12 @@ static async Task GetHelloRoute(HttpContext ctx)
 { 
   await ctx.Response.Send("Hello from the GET /hello static route!");
 }
- 
+
+static async Task GetBarRoute(HttpContext ctx)
+{
+  await ctx.Response.Send("Hello from the GET /" + ctx.Request.Url.Parameters["version"] + "/bar route!");
+}
+
 static async Task GetFooWithId(HttpContext ctx)
 { 
   await ctx.Response.Send("Hello from the GET /foo/[id] dynamic route!");
@@ -123,6 +130,8 @@ static async Task DefaultRoute(HttpContext ctx)
 
 ## Example using Route Attributes
  
+Methods decorated with route attributes must be marked as public in order to be used and evaluated.
+
 ```csharp
 using System.IO;
 using System.Text;
@@ -139,19 +148,25 @@ static void Main(string[] args)
 }
  
 [StaticRoute(HttpMethod.GET, "/hello")]
-static async Task GetHelloRoute(HttpContext ctx)
+public static async Task GetHelloRoute(HttpContext ctx)
 { 
   await ctx.Response.Send("Hello from the GET /hello static route!");
 }
 
+[ParameterRoute(HttpMethod.POST, "/{version}/bar")]
+public static async Task PostBarRoute(HttpContext ctx)
+{
+  await ctx.Response.Send("Hello from the POST /" + ctx.Request.Url.Parameters["version"] + "/bar parameter route!");
+}
+
 [DynamicRoute(HttpMethod.GET, "^/foo/\\d+$")]
-static async Task GetFooWithId(HttpContext ctx)
+public static async Task GetFooWithId(HttpContext ctx)
 { 
   await ctx.Response.Send("Hello from the GET /foo/[id] dynamic route!");
 }
  
 [DynamicRoute(HttpMethod.GET, "^/foo/")]
-static async Task GetFoo(HttpContext ctx)
+public static async Task GetFoo(HttpContext ctx)
 {  
   await ctx.Response.Send("Hello from the GET /foo/ dynamic route!");
 }

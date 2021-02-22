@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netcoreapp3.1;netstandard2.0;netstandard2.1;net462;net5.0</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>4.1.0</Version>
+    <Version>4.1.1</Version>
     <Description>Simple, fast, async C# web server for handling REST requests with SSL support, targeted to .NET Core, .NET Standard, and .NET Framework.</Description>
     <Authors>Joel Christner</Authors>
     <Company>Joel Christner</Company>
@@ -13,11 +13,12 @@
     <RepositoryUrl>https://github.com/jchristn/WatsonWebserver</RepositoryUrl>
     <RepositoryType>Github</RepositoryType>
     <PackageTags>web server rest restful http https api async ssl</PackageTags>
-    <PackageReleaseNotes>Breaking changes to improve simplicity and reliability; please see project README.</PackageReleaseNotes>
+    <PackageReleaseNotes>Parameter routes</PackageReleaseNotes>
     <PackageId>Watson</PackageId>
     <Product>Watson</Product>
-    <PackageIconUrl>https://raw.githubusercontent.com/jchristn/WatsonWebserver/master/assets/watson.ico</PackageIconUrl>
+    <PackageIconUrl></PackageIconUrl>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
+    <PackageIcon>watson.png</PackageIcon>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp2.0|AnyCPU'">
@@ -32,16 +33,43 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp3.1|AnyCPU'">
+    <DocumentationFile>WatsonWebserver.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp3.1|AnyCPU'">
+    <DocumentationFile>WatsonWebserver.xml</DocumentationFile>
+  </PropertyGroup>
+
+  
+  
   <ItemGroup>
     <PackageReference Include="IpMatcher" Version="1.0.4.1" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="RegexMatcher" Version="1.0.7" />
+    <PackageReference Include="UrlMatcher" Version="1.0.0.1" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="assets\watson.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
     <None Include="LICENSE.md">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="assets\watson.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="assets\watson.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="WatsonWebserver.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 
