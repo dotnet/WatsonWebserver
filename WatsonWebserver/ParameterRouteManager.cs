@@ -109,6 +109,7 @@ namespace WatsonWebserver
         /// </summary>
         /// <param name="method">The HTTP method.</param>
         /// <param name="path">URL path.</param>
+        /// <param name="vals">Values extracted from the URL.</param>
         /// <returns>True if match exists.</returns>
         public Func<HttpContext, Task> Match(HttpMethod method, string path, out Dictionary<string, string> vals)
         {

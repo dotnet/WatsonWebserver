@@ -625,6 +625,11 @@
             Hostname to which the request was directed.
             </summary>
         </member>
+        <member name="P:WatsonWebserver.HttpRequest.DestinationDetails.HostnameElements">
+            <summary>
+            Hostname elements.
+            </summary>
+        </member>
         <member name="P:WatsonWebserver.HttpRequest.DestinationDetails.HostPort">
             <summary>
             Host port to which the request was directed.
@@ -834,6 +839,7 @@
             <summary>
             Return a JSON string of the object.
             </summary>
+            <param name="obj">Object.</param>
             <param name="pretty">Enable or disable pretty print.</param>
             <returns>JSON string.</returns>
         </member>
@@ -935,6 +941,7 @@
             </summary>
             <param name="method">The HTTP method.</param>
             <param name="path">URL path.</param>
+            <param name="vals">Values extracted from the URL.</param>
             <returns>True if match exists.</returns>
         </member>
         <member name="T:WatsonWebserver.RequestEventArgs">

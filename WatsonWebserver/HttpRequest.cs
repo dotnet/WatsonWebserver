@@ -580,6 +580,36 @@ namespace WatsonWebserver
             public string Hostname { get; private set; } = null;
 
             /// <summary>
+            /// Hostname elements.
+            /// </summary>
+            public string[] HostnameElements
+            {
+                get
+                {
+                    string hostname = Hostname;
+                    string[] ret;
+
+                    if (!String.IsNullOrEmpty(hostname))
+                    {
+                        if (!IPAddress.TryParse(hostname, out _))
+                        {
+                            ret = hostname.Split(new char[] { '.' }, StringSplitOptions.RemoveEmptyEntries);
+                            return ret;
+                        }
+                        else
+                        {
+                            ret = new string[1];
+                            ret[0] = hostname;
+                            return ret;
+                        }
+                    }
+
+                    ret = new string[0];
+                    return ret;
+                }
+            }
+
+            /// <summary>
             /// Host port to which the request was directed.
             /// </summary>
             public int HostPort { get; private set; } = 0;
@@ -674,7 +704,8 @@ namespace WatsonWebserver
                         }
                     }
 
-                    return null;
+                    string[] ret = new string[0];
+                    return ret;
                 }
             }
 

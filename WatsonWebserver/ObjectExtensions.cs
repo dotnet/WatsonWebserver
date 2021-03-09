@@ -13,6 +13,7 @@ namespace WatsonWebserver
         /// <summary>
         /// Return a JSON string of the object.
         /// </summary>
+        /// <param name="obj">Object.</param>
         /// <param name="pretty">Enable or disable pretty print.</param>
         /// <returns>JSON string.</returns>
         public static string ToJson(this object obj, bool pretty = false)
