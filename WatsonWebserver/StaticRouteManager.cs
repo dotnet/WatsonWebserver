@@ -16,9 +16,9 @@ namespace WatsonWebserver
         #endregion
 
         #region Private-Members
-         
-        private List<StaticRoute> _Routes;
-        private readonly object _Lock;
+
+        private List<StaticRoute> _Routes = new List<StaticRoute>();
+        private readonly object _Lock = new object();
 
         #endregion
 
@@ -29,8 +29,7 @@ namespace WatsonWebserver
         /// </summary> 
         public StaticRouteManager()
         { 
-            _Routes = new List<StaticRoute>();
-            _Lock = new object();
+
         }
 
         #endregion
@@ -43,12 +42,14 @@ namespace WatsonWebserver
         /// <param name="method">The HTTP method.</param>
         /// <param name="path">URL path, i.e. /path/to/resource.</param>
         /// <param name="handler">Method to invoke.</param>
-        public void Add(HttpMethod method, string path, Func<HttpContext, Task> handler)
+        /// <param name="guid">Globally-unique identifier.</param>
+        /// <param name="metadata">User-supplied metadata.</param>
+        public void Add(HttpMethod method, string path, Func<HttpContext, Task> handler, string guid = null, object metadata = null)
         {
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
             if (handler == null) throw new ArgumentNullException(nameof(handler));
 
-            StaticRoute r = new StaticRoute(method, path, handler);
+            StaticRoute r = new StaticRoute(method, path, handler, guid, metadata);
             Add(r);
         }
 
@@ -136,9 +137,11 @@ namespace WatsonWebserver
         /// </summary>
         /// <param name="method">The HTTP method.</param>
         /// <param name="path">URL path.</param>
+        /// <param name="route">Matching route.</param>
         /// <returns>Method to invoke.</returns>
-        public Func<HttpContext, Task> Match(HttpMethod method, string path)
+        public Func<HttpContext, Task> Match(HttpMethod method, string path, out StaticRoute route)
         {
+            route = null;
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
 
             path = path.ToLower();
@@ -154,6 +157,7 @@ namespace WatsonWebserver
                 }
                 else
                 {
+                    route = curr;
                     return curr.Handler;
                 }
             }

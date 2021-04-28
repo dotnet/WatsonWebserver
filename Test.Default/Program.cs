@@ -14,6 +14,10 @@ namespace Test
         static int _Port = 8080;
         static bool _Ssl = false;
         static Server _Server = null;
+        static Dictionary<string, string> _Metadata = new Dictionary<string, string>
+        {
+            { "foo", "bar" }
+        };
 
         static void Main()
         {
@@ -22,10 +26,20 @@ namespace Test
             _Server.Settings.AccessControl.Mode = AccessControlMode.DefaultPermit;
             _Server.Settings.AccessControl.DenyList.Add("1.1.1.1", "255.255.255.255");
             _Server.Routes.PreRouting = PreRoutingHandler;
+            
             _Server.Routes.Content.Add("/html/", true);
             _Server.Routes.Content.Add("/large/", true);
             _Server.Routes.Content.Add("/img/watson.jpg", false);
+
             _Server.Routes.Static.Add(HttpMethod.GET, "/hola", HolaRoute);
+            _Server.Routes.Static.Add(HttpMethod.GET, "/login", async (ctx) =>
+            {
+                ctx.Response.StatusCode = 200;
+                ctx.Response.ContentType = "text/plain";
+                await ctx.Response.Send("Login static route");
+                return;
+            });
+
             _Server.Routes.Parameter.Matcher.Logger = Console.WriteLine;
             _Server.Routes.Dynamic.Add(HttpMethod.GET, new Regex("^/bar$"), BarRoute);
             _Server.Events.ExceptionEncountered += ExceptionEncountered;
@@ -123,6 +137,8 @@ namespace Test
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "application/json";
             await ctx.Response.Send(ctx.Request.ToJson(true));
+            
+            Console.WriteLine(ctx.ToJson(true));
             return;
         }
 
@@ -132,6 +148,8 @@ namespace Test
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "text/plain";
             await ctx.Response.Send("Hello static route, defined using attributes");
+            
+            Console.WriteLine(ctx.ToJson(true));
             return;
         }
 
@@ -140,15 +158,30 @@ namespace Test
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "text/plain";
             await ctx.Response.Send("Hola static route");
+            
+            Console.WriteLine(ctx.ToJson(true));
             return;
         }
 
-        [ParameterRoute(HttpMethod.GET, "/{version}/parameter/{id}")]
-        public static async Task ParameterRoute(HttpContext ctx)
+        [ParameterRoute(HttpMethod.GET, "/{version}/param1/{id}")]
+        public static async Task ParameterRoute1(HttpContext ctx)
         {
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "text/plain";
-            await ctx.Response.Send("Parameter route, with version " + ctx.Request.Url.Parameters["version"] + " and ID " + ctx.Request.Url.Parameters["id"]);
+            await ctx.Response.Send("Parameter route 1, with version " + ctx.Request.Url.Parameters["version"] + " and ID " + ctx.Request.Url.Parameters["id"]);
+
+            Console.WriteLine(ctx.ToJson(true));
+            return;
+        }
+
+        [ParameterRoute(HttpMethod.GET, "/{version}/param2/{id}", null, "Test Metadata")]
+        public static async Task ParameterRoute2(HttpContext ctx)
+        {
+            ctx.Response.StatusCode = 200;
+            ctx.Response.ContentType = "text/plain";
+            await ctx.Response.Send("Parameter route 2, with version " + ctx.Request.Url.Parameters["version"] + ", ID " + ctx.Request.Url.Parameters["id"] + ", and metadata");
+
+            Console.WriteLine(ctx.ToJson(true));
             return;
         }
 
@@ -158,6 +191,8 @@ namespace Test
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "text/plain";
             await ctx.Response.Send("Foo dynamic route, defined using attributes");
+
+            Console.WriteLine(ctx.ToJson(true));
             return;
         }
 
@@ -167,6 +202,8 @@ namespace Test
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "text/plain";
             await ctx.Response.Send("Foo with ID dynamic route, defined using attributes");
+            
+            Console.WriteLine(ctx.ToJson(true));
             return;
         }
 
@@ -175,6 +212,8 @@ namespace Test
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "text/plain";
             await ctx.Response.Send("Bar dynamic route");
+
+            Console.WriteLine(ctx.ToJson(true));
             return;
         }
 
@@ -188,6 +227,8 @@ namespace Test
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "text/plain";
             await ctx.Response.Send("Default route");
+
+            Console.WriteLine(ctx.ToJson(true));
             return; 
         }
 

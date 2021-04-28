@@ -2,11 +2,16 @@
 
 ## Current Version
 
+v4.1.3
+
+- Inclusion of route details within ```HttpContext```
+- Add GUID and metadata to route definitions, which propagate to ```HttpContext```
+
+## Previous Versions
+
 v4.1.1
 
 - Parameter routes
-
-## Previous Versions
 
 v4.1.0
 

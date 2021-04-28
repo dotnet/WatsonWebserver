@@ -274,7 +274,7 @@ namespace WatsonWebserver
                 if (!_Routes.Static.Exists(attribute.Method, attribute.Path))
                 {
                     Events.Logger?.Invoke(_Header + "adding static route " + attribute.Method.ToString() + " " + attribute.Path);
-                    _Routes.Static.Add(attribute.Method, attribute.Path, ToRouteMethod(staticRoute));
+                    _Routes.Static.Add(attribute.Method, attribute.Path, ToRouteMethod(staticRoute), attribute.GUID, attribute.Metadata);
                 }
             }
 
@@ -284,7 +284,7 @@ namespace WatsonWebserver
                 if (!_Routes.Parameter.Exists(attribute.Method, attribute.Path))
                 {
                     Events.Logger?.Invoke(_Header + "adding parameter route " + attribute.Method.ToString() + " " + attribute.Path);
-                    _Routes.Parameter.Add(attribute.Method, attribute.Path, ToRouteMethod(parameterRoute));
+                    _Routes.Parameter.Add(attribute.Method, attribute.Path, ToRouteMethod(parameterRoute), attribute.GUID, attribute.Metadata);
                 }
             }
 
@@ -294,7 +294,7 @@ namespace WatsonWebserver
                 if (!_Routes.Dynamic.Exists(attribute.Method, attribute.Path))
                 {
                     Events.Logger?.Invoke(_Header + "adding dynamic route " + attribute.Method.ToString() + " " + attribute.Path);
-                    _Routes.Dynamic.Add(attribute.Method, attribute.Path, ToRouteMethod(dynamicRoute));
+                    _Routes.Dynamic.Add(attribute.Method, attribute.Path, ToRouteMethod(dynamicRoute), attribute.GUID, attribute.Metadata);
                 }
             }
         }
@@ -455,7 +455,8 @@ namespace WatsonWebserver
                              
                             if (ctx.Request.Method == HttpMethod.GET || ctx.Request.Method == HttpMethod.HEAD)
                             {
-                                if (_Routes.Content.Exists(ctx.Request.Url.RawWithoutQuery))
+                                ContentRoute cr = null;
+                                if (_Routes.Content.Match(ctx.Request.Url.RawWithoutQuery, out cr))
                                 {
                                     if (_Settings.Debug.Routing)
                                     {
@@ -464,6 +465,8 @@ namespace WatsonWebserver
                                             ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
                                     }
 
+                                    ctx.RouteType = RouteTypeEnum.Content;
+                                    ctx.Route = cr;
                                     await _Routes.ContentHandler.Process(ctx, token).ConfigureAwait(false); 
                                     return;
                                 } 
@@ -472,8 +475,9 @@ namespace WatsonWebserver
                             #endregion
 
                             #region Static-Routes
-                             
-                            Func<HttpContext, Task> handler = _Routes.Static.Match(ctx.Request.Method, ctx.Request.Url.RawWithoutQuery);
+
+                            StaticRoute sr = null;
+                            Func<HttpContext, Task> handler = _Routes.Static.Match(ctx.Request.Method, ctx.Request.Url.RawWithoutQuery, out sr);
                             if (handler != null)
                             {
                                 if (_Settings.Debug.Routing)
@@ -483,6 +487,8 @@ namespace WatsonWebserver
                                         ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
                                 }
 
+                                ctx.RouteType = RouteTypeEnum.Static;
+                                ctx.Route = sr;
                                 await handler(ctx).ConfigureAwait(false);
                                 return;
                             }
@@ -491,8 +497,9 @@ namespace WatsonWebserver
 
                             #region Parameter-Routes
 
+                            ParameterRoute pr = null;
                             Dictionary<string, string> parameters = null;
-                            handler = _Routes.Parameter.Match(ctx.Request.Method, ctx.Request.Url.RawWithoutQuery, out parameters);
+                            handler = _Routes.Parameter.Match(ctx.Request.Method, ctx.Request.Url.RawWithoutQuery, out parameters, out pr);
                             if (handler != null)
                             {
                                 ctx.Request.Url.Parameters = new Dictionary<string, string>(parameters);
@@ -504,6 +511,8 @@ namespace WatsonWebserver
                                         ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
                                 }
 
+                                ctx.RouteType = RouteTypeEnum.Parameter;
+                                ctx.Route = pr;
                                 await handler(ctx).ConfigureAwait(false);
                                 return;
                             }
@@ -512,7 +521,8 @@ namespace WatsonWebserver
 
                             #region Dynamic-Routes
 
-                            handler = _Routes.Dynamic.Match(ctx.Request.Method, ctx.Request.Url.RawWithoutQuery);
+                            DynamicRoute dr = null;
+                            handler = _Routes.Dynamic.Match(ctx.Request.Method, ctx.Request.Url.RawWithoutQuery, out dr);
                             if (handler != null)
                             {
                                 if (_Settings.Debug.Routing)
@@ -522,6 +532,8 @@ namespace WatsonWebserver
                                         ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
                                 }
 
+                                ctx.RouteType = RouteTypeEnum.Dynamic;
+                                ctx.Route = dr;
                                 await handler(ctx).ConfigureAwait(false);
                                 return;
                             }
@@ -539,6 +551,7 @@ namespace WatsonWebserver
                                         ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
                                 }
 
+                                ctx.RouteType = RouteTypeEnum.Default;
                                 await _Routes.Default(ctx).ConfigureAwait(false);
                                 return;
                             }

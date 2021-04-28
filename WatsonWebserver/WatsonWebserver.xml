@@ -108,22 +108,34 @@
             Assign a method handler for when requests are received matching the supplied method and path.
             </summary>
         </member>
-        <member name="F:WatsonWebserver.ContentRoute.Path">
+        <member name="P:WatsonWebserver.ContentRoute.GUID">
+            <summary>
+            Globally-unique identifier.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.ContentRoute.Path">
             <summary>
             The pattern against which the raw URL should be matched.  
             </summary>
         </member>
-        <member name="F:WatsonWebserver.ContentRoute.IsDirectory">
+        <member name="P:WatsonWebserver.ContentRoute.IsDirectory">
             <summary>
             Indicates whether or not the path specifies a directory.  If so, any matching URL will be handled by the specified handler.
             </summary>
         </member>
-        <member name="M:WatsonWebserver.ContentRoute.#ctor(System.String,System.Boolean)">
+        <member name="P:WatsonWebserver.ContentRoute.Metadata">
+            <summary>
+            User-supplied metadata.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.ContentRoute.#ctor(System.String,System.Boolean,System.String,System.Object)">
             <summary>
             Create a new route object.
             </summary> 
             <param name="path">The pattern against which the raw URL should be matched.</param>
             <param name="isDirectory">Indicates whether or not the path specifies a directory.  If so, any matching URL will be handled by the specified handler.</param> 
+            <param name="guid">Globally-unique identifier.</param>
+            <param name="metadata">User-supplied metadata.</param>
         </member>
         <member name="T:WatsonWebserver.ContentRouteManager">
             <summary>
@@ -140,12 +152,14 @@
             Instantiate the object.
             </summary> 
         </member>
-        <member name="M:WatsonWebserver.ContentRouteManager.Add(System.String,System.Boolean)">
+        <member name="M:WatsonWebserver.ContentRouteManager.Add(System.String,System.Boolean,System.String,System.Object)">
             <summary>
             Add a route.
             </summary>
             <param name="path">URL path, i.e. /path/to/resource.</param>
             <param name="isDirectory">True if the path represents a directory.</param>
+            <param name="guid">Globally-unique identifier.</param>
+            <param name="metadata">User-supplied metadata.</param>
         </member>
         <member name="M:WatsonWebserver.ContentRouteManager.Remove(System.String)">
             <summary>
@@ -166,6 +180,14 @@
             </summary>
             <param name="path">URL path.</param>
             <returns>True if exists.</returns>
+        </member>
+        <member name="M:WatsonWebserver.ContentRouteManager.Match(System.String,WatsonWebserver.ContentRoute@)">
+            <summary>
+            Retrieve a content route.
+            </summary>
+            <param name="path">URL path.</param>
+            <param name="route">Matching route.</param>
+            <returns>True if a match exists.</returns>
         </member>
         <member name="T:WatsonWebserver.ContentRouteHandler">
             <summary>
@@ -192,28 +214,40 @@
             Assign a method handler for when requests are received matching the supplied method and path regex.
             </summary>
         </member>
-        <member name="F:WatsonWebserver.DynamicRoute.Method">
+        <member name="P:WatsonWebserver.DynamicRoute.GUID">
+            <summary>
+            Globally-unique identifier.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.DynamicRoute.Method">
             <summary>
             The HTTP method, i.e. GET, PUT, POST, DELETE, etc.
             </summary>
         </member>
-        <member name="F:WatsonWebserver.DynamicRoute.Path">
+        <member name="P:WatsonWebserver.DynamicRoute.Path">
             <summary>
             The pattern against which the raw URL should be matched.  
             </summary>
         </member>
-        <member name="F:WatsonWebserver.DynamicRoute.Handler">
+        <member name="P:WatsonWebserver.DynamicRoute.Handler">
             <summary>
             The handler for the dynamic route.
             </summary>
         </member>
-        <member name="M:WatsonWebserver.DynamicRoute.#ctor(WatsonWebserver.HttpMethod,System.Text.RegularExpressions.Regex,System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task})">
+        <member name="P:WatsonWebserver.DynamicRoute.Metadata">
+            <summary>
+            User-supplied metadata.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.DynamicRoute.#ctor(WatsonWebserver.HttpMethod,System.Text.RegularExpressions.Regex,System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task},System.String,System.Object)">
             <summary>
             Create a new route object.
             </summary>
             <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE, etc.</param>
             <param name="path">The pattern against which the raw URL should be matched.</param>
             <param name="handler">The method that should be called to handle the request.</param>
+            <param name="guid">Globally-unique identifier.</param>
+            <param name="metadata">User-supplied metadata.</param>
         </member>
         <member name="T:WatsonWebserver.DynamicRouteAttribute">
             <summary>
@@ -230,12 +264,24 @@
             The pattern against which the raw URL should be matched. Must be convertible to a regular expression. 
             </summary>
         </member>
-        <member name="M:WatsonWebserver.DynamicRouteAttribute.#ctor(WatsonWebserver.HttpMethod,System.String)">
+        <member name="P:WatsonWebserver.DynamicRouteAttribute.GUID">
+            <summary>
+            Globally-unique identifier.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.DynamicRouteAttribute.Metadata">
+            <summary>
+            User-supplied metadata.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.DynamicRouteAttribute.#ctor(WatsonWebserver.HttpMethod,System.String,System.String,System.Object)">
             <summary>
             Instantiate the object.
             </summary>
             <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE, etc.</param>
             <param name="path">The regular expression pattern against which the raw URL should be matched.</param>
+            <param name="guid">Globally-unique identifier.</param>
+            <param name="metadata">User-supplied metadata.</param>
         </member>
         <member name="T:WatsonWebserver.DynamicRouteManager">
             <summary>
@@ -253,13 +299,15 @@
             Instantiate the object.
             </summary> 
         </member>
-        <member name="M:WatsonWebserver.DynamicRouteManager.Add(WatsonWebserver.HttpMethod,System.Text.RegularExpressions.Regex,System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task})">
+        <member name="M:WatsonWebserver.DynamicRouteManager.Add(WatsonWebserver.HttpMethod,System.Text.RegularExpressions.Regex,System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task},System.String,System.Object)">
             <summary>
             Add a route.
             </summary>
             <param name="method">The HTTP method.</param>
             <param name="path">URL path, i.e. /path/to/resource.</param>
             <param name="handler">Method to invoke.</param>
+            <param name="guid">Globally-unique identifier.</param>
+            <param name="metadata">User-supplied metadata.</param>
         </member>
         <member name="M:WatsonWebserver.DynamicRouteManager.Remove(WatsonWebserver.HttpMethod,System.Text.RegularExpressions.Regex)">
             <summary>
@@ -276,12 +324,13 @@
             <param name="path">URL path.</param>
             <returns>True if exists.</returns>
         </member>
-        <member name="M:WatsonWebserver.DynamicRouteManager.Match(WatsonWebserver.HttpMethod,System.String)">
+        <member name="M:WatsonWebserver.DynamicRouteManager.Match(WatsonWebserver.HttpMethod,System.String,WatsonWebserver.DynamicRoute@)">
             <summary>
             Match a request method and URL to a handler method.
             </summary>
             <param name="method">The HTTP method.</param>
             <param name="rawUrl">URL path.</param>
+            <param name="dr">Matching route.</param>
             <returns>Method to invoke.</returns>
         </member>
         <member name="T:WatsonWebserver.ExceptionEventArgs">
@@ -357,6 +406,16 @@
         <member name="P:WatsonWebserver.HttpContext.Request">
             <summary>
             The HTTP request that was received.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.HttpContext.RouteType">
+            <summary>
+            Type of route.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.HttpContext.Route">
+            <summary>
+            Matched route.
             </summary>
         </member>
         <member name="P:WatsonWebserver.HttpContext.Response">
@@ -848,28 +907,40 @@
             Assign a method handler for when requests are received matching the supplied method and path containing parameters.
             </summary>
         </member>
-        <member name="F:WatsonWebserver.ParameterRoute.Method">
+        <member name="P:WatsonWebserver.ParameterRoute.GUID">
+            <summary>
+            Globally-unique identifier.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.ParameterRoute.Method">
             <summary>
             The HTTP method, i.e. GET, PUT, POST, DELETE, etc.
             </summary>
         </member>
-        <member name="F:WatsonWebserver.ParameterRoute.Path">
+        <member name="P:WatsonWebserver.ParameterRoute.Path">
             <summary>
             The pattern against which the raw URL should be matched.  
             </summary>
         </member>
-        <member name="F:WatsonWebserver.ParameterRoute.Handler">
+        <member name="P:WatsonWebserver.ParameterRoute.Handler">
             <summary>
             The handler for the parameter route.
             </summary>
         </member>
-        <member name="M:WatsonWebserver.ParameterRoute.#ctor(WatsonWebserver.HttpMethod,System.String,System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task})">
+        <member name="P:WatsonWebserver.ParameterRoute.Metadata">
+            <summary>
+            User-supplied metadata.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.ParameterRoute.#ctor(WatsonWebserver.HttpMethod,System.String,System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task},System.String,System.Object)">
             <summary>
             Create a new route object.
             </summary>
             <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE, etc.</param>
             <param name="path">The pattern against which the raw URL should be matched.</param>
             <param name="handler">The method that should be called to handle the request.</param>
+            <param name="guid">Globally-unique identifier.</param>
+            <param name="metadata">User-supplied metadata.</param>
         </member>
         <member name="T:WatsonWebserver.ParameterRouteAttribute">
             <summary>
@@ -887,12 +958,24 @@
             The HTTP method, i.e. GET, PUT, POST, DELETE, etc.
             </summary>
         </member>
-        <member name="M:WatsonWebserver.ParameterRouteAttribute.#ctor(WatsonWebserver.HttpMethod,System.String)">
+        <member name="P:WatsonWebserver.ParameterRouteAttribute.GUID">
+            <summary>
+            Globally-unique identifier.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.ParameterRouteAttribute.Metadata">
+            <summary>
+            User-supplied metadata.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.ParameterRouteAttribute.#ctor(WatsonWebserver.HttpMethod,System.String,System.String,System.Object)">
             <summary>
             Instantiate the object.
             </summary>
             <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE, etc.</param>
             <param name="path">The path to match, i.e. /{version}/api/{id}.</param>
+            <param name="guid">Globally-unique identifier.</param>
+            <param name="metadata">User-supplied metadata.</param>
         </member>
         <member name="T:WatsonWebserver.ParameterRouteManager">
             <summary>
@@ -912,13 +995,15 @@
             Instantiate the object.
             </summary> 
         </member>
-        <member name="M:WatsonWebserver.ParameterRouteManager.Add(WatsonWebserver.HttpMethod,System.String,System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task})">
+        <member name="M:WatsonWebserver.ParameterRouteManager.Add(WatsonWebserver.HttpMethod,System.String,System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task},System.String,System.Object)">
             <summary>
             Add a route.
             </summary>
             <param name="method">The HTTP method.</param>
             <param name="path">URL path, i.e. /path/to/resource.</param>
             <param name="handler">Method to invoke.</param>
+            <param name="guid">Globally-unique identifier.</param>
+            <param name="metadata">User-supplied metadata.</param>
         </member>
         <member name="M:WatsonWebserver.ParameterRouteManager.Remove(WatsonWebserver.HttpMethod,System.String)">
             <summary>
@@ -926,6 +1011,14 @@
             </summary>
             <param name="method">The HTTP method.</param>
             <param name="path">URL path.</param>
+        </member>
+        <member name="M:WatsonWebserver.ParameterRouteManager.Get(WatsonWebserver.HttpMethod,System.String)">
+            <summary>
+            Retrieve a parameter route.
+            </summary>
+            <param name="method">The HTTP method.</param>
+            <param name="path">URL path.</param>
+            <returns>ParameterRoute if the route exists, otherwise null.</returns>
         </member>
         <member name="M:WatsonWebserver.ParameterRouteManager.Exists(WatsonWebserver.HttpMethod,System.String)">
             <summary>
@@ -935,13 +1028,14 @@
             <param name="path">URL path.</param>
             <returns>True if exists.</returns>
         </member>
-        <member name="M:WatsonWebserver.ParameterRouteManager.Match(WatsonWebserver.HttpMethod,System.String,System.Collections.Generic.Dictionary{System.String,System.String}@)">
+        <member name="M:WatsonWebserver.ParameterRouteManager.Match(WatsonWebserver.HttpMethod,System.String,System.Collections.Generic.Dictionary{System.String,System.String}@,WatsonWebserver.ParameterRoute@)">
             <summary>
             Match a request method and URL to a handler method.
             </summary>
             <param name="method">The HTTP method.</param>
             <param name="path">URL path.</param>
             <param name="vals">Values extracted from the URL.</param>
+            <param name="pr">Matching route.</param>
             <returns>True if match exists.</returns>
         </member>
         <member name="T:WatsonWebserver.RequestEventArgs">
@@ -1044,33 +1138,75 @@
             Total time in processing the request and sending the response, in milliseconds.
             </summary>
         </member>
+        <member name="T:WatsonWebserver.RouteTypeEnum">
+            <summary>
+            Route type.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.RouteTypeEnum.Default">
+            <summary>
+            Default route.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.RouteTypeEnum.Content">
+            <summary>
+            Content route.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.RouteTypeEnum.Static">
+            <summary>
+            Static route.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.RouteTypeEnum.Parameter">
+            <summary>
+            Parameter route.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.RouteTypeEnum.Dynamic">
+            <summary>
+            Dynamic route.
+            </summary>
+        </member>
         <member name="T:WatsonWebserver.StaticRoute">
             <summary>
             Assign a method handler for when requests are received matching the supplied method and path.
             </summary>
         </member>
-        <member name="F:WatsonWebserver.StaticRoute.Method">
+        <member name="P:WatsonWebserver.StaticRoute.GUID">
+            <summary>
+            Globally-unique identifier.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.StaticRoute.Method">
             <summary>
             The HTTP method, i.e. GET, PUT, POST, DELETE, etc.
             </summary>
         </member>
-        <member name="F:WatsonWebserver.StaticRoute.Path">
+        <member name="P:WatsonWebserver.StaticRoute.Path">
             <summary>
             The raw URL, i.e. /foo/bar/.  Be sure this begins and ends with '/'.
             </summary>
         </member>
-        <member name="F:WatsonWebserver.StaticRoute.Handler">
+        <member name="P:WatsonWebserver.StaticRoute.Handler">
             <summary>
-            The 
+            The handler for the static route.
             </summary>
         </member>
-        <member name="M:WatsonWebserver.StaticRoute.#ctor(WatsonWebserver.HttpMethod,System.String,System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task})">
+        <member name="P:WatsonWebserver.StaticRoute.Metadata">
+            <summary>
+            User-supplied metadata.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.StaticRoute.#ctor(WatsonWebserver.HttpMethod,System.String,System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task},System.String,System.Object)">
             <summary>
             Create a new route object.
             </summary>
             <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE, etc.</param>
             <param name="path">The raw URL, i.e. /foo/bar/.  Be sure this begins and ends with '/'.</param>
             <param name="handler">The method that should be called to handle the request.</param>
+            <param name="guid">Globally-unique identifier.</param>
+            <param name="metadata">User-supplied metadata.</param>
         </member>
         <member name="T:WatsonWebserver.StaticRouteAttribute">
             <summary>
@@ -1087,12 +1223,24 @@
             The HTTP method, i.e. GET, PUT, POST, DELETE, etc.
             </summary>
         </member>
-        <member name="M:WatsonWebserver.StaticRouteAttribute.#ctor(WatsonWebserver.HttpMethod,System.String)">
+        <member name="P:WatsonWebserver.StaticRouteAttribute.GUID">
+            <summary>
+            Globally-unique identifier.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.StaticRouteAttribute.Metadata">
+            <summary>
+            User-supplied metadata.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.StaticRouteAttribute.#ctor(WatsonWebserver.HttpMethod,System.String,System.String,System.Object)">
             <summary>
             Instantiate the object.
             </summary>
             <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE, etc.</param>
             <param name="path">The raw URL, i.e. /foo/bar/.  Be sure this begins and ends with '/'.</param>
+            <param name="guid">Globally-unique identifier.</param>
+            <param name="metadata">User-supplied metadata.</param>
         </member>
         <member name="T:WatsonWebserver.StaticRouteManager">
             <summary>
@@ -1104,13 +1252,15 @@
             Instantiate the object.
             </summary> 
         </member>
-        <member name="M:WatsonWebserver.StaticRouteManager.Add(WatsonWebserver.HttpMethod,System.String,System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task})">
+        <member name="M:WatsonWebserver.StaticRouteManager.Add(WatsonWebserver.HttpMethod,System.String,System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task},System.String,System.Object)">
             <summary>
             Add a route.
             </summary>
             <param name="method">The HTTP method.</param>
             <param name="path">URL path, i.e. /path/to/resource.</param>
             <param name="handler">Method to invoke.</param>
+            <param name="guid">Globally-unique identifier.</param>
+            <param name="metadata">User-supplied metadata.</param>
         </member>
         <member name="M:WatsonWebserver.StaticRouteManager.Remove(WatsonWebserver.HttpMethod,System.String)">
             <summary>
@@ -1135,12 +1285,13 @@
             <param name="path">URL path.</param>
             <returns>True if exists.</returns>
         </member>
-        <member name="M:WatsonWebserver.StaticRouteManager.Match(WatsonWebserver.HttpMethod,System.String)">
+        <member name="M:WatsonWebserver.StaticRouteManager.Match(WatsonWebserver.HttpMethod,System.String,WatsonWebserver.StaticRoute@)">
             <summary>
             Match a request method and URL to a handler method.
             </summary>
             <param name="method">The HTTP method.</param>
             <param name="path">URL path.</param>
+            <param name="route">Matching route.</param>
             <returns>Method to invoke.</returns>
         </member>
         <member name="T:WatsonWebserver.Server">

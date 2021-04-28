@@ -18,8 +18,21 @@ namespace WatsonWebserver
         public HttpRequest Request { get; private set; } = null;
 
         /// <summary>
+        /// Type of route.
+        /// </summary>
+        [JsonProperty(Order = 0)]
+        public RouteTypeEnum? RouteType { get; set; } = null;
+
+        /// <summary>
+        /// Matched route.
+        /// </summary>
+        [JsonProperty(Order = 1)]
+        public object Route { get; internal set; } = null;
+
+        /// <summary>
         /// The HTTP response that will be sent.  This object is preconstructed on your behalf and can be modified directly.
         /// </summary>
+        [JsonProperty(Order = 999)]
         public HttpResponse Response { get; private set; } = null;
 
         #endregion

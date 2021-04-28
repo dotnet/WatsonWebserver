@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace WatsonWebserver
 {
@@ -15,15 +16,29 @@ namespace WatsonWebserver
         #region Public-Members
 
         /// <summary>
+        /// Globally-unique identifier.
+        /// </summary>
+        [JsonProperty(Order = -1)]
+        public string GUID { get; set; } = Guid.NewGuid().ToString();
+
+        /// <summary>
         /// The pattern against which the raw URL should be matched.  
         /// </summary>
-        public string Path = null;
+        [JsonProperty(Order = 0)]
+        public string Path { get; set; } = null;
 
         /// <summary>
         /// Indicates whether or not the path specifies a directory.  If so, any matching URL will be handled by the specified handler.
         /// </summary>
-        public bool IsDirectory = false;
-         
+        [JsonProperty(Order = 1)]
+        public bool IsDirectory { get; set; } = false;
+
+        /// <summary>
+        /// User-supplied metadata.
+        /// </summary>
+        [JsonProperty(Order = 999)]
+        public object Metadata { get; set; } = null;
+
         #endregion
 
         #region Private-Members
@@ -37,11 +52,16 @@ namespace WatsonWebserver
         /// </summary> 
         /// <param name="path">The pattern against which the raw URL should be matched.</param>
         /// <param name="isDirectory">Indicates whether or not the path specifies a directory.  If so, any matching URL will be handled by the specified handler.</param> 
-        public ContentRoute(string path, bool isDirectory)
+        /// <param name="guid">Globally-unique identifier.</param>
+        /// <param name="metadata">User-supplied metadata.</param>
+        public ContentRoute(string path, bool isDirectory, string guid = null, object metadata = null)
         {
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));            
             Path = path.ToLower();
-            IsDirectory = isDirectory; 
+            IsDirectory = isDirectory;
+
+            if (!String.IsNullOrEmpty(guid)) GUID = guid;
+            if (metadata != null) Metadata = metadata;
         }
 
         #endregion

@@ -32,6 +32,8 @@ namespace WatsonWebserver
         #region Private-Members
 
         private Matcher _Matcher = new Matcher();
+        private readonly object _Lock = new object();
+        private Dictionary<DynamicRoute, Func<HttpContext, Task>> _Routes = new Dictionary<DynamicRoute, Func<HttpContext, Task>>();
 
         #endregion
 
@@ -55,13 +57,23 @@ namespace WatsonWebserver
         /// <param name="method">The HTTP method.</param>
         /// <param name="path">URL path, i.e. /path/to/resource.</param>
         /// <param name="handler">Method to invoke.</param>
-        public void Add(HttpMethod method, Regex path, Func<HttpContext, Task> handler)
+        /// <param name="guid">Globally-unique identifier.</param>
+        /// <param name="metadata">User-supplied metadata.</param>
+        public void Add(HttpMethod method, Regex path, Func<HttpContext, Task> handler, string guid = null, object metadata = null)
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
             if (handler == null) throw new ArgumentNullException(nameof(handler));
-            _Matcher.Add(
-                new Regex(BuildConsolidatedRegex(method, path)), 
-                handler);
+
+            lock (_Lock)
+            {
+                DynamicRoute dr = new DynamicRoute(method, path, handler);
+
+                _Matcher.Add(
+                    new Regex(BuildConsolidatedRegex(method, path)),
+                    dr);
+
+                _Routes.Add(new DynamicRoute(method, path, handler, guid, metadata), handler);
+            }
         }
 
         /// <summary>
@@ -72,8 +84,24 @@ namespace WatsonWebserver
         public void Remove(HttpMethod method, Regex path)
         { 
             if (path == null) throw new ArgumentNullException(nameof(path));
-            _Matcher.Remove(
-                new Regex(BuildConsolidatedRegex(method, path)));
+
+            lock (_Lock)
+            {
+                _Matcher.Remove(
+                    new Regex(BuildConsolidatedRegex(method, path)));
+
+                if (_Routes.Any(r => r.Key.Method == method && r.Key.Path.Equals(path)))
+                {
+                    List<DynamicRoute> removeList = _Routes.Where(r => r.Key.Method == method && r.Key.Path.Equals(path))
+                        .Select(r => r.Key)
+                        .ToList();
+
+                    foreach (DynamicRoute remove in removeList)
+                    {
+                        _Routes.Remove(remove);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -85,8 +113,11 @@ namespace WatsonWebserver
         public bool Exists(HttpMethod method, Regex path)
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
-            return _Matcher.Exists(
-                new Regex(BuildConsolidatedRegex(method, path)));
+
+            lock (_Lock)
+            {
+                return _Routes.Any(r => r.Key.Method == method && r.Key.Path.Equals(path));
+            }
         }
 
         /// <summary>
@@ -94,20 +125,31 @@ namespace WatsonWebserver
         /// </summary>
         /// <param name="method">The HTTP method.</param>
         /// <param name="rawUrl">URL path.</param>
+        /// <param name="dr">Matching route.</param>
         /// <returns>Method to invoke.</returns>
-        public Func<HttpContext, Task> Match(HttpMethod method, string rawUrl)
+        public Func<HttpContext, Task> Match(HttpMethod method, string rawUrl, out DynamicRoute dr)
         {
+            dr = null;
             if (String.IsNullOrEmpty(rawUrl)) throw new ArgumentNullException(nameof(rawUrl));
 
-            object val;
-            Func<HttpContext, Task> handler;
+            object val = null;
+
             if (_Matcher.Match(
-                BuildConsolidatedRegex(method, rawUrl), 
+                BuildConsolidatedRegex(method, rawUrl),
                 out val))
-            { 
-                if (val == null) return null;
-                handler = (Func<HttpContext, Task>)val;
-                return handler;
+            {
+                if (val == null)
+                {
+                    return null;
+                }
+                else
+                {
+                    lock (_Lock)
+                    {
+                        dr = (DynamicRoute)val;
+                        return dr.Handler;
+                    }
+                }
             }
 
             return null;

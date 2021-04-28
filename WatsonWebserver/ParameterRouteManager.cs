@@ -35,7 +35,7 @@ namespace WatsonWebserver
 
         private Matcher _Matcher = new Matcher();
         private readonly object _Lock = new object();
-        private Dictionary<string, Func<HttpContext, Task>> _Routes = new Dictionary<string, Func<HttpContext, Task>>();
+        private Dictionary<ParameterRoute, Func<HttpContext, Task>> _Routes = new Dictionary<ParameterRoute, Func<HttpContext, Task>>();
 
         #endregion
 
@@ -59,16 +59,17 @@ namespace WatsonWebserver
         /// <param name="method">The HTTP method.</param>
         /// <param name="path">URL path, i.e. /path/to/resource.</param>
         /// <param name="handler">Method to invoke.</param>
-        public void Add(HttpMethod method, string path, Func<HttpContext, Task> handler)
+        /// <param name="guid">Globally-unique identifier.</param>
+        /// <param name="metadata">User-supplied metadata.</param>
+        public void Add(HttpMethod method, string path, Func<HttpContext, Task> handler, string guid = null, object metadata = null)
         {
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
             if (handler == null) throw new ArgumentNullException(nameof(handler));
 
             lock (_Lock)
             {
-                _Routes.Add(
-                    BuildConsolidatedPath(method, path),
-                    handler);
+                ParameterRoute pr = new ParameterRoute(method, path, handler, guid, metadata);
+                _Routes.Add(pr, handler);
             }
         }
 
@@ -83,9 +84,39 @@ namespace WatsonWebserver
 
             lock (_Lock)
             {
-                _Routes.Remove(
-                    BuildConsolidatedPath(method, path));
+                if (_Routes.Any(r => r.Key.Method == method && r.Key.Path.Equals(path)))
+                {
+                    List<ParameterRoute> removeList = _Routes.Where(r => r.Key.Method == method && r.Key.Path.Equals(path))
+                        .Select(r => r.Key)
+                        .ToList();
+
+                    foreach (ParameterRoute remove in removeList)
+                    {
+                        _Routes.Remove(remove);
+                    }
+                }
             }
+        }
+
+        /// <summary>
+        /// Retrieve a parameter route.
+        /// </summary>
+        /// <param name="method">The HTTP method.</param>
+        /// <param name="path">URL path.</param>
+        /// <returns>ParameterRoute if the route exists, otherwise null.</returns>
+        public ParameterRoute Get(HttpMethod method, string path)
+        {
+            if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
+
+            lock (_Lock)
+            {
+                if (_Routes.Any(r => r.Key.Method == method && r.Key.Path.Equals(path)))
+                {
+                    return _Routes.First(r => r.Key.Method == method && r.Key.Path.Equals(path)).Key;
+                }
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -100,7 +131,7 @@ namespace WatsonWebserver
 
             lock (_Lock)
             {
-                return _Routes.ContainsKey(BuildConsolidatedPath(method, path));
+                return _Routes.Any(r => r.Key.Method == method && r.Key.Path.Equals(path));
             }
         }
 
@@ -110,9 +141,11 @@ namespace WatsonWebserver
         /// <param name="method">The HTTP method.</param>
         /// <param name="path">URL path.</param>
         /// <param name="vals">Values extracted from the URL.</param>
+        /// <param name="pr">Matching route.</param>
         /// <returns>True if match exists.</returns>
-        public Func<HttpContext, Task> Match(HttpMethod method, string path, out Dictionary<string, string> vals)
+        public Func<HttpContext, Task> Match(HttpMethod method, string path, out Dictionary<string, string> vals, out ParameterRoute pr)
         {
+            pr = null;
             vals = null;
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
 
@@ -120,13 +153,14 @@ namespace WatsonWebserver
 
             lock (_Lock)
             {
-                foreach (KeyValuePair<string, Func<HttpContext, Task>> route in _Routes)
+                foreach (KeyValuePair<ParameterRoute, Func<HttpContext, Task>> route in _Routes)
                 {
                     if (_Matcher.Match(
                         consolidatedPath,
-                        route.Key, 
+                        BuildConsolidatedPath(route.Key.Method, route.Key.Path), 
                         out vals))
                     {
+                        pr = route.Key;
                         return route.Value;
                     }
                 }

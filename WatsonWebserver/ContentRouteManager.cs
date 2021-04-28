@@ -63,10 +63,12 @@ namespace WatsonWebserver
         /// </summary>
         /// <param name="path">URL path, i.e. /path/to/resource.</param>
         /// <param name="isDirectory">True if the path represents a directory.</param>
-        public void Add(string path, bool isDirectory)
+        /// <param name="guid">Globally-unique identifier.</param>
+        /// <param name="metadata">User-supplied metadata.</param>
+        public void Add(string path, bool isDirectory, string guid = null, object metadata = null)
         {
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path)); 
-            Add(new ContentRoute(path, isDirectory));
+            Add(new ContentRoute(path, isDirectory, guid, metadata));
         }
 
         /// <summary>
@@ -148,7 +150,48 @@ namespace WatsonWebserver
              
             return false;
         }
-        
+
+        /// <summary>
+        /// Retrieve a content route.
+        /// </summary>
+        /// <param name="path">URL path.</param>
+        /// <param name="route">Matching route.</param>
+        /// <returns>True if a match exists.</returns>
+        public bool Match(string path, out ContentRoute route)
+        {
+            route = null;
+            if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
+
+            path = path.ToLower();
+            if (!path.StartsWith("/")) path = "/" + path;
+            if (!path.EndsWith("/")) path = path + "/";
+
+            lock (_Lock)
+            {
+                foreach (ContentRoute curr in _Routes)
+                {
+                    if (curr.IsDirectory)
+                    {
+                        if (path.StartsWith(curr.Path.ToLower()))
+                        {
+                            route = curr;
+                            return true;
+                        }
+                    }
+                    else
+                    {
+                        if (path.Equals(curr.Path.ToLower()))
+                        {
+                            route = curr;
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            }
+        }
+
         #endregion
 
         #region Private-Methods
