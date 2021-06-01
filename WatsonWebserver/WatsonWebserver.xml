@@ -685,11 +685,6 @@
             Hostname elements.
             </summary>
         </member>
-        <member name="P:WatsonWebserver.HttpRequest.DestinationDetails.aHostPort">
-            <summary>
-            Host port to which the request was directed.
-            </summary>
-        </member>
         <member name="M:WatsonWebserver.HttpRequest.DestinationDetails.#ctor">
             <summary>
             Destination details.

@@ -643,11 +643,6 @@ namespace WatsonWebserver
             }
 
             /// <summary>
-            /// Host port to which the request was directed.
-            /// </summary>
-            public int aHostPort { get; private set; } = 0;
-
-            /// <summary>
             /// Destination details.
             /// </summary>
             public DestinationDetails()
