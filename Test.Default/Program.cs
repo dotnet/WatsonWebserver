@@ -123,12 +123,12 @@ namespace Test
 
         static void ExceptionEncountered(object sender, ExceptionEventArgs args)
         {
-            Console.WriteLine(args.Exception.ToString());
+            _Server.Events.Logger(args.Exception.ToString());
         }
 
         static void ServerStopped(object sender, EventArgs args)
         {
-            Console.WriteLine("*** Server stopped");
+            _Server.Events.Logger("*** Server stopped");
         }
 
         [StaticRoute(HttpMethod.GET, "/mirror")]
@@ -137,9 +137,41 @@ namespace Test
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "application/json";
             await ctx.Response.Send(ctx.Request.ToJson(true));
-            
-            Console.WriteLine(ctx.ToJson(true));
+            _Server.Events.Logger(ctx.ToJson(true));
             return;
+        }
+
+        [StaticRoute(HttpMethod.POST, "/mirror/1")]
+        public static async Task MirrorPostRoute1(HttpContext ctx)
+        {
+            ctx.Response.StatusCode = 200;
+            ctx.Response.ContentType = "application/json";
+            await ctx.Response.Send(ctx.Request.DataAsString);
+            _Server.Events.Logger(ctx.ToJson(true));
+            _Server.Events.Logger("Request data  : " + ctx.Request.DataAsString);
+            _Server.Events.Logger("Response data : " + ctx.Response.DataAsString);
+        }
+
+        [StaticRoute(HttpMethod.POST, "/mirror/2")]
+        public static async Task MirrorPostRoute2(HttpContext ctx)
+        {
+            ctx.Response.StatusCode = 200;
+            ctx.Response.ContentType = "application/json";
+            await ctx.Response.Send(ctx.Request.DataAsBytes);
+            _Server.Events.Logger(ctx.ToJson(true));
+            _Server.Events.Logger("Request data  : " + ctx.Request.DataAsString);
+            _Server.Events.Logger("Response data : " + ctx.Response.DataAsString);
+        }
+
+        [StaticRoute(HttpMethod.POST, "/mirror/3")]
+        public static async Task MirrorPostRoute3(HttpContext ctx)
+        {
+            ctx.Response.StatusCode = 200;
+            ctx.Response.ContentType = "application/json";
+            await ctx.Response.Send(ctx.Request.ContentLength, ctx.Request.Data);
+            _Server.Events.Logger(ctx.ToJson(true));
+            _Server.Events.Logger("Request data  : " + ctx.Request.DataAsString);
+            _Server.Events.Logger("Response data : " + ctx.Response.DataAsString);
         }
 
         [StaticRoute(HttpMethod.GET, "/hello")]
@@ -148,8 +180,7 @@ namespace Test
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "text/plain";
             await ctx.Response.Send("Hello static route, defined using attributes");
-            
-            Console.WriteLine(ctx.ToJson(true));
+            _Server.Events.Logger(ctx.ToJson(true));
             return;
         }
 
@@ -158,8 +189,7 @@ namespace Test
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "text/plain";
             await ctx.Response.Send("Hola static route");
-            
-            Console.WriteLine(ctx.ToJson(true));
+            _Server.Events.Logger(ctx.ToJson(true));
             return;
         }
 
@@ -169,8 +199,7 @@ namespace Test
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "text/plain";
             await ctx.Response.Send("Parameter route 1, with version " + ctx.Request.Url.Parameters["version"] + " and ID " + ctx.Request.Url.Parameters["id"]);
-
-            Console.WriteLine(ctx.ToJson(true));
+            _Server.Events.Logger(ctx.ToJson(true));
             return;
         }
 
@@ -180,8 +209,7 @@ namespace Test
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "text/plain";
             await ctx.Response.Send("Parameter route 2, with version " + ctx.Request.Url.Parameters["version"] + ", ID " + ctx.Request.Url.Parameters["id"] + ", and metadata");
-
-            Console.WriteLine(ctx.ToJson(true));
+            _Server.Events.Logger(ctx.ToJson(true));
             return;
         }
 
@@ -191,8 +219,7 @@ namespace Test
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "text/plain";
             await ctx.Response.Send("Foo dynamic route, defined using attributes");
-
-            Console.WriteLine(ctx.ToJson(true));
+            _Server.Events.Logger(ctx.ToJson(true));
             return;
         }
 
@@ -202,8 +229,7 @@ namespace Test
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "text/plain";
             await ctx.Response.Send("Foo with ID dynamic route, defined using attributes");
-            
-            Console.WriteLine(ctx.ToJson(true));
+            _Server.Events.Logger(ctx.ToJson(true));
             return;
         }
 
@@ -212,8 +238,7 @@ namespace Test
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "text/plain";
             await ctx.Response.Send("Bar dynamic route");
-
-            Console.WriteLine(ctx.ToJson(true));
+            _Server.Events.Logger(ctx.ToJson(true));
             return;
         }
 
@@ -227,8 +252,7 @@ namespace Test
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "text/plain";
             await ctx.Response.Send("Default route");
-
-            Console.WriteLine(ctx.ToJson(true));
+            _Server.Events.Logger(ctx.ToJson(true));
             return; 
         }
 

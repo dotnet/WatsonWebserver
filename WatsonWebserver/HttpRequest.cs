@@ -118,6 +118,42 @@ namespace WatsonWebserver
         public Stream Data;
          
         /// <summary>
+        /// Retrieve the request body as a byte array.  This will fully read the stream. 
+        /// </summary>
+        [JsonIgnore]
+        public byte[] DataAsBytes
+        {
+            get
+            {
+                if (_DataAsBytes != null) return _DataAsBytes;
+                if (Data != null && ContentLength > 0)
+                {
+                    _DataAsBytes = ReadStreamFully(Data);
+                    return _DataAsBytes;
+                }
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Retrieve the request body as a string.  This will fully read the stream.
+        /// </summary>
+        [JsonIgnore]
+        public string DataAsString
+        {
+            get
+            {
+                if (_DataAsBytes != null) return Encoding.UTF8.GetString(_DataAsBytes);
+                if (Data != null && ContentLength > 0)
+                {
+                    _DataAsBytes = ReadStreamFully(Data);
+                    if (_DataAsBytes != null) return Encoding.UTF8.GetString(_DataAsBytes);
+                }
+                return null;
+            }
+        }
+
+        /// <summary>
         /// The original HttpListenerContext from which the HttpRequest was constructed.
         /// </summary>
         [JsonIgnore]
@@ -128,7 +164,7 @@ namespace WatsonWebserver
         #region Private-Members
 
         private Uri _Uri = null;
-        private byte[] _DataBytes = null;
+        private byte[] _DataAsBytes = null;
 
         #endregion
 
@@ -163,7 +199,7 @@ namespace WatsonWebserver
             TimestampUtc = DateTime.Now.ToUniversalTime();
             ProtocolVersion = "HTTP/" + ctx.Request.ProtocolVersion.ToString(); 
             Source = new SourceDetails(ctx.Request.RemoteEndPoint.Address.ToString(), ctx.Request.RemoteEndPoint.Port);
-            Destination = new DestinationDetails(ctx.Request.LocalEndPoint.Address.ToString(), ctx.Request.LocalEndPoint.Port, _Uri.Host, _Uri.Port);
+            Destination = new DestinationDetails(ctx.Request.LocalEndPoint.Address.ToString(), ctx.Request.LocalEndPoint.Port, _Uri.Host);
             Method = (HttpMethod)Enum.Parse(typeof(HttpMethod), ctx.Request.HttpMethod, true); 
             Url = new UrlDetails(ctx.Request.Url.ToString().Trim(), ctx.Request.RawUrl.ToString().Trim()); 
             Query = new QueryDetails(Url.Full);
@@ -380,29 +416,6 @@ namespace WatsonWebserver
         }
          
         /// <summary>
-        /// Read the data stream fully and retrieve the byte data contained within.
-        /// Note: if you use this method, you will not be able to read from the data stream afterward.
-        /// </summary>
-        /// <returns>Byte array.</returns>
-        public byte[] DataAsBytes()
-        {
-            ReadStreamFully();
-            return _DataBytes;
-        }
-
-        /// <summary>
-        /// Read the data stream fully and retrieve the string data contained within.
-        /// Note: if you use this method, you will not be able to read from the data stream afterward.
-        /// </summary>
-        /// <returns>String.</returns>
-        public string DataAsString()
-        {
-            ReadStreamFully();
-            if (_DataBytes == null) return null;
-            else return Encoding.UTF8.GetString(_DataBytes);
-        }
-
-        /// <summary>
         /// Read the data stream fully and convert the data to the object type specified using JSON deserialization.
         /// Note: if you use this method, you will not be able to read from the data stream afterward.
         /// </summary>
@@ -410,7 +423,7 @@ namespace WatsonWebserver
         /// <returns>Object of type specified.</returns>
         public T DataAsJsonObject<T>() where T : class
         {
-            string json = DataAsString();
+            string json = DataAsString;
             if (String.IsNullOrEmpty(json)) return null;
             return SerializationHelper.DeserializeJson<T>(json);
         }
@@ -499,21 +512,41 @@ namespace WatsonWebserver
             if (Data == null) return;
             if (!Data.CanRead) return;
 
-            if (_DataBytes == null)
+            if (_DataAsBytes == null)
             {
                 if (!ChunkedTransfer)
                 {
-                    _DataBytes = StreamToBytes(Data);
+                    _DataAsBytes = StreamToBytes(Data);
                 }
                 else
                 {
                     while (true)
                     {
                         Chunk chunk = ReadChunk().Result;
-                        if (chunk.Data != null && chunk.Data.Length > 0) _DataBytes = AppendBytes(_DataBytes, chunk.Data);
+                        if (chunk.Data != null && chunk.Data.Length > 0) _DataAsBytes = AppendBytes(_DataAsBytes, chunk.Data);
                         if (chunk.IsFinalChunk) break;
                     }
                 }
+            }
+        }
+
+        private byte[] ReadStreamFully(Stream input)
+        {
+            if (input == null) throw new ArgumentNullException(nameof(input));
+            if (!input.CanRead) throw new InvalidOperationException("Input stream is not readable");
+
+            byte[] buffer = new byte[16 * 1024];
+            using (MemoryStream ms = new MemoryStream())
+            {
+                int read;
+
+                while ((read = input.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    ms.Write(buffer, 0, read);
+                }
+
+                byte[] ret = ms.ToArray();
+                return ret;
             }
         }
 
@@ -612,7 +645,7 @@ namespace WatsonWebserver
             /// <summary>
             /// Host port to which the request was directed.
             /// </summary>
-            public int HostPort { get; private set; } = 0;
+            public int aHostPort { get; private set; } = 0;
 
             /// <summary>
             /// Destination details.
@@ -628,18 +661,15 @@ namespace WatsonWebserver
             /// <param name="ip">IP address to which the request was made.</param>
             /// <param name="port">TCP port on which the request was received.</param>
             /// <param name="hostname">Hostname.</param>
-            /// <param name="hostPort">Host TCP port.</param>
-            public DestinationDetails(string ip, int port, string hostname, int hostPort)
+            public DestinationDetails(string ip, int port, string hostname)
             {
                 if (String.IsNullOrEmpty(ip)) throw new ArgumentNullException(nameof(ip));
                 if (port < 0) throw new ArgumentOutOfRangeException(nameof(port));
                 if (String.IsNullOrEmpty(hostname)) throw new ArgumentNullException(nameof(hostname));
-                if (hostPort < 0) throw new ArgumentOutOfRangeException(nameof(hostPort));
 
                 IpAddress = ip;
                 Port = port;
                 Hostname = hostname;
-                HostPort = hostPort;
             }
         }
 

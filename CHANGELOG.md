@@ -2,12 +2,19 @@
 
 ## Current Version
 
+v4.2.0
+
+- Breaking changes
+- ```DataAsString```, ```DataAsBytes``` now are properties instead of methods
+- ```DataAsString```, ```DataAsBytes```, ```DataAsJson``` now available on ```HttpResponse```
+- Response data now retained within the ```HttpResponse``` object for later use
+
+## Previous Versions
+
 v4.1.3
 
 - Inclusion of route details within ```HttpContext```
 - Add GUID and metadata to route definitions, which propagate to ```HttpContext```
-
-## Previous Versions
 
 v4.1.1
 

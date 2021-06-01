@@ -92,11 +92,11 @@ namespace Test
             switch (_Mode)
             {
                 case Mode.Text:
-                    dataStr = ctx.Request.DataAsString();
+                    dataStr = ctx.Request.DataAsString;
                     Console.WriteLine("String data:" + Environment.NewLine + dataStr != null ? dataStr : "(null)");
                     break;
                 case Mode.Bytes:
-                    dataBytes = ctx.Request.DataAsBytes();
+                    dataBytes = ctx.Request.DataAsBytes;
                     Console.WriteLine("Byte data:" + Environment.NewLine + dataBytes != null ? ByteArrayToHex(dataBytes) : "(null)");
                     break; 
                 case Mode.Json:
@@ -105,7 +105,7 @@ namespace Test
                     break;
                 default:
                     Console.WriteLine("Unknown mode '" + _Mode + "', reading bytes instead");
-                    dataBytes = ctx.Request.DataAsBytes();
+                    dataBytes = ctx.Request.DataAsBytes;
                     Console.WriteLine("Byte data:" + Environment.NewLine + ByteArrayToHex(dataBytes));
                     break; 
             }

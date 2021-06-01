@@ -62,7 +62,55 @@ namespace WatsonWebserver
         /// Indicates whether or not chunked transfer encoding should be indicated in the response. 
         /// </summary>
         public bool ChunkedTransfer = false;
-         
+        
+        /// <summary>
+        /// Retrieve the response body sent using a Send() or SendAsync() method.
+        /// </summary>
+        [JsonIgnore]
+        public string DataAsString
+        {
+            get
+            {
+                if (_DataAsBytes != null) return Encoding.UTF8.GetString(_DataAsBytes);
+                if (_Data != null && ContentLength > 0)
+                {
+                    _DataAsBytes = ReadStreamFully(_Data);
+                    if (_DataAsBytes != null) return Encoding.UTF8.GetString(_DataAsBytes);
+                }
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Retrieve the response body sent using a Send() or SendAsync() method.
+        /// </summary>
+        [JsonIgnore]
+        public byte[] DataAsBytes
+        {
+            get
+            {
+                if (_DataAsBytes != null) return _DataAsBytes;
+                if (_Data != null && ContentLength > 0)
+                {
+                    _DataAsBytes = ReadStreamFully(_Data);
+                    return _DataAsBytes;
+                }
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Response data stream sent to the requestor.
+        /// </summary>
+        [JsonIgnore]
+        public MemoryStream Data
+        {
+            get
+            {
+                return _Data;
+            }
+        }
+
         #endregion
 
         #region Internal-Members
@@ -90,6 +138,8 @@ namespace WatsonWebserver
         private WatsonWebserverEvents _Events = new WatsonWebserverEvents();
 
         private Dictionary<string, string> _Headers = new Dictionary<string, string>();
+        private byte[] _DataAsBytes = null;
+        private MemoryStream _Data = null;
 
         #endregion
 
@@ -191,11 +241,17 @@ namespace WatsonWebserver
             if (!_HeadersSent) SendHeaders();
 
             byte[] bytes = null;
+
             if (!String.IsNullOrEmpty(data))
             {
                 bytes = Encoding.UTF8.GetBytes(data);
-                ContentLength = bytes.Length;
+
+                _Data = new MemoryStream();
+                await _Data.WriteAsync(bytes, 0, bytes.Length, token).ConfigureAwait(false);
+                _Data.Seek(0, SeekOrigin.Begin);
+
                 _Response.ContentLength64 = bytes.Length;
+                ContentLength = bytes.Length;
             }
             else
             {
@@ -239,8 +295,12 @@ namespace WatsonWebserver
 
             if (data != null && data.Length > 0)
             {
-                ContentLength = data.Length;
+                _Data = new MemoryStream();
+                await _Data.WriteAsync(data, 0, data.Length, token).ConfigureAwait(false);
+                _Data.Seek(0, SeekOrigin.Begin);
+
                 _Response.ContentLength64 = data.Length;
+                ContentLength = data.Length;
             }
             else
             {
@@ -253,7 +313,7 @@ namespace WatsonWebserver
                 {
                     if (data != null && data.Length > 0)
                     {
-                        await _OutputStream.WriteAsync(data, 0, (int)_Response.ContentLength64, token).ConfigureAwait(false);
+                        await _OutputStream.WriteAsync(data, 0, data.Length, token).ConfigureAwait(false);
                     }
                 }
 
@@ -292,6 +352,8 @@ namespace WatsonWebserver
                     {
                         long bytesRemaining = contentLength;
 
+                        _Data = new MemoryStream();
+
                         while (bytesRemaining > 0)
                         {
                             int bytesRead = 0;
@@ -299,6 +361,7 @@ namespace WatsonWebserver
                             bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length, token).ConfigureAwait(false);
                             if (bytesRead > 0)
                             {
+                                await _Data.WriteAsync(buffer, 0, bytesRead, token).ConfigureAwait(false);
                                 await _OutputStream.WriteAsync(buffer, 0, bytesRead, token).ConfigureAwait(false);
                                 bytesRemaining -= bytesRead;
                             }
@@ -306,6 +369,8 @@ namespace WatsonWebserver
 
                         stream.Close();
                         stream.Dispose();
+
+                        _Data.Seek(0, SeekOrigin.Begin);
                     }
                 }
 
@@ -342,6 +407,8 @@ namespace WatsonWebserver
             try
             {
                 if (chunk == null || chunk.Length < 1) chunk = new byte[0];
+                if (_Data == null) _Data = new MemoryStream();
+                await _Data.WriteAsync(chunk, 0, chunk.Length, token).ConfigureAwait(false);
                 await _OutputStream.WriteAsync(chunk, 0, chunk.Length, token).ConfigureAwait(false);
                 await _OutputStream.FlushAsync(token).ConfigureAwait(false);
             }
@@ -373,6 +440,8 @@ namespace WatsonWebserver
             { 
                 if (chunk != null && chunk.Length > 0)
                 {
+                    if (_Data == null) _Data = new MemoryStream();
+                    await _Data.WriteAsync(chunk, 0, chunk.Length, token).ConfigureAwait(false);
                     await _OutputStream.WriteAsync(chunk, 0, chunk.Length, token).ConfigureAwait(false);
                 }
 
@@ -381,6 +450,8 @@ namespace WatsonWebserver
 
                 await _OutputStream.FlushAsync(token).ConfigureAwait(false);
                 _OutputStream.Close();
+
+                _Data.Seek(0, SeekOrigin.Begin);
 
                 if (_Response != null) _Response.Close();
 
@@ -392,7 +463,19 @@ namespace WatsonWebserver
                 return false;
             }
         }
-         
+
+        /// <summary>
+        /// Convert the response data sent using a Send() method to the object type specified using JSON deserialization.
+        /// </summary>
+        /// <typeparam name="T">Type.</typeparam>
+        /// <returns>Object of type specified.</returns>
+        public T DataAsJsonObject<T>() where T : class
+        {
+            string json = DataAsString;
+            if (String.IsNullOrEmpty(json)) return null;
+            return SerializationHelper.DeserializeJson<T>(json);
+        }
+
         #endregion
 
         #region Private-Methods
@@ -491,6 +574,26 @@ namespace WatsonWebserver
             byte[] ret = ms.ToArray();
              
             return ret;
+        }
+
+        private byte[] ReadStreamFully(Stream input)
+        {
+            if (input == null) throw new ArgumentNullException(nameof(input));
+            if (!input.CanRead) throw new InvalidOperationException("Input stream is not readable");
+
+            byte[] buffer = new byte[16 * 1024];
+            using (MemoryStream ms = new MemoryStream())
+            {
+                int read;
+
+                while ((read = input.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    ms.Write(buffer, 0, read);
+                }
+
+                byte[] ret = ms.ToArray();
+                return ret;
+            }
         }
 
         #endregion

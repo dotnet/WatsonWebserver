@@ -6,10 +6,12 @@
 
 Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS requests, written in C#.
 
-## New in v4.1.3
+## New in v4.2.0
 
-- Inclusion of route details within ```HttpContext```
-- Add GUID and metadata to route definitions, which propagate to ```HttpContext```
+- Breaking changes
+- ```DataAsString```, ```DataAsBytes``` now are properties instead of methods
+- ```DataAsString```, ```DataAsBytes```, ```DataAsJson``` now available on ```HttpResponse```
+- Response data now retained within the ```HttpResponse``` object for later use
 
 ## Special Thanks
 

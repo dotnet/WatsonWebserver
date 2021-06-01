@@ -568,6 +568,16 @@
             The stream from which to read the request body sent by the requestor (client).
             </summary>
         </member>
+        <member name="P:WatsonWebserver.HttpRequest.DataAsBytes">
+            <summary>
+            Retrieve the request body as a byte array.  This will fully read the stream. 
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.HttpRequest.DataAsString">
+            <summary>
+            Retrieve the request body as a string.  This will fully read the stream.
+            </summary>
+        </member>
         <member name="F:WatsonWebserver.HttpRequest.ListenerContext">
             <summary>
             The original HttpListenerContext from which the HttpRequest was constructed.
@@ -614,20 +624,6 @@
             </summary>
             <param name="token">Cancellation token useful for canceling the request.</param>
             <returns>Chunk.</returns>
-        </member>
-        <member name="M:WatsonWebserver.HttpRequest.DataAsBytes">
-            <summary>
-            Read the data stream fully and retrieve the byte data contained within.
-            Note: if you use this method, you will not be able to read from the data stream afterward.
-            </summary>
-            <returns>Byte array.</returns>
-        </member>
-        <member name="M:WatsonWebserver.HttpRequest.DataAsString">
-            <summary>
-            Read the data stream fully and retrieve the string data contained within.
-            Note: if you use this method, you will not be able to read from the data stream afterward.
-            </summary>
-            <returns>String.</returns>
         </member>
         <member name="M:WatsonWebserver.HttpRequest.DataAsJsonObject``1">
             <summary>
@@ -689,7 +685,7 @@
             Hostname elements.
             </summary>
         </member>
-        <member name="P:WatsonWebserver.HttpRequest.DestinationDetails.HostPort">
+        <member name="P:WatsonWebserver.HttpRequest.DestinationDetails.aHostPort">
             <summary>
             Host port to which the request was directed.
             </summary>
@@ -699,14 +695,13 @@
             Destination details.
             </summary>
         </member>
-        <member name="M:WatsonWebserver.HttpRequest.DestinationDetails.#ctor(System.String,System.Int32,System.String,System.Int32)">
+        <member name="M:WatsonWebserver.HttpRequest.DestinationDetails.#ctor(System.String,System.Int32,System.String)">
             <summary>
             Source details.
             </summary>
             <param name="ip">IP address to which the request was made.</param>
             <param name="port">TCP port on which the request was received.</param>
             <param name="hostname">Hostname.</param>
-            <param name="hostPort">Host TCP port.</param>
         </member>
         <member name="T:WatsonWebserver.HttpRequest.UrlDetails">
             <summary>
@@ -811,6 +806,21 @@
             Indicates whether or not chunked transfer encoding should be indicated in the response. 
             </summary>
         </member>
+        <member name="P:WatsonWebserver.HttpResponse.DataAsString">
+            <summary>
+            Retrieve the response body sent using a Send() or SendAsync() method.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.HttpResponse.DataAsBytes">
+            <summary>
+            Retrieve the response body sent using a Send() or SendAsync() method.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.HttpResponse.Data">
+            <summary>
+            Response data stream sent to the requestor.
+            </summary>
+        </member>
         <member name="M:WatsonWebserver.HttpResponse.#ctor">
             <summary>
             Instantiate the object.
@@ -871,6 +881,13 @@
             <param name="chunk">Chunk of data.</param>
             <param name="token">Cancellation token useful for canceling the request.</param>
             <returns>True if successful.</returns>
+        </member>
+        <member name="M:WatsonWebserver.HttpResponse.DataAsJsonObject``1">
+            <summary>
+            Convert the response data sent using a Send() method to the object type specified using JSON deserialization.
+            </summary>
+            <typeparam name="T">Type.</typeparam>
+            <returns>Object of type specified.</returns>
         </member>
         <member name="T:WatsonWebserver.MimeTypes">
             <summary>
