@@ -171,12 +171,17 @@ namespace WatsonWebserver
             if (_HttpListener != null && _HttpListener.IsListening) throw new InvalidOperationException("WatsonWebserver is already listening.");
 
             LoadRoutes();
-
             Statistics = new WatsonWebserverStatistics();
 
             _TokenSource = CancellationTokenSource.CreateLinkedTokenSource(token);
             _Token = token;
 
+            foreach (string prefix in _Settings.Prefixes)
+            {
+                _HttpListener.Prefixes.Add(prefix);
+            }
+
+            _HttpListener.Start();
             _AcceptConnections = Task.Run(() => AcceptConnections(_Token), _Token);
         }
 
@@ -190,15 +195,19 @@ namespace WatsonWebserver
             if (_HttpListener != null && _HttpListener.IsListening) throw new InvalidOperationException("WatsonWebserver is already listening.");
 
             LoadRoutes();
-
             Statistics = new WatsonWebserverStatistics();
 
             _TokenSource = CancellationTokenSource.CreateLinkedTokenSource(token);
             _Token = token;
 
+            foreach (string prefix in _Settings.Prefixes)
+            {
+                _HttpListener.Prefixes.Add(prefix);
+            }
+            
+            _HttpListener.Start();
             _AcceptConnections = Task.Run(() => AcceptConnections(_Token), _Token);
-
-            return Task.Delay(1);
+            return _AcceptConnections;
         }
 
         /// <summary>
@@ -339,18 +348,7 @@ namespace WatsonWebserver
         private async Task AcceptConnections(CancellationToken token)
         {
             try
-            {
-                #region Start-Listeners
-
-                foreach (string prefix in _Settings.Prefixes)
-                { 
-                    _HttpListener.Prefixes.Add(prefix);
-                }
-
-                _HttpListener.Start();
-
-                #endregion
-
+            { 
                 #region Process-Requests
 
                 while (_HttpListener.IsListening)
