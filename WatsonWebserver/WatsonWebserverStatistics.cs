@@ -118,7 +118,7 @@ namespace WatsonWebserver
                 if (_RequestsByMethod[i] > 0)
                 {
                     foundAtLeastOne = true;
-                    sb.AppendLine($"        { ((HttpMethod)i).ToString().PadRight(18)} : {_RequestsByMethod[i].ToString("N0")}");
+                    sb.AppendLine($"        { ((HttpMethod)i).ToString().PadRight(18)} : {Interlocked.Read(ref _RequestsByMethod[i]).ToString("N0")}");
                 }
             }
 
