@@ -115,10 +115,11 @@ namespace WatsonWebserver
             bool foundAtLeastOne = false;
             for (int i = 0; i < _RequestsByMethod.Length; i++)
             {
-                if (_RequestsByMethod[i] > 0)
+                var count = Interlocked.Read(ref _RequestsByMethod[i]);
+                if (count > 0)
                 {
                     foundAtLeastOne = true;
-                    sb.AppendLine($"        { ((HttpMethod)i).ToString().PadRight(18)} : {Interlocked.Read(ref _RequestsByMethod[i]).ToString("N0")}");
+                    sb.AppendLine($"        { ((HttpMethod)i).ToString().PadRight(18)} : {count.ToString("N0")}");
                 }
             }
 
