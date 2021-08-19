@@ -44,7 +44,7 @@
   
   
   <ItemGroup>
-    <PackageReference Include="IpMatcher" Version="1.0.4.1" />
+    <PackageReference Include="IpMatcher" Version="1.0.4.2" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="RegexMatcher" Version="1.0.7" />
     <PackageReference Include="UrlMatcher" Version="1.0.0.1" />
