@@ -55,8 +55,8 @@ using WatsonWebserver;
 
 static void Main(string[] args)
 {
-  Server s = new Server("127.0.0.1", 9000, false, DefaultRoute);
-  s.Start();
+  Server server = new Server("127.0.0.1", 9000, false, DefaultRoute);
+  server.Start();
   Console.ReadLine();
 }
 
@@ -79,24 +79,24 @@ using WatsonWebserver;
 
 static void Main(string[] args)
 {
-  Server s = new Server("127.0.0.1", 9000, false, DefaultRoute);
+  Server server = new Server("127.0.0.1", 9000, false, DefaultRoute);
 
   // add content routes
-  s.Routes.Content.Add("/html/", true);
-  s.Routes.Content.Add("/img/watson.jpg", false);
+  server.Routes.Content.Add("/html/", true);
+  server.Routes.Content.Add("/img/watson.jpg", false);
 
   // add static routes
-  s.Routes.Static.Add(HttpMethod.GET, "/hello/", GetHelloRoute); 
+  server.Routes.Static.Add(HttpMethod.GET, "/hello/", GetHelloRoute); 
 
   // add parameter routes
-  s.Routes.Parameter.Add(HttpMethod.GET, "/{version}/bar", GetBarRoute);
+  server.Routes.Parameter.Add(HttpMethod.GET, "/{version}/bar", GetBarRoute);
 
   // add dynamic routes
-  s.Routes.Dynamic.Add(HttpMethod.GET, new Regex("^/foo/\\d+$"), GetFooWithId);  
-  s.Routes.Dynamic.Add(HttpMethod.GET, new Regex("^/foo/?$"), GetFoo); 
+  server.Routes.Dynamic.Add(HttpMethod.GET, new Regex("^/foo/\\d+$"), GetFooWithId);  
+  server.Routes.Dynamic.Add(HttpMethod.GET, new Regex("^/foo/?$"), GetFoo); 
 
   // start the server
-  s.Start();
+  server.Start();
 
   Console.WriteLine("Press ENTER to exit");
   Console.ReadLine();
@@ -140,8 +140,8 @@ using WatsonWebserver;
 
 static void Main(string[] args)
 {
-  Server s = new Server("127.0.0.1", 9000, false, DefaultRoute); 
-  s.Start();
+  Server server = new Server("127.0.0.1", 9000, false, DefaultRoute); 
+  server.Start();
 
   Console.WriteLine("Press ENTER to exit");
   Console.ReadLine();
@@ -180,15 +180,15 @@ static async Task DefaultRoute(HttpContext ctx)
 ## Permit or Deny by IP or Network
 
 ```csharp
-Server s = new Server("127.0.0.1", 9000, false, DefaultRoute);
+Server server = new Server("127.0.0.1", 9000, false, DefaultRoute);
 
 // set default permit (permit any) with deny list to block specific IP addresses or networks
-s.Settings.AccessControl.Mode = AccessControlMode.DefaultPermit;
-s.Settings.AccessControl.DenyList.Add("127.0.0.1", "255.255.255.255");  
+server.Settings.AccessControl.Mode = AccessControlMode.DefaultPermit;
+server.Settings.AccessControl.DenyList.Add("127.0.0.1", "255.255.255.255");  
 
 // set default deny (deny all) with permit list to permit specific IP addresses or networks
-s.Settings.AccessControl.Mode = AccessControlMode.DefaultDeny;
-s.Settings.AccessControl.PermitList.Add("127.0.0.1", "255.255.255.255");
+server.Settings.AccessControl.Mode = AccessControlMode.DefaultDeny;
+server.Settings.AccessControl.PermitList.Add("127.0.0.1", "255.255.255.255");
 ```
 
 ## Chunked Transfer-Encoding

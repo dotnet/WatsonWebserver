@@ -21,7 +21,7 @@ namespace WatsonWebserver
         /// Type of route.
         /// </summary>
         [JsonProperty(Order = 0)]
-        public RouteTypeEnum? RouteType { get; set; } = null;
+        public RouteTypeEnum? RouteType { get; internal set; } = null;
 
         /// <summary>
         /// Matched route.

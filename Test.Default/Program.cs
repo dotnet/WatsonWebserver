@@ -41,6 +41,7 @@ namespace Test
             });
 
             _Server.Routes.Parameter.Matcher.Logger = Console.WriteLine;
+            _Server.Routes.Parameter.Add()
             _Server.Routes.Dynamic.Add(HttpMethod.GET, new Regex("^/bar$"), BarRoute);
             _Server.Events.ExceptionEncountered += ExceptionEncountered;
             _Server.Events.ServerStopped += ServerStopped;
@@ -225,7 +226,7 @@ namespace Test
 
         [DynamicRoute(HttpMethod.GET, "^/foo/\\d+$")]
         public static async Task FooWithIdRoute(HttpContext ctx)
-        { 
+        {
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "text/plain";
             await ctx.Response.Send("Foo with ID dynamic route, defined using attributes");
