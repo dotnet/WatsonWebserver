@@ -6,18 +6,15 @@
 
 Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS requests, written in C#.
 
-## New in v4.2.0
+## New in v4.2.2
 
-- Breaking changes
-- ```DataAsString```, ```DataAsBytes``` now are properties instead of methods
-- ```DataAsString```, ```DataAsBytes```, ```DataAsJson``` now available on ```HttpResponse```
-- Response data now retained within the ```HttpResponse``` object for later use
+- Bugfix in content route manager match function
 
 ## Special Thanks
 
 I'd like to extend a special thanks to those that have helped make Watson Webserver better.
 
-- @notesjor @shdwp @Tutch @GeoffMcGrath @jurkovic-nikola @joreg @Job79 @at1993 @MartyIX @pocsuka
+- @notesjor @shdwp @Tutch @GeoffMcGrath @jurkovic-nikola @joreg @Job79 @at1993 @MartyIX @pocsuka @orinem
 
 ## Important Notes
 

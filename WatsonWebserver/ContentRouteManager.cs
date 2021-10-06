@@ -162,9 +162,9 @@ namespace WatsonWebserver
             route = null;
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
 
-            path = path.ToLower();
-            if (!path.StartsWith("/")) path = "/" + path;
-            if (!path.EndsWith("/")) path = path + "/";
+            path = path.ToLower(); 
+            string dirPath = path;
+            if (!dirPath.EndsWith("/")) dirPath = dirPath + "/";
 
             lock (_Lock)
             {
@@ -172,7 +172,7 @@ namespace WatsonWebserver
                 {
                     if (curr.IsDirectory)
                     {
-                        if (path.StartsWith(curr.Path.ToLower()))
+                        if (dirPath.StartsWith(curr.Path.ToLower()))
                         {
                             route = curr;
                             return true;

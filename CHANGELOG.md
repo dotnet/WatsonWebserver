@@ -2,14 +2,18 @@
 
 ## Current Version
 
+v4.2.2
+
+- Bugfix in content route manager match function
+
+## Previous Versions
+
 v4.2.0
 
 - Breaking changes
 - ```DataAsString```, ```DataAsBytes``` now are properties instead of methods
 - ```DataAsString```, ```DataAsBytes```, ```DataAsJson``` now available on ```HttpResponse```
 - Response data now retained within the ```HttpResponse``` object for later use
-
-## Previous Versions
 
 v4.1.3
 
