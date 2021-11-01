@@ -41,7 +41,7 @@ namespace Test
             });
 
             _Server.Routes.Parameter.Matcher.Logger = Console.WriteLine;
-            _Server.Routes.Parameter.Add()
+            _Server.Routes.Parameter.Add(HttpMethod.GET, "/user/{id}", GetUserByIdRoute);
             _Server.Routes.Dynamic.Add(HttpMethod.GET, new Regex("^/bar$"), BarRoute);
             _Server.Events.ExceptionEncountered += ExceptionEncountered;
             _Server.Events.ServerStopped += ServerStopped;
@@ -119,7 +119,6 @@ namespace Test
         {
             Console.WriteLine("Starting server");
             await _Server.StartAsync();
-            Console.WriteLine("Server started");
         }
 
         static void ExceptionEncountered(object sender, ExceptionEventArgs args)
@@ -181,6 +180,16 @@ namespace Test
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "text/plain";
             await ctx.Response.Send("Hello static route, defined using attributes");
+            _Server.Events.Logger(ctx.ToJson(true));
+            return;
+        }
+
+        public static async Task GetUserByIdRoute(HttpContext ctx)
+        {
+            string id = ctx.Request.Url.Parameters["id"];
+            ctx.Response.StatusCode = 200;
+            ctx.Response.ContentType = "text/plain";
+            await ctx.Response.Send("Get user by ID " + id + " route");
             _Server.Events.Logger(ctx.ToJson(true));
             return;
         }

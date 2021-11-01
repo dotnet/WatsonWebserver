@@ -170,6 +170,8 @@ namespace WatsonWebserver
         {
             if (_HttpListener != null && _HttpListener.IsListening) throw new InvalidOperationException("WatsonWebserver is already listening.");
 
+            _HttpListener = new HttpListener();
+
             LoadRoutes();
             Statistics = new WatsonWebserverStatistics();
 
@@ -193,6 +195,8 @@ namespace WatsonWebserver
         public Task StartAsync(CancellationToken token = default)
         {
             if (_HttpListener != null && _HttpListener.IsListening) throw new InvalidOperationException("WatsonWebserver is already listening.");
+
+            _HttpListener = new HttpListener();
 
             LoadRoutes();
             Statistics = new WatsonWebserverStatistics();
@@ -597,6 +601,9 @@ namespace WatsonWebserver
             {
             }
             catch (OperationCanceledException)
+            {
+            }
+            catch (HttpListenerException)
             {
             }
             catch (Exception e)

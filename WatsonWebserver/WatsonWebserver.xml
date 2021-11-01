@@ -1180,11 +1180,6 @@
             Dynamic route.
             </summary>
         </member>
-        <member name="F:WatsonWebserver.RouteTypeEnum.Route">
-            <summary>
-            Route.
-            </summary>
-        </member>
         <member name="T:WatsonWebserver.StaticRoute">
             <summary>
             Assign a method handler for when requests are received matching the supplied method and path.
