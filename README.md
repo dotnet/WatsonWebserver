@@ -15,7 +15,7 @@ Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS reque
 I'd like to extend a special thanks to those that have helped make Watson Webserver better.
 
 - @notesjor @shdwp @Tutch @GeoffMcGrath @jurkovic-nikola @joreg @Job79 @at1993 @MartyIX 
-- @pocsuka @orinem @deathbull
+- @pocsuka @orinem @deathbull @binozo
 
 ## Important Notes
 
@@ -229,18 +229,19 @@ static async Task DownloadChunkedFile(HttpContext ctx)
     ctx.Response.ChunkedTransfer = true;
 
     byte[] buffer = new byte[4096];
-    while(true){
-        int bytesRead = await fs.ReadAsync(buffer, 0, buffer.Length);
-        if (bytesRead > 0)
-        {
-          // you'll want to check bytesRead vs buffer.Length, of course!
-          await ctx.Response.SendChunk(buffer);
-        }
-        else
-        {
-          await ctx.Response.SendFinalChunk(buffer);
-          break;
-        }
+    while (true)
+    {
+      int bytesRead = await fs.ReadAsync(buffer, 0, buffer.Length);
+      if (bytesRead > 0)
+      {
+        // you'll want to check bytesRead vs buffer.Length, of course!
+        await ctx.Response.SendChunk(buffer);
+      }
+      else
+      {
+        await ctx.Response.SendFinalChunk(buffer);
+        break;
+      }
     }
   }
 
