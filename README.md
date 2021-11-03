@@ -228,16 +228,19 @@ static async Task DownloadChunkedFile(HttpContext ctx)
     ctx.Response.StatusCode = 200;
     ctx.Response.ChunkedTransfer = true;
 
-    byte[] buffer = new byte[65536];
-    int bytesRead = await fs.ReadAsync(buffer, 0, buffer.Length);
-    if (bytesRead > 0)
-    {
-      // you'll want to check bytesRead vs buffer.Length, of course!
-      await ctx.Response.SendChunk(buffer);
-    }
-    else
-    {
-      await ctx.Response.SendFinalChunk(buffer);
+    byte[] buffer = new byte[4096];
+    while(true){
+        int bytesRead = await fs.ReadAsync(buffer, 0, buffer.Length);
+        if (bytesRead > 0)
+        {
+          // you'll want to check bytesRead vs buffer.Length, of course!
+          await ctx.Response.SendChunk(buffer);
+        }
+        else
+        {
+          await ctx.Response.SendFinalChunk(buffer);
+          break;
+        }
     }
   }
 
