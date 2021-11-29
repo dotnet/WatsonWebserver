@@ -254,11 +254,13 @@ namespace Test
 
         static async Task<bool> PreRoutingHandler(HttpContext ctx)
         {
+            ctx.Metadata = "Hello, world!";
             return false;
         }
 
         static async Task DefaultRoute(HttpContext ctx)
-        { 
+        {
+            // Console.WriteLine(ctx.Metadata.ToString());
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "text/plain";
             await ctx.Response.Send("Default route");

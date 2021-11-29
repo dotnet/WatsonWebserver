@@ -423,6 +423,11 @@
             The HTTP response that will be sent.  This object is preconstructed on your behalf and can be modified directly.
             </summary>
         </member>
+        <member name="P:WatsonWebserver.HttpContext.Metadata">
+            <summary>
+            User-supplied metadata.
+            </summary>
+        </member>
         <member name="M:WatsonWebserver.HttpContext.#ctor">
             <summary>
             Instantiate the object.

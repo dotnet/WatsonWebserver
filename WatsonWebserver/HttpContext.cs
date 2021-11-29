@@ -32,8 +32,14 @@ namespace WatsonWebserver
         /// <summary>
         /// The HTTP response that will be sent.  This object is preconstructed on your behalf and can be modified directly.
         /// </summary>
-        [JsonProperty(Order = 999)]
+        [JsonProperty(Order = 998)]
         public HttpResponse Response { get; private set; } = null;
+
+        /// <summary>
+        /// User-supplied metadata.
+        /// </summary>
+        [JsonProperty(Order = 999)]
+        public object Metadata { get; set; } = null;
 
         #endregion
 
