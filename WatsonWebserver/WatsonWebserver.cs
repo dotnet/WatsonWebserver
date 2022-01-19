@@ -406,6 +406,7 @@ namespace WatsonWebserver
                                     Events.Logger?.Invoke(_Header + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " denied due to access control");
                                 }
 
+                                listenerCtx.Response.StatusCode = 403;
                                 listenerCtx.Response.Close();
                                 return;
                             }
