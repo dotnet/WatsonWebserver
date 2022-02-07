@@ -4,7 +4,7 @@
     <TargetFrameworks>netstandard2.1;netcoreapp3.1;net462;net5.0;net6.0</TargetFrameworks>
 	<GenerateDocumentationFile>true</GenerateDocumentationFile>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>4.2.2.5</Version>
+    <Version>4.2.2.6</Version>
     <Description>Simple, fast, async C# web server for handling REST requests with SSL support, targeted to .NET Core, .NET Standard, and .NET Framework.</Description>
     <Authors>Joel Christner</Authors>
     <Company>Joel Christner</Company>
@@ -20,6 +20,8 @@
     <PackageIconUrl></PackageIconUrl>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
     <PackageIcon>watson.png</PackageIcon>
+    <SignAssembly>True</SignAssembly>
+    <AssemblyOriginatorKeyFile>C:\Code\Watson\WatsonWebserver-4.2-main\WatsonWebserver.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.1|AnyCPU'">
@@ -65,10 +67,10 @@
   
   
   <ItemGroup>
-    <PackageReference Include="IpMatcher" Version="1.0.4.3" />
+    <PackageReference Include="IpMatcher" Version="1.0.4.4" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="RegexMatcher" Version="1.0.7.1" />
-    <PackageReference Include="UrlMatcher" Version="1.0.0.2" />
+    <PackageReference Include="RegexMatcher" Version="1.0.7.2" />
+    <PackageReference Include="UrlMatcher" Version="1.0.0.3" />
   </ItemGroup>
 
   <ItemGroup>
