@@ -392,25 +392,21 @@ namespace WatsonWebserver
         /// Send headers (if not already sent) and a chunk of data using chunked transfer-encoding, and keep the connection in-tact.
         /// </summary>
         /// <param name="chunk">Chunk of data.</param>
-        /// <param name="nDataSize">not a buffer size, but a real data size(return value of filestream.ReadAsync(buffer, 0, buffer.Length) )</param>
+        /// <param name="numBytes">Number of bytes to send from the chunk, i.e. the actual data size (for example, return value of FileStream.ReadAsync(buffer, 0, buffer.Length)).</param>
         /// <param name="token">Cancellation token useful for canceling the request.</param>
         /// <returns>True if successful.</returns>
-        public async Task<bool> SendChunk(byte[] chunk, int nDataSize, CancellationToken token = default)
+        public async Task<bool> SendChunk(byte[] chunk, int numBytes, CancellationToken token = default)
         {
             if (!ChunkedTransfer) throw new IOException("Response is not configured to use chunked transfer-encoding.  Set ChunkedTransfer to true first, otherwise use Send().");
             if (!_HeadersSent) SendHeaders();
 
             if (chunk != null && chunk.Length > 0)
-            {
                 ContentLength += chunk.Length;
-            }
 
             try
             {
                 if (chunk == null || chunk.Length < 1) chunk = new byte[0];
-                //if (_Data == null) _Data = new MemoryStream();
-                //await _Data.WriteAsync(chunk, 0, chunk.Length, token).ConfigureAwait(false);
-                await _OutputStream.WriteAsync(chunk, 0, nDataSize, token).ConfigureAwait(false);
+                await _OutputStream.WriteAsync(chunk, 0, numBytes, token).ConfigureAwait(false);
                 await _OutputStream.FlushAsync(token).ConfigureAwait(false);
             }
             catch (Exception)
@@ -424,36 +420,27 @@ namespace WatsonWebserver
         /// <summary>
         /// Send headers (if not already sent) and the final chunk of data using chunked transfer-encoding and terminate the connection.
         /// </summary>
-        /// <param name="chunk">Chunk of data.</param>
-        /// <param name="nDataSize">not a buffer size, but a real data size(return value of filestream.ReadAsync(buffer, 0, buffer.Length) )</param>
+        /// <param name="chunk">Chunk of data.</param>/// <param name="numBytes">Number of bytes to send from the chunk, i.e. the actual data size (for example, return value of FileStream.ReadAsync(buffer, 0, buffer.Length)).</param>
         /// <param name="token">Cancellation token useful for canceling the request.</param>
         /// <returns>True if successful.</returns>
-        public async Task<bool> SendFinalChunk(byte[] chunk, int nDataSize, CancellationToken token = default)
+        public async Task<bool> SendFinalChunk(byte[] chunk, int numBytes, CancellationToken token = default)
         {
             if (!ChunkedTransfer) throw new IOException("Response is not configured to use chunked transfer-encoding.  Set ChunkedTransfer to true first, otherwise use Send().");
             if (!_HeadersSent) SendHeaders();
 
             if (chunk != null && chunk.Length > 0)
-            {
                 ContentLength += chunk.Length;
-            }
 
             try
             { 
                 if (chunk != null && chunk.Length > 0)
-                {
-                    //if (_Data == null) _Data = new MemoryStream();
-                    //await _Data.WriteAsync(chunk, 0, chunk.Length, token).ConfigureAwait(false);
-                    await _OutputStream.WriteAsync(chunk, 0, nDataSize, token).ConfigureAwait(false);
-                }
+                    await _OutputStream.WriteAsync(chunk, 0, numBytes, token).ConfigureAwait(false);
 
                 byte[] endChunk = new byte[0];
                 await _OutputStream.WriteAsync(endChunk, 0, endChunk.Length, token).ConfigureAwait(false);
 
                 await _OutputStream.FlushAsync(token).ConfigureAwait(false);
                 _OutputStream.Close();
-
-                //_Data.Seek(0, SeekOrigin.Begin);
 
                 if (_Response != null) _Response.Close();
 

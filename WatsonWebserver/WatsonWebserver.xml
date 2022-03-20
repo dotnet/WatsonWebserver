@@ -871,7 +871,7 @@
             Send headers (if not already sent) and a chunk of data using chunked transfer-encoding, and keep the connection in-tact.
             </summary>
             <param name="chunk">Chunk of data.</param>
-            <param name="nDataSize">not a buffer size, but a real data size(return value of filestream.ReadAsync(buffer, 0, buffer.Length) )</param>
+            <param name="numBytes">Number of bytes to send from the chunk, i.e. the actual data size (for example, return value of FileStream.ReadAsync(buffer, 0, buffer.Length)).</param>
             <param name="token">Cancellation token useful for canceling the request.</param>
             <returns>True if successful.</returns>
         </member>
@@ -879,8 +879,7 @@
             <summary>
             Send headers (if not already sent) and the final chunk of data using chunked transfer-encoding and terminate the connection.
             </summary>
-            <param name="chunk">Chunk of data.</param>
-            <param name="nDataSize">not a buffer size, but a real data size(return value of filestream.ReadAsync(buffer, 0, buffer.Length) )</param>
+            <param name="chunk">Chunk of data.</param>/// <param name="numBytes">Number of bytes to send from the chunk, i.e. the actual data size (for example, return value of FileStream.ReadAsync(buffer, 0, buffer.Length)).</param>
             <param name="token">Cancellation token useful for canceling the request.</param>
             <returns>True if successful.</returns>
         </member>
