@@ -89,19 +89,20 @@ namespace Test
 
                                         if (bytesRead == buffer.Length)
                                         {
-                                            await ctx.Response.SendChunk(buffer);
+                                            await ctx.Response.SendChunk(buffer, bytesRead);
                                         }
                                         else
                                         {
                                             byte[] temp = new byte[bytesRead];
                                             Buffer.BlockCopy(buffer, 0, temp, 0, bytesRead);
-                                            await ctx.Response.SendChunk(temp);
+                                            await ctx.Response.SendChunk(temp, bytesRead);
                                         }
                                     }
                                     else
                                     {
                                         Console.WriteLine("- Sending final chunk of size " + bytesRead);
 
+                                        /*
                                         if (bytesRead == buffer.Length)
                                         {
                                             await ctx.Response.SendFinalChunk(buffer);
@@ -112,6 +113,9 @@ namespace Test
                                             Buffer.BlockCopy(buffer, 0, temp, 0, bytesRead);
                                             await ctx.Response.SendFinalChunk(temp);
                                         }
+                                        */
+
+                                        await ctx.Response.SendFinalChunk(buffer, bytesRead);
                                     }
 
                                     bytesSent += bytesRead;
@@ -155,19 +159,20 @@ namespace Test
 
                                         if (bytesRead == buffer.Length)
                                         {
-                                            await ctx.Response.SendChunk(buffer);
+                                            await ctx.Response.SendChunk(buffer, bytesRead);
                                         }
                                         else
                                         {
                                             byte[] temp = new byte[bytesRead];
                                             Buffer.BlockCopy(buffer, 0, temp, 0, bytesRead);
-                                            await ctx.Response.SendChunk(temp);
+                                            await ctx.Response.SendChunk(temp, bytesRead);
                                         }
                                     }
                                     else
                                     {
                                         Console.WriteLine("- Sending final chunk of size " + bytesRead);
 
+                                        /*
                                         if (bytesRead == buffer.Length)
                                         {
                                             await ctx.Response.SendFinalChunk(buffer);
@@ -178,6 +183,9 @@ namespace Test
                                             Buffer.BlockCopy(buffer, 0, temp, 0, bytesRead);
                                             await ctx.Response.SendFinalChunk(temp);
                                         }
+                                        */
+
+                                        await ctx.Response.SendFinalChunk(buffer, bytesRead);
                                     }
 
                                     bytesSent += bytesRead;
