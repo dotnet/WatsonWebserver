@@ -626,6 +626,7 @@
         <member name="M:WatsonWebserver.HttpRequest.ReadChunk(System.Threading.CancellationToken)">
             <summary>
             For chunked transfer-encoded requests, read the next chunk.
+            It is strongly recommended that you use the ChunkedTransfer parameter before invoking this method.
             </summary>
             <param name="token">Cancellation token useful for canceling the request.</param>
             <returns>Chunk.</returns>

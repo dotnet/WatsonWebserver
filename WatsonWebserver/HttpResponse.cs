@@ -124,13 +124,13 @@ namespace WatsonWebserver
         }
 
         #endregion
-        
+
         #region Private-Members
-        
-        private HttpRequest _Request;
-        private HttpListenerContext _Context;
-        private HttpListenerResponse _Response;
-        private Stream _OutputStream;
+
+        private HttpRequest _Request = null;
+        private HttpListenerContext _Context = null;
+        private HttpListenerResponse _Response = null;
+        private Stream _OutputStream = null;
         private bool _HeadersSent = false;
         private bool _ResponseSent = false;
 

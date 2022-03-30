@@ -36,74 +36,74 @@ namespace WatsonWebserver
         /// The protocol and version.
         /// </summary>
         [JsonProperty(Order = -8)]
-        public string ProtocolVersion { get; private set; } = null;
+        public string ProtocolVersion { get; set; } = null;
 
         /// <summary>
         /// Source (requestor) IP and port information.
         /// </summary>
         [JsonProperty(Order = -7)]
-        public SourceDetails Source { get; private set; } = new SourceDetails();
+        public SourceDetails Source { get; set; } = new SourceDetails();
 
         /// <summary>
         /// Destination IP and port information.
         /// </summary>
         [JsonProperty(Order = -6)]
-        public DestinationDetails Destination { get; private set; } = new DestinationDetails();
+        public DestinationDetails Destination { get; set; } = new DestinationDetails();
 
         /// <summary>
         /// The HTTP method used in the request.
         /// </summary>
         [JsonProperty(Order = -5)]
-        public HttpMethod Method { get; private set; } = HttpMethod.GET;
+        public HttpMethod Method { get; set; } = HttpMethod.GET;
 
         /// <summary>
         /// URL details.
         /// </summary>
         [JsonProperty(Order = -4)]
-        public UrlDetails Url { get; private set; } = new UrlDetails();
+        public UrlDetails Url { get; set; } = new UrlDetails();
 
         /// <summary>
         /// Query details.
         /// </summary>
         [JsonProperty(Order = -3)]
-        public QueryDetails Query { get; private set; } = new QueryDetails();
+        public QueryDetails Query { get; set; } = new QueryDetails();
 
         /// <summary>
         /// The headers found in the request.
         /// </summary>
         [JsonProperty(Order = -2)]
-        public Dictionary<string, string> Headers { get; private set; } = new Dictionary<string, string>();
+        public Dictionary<string, string> Headers { get; set; } = new Dictionary<string, string>();
 
         /// <summary>
         /// Specifies whether or not the client requested HTTP keepalives.
         /// </summary>
-        public bool Keepalive { get; private set; } = false;
+        public bool Keepalive { get; set; } = false;
 
         /// <summary>
         /// Indicates whether or not chunked transfer encoding was detected.
         /// </summary>
-        public bool ChunkedTransfer { get; private set; } = false;
+        public bool ChunkedTransfer { get; set; } = false;
 
         /// <summary>
         /// Indicates whether or not the payload has been gzip compressed.
         /// </summary>
-        public bool Gzip { get; private set; } = false;
+        public bool Gzip { get; set; } = false;
 
         /// <summary>
         /// Indicates whether or not the payload has been deflate compressed.
         /// </summary>
-        public bool Deflate { get; private set; } = false;
+        public bool Deflate { get; set; } = false;
          
         /// <summary>
         /// The useragent specified in the request.
         /// </summary>
-        public string Useragent { get; private set; } = null;
+        public string Useragent { get; set; } = null;
 
         /// <summary>
         /// The content type as specified by the requestor (client).
         /// </summary>
         [JsonProperty(Order = 990)]
-        public string ContentType { get; private set; } = null;
+        public string ContentType { get; set; } = null;
 
         /// <summary>
         /// The number of bytes in the request body.
@@ -324,13 +324,12 @@ namespace WatsonWebserver
 
         /// <summary>
         /// For chunked transfer-encoded requests, read the next chunk.
+        /// It is strongly recommended that you use the ChunkedTransfer parameter before invoking this method.
         /// </summary>
         /// <param name="token">Cancellation token useful for canceling the request.</param>
         /// <returns>Chunk.</returns>
         public async Task<Chunk> ReadChunk(CancellationToken token = default)
         {
-            if (!ChunkedTransfer) throw new IOException("Request is not chunk transfer-encoded.");
-
             Chunk chunk = new Chunk();
              
             #region Get-Length-and-Metadata
@@ -562,12 +561,12 @@ namespace WatsonWebserver
             /// <summary>
             /// IP address of the requestor.
             /// </summary>
-            public string IpAddress { get; private set; } = null;
+            public string IpAddress { get; set; } = null;
 
             /// <summary>
             /// TCP port from which the request originated on the requestor.
             /// </summary>
-            public int Port { get; private set; } = 0;
+            public int Port { get; set; } = 0;
 
             /// <summary>
             /// Source details.
@@ -600,17 +599,17 @@ namespace WatsonWebserver
             /// <summary>
             /// IP address to which the request was made.
             /// </summary>
-            public string IpAddress { get; private set; } = null;
+            public string IpAddress { get; set; } = null;
 
             /// <summary>
             /// TCP port on which the request was received.
             /// </summary>
-            public int Port { get; private set; } = 0;
+            public int Port { get; set; } = 0;
 
             /// <summary>
             /// Hostname to which the request was directed.
             /// </summary>
-            public string Hostname { get; private set; } = null;
+            public string Hostname { get; set; } = null;
 
             /// <summary>
             /// Hostname elements.
@@ -676,12 +675,12 @@ namespace WatsonWebserver
             /// <summary>
             /// Full URL.
             /// </summary>
-            public string Full { get; private set; } = null;
+            public string Full { get; set; } = null;
 
             /// <summary>
             /// Raw URL with query.
             /// </summary>
-            public string RawWithQuery { get; private set; } = null;
+            public string RawWithQuery { get; set; } = null;
 
             /// <summary>
             /// Raw URL without query.
@@ -737,7 +736,7 @@ namespace WatsonWebserver
             /// <summary>
             /// Parameters found within the URL, if using parameter routes.
             /// </summary>
-            public Dictionary<string, string> Parameters { get; internal set; } = new Dictionary<string, string>();
+            public Dictionary<string, string> Parameters { get; set; } = new Dictionary<string, string>();
 
             /// <summary>
             /// URL details.
