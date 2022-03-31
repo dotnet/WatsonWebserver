@@ -11,12 +11,17 @@ namespace Test
 {
     static class Program
     {
+        static string _Hostname = "127.0.0.1";
+        static int _Port = 8080;
+
         static void Main()
         {
             List<string> hostnames = new List<string>();
-            hostnames.Add("127.0.0.1");
+            hostnames.Add(_Hostname);
 
-            Server server = new Server(hostnames, 8080, false, DefaultRoute);
+            Server server = new Server(hostnames, _Port, false, DefaultRoute);
+            Console.WriteLine("Listening on http://" + _Hostname + ":" + _Port);
+            Console.WriteLine("Use /img/watson.jpg or /txt/test.txt");
             server.Start();
 
             Console.WriteLine("Press ENTER to exit");

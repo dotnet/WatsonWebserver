@@ -9,11 +9,14 @@ namespace Test.Loopback
 {
     static class Program
     {
+        static string _Hostname = "127.0.0.1";
+        static int _Port = 8080;
+
         static void Main()
         {
-            Server server = new Server("localhost", 8080, false, DefaultRoute);
+            Server server = new Server(_Hostname, _Port, false, DefaultRoute);
             server.Start();
-            Console.WriteLine("WatsonWebserver listening on http://localhost:8080");
+            Console.WriteLine("WatsonWebserver listening on http://" + _Hostname + ":" + _Port);
             Console.WriteLine("ENTER to exit");
             Console.ReadLine();
         }

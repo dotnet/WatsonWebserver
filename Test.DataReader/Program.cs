@@ -9,6 +9,9 @@ namespace Test
 {
     static class Program
     {
+        static string _Hostname = "127.0.0.1";
+        static int _Port = 8080;
+
         private enum Mode
         {
             Bytes,
@@ -21,8 +24,9 @@ namespace Test
         static void Main()
         {
             List<string> hostnames = new List<string>();
-            hostnames.Add("127.0.0.1"); 
-            Server server = new Server(hostnames, 8080, false, DefaultRoute);
+            hostnames.Add(_Hostname); 
+            Server server = new Server(hostnames, _Port, false, DefaultRoute);
+            Console.WriteLine("Listening on http://" + _Hostname + ":" + _Port);
             server.Start();
 
             bool runForever = true;

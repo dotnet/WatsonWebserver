@@ -9,15 +9,18 @@ namespace Test
 {
     class Program
     {
+        static string _Hostname = "127.0.0.1";
+        static int _Port = 8080;
         static string _Directory = "Uploads";
         static Server _Server;
 
         static void Main(string[] args)
         {
             if (!Directory.Exists(_Directory)) Directory.CreateDirectory(_Directory);
-            _Server = new Server("127.0.0.1", 8080, false, DefaultRoute);
+            _Server = new Server(_Hostname, _Port, false, DefaultRoute);
             _Server.Start();
-
+            Console.WriteLine("Listening on http://" + _Hostname + ":" + _Port);
+            Console.WriteLine("Press ENTER to exit");
             Console.ReadLine();
         }
 
