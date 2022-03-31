@@ -355,8 +355,9 @@ namespace WatsonWebserver
                             string[] lenStrParts = lenStr.Split(new char[] { ';' }, 2);
                             lenStr = lenStrParts[0];
 
-                            if (lenStrParts.Length == 2)
+                            if (lenStrParts.Length >= 2)
                             {
+                                chunk.Length = Convert.ToInt32(lenStr);
                                 chunk.Metadata = lenStrParts[1];
                             }
                         }
