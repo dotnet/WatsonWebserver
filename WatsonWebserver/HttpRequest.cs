@@ -226,6 +226,13 @@ namespace WatsonWebserver
                     if (curr.Value.ToLower().Contains("deflate"))
                         Deflate = true;
                 }
+                else if (curr.Key.ToLower().Equals("x-amz-content-sha256"))
+                {
+                    if (curr.Value.ToLower().Contains("streaming"))
+                    {
+                        ChunkedTransfer = true;
+                    }
+                }
             }
               
             Data = ctx.Request.InputStream;
@@ -354,12 +361,8 @@ namespace WatsonWebserver
                         {
                             string[] lenStrParts = lenStr.Split(new char[] { ';' }, 2);
                             lenStr = lenStrParts[0];
-
-                            if (lenStrParts.Length >= 2)
-                            {
-                                chunk.Length = Convert.ToInt32(lenStr);
-                                chunk.Metadata = lenStrParts[1];
-                            }
+                            chunk.Length = int.Parse(lenStr, NumberStyles.HexNumber);
+                            if (lenStrParts.Length >= 2) chunk.Metadata = lenStrParts[1];
                         }
                         else
                         {
