@@ -359,10 +359,9 @@ namespace WatsonWebserver
 
                         if (lenStr.Contains(";"))
                         {
-                            string[] lenStrParts = lenStr.Split(new char[] { ';' }, 2);
-                            lenStr = lenStrParts[0];
-                            chunk.Length = int.Parse(lenStr, NumberStyles.HexNumber);
-                            if (lenStrParts.Length >= 2) chunk.Metadata = lenStrParts[1];
+                            string[] lenParts = lenStr.Split(new char[] { ';' }, 2);
+                            chunk.Length = int.Parse(lenParts[0], NumberStyles.HexNumber);
+                            if (lenParts.Length >= 2) chunk.Metadata = lenParts[1];
                         }
                         else
                         {
