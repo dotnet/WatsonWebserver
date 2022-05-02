@@ -46,7 +46,10 @@ I'd like to extend a special thanks to those that have helped make Watson Webser
   - If you only want to allow certain IPs or networks, and block all others, use:
     - ```Server.AccessControl.Mode = AccessControlMode.DefaultDeny```
     - ```Server.AccessControl.PermitList.Add(ip, netmask)```
-
+- If you instantiate Watson with the parameterless constructor:
+  - A default listener on ```http://127.0.0.1:8000``` will be used
+  - Events will be logged to the console
+  
 ## Simple Example
 
 ```csharp

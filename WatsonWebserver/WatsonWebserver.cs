@@ -105,12 +105,18 @@ namespace WatsonWebserver
 
         /// <summary>
         /// Creates a new instance of the Watson webserver.
+        /// If you do not provide a settings object, default settings will be used, which will cause Watson Webserver to listen on http://127.0.0.1:8000, and send events to the console.
         /// </summary>
         /// <param name="settings">Waton webserver settings.</param>
         /// <param name="defaultRoute">Method used when a request is received and no matching routes are found.  Commonly used as the 404 handler when routes are used.</param>
         public Server(WatsonWebserverSettings settings = null, Func<HttpContext, Task> defaultRoute = null)
         {
-            if (settings == null) settings = new WatsonWebserverSettings();
+            if (settings == null)
+            {
+                settings = new WatsonWebserverSettings();
+                settings.Prefixes.Add("http://127.0.0.1:8000");
+                Events.Logger = Console.WriteLine;
+            }
 
             _Settings = settings;
             _Routes.Default = defaultRoute;
