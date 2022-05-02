@@ -23,6 +23,11 @@ namespace Test
         {
             _Server = new Server(_Hostname, _Port, false, DefaultRoute);
 
+            /*
+            _Server = new Server();
+            _Server.Routes.Default = DefaultRoute;
+            */
+
             _Server.Settings.AccessControl.Mode = AccessControlMode.DefaultPermit;
             _Server.Settings.AccessControl.DenyList.Add("1.1.1.1", "255.255.255.255");
             _Server.Routes.PreRouting = PreRoutingHandler;
@@ -49,9 +54,13 @@ namespace Test
 
             StartServer();
 
-            if (_Ssl) Console.WriteLine("Listening on https://" + _Hostname + ":" + _Port);
-            else Console.WriteLine("Listening on http://" + _Hostname + ":" + _Port);
-             
+            Console.Write("Listening on:");
+            foreach (string prefix in _Server.Settings.Prefixes)
+            {
+                Console.Write(" " + prefix);
+            }
+            Console.WriteLine();
+ 
             bool runForever = true;
             while (runForever)
             {

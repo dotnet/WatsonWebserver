@@ -114,7 +114,7 @@ namespace WatsonWebserver
             if (settings == null)
             {
                 settings = new WatsonWebserverSettings();
-                settings.Prefixes.Add("http://127.0.0.1:8000");
+                settings.Prefixes.Add("http://127.0.0.1:8000/");
                 Events.Logger = Console.WriteLine;
             }
 
