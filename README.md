@@ -6,16 +6,16 @@
 
 Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS requests, written in C#.
 
-## New in v4.2.2
+## New in v4.3.0
 
-- Bugfix in content route manager match function
+- Support for ```UNKNOWN``` HTTP methods; ```MethodRaw``` property in ```HttpRequest```
 
 ## Special Thanks
 
 I'd like to extend a special thanks to those that have helped make Watson Webserver better.
 
 - @notesjor @shdwp @Tutch @GeoffMcGrath @jurkovic-nikola @joreg @Job79 @at1993 @MartyIX 
-- @pocsuka @orinem @deathbull @binozo @panboy75 @iain-cyborn
+- @pocsuka @orinem @deathbull @binozo @panboy75 @iain-cyborn @gamerhost31
 
 ## Important Notes
 
