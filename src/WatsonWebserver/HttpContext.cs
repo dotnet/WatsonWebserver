@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
-using Newtonsoft.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace WatsonWebserver
 {
@@ -14,31 +15,31 @@ namespace WatsonWebserver
         /// <summary>
         /// The HTTP request that was received.
         /// </summary>
-        [JsonProperty(Order = -1)]
+        [JsonPropertyOrder(-1)]
         public HttpRequest Request { get; private set; } = null;
 
         /// <summary>
         /// Type of route.
         /// </summary>
-        [JsonProperty(Order = 0)]
+        [JsonPropertyOrder(0)]
         public RouteTypeEnum? RouteType { get; internal set; } = null;
 
         /// <summary>
         /// Matched route.
         /// </summary>
-        [JsonProperty(Order = 1)]
+        [JsonPropertyOrder(1)]
         public object Route { get; internal set; } = null;
 
         /// <summary>
         /// The HTTP response that will be sent.  This object is preconstructed on your behalf and can be modified directly.
         /// </summary>
-        [JsonProperty(Order = 998)]
+        [JsonPropertyOrder(998)]
         public HttpResponse Response { get; private set; } = null;
 
         /// <summary>
         /// User-supplied metadata.
         /// </summary>
-        [JsonProperty(Order = 999)]
+        [JsonPropertyOrder(999)]
         public object Metadata { get; set; } = null;
 
         #endregion
@@ -46,6 +47,7 @@ namespace WatsonWebserver
         #region Private-Members
 
         private HttpListenerContext _Context = null;
+        private ISerializationHelper _Serializer = null;
 
         #endregion
 
@@ -59,13 +61,20 @@ namespace WatsonWebserver
 
         }
 
-        internal HttpContext(HttpListenerContext ctx, WatsonWebserverSettings settings, WatsonWebserverEvents events)
+        internal HttpContext(
+            HttpListenerContext ctx, 
+            WatsonWebserverSettings settings, 
+            WatsonWebserverEvents events,
+            ISerializationHelper serializer)
         {
             if (ctx == null) throw new ArgumentNullException(nameof(ctx));
             if (events == null) throw new ArgumentNullException(nameof(events));
+            if (serializer == null) throw new ArgumentNullException(nameof(serializer));
+
+            _Serializer = serializer;
             _Context = ctx;
-            Request = new HttpRequest(ctx); 
-            Response = new HttpResponse(Request, ctx, settings, events); 
+            Request = new HttpRequest(ctx, _Serializer); 
+            Response = new HttpResponse(Request, ctx, settings, events, _Serializer); 
         }
 
         #endregion

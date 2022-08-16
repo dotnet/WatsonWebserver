@@ -8,7 +8,8 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace WatsonWebserver
 {
@@ -22,19 +23,19 @@ namespace WatsonWebserver
         /// <summary>
         /// The HTTP status code to return to the requestor (client).
         /// </summary>
-        [JsonProperty(Order = -3)]
+        [JsonPropertyOrder(-3)]
         public int StatusCode = 200;
 
         /// <summary>
         /// The HTTP status description to return to the requestor (client).
         /// </summary>
-        [JsonProperty(Order = -2)]
+        [JsonPropertyOrder(-2)]
         public string StatusDescription = "OK";
 
         /// <summary>
         /// User-supplied headers to include in the response.
         /// </summary>
-        [JsonProperty(Order = -1)]
+        [JsonPropertyOrder(-1)]
         public Dictionary<string, string> Headers
         {
             get
@@ -140,6 +141,7 @@ namespace WatsonWebserver
         private Dictionary<string, string> _Headers = new Dictionary<string, string>();
         private byte[] _DataAsBytes = null;
         private MemoryStream _Data = null;
+        private ISerializationHelper _Serializer = null;
 
         #endregion
 
@@ -153,13 +155,20 @@ namespace WatsonWebserver
 
         }
 
-        internal HttpResponse(HttpRequest req, HttpListenerContext ctx, WatsonWebserverSettings settings, WatsonWebserverEvents events)
+        internal HttpResponse(
+            HttpRequest req, 
+            HttpListenerContext ctx, 
+            WatsonWebserverSettings settings, 
+            WatsonWebserverEvents events,
+            ISerializationHelper serializer)
         {
             if (req == null) throw new ArgumentNullException(nameof(req));
             if (ctx == null) throw new ArgumentNullException(nameof(ctx));
             if (settings == null) throw new ArgumentNullException(nameof(settings));
             if (events == null) throw new ArgumentNullException(nameof(events));
+            if (serializer == null) throw new ArgumentNullException(nameof(serializer));
 
+            _Serializer = serializer;
             _Request = req;
             _Context = ctx;
             _Response = _Context.Response;
@@ -462,7 +471,7 @@ namespace WatsonWebserver
         {
             string json = DataAsString;
             if (String.IsNullOrEmpty(json)) return null;
-            return SerializationHelper.DeserializeJson<T>(json);
+            return _Serializer.DeserializeJson<T>(json);
         }
 
         #endregion

@@ -139,7 +139,7 @@ namespace WatsonWebserver
             }
             catch (Exception e)
             {
-                Logger?.Invoke("Event handler exception in " + handler + ": " + Environment.NewLine + e.ToJson(true));
+                Logger?.Invoke("Event handler exception in " + handler + ": " + e.Message);
             }
         }
 

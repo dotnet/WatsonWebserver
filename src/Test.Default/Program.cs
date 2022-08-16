@@ -145,8 +145,8 @@ namespace Test
         {
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "application/json";
-            await ctx.Response.Send(ctx.Request.ToJson(true));
-            _Server.Events.Logger(ctx.ToJson(true));
+            await ctx.Response.Send(_Server.SerializationHelper.SerializeJson(ctx, true));
+            _Server.Events.Logger(_Server.SerializationHelper.SerializeJson(ctx, true));
             return;
         }
 
@@ -156,7 +156,7 @@ namespace Test
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "application/json";
             await ctx.Response.Send(ctx.Request.DataAsString);
-            _Server.Events.Logger(ctx.ToJson(true));
+            _Server.Events.Logger(_Server.SerializationHelper.SerializeJson(ctx, true));
             _Server.Events.Logger("Request data  : " + ctx.Request.DataAsString);
             _Server.Events.Logger("Response data : " + ctx.Response.DataAsString);
         }
@@ -167,7 +167,7 @@ namespace Test
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "application/json";
             await ctx.Response.Send(ctx.Request.DataAsBytes);
-            _Server.Events.Logger(ctx.ToJson(true));
+            _Server.Events.Logger(_Server.SerializationHelper.SerializeJson(ctx, true));
             _Server.Events.Logger("Request data  : " + ctx.Request.DataAsString);
             _Server.Events.Logger("Response data : " + ctx.Response.DataAsString);
         }
@@ -178,7 +178,7 @@ namespace Test
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "application/json";
             await ctx.Response.Send(ctx.Request.ContentLength, ctx.Request.Data);
-            _Server.Events.Logger(ctx.ToJson(true));
+            _Server.Events.Logger(_Server.SerializationHelper.SerializeJson(ctx, true));
             _Server.Events.Logger("Request data  : " + ctx.Request.DataAsString);
             _Server.Events.Logger("Response data : " + ctx.Response.DataAsString);
         }
@@ -189,7 +189,7 @@ namespace Test
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "text/plain";
             await ctx.Response.Send("Hello static route, defined using attributes");
-            _Server.Events.Logger(ctx.ToJson(true));
+            _Server.Events.Logger(_Server.SerializationHelper.SerializeJson(ctx, true));
             return;
         }
 
@@ -199,7 +199,7 @@ namespace Test
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "text/plain";
             await ctx.Response.Send("Get user by ID " + id + " route");
-            _Server.Events.Logger(ctx.ToJson(true));
+            _Server.Events.Logger(_Server.SerializationHelper.SerializeJson(ctx, true));
             return;
         }
 
@@ -208,7 +208,7 @@ namespace Test
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "text/plain";
             await ctx.Response.Send("Hola static route");
-            _Server.Events.Logger(ctx.ToJson(true));
+            _Server.Events.Logger(_Server.SerializationHelper.SerializeJson(ctx, true));
             return;
         }
 
@@ -218,7 +218,7 @@ namespace Test
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "text/plain";
             await ctx.Response.Send("Parameter route 1, with version " + ctx.Request.Url.Parameters["version"] + " and ID " + ctx.Request.Url.Parameters["id"]);
-            _Server.Events.Logger(ctx.ToJson(true));
+            _Server.Events.Logger(_Server.SerializationHelper.SerializeJson(ctx, true));
             return;
         }
 
@@ -228,7 +228,7 @@ namespace Test
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "text/plain";
             await ctx.Response.Send("Parameter route 2, with version " + ctx.Request.Url.Parameters["version"] + ", ID " + ctx.Request.Url.Parameters["id"] + ", and metadata");
-            _Server.Events.Logger(ctx.ToJson(true));
+            _Server.Events.Logger(_Server.SerializationHelper.SerializeJson(ctx, true));
             return;
         }
 
@@ -238,7 +238,7 @@ namespace Test
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "text/plain";
             await ctx.Response.Send("Foo dynamic route, defined using attributes");
-            _Server.Events.Logger(ctx.ToJson(true));
+            _Server.Events.Logger(_Server.SerializationHelper.SerializeJson(ctx, true));
             return;
         }
 
@@ -248,7 +248,7 @@ namespace Test
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "text/plain";
             await ctx.Response.Send("Foo with ID dynamic route, defined using attributes");
-            _Server.Events.Logger(ctx.ToJson(true));
+            _Server.Events.Logger(_Server.SerializationHelper.SerializeJson(ctx, true));
             return;
         }
 
@@ -257,7 +257,7 @@ namespace Test
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "text/plain";
             await ctx.Response.Send("Bar dynamic route");
-            _Server.Events.Logger(ctx.ToJson(true));
+            _Server.Events.Logger(_Server.SerializationHelper.SerializeJson(ctx, true));
             return;
         }
 
@@ -273,7 +273,7 @@ namespace Test
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "text/plain";
             await ctx.Response.Send("Default route");
-            _Server.Events.Logger(ctx.ToJson(true));
+            _Server.Events.Logger(_Server.SerializationHelper.SerializeJson(ctx, true));
             return; 
         }
 

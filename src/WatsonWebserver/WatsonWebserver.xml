@@ -209,6 +209,27 @@
             The FileShare value to use when accessing files within a content route via a FileStream.  Default is FileShare.Read.
             </summary>
         </member>
+        <member name="T:WatsonWebserver.DefaultSerializationHelper">
+            <summary>
+            Default serialization helper.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.DefaultSerializationHelper.DeserializeJson``1(System.String)">
+            <summary>
+            Deserialize JSON to an instance.
+            </summary>
+            <typeparam name="T">Type.</typeparam>
+            <param name="json">JSON string.</param>
+            <returns>Instance.</returns>
+        </member>
+        <member name="M:WatsonWebserver.DefaultSerializationHelper.SerializeJson(System.Object,System.Boolean)">
+            <summary>
+            Serialize object to JSON.
+            </summary>
+            <param name="obj">Object.</param>
+            <param name="pretty">Pretty print.</param>
+            <returns>JSON.</returns>
+        </member>
         <member name="T:WatsonWebserver.DynamicRoute">
             <summary>
             Assign a method handler for when requests are received matching the supplied method and path regex.
@@ -391,11 +412,6 @@
         <member name="P:WatsonWebserver.ExceptionEventArgs.Exception">
             <summary>
             Exception.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ExceptionEventArgs.Json">
-            <summary>
-            JSON string of the Exception.
             </summary>
         </member>
         <member name="T:WatsonWebserver.HttpContext">
@@ -603,12 +619,13 @@
             HTTP request.
             </summary>
         </member>
-        <member name="M:WatsonWebserver.HttpRequest.#ctor(System.Net.HttpListenerContext)">
+        <member name="M:WatsonWebserver.HttpRequest.#ctor(System.Net.HttpListenerContext,WatsonWebserver.ISerializationHelper)">
             <summary>
             HTTP request.
             Instantiate the object using an HttpListenerContext.
             </summary>
             <param name="ctx">HttpListenerContext.</param>
+            <param name="serializer">Serialization helper.</param>
         </member>
         <member name="M:WatsonWebserver.HttpRequest.RetrieveHeaderValue(System.String)">
             <summary>
@@ -901,6 +918,27 @@
             <typeparam name="T">Type.</typeparam>
             <returns>Object of type specified.</returns>
         </member>
+        <member name="T:WatsonWebserver.ISerializationHelper">
+            <summary>
+            Serialization helper.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.ISerializationHelper.DeserializeJson``1(System.String)">
+            <summary>
+            Deserialize from JSON to an object of the specified type.
+            </summary>
+            <typeparam name="T">Type.</typeparam>
+            <param name="json">JSON string.</param>
+            <returns>Instance.</returns>
+        </member>
+        <member name="M:WatsonWebserver.ISerializationHelper.SerializeJson(System.Object,System.Boolean)">
+            <summary>
+            Serialize from object to JSON.
+            </summary>
+            <param name="obj">Object.</param>
+            <param name="pretty">Pretty print.</param>
+            <returns>JSON.</returns>
+        </member>
         <member name="T:WatsonWebserver.MimeTypes">
             <summary>
             MIME types and file extensions.
@@ -917,19 +955,6 @@
             </summary>
             <param name="extension">File extension.</param>
             <returns>String containing MIME type.</returns>
-        </member>
-        <member name="T:WatsonWebserver.ObjectExtensions">
-            <summary>
-            Object extensions.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.ObjectExtensions.ToJson(System.Object,System.Boolean)">
-            <summary>
-            Return a JSON string of the object.
-            </summary>
-            <param name="obj">Object.</param>
-            <param name="pretty">Enable or disable pretty print.</param>
-            <returns>JSON string.</returns>
         </member>
         <member name="T:WatsonWebserver.ParameterRoute">
             <summary>
@@ -1361,6 +1386,11 @@
         <member name="P:WatsonWebserver.Server.Pages">
             <summary>
             Default pages served by Watson webserver.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Server.SerializationHelper">
+            <summary>
+            JSON serialization helper.
             </summary>
         </member>
         <member name="M:WatsonWebserver.Server.#ctor(WatsonWebserver.WatsonWebserverSettings,System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task})">

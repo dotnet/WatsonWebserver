@@ -4,7 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace WatsonWebserver
 {
@@ -18,19 +19,19 @@ namespace WatsonWebserver
         /// <summary>
         /// Globally-unique identifier.
         /// </summary>
-        [JsonProperty(Order = -1)]
+        [JsonPropertyOrder(-1)]
         public string GUID { get; set; } = Guid.NewGuid().ToString();
 
         /// <summary>
         /// The HTTP method, i.e. GET, PUT, POST, DELETE, etc.
         /// </summary>
-        [JsonProperty(Order = 0)]
+        [JsonPropertyOrder(0)]
         public HttpMethod Method { get; set; } = HttpMethod.GET;
 
         /// <summary>
         /// The pattern against which the raw URL should be matched.  
         /// </summary>
-        [JsonProperty(Order = 1)]
+        [JsonPropertyOrder(1)]
         public Regex Path { get; set; } = null;
 
         /// <summary>
@@ -42,7 +43,7 @@ namespace WatsonWebserver
         /// <summary>
         /// User-supplied metadata.
         /// </summary>
-        [JsonProperty(Order = 999)]
+        [JsonPropertyOrder(999)]
         public object Metadata { get; set; } = null;
 
         #endregion

@@ -5,6 +5,7 @@ using System.Net;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text.Json.Serialization;
 
 namespace WatsonWebserver
 {
@@ -84,6 +85,23 @@ namespace WatsonWebserver
         /// </summary>
         public WatsonWebserverPages Pages { get; private set; } = new WatsonWebserverPages();
 
+        /// <summary>
+        /// JSON serialization helper.
+        /// </summary>
+        [JsonIgnore]
+        public ISerializationHelper SerializationHelper
+        {
+            get
+            {
+                return _Serializer;
+            }
+            set
+            {
+                if (value == null) throw new ArgumentNullException(nameof(SerializationHelper));
+                _Serializer = value;
+            }
+        }
+
         #endregion
 
         #region Private-Members
@@ -98,6 +116,7 @@ namespace WatsonWebserver
         private CancellationTokenSource _TokenSource = new CancellationTokenSource();
         private CancellationToken _Token;
         private Task _AcceptConnections = null;
+        private ISerializationHelper _Serializer = new DefaultSerializationHelper();
 
         #endregion
 
@@ -385,7 +404,7 @@ namespace WatsonWebserver
                                 listenerCtx.Request.RemoteEndPoint.Address.ToString(),
                                 listenerCtx.Request.RemoteEndPoint.Port));
 
-                            ctx = new HttpContext(listenerCtx, _Settings, Events);
+                            ctx = new HttpContext(listenerCtx, _Settings, Events, _Serializer);
 
                             Events.HandleRequestReceived(this, new RequestEventArgs(ctx));
 

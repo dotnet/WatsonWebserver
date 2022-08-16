@@ -7,9 +7,10 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks; 
-using Newtonsoft.Json;
 
 namespace WatsonWebserver
 {
@@ -23,61 +24,61 @@ namespace WatsonWebserver
         /// <summary>
         /// UTC timestamp from when the request was received.
         /// </summary>
-        [JsonProperty(Order = -10)]
+        [JsonPropertyOrder(-10)]
         public DateTime TimestampUtc { get; private set; } = DateTime.Now.ToUniversalTime();
 
         /// <summary>
         /// Thread ID on which the request exists.
         /// </summary>
-        [JsonProperty(Order = -9)]
+        [JsonPropertyOrder(-9)]
         public int ThreadId { get; private set; } = Thread.CurrentThread.ManagedThreadId;
 
         /// <summary>
         /// The protocol and version.
         /// </summary>
-        [JsonProperty(Order = -9)]
+        [JsonPropertyOrder(-9)]
         public string ProtocolVersion { get; set; } = null;
 
         /// <summary>
         /// Source (requestor) IP and port information.
         /// </summary>
-        [JsonProperty(Order = -8)]
+        [JsonPropertyOrder(-8)]
         public SourceDetails Source { get; set; } = new SourceDetails();
 
         /// <summary>
         /// Destination IP and port information.
         /// </summary>
-        [JsonProperty(Order = -7)]
+        [JsonPropertyOrder(-7)]
         public DestinationDetails Destination { get; set; } = new DestinationDetails();
 
         /// <summary>
         /// The HTTP method used in the request.
         /// </summary>
-        [JsonProperty(Order = -6)]
+        [JsonPropertyOrder(-6)]
         public HttpMethod Method { get; set; } = HttpMethod.GET;
 
         /// <summary>
         /// The string version of the HTTP method, useful if Method is UNKNOWN.
         /// </summary>
-        [JsonProperty(Order = -5)]
+        [JsonPropertyOrder(-5)]
         public string MethodRaw { get; set; } = null;
 
         /// <summary>
         /// URL details.
         /// </summary>
-        [JsonProperty(Order = -4)]
+        [JsonPropertyOrder(-4)]
         public UrlDetails Url { get; set; } = new UrlDetails();
 
         /// <summary>
         /// Query details.
         /// </summary>
-        [JsonProperty(Order = -3)]
+        [JsonPropertyOrder(-3)]
         public QueryDetails Query { get; set; } = new QueryDetails();
 
         /// <summary>
         /// The headers found in the request.
         /// </summary>
-        [JsonProperty(Order = -2)]
+        [JsonPropertyOrder(-2)]
         public Dictionary<string, string> Headers { get; set; } = new Dictionary<string, string>();
 
         /// <summary>
@@ -108,13 +109,13 @@ namespace WatsonWebserver
         /// <summary>
         /// The content type as specified by the requestor (client).
         /// </summary>
-        [JsonProperty(Order = 990)]
+        [JsonPropertyOrder(990)]
         public string ContentType { get; set; } = null;
 
         /// <summary>
         /// The number of bytes in the request body.
         /// </summary>
-        [JsonProperty(Order = 991)]
+        [JsonPropertyOrder(991)]
         public long ContentLength { get; private set; } = 0;
 
         /// <summary>
@@ -171,6 +172,7 @@ namespace WatsonWebserver
 
         private Uri _Uri = null;
         private byte[] _DataAsBytes = null;
+        private ISerializationHelper _Serializer = null;
 
         #endregion
 
@@ -188,11 +190,15 @@ namespace WatsonWebserver
         /// Instantiate the object using an HttpListenerContext.
         /// </summary>
         /// <param name="ctx">HttpListenerContext.</param>
-        public HttpRequest(HttpListenerContext ctx)
+        /// <param name="serializer">Serialization helper.</param>
+        public HttpRequest(HttpListenerContext ctx, ISerializationHelper serializer)
         { 
             if (ctx == null) throw new ArgumentNullException(nameof(ctx));
             if (ctx.Request == null) throw new ArgumentNullException(nameof(ctx.Request));
-             
+            if (serializer == null) throw new ArgumentNullException(nameof(serializer));
+
+            _Serializer = serializer;
+
             ListenerContext = ctx; 
             Keepalive = ctx.Request.KeepAlive;
             ContentLength = ctx.Request.ContentLength64;
@@ -442,7 +448,7 @@ namespace WatsonWebserver
         {
             string json = DataAsString;
             if (String.IsNullOrEmpty(json)) return null;
-            return SerializationHelper.DeserializeJson<T>(json);
+            return _Serializer.DeserializeJson<T>(json);
         }
          
         #endregion
