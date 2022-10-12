@@ -403,15 +403,9 @@ namespace WatsonWebserver
                 chunk.IsFinalChunk = false;
                 buffer = new byte[chunk.Length];
                 bytesRead = await Data.ReadAsync(buffer, 0, buffer.Length, token).ConfigureAwait(false);
-                if (bytesRead == chunk.Length)
-                {
-                    chunk.Data = new byte[chunk.Length];
-                    Buffer.BlockCopy(buffer, 0, chunk.Data, 0, chunk.Length); 
-                }
-                else
-                {
-                    throw new IOException("Expected " + chunk.Length + " bytes but only read " + bytesRead + " bytes in chunk.");
-                }
+                chunk.Data = new byte[bytesRead];
+                chunk.Length = bytesRead; // may be different
+                if (bytesRead > 0) Buffer.BlockCopy(buffer, 0, chunk.Data, 0, bytesRead);
             }
             else
             {

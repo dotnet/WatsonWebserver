@@ -2,6 +2,12 @@
 
 ## Current Version
 
+v4.3.3
+
+- Less restrictive chunk reading
+
+## Previous Versions
+
 v4.3.0
 
 - Support for ```UNKNOWN``` HTTP methods; ```MethodRaw``` property in ```HttpRequest```
@@ -10,7 +16,6 @@ v4.2.2
 
 - Bugfix in content route manager match function
 
-## Previous Versions
 
 v4.2.0
 

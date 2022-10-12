@@ -21,7 +21,7 @@ namespace Test
 
         static void Main()
         {
-            _Server = new Server(_Hostname, _Port, false, DefaultRoute);
+            _Server = new Server(_Hostname, _Port, _Ssl, DefaultRoute);
 
             /*
             _Server = new Server();
@@ -261,7 +261,9 @@ namespace Test
             return;
         }
 
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         static async Task<bool> PreRoutingHandler(HttpContext ctx)
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             ctx.Metadata = "Hello, world!";
             return false;

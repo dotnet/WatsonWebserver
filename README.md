@@ -10,6 +10,7 @@ Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS reque
 
 - Overrideable JSON serializer
 - Support for ```UNKNOWN``` HTTP methods; ```MethodRaw``` property in ```HttpRequest```
+- Less restrictive chunk reading
 
 ## Special Thanks
 

@@ -4,7 +4,7 @@
     <TargetFrameworks>netstandard2.1;netcoreapp3.1;net462;net5.0;net6.0</TargetFrameworks>
 	<GenerateDocumentationFile>true</GenerateDocumentationFile>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>4.3.2</Version>
+    <Version>4.3.3</Version>
     <Description>Simple, fast, async C# web server for handling REST requests with SSL support, targeted to .NET Core, .NET Standard, and .NET Framework.</Description>
     <Authors>Joel Christner</Authors>
     <Company>Joel Christner</Company>
@@ -21,7 +21,7 @@
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
     <PackageIcon>watson.png</PackageIcon>
     <SignAssembly>True</SignAssembly>
-    <AssemblyOriginatorKeyFile>C:\Code\Watson\WatsonWebserver-4.2-main\WatsonWebserver.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>..\WatsonWebserver.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.1|AnyCPU'">
