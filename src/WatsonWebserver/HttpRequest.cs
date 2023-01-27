@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -79,7 +80,18 @@ namespace WatsonWebserver
         /// The headers found in the request.
         /// </summary>
         [JsonPropertyOrder(-2)]
-        public Dictionary<string, string> Headers { get; set; } = new Dictionary<string, string>();
+        public Dictionary<string, string> Headers
+        {
+            get
+            {
+                return _Headers;
+            }
+            set
+            {
+                if (value == null) _Headers = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+                else _Headers = value;
+            }
+        }
 
         /// <summary>
         /// Specifies whether or not the client requested HTTP keepalives.
@@ -174,6 +186,7 @@ namespace WatsonWebserver
         private Uri _Uri = null;
         private byte[] _DataAsBytes = null;
         private ISerializationHelper _Serializer = null;
+        private Dictionary<string, string> _Headers = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
 
         #endregion
 
@@ -263,12 +276,13 @@ namespace WatsonWebserver
         #endregion
 
         #region Public-Methods
-         
+
         /// <summary>
         /// Retrieve a specified header value from either the headers or the querystring (case insensitive).
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
+        [Obsolete("This API will be deprecated in a future release.  Header dictionary is now case insensitive.")]
         public string RetrieveHeaderValue(string key)
         {
             if (String.IsNullOrEmpty(key)) throw new ArgumentNullException(nameof(key));
@@ -299,6 +313,7 @@ namespace WatsonWebserver
         /// <param name="key">Header key.</param>
         /// <param name="caseSensitive">Specify whether a case sensitive search should be used.</param>
         /// <returns>True if exists.</returns>
+        [Obsolete("This API will be deprecated in a future release.  Header dictionary is now case insensitive.")]
         public bool HeaderExists(string key, bool caseSensitive)
         {
             if (String.IsNullOrEmpty(key)) throw new ArgumentNullException(nameof(key));
@@ -328,6 +343,7 @@ namespace WatsonWebserver
         /// <param name="key">Querystring key.</param>
         /// <param name="caseSensitive">Specify whether a case sensitive search should be used.</param>
         /// <returns>True if exists.</returns>
+        [Obsolete("This API will be deprecated in a future release.  Query elements dictionary is now case insensitive.")]
         public bool QuerystringExists(string key, bool caseSensitive)
         {
             if (String.IsNullOrEmpty(key)) throw new ArgumentNullException(nameof(key));
@@ -773,7 +789,18 @@ namespace WatsonWebserver
             /// <summary>
             /// Parameters found within the URL, if using parameter routes.
             /// </summary>
-            public Dictionary<string, string> Parameters { get; set; } = new Dictionary<string, string>();
+            public Dictionary<string, string> Parameters
+            {
+                get
+                {
+                    return _Parameters;
+                }
+                set
+                {
+                    if (value == null) _Parameters = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+                    else _Parameters = value;
+                }
+            }
 
             /// <summary>
             /// URL details.
@@ -796,6 +823,8 @@ namespace WatsonWebserver
                 Full = fullUrl;
                 RawWithQuery = rawUrl;
             }
+
+            private Dictionary<string, string> _Parameters = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
         }
         
         /// <summary>
@@ -828,7 +857,7 @@ namespace WatsonWebserver
             {
                 get
                 {
-                    Dictionary<string, string> ret = new Dictionary<string, string>();
+                    Dictionary<string, string> ret = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
                     string qs = Querystring;
                     if (!String.IsNullOrEmpty(qs))
                     {
@@ -874,6 +903,7 @@ namespace WatsonWebserver
             }
 
             private string _FullUrl = null;
+            private Dictionary<string, string> _Elements = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
         }
 
         #endregion

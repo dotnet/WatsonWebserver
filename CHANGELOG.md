@@ -2,11 +2,16 @@
 
 ## Current Version
 
+v4.3.6
+
+- Case-insensitive dictionaries in ```HttpRequest```, eventually depcreating certain methods
+- Targeting .NET Framework 4.8
+
+## Previous Versions
+
 v4.3.3
 
 - Less restrictive chunk reading
-
-## Previous Versions
 
 v4.3.0
 
