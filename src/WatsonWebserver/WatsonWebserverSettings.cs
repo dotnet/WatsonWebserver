@@ -266,7 +266,7 @@ namespace WatsonWebserver
             /// <summary>
             /// SSL settings.
             /// </summary>
-            internal SslSettings()
+            public SslSettings()
             {
             } 
         }

@@ -2,6 +2,10 @@
 
 ## Current Version
 
+v4.3.7
+
+- Bugfix (parameterless constructor for settings)
+
 v4.3.6
 
 - Case-insensitive dictionaries in ```HttpRequest```, eventually depcreating certain methods

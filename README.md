@@ -13,6 +13,7 @@ Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS reque
 - Less restrictive chunk reading
 - Case-insensitive dictionaries in ```HttpRequest```, eventually depcreating certain methods
 - Targeting .NET Framework 4.8
+- Bugfixes
 
 ## Special Thanks
 
