@@ -9,26 +9,31 @@
             Access control manager.  Dictates which connections are permitted or denied.
             </summary>
         </member>
-        <member name="F:WatsonWebserver.AccessControlManager.DenyList">
+        <member name="P:WatsonWebserver.AccessControlManager.DenyList">
             <summary>
             Matcher to match denied addresses.
             </summary>
         </member>
-        <member name="F:WatsonWebserver.AccessControlManager.PermitList">
+        <member name="P:WatsonWebserver.AccessControlManager.PermitList">
             <summary>
             Matcher to match permitted addresses.
             </summary>
         </member>
-        <member name="F:WatsonWebserver.AccessControlManager.Mode">
+        <member name="P:WatsonWebserver.AccessControlManager.Mode">
             <summary>
             Access control mode, either DefaultPermit or DefaultDeny.
             DefaultPermit: allow everything, except for those explicitly denied.
             DefaultDeny: deny everything, except for those explicitly permitted.
             </summary>
         </member>
+        <member name="M:WatsonWebserver.AccessControlManager.#ctor">
+            <summary>
+            Instantiate.
+            </summary>
+        </member>
         <member name="M:WatsonWebserver.AccessControlManager.#ctor(WatsonWebserver.AccessControlMode)">
             <summary>
-            Instantiate the object.
+            Instantiate.
             </summary> 
             <param name="mode">Access control mode.</param>
         </member>
@@ -1692,17 +1697,17 @@
             SSL settings.
             </summary>
         </member>
-        <member name="F:WatsonWebserver.WatsonWebserverSettings.SslSettings.Enable">
+        <member name="P:WatsonWebserver.WatsonWebserverSettings.SslSettings.Enable">
             <summary>
             Enable or disable SSL.
             </summary>
         </member>
-        <member name="F:WatsonWebserver.WatsonWebserverSettings.SslSettings.MutuallyAuthenticate">
+        <member name="P:WatsonWebserver.WatsonWebserverSettings.SslSettings.MutuallyAuthenticate">
             <summary>
             Require mutual authentication.
             </summary>
         </member>
-        <member name="F:WatsonWebserver.WatsonWebserverSettings.SslSettings.AcceptInvalidAcertificates">
+        <member name="P:WatsonWebserver.WatsonWebserverSettings.SslSettings.AcceptInvalidAcertificates">
             <summary>
             Accept invalid certificates including self-signed and those that are unable to be verified.
             </summary>
@@ -1717,47 +1722,47 @@
             Headers that will be added to every response unless previously set.
             </summary>
         </member>
-        <member name="F:WatsonWebserver.WatsonWebserverSettings.HeaderSettings.AccessControlAllowOrigin">
+        <member name="P:WatsonWebserver.WatsonWebserverSettings.HeaderSettings.AccessControlAllowOrigin">
             <summary>
             Access-Control-Allow-Origin header.
             </summary>
         </member>
-        <member name="F:WatsonWebserver.WatsonWebserverSettings.HeaderSettings.AccessControlAllowMethods">
+        <member name="P:WatsonWebserver.WatsonWebserverSettings.HeaderSettings.AccessControlAllowMethods">
             <summary>
             Access-Control-Allow-Methods header.
             </summary>
         </member>
-        <member name="F:WatsonWebserver.WatsonWebserverSettings.HeaderSettings.AccessControlAllowHeaders">
+        <member name="P:WatsonWebserver.WatsonWebserverSettings.HeaderSettings.AccessControlAllowHeaders">
             <summary>
             Access-Control-Allow-Headers header.
             </summary>
         </member>
-        <member name="F:WatsonWebserver.WatsonWebserverSettings.HeaderSettings.AccessControlExposeHeaders">
+        <member name="P:WatsonWebserver.WatsonWebserverSettings.HeaderSettings.AccessControlExposeHeaders">
             <summary>
             Access-Control-Expose-Headers header.
             </summary>
         </member>
-        <member name="F:WatsonWebserver.WatsonWebserverSettings.HeaderSettings.Accept">
+        <member name="P:WatsonWebserver.WatsonWebserverSettings.HeaderSettings.Accept">
             <summary>
             Accept header.
             </summary>
         </member>
-        <member name="F:WatsonWebserver.WatsonWebserverSettings.HeaderSettings.AcceptLanguage">
+        <member name="P:WatsonWebserver.WatsonWebserverSettings.HeaderSettings.AcceptLanguage">
             <summary>
             Accept-Language header.
             </summary>
         </member>
-        <member name="F:WatsonWebserver.WatsonWebserverSettings.HeaderSettings.AcceptCharset">
+        <member name="P:WatsonWebserver.WatsonWebserverSettings.HeaderSettings.AcceptCharset">
             <summary>
             Accept-Charset header.
             </summary>
         </member>
-        <member name="F:WatsonWebserver.WatsonWebserverSettings.HeaderSettings.Connection">
+        <member name="P:WatsonWebserver.WatsonWebserverSettings.HeaderSettings.Connection">
             <summary>
             Connection header.
             </summary>
         </member>
-        <member name="F:WatsonWebserver.WatsonWebserverSettings.HeaderSettings.Host">
+        <member name="P:WatsonWebserver.WatsonWebserverSettings.HeaderSettings.Host">
             <summary>
             Host header.
             </summary>
@@ -1773,22 +1778,22 @@
             Be sure to set Events.Logger in order to receive debug messages.
             </summary>
         </member>
-        <member name="F:WatsonWebserver.WatsonWebserverSettings.DebugSettings.AccessControl">
+        <member name="P:WatsonWebserver.WatsonWebserverSettings.DebugSettings.AccessControl">
             <summary>
             Enable or disable debug logging of access control.
             </summary>
         </member>
-        <member name="F:WatsonWebserver.WatsonWebserverSettings.DebugSettings.Routing">
+        <member name="P:WatsonWebserver.WatsonWebserverSettings.DebugSettings.Routing">
             <summary>
             Enable or disable debug logging of routing.
             </summary>
         </member>
-        <member name="F:WatsonWebserver.WatsonWebserverSettings.DebugSettings.Requests">
+        <member name="P:WatsonWebserver.WatsonWebserverSettings.DebugSettings.Requests">
             <summary>
             Enable or disable debug logging of requests.
             </summary>
         </member>
-        <member name="F:WatsonWebserver.WatsonWebserverSettings.DebugSettings.Responses">
+        <member name="P:WatsonWebserver.WatsonWebserverSettings.DebugSettings.Responses">
             <summary>
             Enable or disable debug logging of responses.
             </summary>

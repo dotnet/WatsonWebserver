@@ -18,30 +18,63 @@ namespace WatsonWebserver
         /// <summary>
         /// Matcher to match denied addresses.
         /// </summary>
-        public Matcher DenyList = new Matcher();
+        public Matcher DenyList
+        {
+            get
+            {
+                return _DenyList;
+            }
+            set
+            {
+                if (value == null) value = new Matcher();
+                _DenyList = value;
+            }
+        }
 
         /// <summary>
         /// Matcher to match permitted addresses.
         /// </summary>
-        public Matcher PermitList = new Matcher();
+        public Matcher PermitList
+        {
+            get
+            {
+                return _PermitList;
+            }
+            set
+            {
+                if (value == null) value = new Matcher();
+                _PermitList = value;
+            }
+        }
 
         /// <summary>
         /// Access control mode, either DefaultPermit or DefaultDeny.
         /// DefaultPermit: allow everything, except for those explicitly denied.
         /// DefaultDeny: deny everything, except for those explicitly permitted.
         /// </summary>
-        public AccessControlMode Mode = AccessControlMode.DefaultPermit;
+        public AccessControlMode Mode { get; set; } = AccessControlMode.DefaultPermit;
 
         #endregion
 
         #region Private-Members
-          
+
+        private Matcher _DenyList = new Matcher();
+        private Matcher _PermitList = new Matcher();
+
         #endregion
 
         #region Constructors-and-Factories
 
         /// <summary>
-        /// Instantiate the object.
+        /// Instantiate.
+        /// </summary>
+        public AccessControlManager()
+        {
+
+        }
+
+        /// <summary>
+        /// Instantiate.
         /// </summary> 
         /// <param name="mode">Access control mode.</param>
         public AccessControlManager(AccessControlMode mode)

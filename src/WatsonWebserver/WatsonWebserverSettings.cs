@@ -251,17 +251,17 @@ namespace WatsonWebserver
             /// <summary>
             /// Enable or disable SSL.
             /// </summary>
-            public bool Enable = false;
+            public bool Enable { get; set; } = false;
 
             /// <summary>
             /// Require mutual authentication.
             /// </summary>
-            public bool MutuallyAuthenticate = false;
+            public bool MutuallyAuthenticate { get; set; } = false;
 
             /// <summary>
             /// Accept invalid certificates including self-signed and those that are unable to be verified.
             /// </summary>
-            public bool AcceptInvalidAcertificates = true;
+            public bool AcceptInvalidAcertificates { get; set; } = true;
 
             /// <summary>
             /// SSL settings.
@@ -279,47 +279,47 @@ namespace WatsonWebserver
             /// <summary>
             /// Access-Control-Allow-Origin header.
             /// </summary>
-            public string AccessControlAllowOrigin = "*";
+            public string AccessControlAllowOrigin { get; set; } = "*";
 
             /// <summary>
             /// Access-Control-Allow-Methods header.
             /// </summary>
-            public string AccessControlAllowMethods = "OPTIONS, HEAD, GET, PUT, POST, DELETE";
+            public string AccessControlAllowMethods { get; set; } = "OPTIONS, HEAD, GET, PUT, POST, DELETE";
 
             /// <summary>
             /// Access-Control-Allow-Headers header.
             /// </summary>
-            public string AccessControlAllowHeaders = "*";
+            public string AccessControlAllowHeaders { get; set; } = "*";
 
             /// <summary>
             /// Access-Control-Expose-Headers header.
             /// </summary>
-            public string AccessControlExposeHeaders = "";
+            public string AccessControlExposeHeaders { get; set; } = "";
 
             /// <summary>
             /// Accept header.
             /// </summary>
-            public string Accept = "*/*";
+            public string Accept { get; set; } = "*/*";
 
             /// <summary>
             /// Accept-Language header.
             /// </summary>
-            public string AcceptLanguage = "en-US, en";
+            public string AcceptLanguage { get; set; } = "en-US, en";
 
             /// <summary>
             /// Accept-Charset header.
             /// </summary>
-            public string AcceptCharset = "ISO-8859-1, utf-8";
+            public string AcceptCharset { get; set; } = "ISO-8859-1, utf-8";
 
             /// <summary>
             /// Connection header.
             /// </summary>
-            public string Connection = "close";
+            public string Connection { get; set; } = "close";
 
             /// <summary>
             /// Host header.
             /// </summary>
-            public string Host = null;
+            public string Host { get; set; } = null;
 
             /// <summary>
             /// Headers that will be added to every response unless previously set.
@@ -339,22 +339,22 @@ namespace WatsonWebserver
             /// <summary>
             /// Enable or disable debug logging of access control.
             /// </summary>
-            public bool AccessControl = false;
+            public bool AccessControl { get; set; } = false;
 
             /// <summary>
             /// Enable or disable debug logging of routing.
             /// </summary>
-            public bool Routing = false;
+            public bool Routing { get; set; } = false;
               
             /// <summary>
             /// Enable or disable debug logging of requests.
             /// </summary>
-            public bool Requests = false;
+            public bool Requests { get; set; } = false;
 
             /// <summary>
             /// Enable or disable debug logging of responses.
             /// </summary>
-            public bool Responses = false;
+            public bool Responses { get; set; } = false;
 
             /// <summary>
             /// Debug logging settings.

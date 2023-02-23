@@ -2,16 +2,16 @@
 
 ## Current Version
 
-v4.3.7
+v4.3.7, 4.3.8
 
 - Bugfix (parameterless constructor for settings)
+
+## Previous Versions
 
 v4.3.6
 
 - Case-insensitive dictionaries in ```HttpRequest```, eventually depcreating certain methods
 - Targeting .NET Framework 4.8
-
-## Previous Versions
 
 v4.3.3
 
