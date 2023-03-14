@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using GetSomeInput;
 using WatsonWebserver;
 
 namespace Test.Serialization
@@ -33,7 +34,7 @@ namespace Test.Serialization
             bool runForever = true;
             while (runForever)
             {
-                string userInput = InputString("Command [? for help] >", null, false);
+                string userInput = Inputty.GetString("Command [? for help] >", null, false);
                 switch (userInput.ToLower())
                 {
                     case "?":
@@ -138,32 +139,6 @@ namespace Test.Serialization
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
-            }
-        }
-
-        static string InputString(string question, string defaultAnswer, bool allowNull)
-        {
-            while (true)
-            {
-                Console.Write(question);
-
-                if (!String.IsNullOrEmpty(defaultAnswer))
-                {
-                    Console.Write(" [" + defaultAnswer + "]");
-                }
-
-                Console.Write(" ");
-
-                string userInput = Console.ReadLine();
-
-                if (String.IsNullOrEmpty(userInput))
-                {
-                    if (!String.IsNullOrEmpty(defaultAnswer)) return defaultAnswer;
-                    if (allowNull) return null;
-                    else continue;
-                }
-
-                return userInput;
             }
         }
     }

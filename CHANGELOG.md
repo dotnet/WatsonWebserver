@@ -2,32 +2,23 @@
 
 ## Current Version
 
-v4.3.7, 4.3.8
+v5.0.x
 
-- Bugfix (parameterless constructor for settings)
+- Migrate from dictionaries to ```NameValueCollection```
 
 ## Previous Versions
 
-v4.3.6
+v4.3.x
 
+- Bugfix (parameterless constructor for settings)
 - Case-insensitive dictionaries in ```HttpRequest```, eventually depcreating certain methods
 - Targeting .NET Framework 4.8
-
-v4.3.3
-
 - Less restrictive chunk reading
-
-v4.3.0
-
 - Support for ```UNKNOWN``` HTTP methods; ```MethodRaw``` property in ```HttpRequest```
 
-v4.2.2
+v4.2.x
 
 - Bugfix in content route manager match function
-
-
-v4.2.0
-
 - Breaking changes
 - ```DataAsString```, ```DataAsBytes``` now are properties instead of methods
 - ```DataAsString```, ```DataAsBytes```, ```DataAsJson``` now available on ```HttpResponse```

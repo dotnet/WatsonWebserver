@@ -632,29 +632,6 @@
             <param name="ctx">HttpListenerContext.</param>
             <param name="serializer">Serialization helper.</param>
         </member>
-        <member name="M:WatsonWebserver.HttpRequest.RetrieveHeaderValue(System.String)">
-            <summary>
-            Retrieve a specified header value from either the headers or the querystring (case insensitive).
-            </summary>
-            <param name="key"></param>
-            <returns></returns>
-        </member>
-        <member name="M:WatsonWebserver.HttpRequest.HeaderExists(System.String,System.Boolean)">
-            <summary>
-            Determine if a header exists.
-            </summary>
-            <param name="key">Header key.</param>
-            <param name="caseSensitive">Specify whether a case sensitive search should be used.</param>
-            <returns>True if exists.</returns>
-        </member>
-        <member name="M:WatsonWebserver.HttpRequest.QuerystringExists(System.String,System.Boolean)">
-            <summary>
-            Determine if a querystring entry exists.
-            </summary>
-            <param name="key">Querystring key.</param>
-            <param name="caseSensitive">Specify whether a case sensitive search should be used.</param>
-            <returns>True if exists.</returns>
-        </member>
         <member name="M:WatsonWebserver.HttpRequest.ReadChunk(System.Threading.CancellationToken)">
             <summary>
             For chunked transfer-encoded requests, read the next chunk.
@@ -1087,7 +1064,7 @@
             <param name="path">URL path.</param>
             <returns>True if exists.</returns>
         </member>
-        <member name="M:WatsonWebserver.ParameterRouteManager.Match(WatsonWebserver.HttpMethod,System.String,System.Collections.Generic.Dictionary{System.String,System.String}@,WatsonWebserver.ParameterRoute@)">
+        <member name="M:WatsonWebserver.ParameterRouteManager.Match(WatsonWebserver.HttpMethod,System.String,System.Collections.Specialized.NameValueCollection@,WatsonWebserver.ParameterRoute@)">
             <summary>
             Match a request method and URL to a handler method.
             </summary>

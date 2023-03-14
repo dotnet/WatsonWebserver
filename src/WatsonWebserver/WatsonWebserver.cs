@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Text.Json.Serialization;
+using System.Collections.Specialized;
 
 namespace WatsonWebserver
 {
@@ -526,11 +527,11 @@ namespace WatsonWebserver
                             #region Parameter-Routes
 
                             ParameterRoute pr = null;
-                            Dictionary<string, string> parameters = null;
+                            NameValueCollection parameters = null;
                             handler = _Routes.Parameter.Match(ctx.Request.Method, ctx.Request.Url.RawWithoutQuery, out parameters, out pr);
                             if (handler != null)
                             {
-                                ctx.Request.Url.Parameters = new Dictionary<string, string>(parameters);
+                                ctx.Request.Url.Parameters = new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
 
                                 if (_Settings.Debug.Routing)
                                 {

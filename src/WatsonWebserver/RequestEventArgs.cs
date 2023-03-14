@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Text;
 
 namespace WatsonWebserver
@@ -32,12 +33,12 @@ namespace WatsonWebserver
         /// <summary>
         /// Query found in the URL.
         /// </summary>
-        public Dictionary<string, string> Query { get; private set; } = new Dictionary<string, string>();
+        public NameValueCollection Query { get; private set; } = new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
 
         /// <summary>
         /// Request headers.
         /// </summary>
-        public Dictionary<string, string> Headers { get; private set; } = new Dictionary<string, string>();
+        public NameValueCollection Headers { get; private set; } = new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
 
         /// <summary>
         /// Content length.

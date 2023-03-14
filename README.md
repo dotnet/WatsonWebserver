@@ -6,14 +6,9 @@
 
 Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS requests, written in C#.
 
-## New in v4.3.x
+## New in v5.0.x
 
-- Overrideable JSON serializer
-- Support for ```UNKNOWN``` HTTP methods; ```MethodRaw``` property in ```HttpRequest```
-- Less restrictive chunk reading
-- Case-insensitive dictionaries in ```HttpRequest```, eventually depcreating certain methods
-- Targeting .NET Framework 4.8
-- Bugfixes
+- Migrate from dictionaries to ```NameValueCollection```
 
 ## Special Thanks
 

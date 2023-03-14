@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -36,7 +37,7 @@ namespace WatsonWebserver
         /// User-supplied headers to include in the response.
         /// </summary>
         [JsonPropertyOrder(-1)]
-        public Dictionary<string, string> Headers
+        public NameValueCollection Headers
         {
             get
             {
@@ -44,7 +45,7 @@ namespace WatsonWebserver
             }
             set
             {
-                if (value == null) _Headers = new Dictionary<string, string>();
+                if (value == null) _Headers = new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
                 else _Headers = value;
             }
         }
@@ -138,7 +139,7 @@ namespace WatsonWebserver
         private WatsonWebserverSettings _Settings = new WatsonWebserverSettings();
         private WatsonWebserverEvents _Events = new WatsonWebserverEvents();
 
-        private Dictionary<string, string> _Headers = new Dictionary<string, string>();
+        private NameValueCollection _Headers = new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
         private byte[] _DataAsBytes = null;
         private MemoryStream _Data = null;
         private ISerializationHelper _Serializer = null;
@@ -490,18 +491,34 @@ namespace WatsonWebserver
 
             if (Headers != null && Headers.Count > 0)
             {
-                foreach (KeyValuePair<string, string> header in Headers)
+                for (int i = 0; i < Headers.Count; i++)
                 {
-                    if (String.IsNullOrEmpty(header.Key)) continue;
-                    _Response.AddHeader(header.Key, header.Value);
+                    string key = Headers.GetKey(i);
+                    string[] vals = Headers.GetValues(i);
+
+                    if (vals == null || vals.Length < 1)
+                    {
+                        _Response.AddHeader(key, null);
+                    }
+                    else
+                    {
+                        for (int j = 0; j < vals.Length; j++)
+                        {
+                            _Response.AddHeader(key, vals[j]);
+                        }
+                    }
                 }
             }
 
-            if (_Settings.Headers != null)
+            if (_Settings.Headers != null && _Settings.Headers.Count > 0)
             {
                 foreach (KeyValuePair<string, string> header in _Settings.Headers)
                 {
-                    if (!Headers.Any(h => h.Key.ToLower().Equals(header.Key.ToLower())))
+                    if (Headers.Get(header.Key) != null || Headers.AllKeys.Contains(header.Key))
+                    {
+                        // already present
+                    }
+                    else
                     {
                         _Response.AddHeader(header.Key, header.Value);
                     }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -143,7 +144,7 @@ namespace WatsonWebserver
         /// <param name="vals">Values extracted from the URL.</param>
         /// <param name="pr">Matching route.</param>
         /// <returns>True if match exists.</returns>
-        public Func<HttpContext, Task> Match(HttpMethod method, string path, out Dictionary<string, string> vals, out ParameterRoute pr)
+        public Func<HttpContext, Task> Match(HttpMethod method, string path, out NameValueCollection vals, out ParameterRoute pr)
         {
             pr = null;
             vals = null;

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -80,7 +81,7 @@ namespace WatsonWebserver
         /// The headers found in the request.
         /// </summary>
         [JsonPropertyOrder(-2)]
-        public Dictionary<string, string> Headers
+        public NameValueCollection Headers
         {
             get
             {
@@ -88,7 +89,7 @@ namespace WatsonWebserver
             }
             set
             {
-                if (value == null) _Headers = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+                if (value == null) _Headers = new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
                 else _Headers = value;
             }
         }
@@ -186,7 +187,7 @@ namespace WatsonWebserver
         private Uri _Uri = null;
         private byte[] _DataAsBytes = null;
         private ISerializationHelper _Serializer = null;
-        private Dictionary<string, string> _Headers = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+        private NameValueCollection _Headers = new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
 
         #endregion
 
@@ -239,31 +240,28 @@ namespace WatsonWebserver
                 Method = HttpMethod.UNKNOWN;
             }
 
-            Headers = new Dictionary<string, string>();
-            for (int i = 0; i < ctx.Request.Headers.Count; i++)
-            {
-                string key = ctx.Request.Headers.GetKey(i);
-                string val = ctx.Request.Headers.Get(i);
-                Headers = AddToDict(key, val, Headers);
-            }
+            Headers = ctx.Request.Headers;
              
-            foreach (KeyValuePair<string, string> curr in Headers)
+            for (int i = 0; i < Headers.Count; i++)
             {
-                if (String.IsNullOrEmpty(curr.Key)) continue;
-                if (String.IsNullOrEmpty(curr.Value)) continue;
+                string key = Headers.GetKey(i);
+                string[] vals = Headers.GetValues(i);
 
-                if (curr.Key.ToLower().Equals("transfer-encoding"))
+                if (String.IsNullOrEmpty(key)) continue;
+                if (vals == null || vals.Length < 1) continue;
+
+                if (key.ToLower().Equals("transfer-encoding"))
                 {
-                    if (curr.Value.ToLower().Contains("chunked"))
+                    if (vals.Contains("chunked", StringComparer.InvariantCultureIgnoreCase))
                         ChunkedTransfer = true;
-                    if (curr.Value.ToLower().Contains("gzip"))
+                    if (vals.Contains("gzip", StringComparer.InvariantCultureIgnoreCase))
                         Gzip = true;
-                    if (curr.Value.ToLower().Contains("deflate"))
+                    if (vals.Contains("deflate", StringComparer.InvariantCultureIgnoreCase))
                         Deflate = true;
                 }
-                else if (curr.Key.ToLower().Equals("x-amz-content-sha256"))
+                else if (key.ToLower().Equals("x-amz-content-sha256"))
                 {
-                    if (curr.Value.ToLower().Contains("streaming"))
+                    if (vals.Contains("streaming", StringComparer.InvariantCultureIgnoreCase))
                     {
                         ChunkedTransfer = true;
                     }
@@ -276,96 +274,6 @@ namespace WatsonWebserver
         #endregion
 
         #region Public-Methods
-
-        /// <summary>
-        /// Retrieve a specified header value from either the headers or the querystring (case insensitive).
-        /// </summary>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        [Obsolete("This API will be deprecated in a future release.  Header dictionary is now case insensitive.")]
-        public string RetrieveHeaderValue(string key)
-        {
-            if (String.IsNullOrEmpty(key)) throw new ArgumentNullException(nameof(key));
-            if (Headers != null && Headers.Count > 0)
-            {
-                foreach (KeyValuePair<string, string> curr in Headers)
-                {
-                    if (String.IsNullOrEmpty(curr.Key)) continue;
-                    if (String.Compare(curr.Key.ToLower(), key.ToLower()) == 0) return curr.Value;
-                }
-            }
-
-            if (Query != null && Query.Elements != null && Query.Elements.Count > 0)
-            {
-                foreach (KeyValuePair<string, string> curr in Query.Elements)
-                {
-                    if (String.IsNullOrEmpty(curr.Key)) continue;
-                    if (String.Compare(curr.Key.ToLower(), key.ToLower()) == 0) return curr.Value;
-                }
-            }
-
-            return null;
-        }
-        
-        /// <summary>
-        /// Determine if a header exists.
-        /// </summary>
-        /// <param name="key">Header key.</param>
-        /// <param name="caseSensitive">Specify whether a case sensitive search should be used.</param>
-        /// <returns>True if exists.</returns>
-        [Obsolete("This API will be deprecated in a future release.  Header dictionary is now case insensitive.")]
-        public bool HeaderExists(string key, bool caseSensitive)
-        {
-            if (String.IsNullOrEmpty(key)) throw new ArgumentNullException(nameof(key));
-
-            if (Headers != null && Headers.Count > 0)
-            {
-                if (caseSensitive)
-                {
-                    return Headers.ContainsKey(key);
-                }
-                else
-                { 
-                    foreach (KeyValuePair<string, string> header in Headers)
-                    {
-                        if (String.IsNullOrEmpty(header.Key)) continue;
-                        if (header.Key.ToLower().Trim().Equals(key)) return true;
-                    } 
-                }
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Determine if a querystring entry exists.
-        /// </summary>
-        /// <param name="key">Querystring key.</param>
-        /// <param name="caseSensitive">Specify whether a case sensitive search should be used.</param>
-        /// <returns>True if exists.</returns>
-        [Obsolete("This API will be deprecated in a future release.  Query elements dictionary is now case insensitive.")]
-        public bool QuerystringExists(string key, bool caseSensitive)
-        {
-            if (String.IsNullOrEmpty(key)) throw new ArgumentNullException(nameof(key));
-
-            if (Query != null && Query.Elements != null && Query.Elements.Count > 0)
-            {
-                if (caseSensitive)
-                {
-                    return Query.Elements.ContainsKey(key);
-                }
-                else
-                { 
-                    foreach (KeyValuePair<string, string> queryElement in Query.Elements)
-                    {
-                        if (String.IsNullOrEmpty(queryElement.Key)) continue;
-                        if (queryElement.Key.ToLower().Trim().Equals(key)) return true;
-                    } 
-                }
-            }
-
-            return false;
-        }
 
         /// <summary>
         /// For chunked transfer-encoded requests, read the next chunk.
@@ -484,36 +392,6 @@ namespace WatsonWebserver
 
         #region Private-Methods
           
-        private static Dictionary<string, string> AddToDict(string key, string val, Dictionary<string, string> existing)
-        {
-            if (String.IsNullOrEmpty(key)) return existing;
-
-            Dictionary<string, string> ret = new Dictionary<string, string>();
-
-            if (existing == null)
-            {
-                ret.Add(key, val);
-                return ret;
-            }
-            else
-            {
-                if (existing.ContainsKey(key))
-                {
-                    if (String.IsNullOrEmpty(val)) return existing;
-                    string tempVal = existing[key];
-                    tempVal += "," + val;
-                    existing.Remove(key);
-                    existing.Add(key, tempVal);
-                    return existing;
-                }
-                else
-                {
-                    existing.Add(key, val);
-                    return existing;
-                }
-            }
-        }
-
         private byte[] AppendBytes(byte[] orig, byte[] append)
         {
             if (orig == null && append == null) return null;
@@ -789,7 +667,7 @@ namespace WatsonWebserver
             /// <summary>
             /// Parameters found within the URL, if using parameter routes.
             /// </summary>
-            public Dictionary<string, string> Parameters
+            public NameValueCollection Parameters
             {
                 get
                 {
@@ -797,7 +675,7 @@ namespace WatsonWebserver
                 }
                 set
                 {
-                    if (value == null) _Parameters = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+                    if (value == null) _Parameters = new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
                     else _Parameters = value;
                 }
             }
@@ -824,7 +702,7 @@ namespace WatsonWebserver
                 RawWithQuery = rawUrl;
             }
 
-            private Dictionary<string, string> _Parameters = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+            private NameValueCollection _Parameters = new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
         }
         
         /// <summary>
@@ -853,11 +731,11 @@ namespace WatsonWebserver
             /// <summary>
             /// Query elements.
             /// </summary>
-            public Dictionary<string, string> Elements
+            public NameValueCollection Elements
             {
                 get
                 {
-                    Dictionary<string, string> ret = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+                    NameValueCollection ret = new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
                     string qs = Querystring;
                     if (!String.IsNullOrEmpty(qs))
                     {
@@ -869,11 +747,11 @@ namespace WatsonWebserver
                                 string[] queryParts = queries[i].Split('=');
                                 if (queryParts != null && queryParts.Length == 2)
                                 {
-                                    ret = AddToDict(queryParts[0], queryParts[1], ret);
+                                    ret.Add(queryParts[0], queryParts[1]);
                                 }
                                 else if (queryParts != null && queryParts.Length == 1)
                                 {
-                                    ret = AddToDict(queryParts[0], null, ret);
+                                    ret.Add(queryParts[0], null);
                                 }
                             }
                         }
@@ -903,7 +781,6 @@ namespace WatsonWebserver
             }
 
             private string _FullUrl = null;
-            private Dictionary<string, string> _Elements = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
         }
 
         #endregion

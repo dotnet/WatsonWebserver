@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using GetSomeInput;
 using WatsonWebserver;
 
 namespace Test
@@ -64,7 +65,7 @@ namespace Test
             bool runForever = true;
             while (runForever)
             {
-                string userInput = InputString("Command [? for help] >", null, false);
+                string userInput = Inputty.GetString("Command [? for help] >", null, false);
                 switch (userInput.ToLower())
                 {
                     case "?":
@@ -277,32 +278,6 @@ namespace Test
             await ctx.Response.Send("Default route");
             _Server.Events.Logger(_Server.SerializationHelper.SerializeJson(ctx, true));
             return; 
-        }
-
-        static string InputString(string question, string defaultAnswer, bool allowNull)
-        {
-            while (true)
-            {
-                Console.Write(question);
-
-                if (!String.IsNullOrEmpty(defaultAnswer))
-                {
-                    Console.Write(" [" + defaultAnswer + "]");
-                }
-
-                Console.Write(" ");
-
-                string userInput = Console.ReadLine();
-
-                if (String.IsNullOrEmpty(userInput))
-                {
-                    if (!String.IsNullOrEmpty(defaultAnswer)) return defaultAnswer;
-                    if (allowNull) return null;
-                    else continue;
-                }
-
-                return userInput;
-            }
         }
     }
 }

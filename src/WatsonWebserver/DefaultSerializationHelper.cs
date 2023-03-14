@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace WatsonWebserver
 {
@@ -31,14 +34,18 @@ namespace WatsonWebserver
         public string SerializeJson(object obj, bool pretty = true)
         {
             if (obj == null) return null;
-            if (!pretty)
-            {
-                return JsonSerializer.Serialize(obj);
-            }
-            else
-            {
-                return JsonSerializer.Serialize(obj, new JsonSerializerOptions {  WriteIndented = true });
-            }
+
+            JsonSerializerOptions options = new JsonSerializerOptions();
+            options.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+
+            // see https://github.com/dotnet/runtime/issues/43026
+            options.Converters.Add(new ExceptionConverter<Exception>());
+            options.Converters.Add(new NameValueCollectionConverter());
+
+            if (!pretty) options.WriteIndented = false;
+            else options.WriteIndented = true;
+
+            return JsonSerializer.Serialize(obj, options);
         }
 
         #endregion
@@ -56,6 +63,66 @@ namespace WatsonWebserver
         #endregion
 
         #region Private-Methods
+
+        #endregion
+
+        #region Private-Embedded-Classes
+
+        private class ExceptionConverter<TExceptionType> : JsonConverter<TExceptionType>
+        {
+            public override bool CanConvert(Type typeToConvert)
+            {
+                return typeof(Exception).IsAssignableFrom(typeToConvert);
+            }
+
+            public override TExceptionType Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            {
+                throw new NotSupportedException("Deserializing exceptions is not allowed");
+            }
+
+            public override void Write(Utf8JsonWriter writer, TExceptionType value, JsonSerializerOptions options)
+            {
+                var serializableProperties = value.GetType()
+                    .GetProperties()
+                    .Select(uu => new { uu.Name, Value = uu.GetValue(value) })
+                    .Where(uu => uu.Name != nameof(Exception.TargetSite));
+
+                if (options.DefaultIgnoreCondition == JsonIgnoreCondition.WhenWritingNull)
+                {
+                    serializableProperties = serializableProperties.Where(uu => uu.Value != null);
+                }
+
+                var propList = serializableProperties.ToList();
+
+                if (propList.Count == 0)
+                {
+                    // Nothing to write
+                    return;
+                }
+
+                writer.WriteStartObject();
+
+                foreach (var prop in propList)
+                {
+                    writer.WritePropertyName(prop.Name);
+                    JsonSerializer.Serialize(writer, prop.Value, options);
+                }
+
+                writer.WriteEndObject();
+            }
+        }
+
+        private class NameValueCollectionConverter : JsonConverter<NameValueCollection>
+        {
+            public override NameValueCollection Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) => throw new NotImplementedException();
+
+            public override void Write(Utf8JsonWriter writer, NameValueCollection value, JsonSerializerOptions options)
+            {
+                var val = value.Keys.Cast<string>()
+                    .ToDictionary(k => k, k => string.Join(", ", value.GetValues(k)));
+                System.Text.Json.JsonSerializer.Serialize(writer, val);
+            }
+        }
 
         #endregion
     }
