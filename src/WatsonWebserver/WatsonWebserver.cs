@@ -531,7 +531,7 @@ namespace WatsonWebserver
                             handler = _Routes.Parameter.Match(ctx.Request.Method, ctx.Request.Url.RawWithoutQuery, out parameters, out pr);
                             if (handler != null)
                             {
-                                ctx.Request.Url.Parameters = new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
+                                ctx.Request.Url.Parameters = parameters;
 
                                 if (_Settings.Debug.Routing)
                                 {
