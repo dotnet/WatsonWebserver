@@ -9,6 +9,7 @@ Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS reque
 ## New in v5.0.x
 
 - Migrate from dictionaries to ```NameValueCollection```
+- Reintroduce ```HttpRequest``` methods for checking existence of and retrieving query or header values
 
 ## Special Thanks
 

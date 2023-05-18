@@ -5,6 +5,7 @@
 v5.0.x
 
 - Migrate from dictionaries to ```NameValueCollection```
+- Reintroduce ```HttpRequest``` methods for checking existence of and retrieving query or header values
 
 ## Previous Versions
 
