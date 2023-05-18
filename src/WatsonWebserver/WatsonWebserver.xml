@@ -424,6 +424,11 @@
             HTTP context including both request and response.
             </summary>
         </member>
+        <member name="P:WatsonWebserver.HttpContext.Timestamp">
+            <summary>
+            Time information for start, end, and total runtime.
+            </summary>
+        </member>
         <member name="P:WatsonWebserver.HttpContext.Request">
             <summary>
             The HTTP request that was received.

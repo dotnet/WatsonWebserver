@@ -2,6 +2,7 @@
 using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Timestamps;
 
 namespace WatsonWebserver
 {
@@ -11,6 +12,12 @@ namespace WatsonWebserver
     public class HttpContext
     {
         #region Public-Members
+
+        /// <summary>
+        /// Time information for start, end, and total runtime.
+        /// </summary>
+        [JsonPropertyOrder(-2)]
+        public Timestamp Timestamp { get; set; } = new Timestamp();
 
         /// <summary>
         /// The HTTP request that was received.
@@ -46,8 +53,7 @@ namespace WatsonWebserver
 
         #region Private-Members
 
-        private HttpListenerContext _Context = null;
-        private ISerializationHelper _Serializer = null;
+        private readonly ISerializationHelper _Serializer = null;
 
         #endregion
 
@@ -67,12 +73,11 @@ namespace WatsonWebserver
             WatsonWebserverEvents events,
             ISerializationHelper serializer)
         {
-            if (ctx == null) throw new ArgumentNullException(nameof(ctx));
             if (events == null) throw new ArgumentNullException(nameof(events));
-            if (serializer == null) throw new ArgumentNullException(nameof(serializer));
+            if (ctx == null) throw new ArgumentNullException(nameof(ctx));
 
-            _Serializer = serializer;
-            _Context = ctx;
+            _Serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
+            
             Request = new HttpRequest(ctx, _Serializer); 
             Response = new HttpResponse(Request, ctx, settings, events, _Serializer); 
         }

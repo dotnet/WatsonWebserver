@@ -4,7 +4,7 @@
     <TargetFrameworks>netstandard2.1;netcoreapp3.1;net462;net48;net5.0;net6.0;net7.0</TargetFrameworks>
 	<GenerateDocumentationFile>true</GenerateDocumentationFile>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>5.0.2</Version>
+    <Version>5.0.3</Version>
     <Description>Simple, fast, async C# web server for handling REST requests with SSL support, targeted to .NET Core, .NET Standard, and .NET Framework.</Description>
     <Authors>Joel Christner</Authors>
     <Company>Joel Christner</Company>
@@ -68,8 +68,9 @@
   
   <ItemGroup>
     <PackageReference Include="IpMatcher" Version="1.0.4.4" />
-    <PackageReference Include="RegexMatcher" Version="1.0.7.2" />
+    <PackageReference Include="RegexMatcher" Version="1.0.8" />
     <PackageReference Include="System.Text.Json" Version="7.0.2" />
+    <PackageReference Include="Timestamps" Version="1.0.2" />
     <PackageReference Include="UrlMatcher" Version="2.0.1" />
   </ItemGroup>
 

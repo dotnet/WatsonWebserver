@@ -98,8 +98,7 @@ namespace WatsonWebserver
             }
             set
             {
-                if (value == null) throw new ArgumentNullException(nameof(SerializationHelper));
-                _Serializer = value;
+                _Serializer = value ?? throw new ArgumentNullException(nameof(SerializationHelper));
             }
         }
 
@@ -107,8 +106,8 @@ namespace WatsonWebserver
 
         #region Private-Members
 
-        private string _Header = "[Watson] ";
-        private Assembly _Assembly = Assembly.GetCallingAssembly();
+        private readonly string _Header = "[Watson] ";
+        private readonly Assembly _Assembly = Assembly.GetCallingAssembly();
         private WatsonWebserverSettings _Settings = new WatsonWebserverSettings();
         private WatsonWebserverRoutes _Routes = new WatsonWebserverRoutes();
         private HttpListener _HttpListener = new HttpListener();
@@ -395,8 +394,6 @@ namespace WatsonWebserver
 
                     Task unawaited = Task.Run(async () =>
                     {
-                        DateTime startTime = DateTime.Now;
-
                         try
                         {
                             #region Build-Context
@@ -484,8 +481,7 @@ namespace WatsonWebserver
 
                             if (ctx.Request.Method == HttpMethod.GET || ctx.Request.Method == HttpMethod.HEAD)
                             {
-                                ContentRoute cr = null;
-                                if (_Routes.Content.Match(ctx.Request.Url.RawWithoutQuery, out cr))
+                                if (_Routes.Content.Match(ctx.Request.Url.RawWithoutQuery, out ContentRoute cr))
                                 {
                                     if (_Settings.Debug.Routing)
                                     {
@@ -505,8 +501,7 @@ namespace WatsonWebserver
 
                             #region Static-Routes
 
-                            StaticRoute sr = null;
-                            Func<HttpContext, Task> handler = _Routes.Static.Match(ctx.Request.Method, ctx.Request.Url.RawWithoutQuery, out sr);
+                            Func<HttpContext, Task> handler = _Routes.Static.Match(ctx.Request.Method, ctx.Request.Url.RawWithoutQuery, out StaticRoute sr);
                             if (handler != null)
                             {
                                 if (_Settings.Debug.Routing)
@@ -526,9 +521,7 @@ namespace WatsonWebserver
 
                             #region Parameter-Routes
 
-                            ParameterRoute pr = null;
-                            NameValueCollection parameters = null;
-                            handler = _Routes.Parameter.Match(ctx.Request.Method, ctx.Request.Url.RawWithoutQuery, out parameters, out pr);
+                            handler = _Routes.Parameter.Match(ctx.Request.Method, ctx.Request.Url.RawWithoutQuery, out NameValueCollection parameters, out ParameterRoute pr);
                             if (handler != null)
                             {
                                 ctx.Request.Url.Parameters = parameters;
@@ -550,8 +543,7 @@ namespace WatsonWebserver
 
                             #region Dynamic-Routes
 
-                            DynamicRoute dr = null;
-                            handler = _Routes.Dynamic.Match(ctx.Request.Method, ctx.Request.Url.RawWithoutQuery, out dr);
+                            handler = _Routes.Dynamic.Match(ctx.Request.Method, ctx.Request.Url.RawWithoutQuery, out DynamicRoute dr);
                             if (handler != null)
                             {
                                 if (_Settings.Debug.Routing)
@@ -612,10 +604,14 @@ namespace WatsonWebserver
                         {
                             Interlocked.Decrement(ref _RequestCount);
 
-                            if (ctx != null && ctx.Response != null && ctx.Response.ResponseSent)
+                            if (ctx != null)
                             {
-                                Events.HandleResponseSent(this, new ResponseEventArgs(ctx, TotalMsFrom(startTime)));
-                                Statistics.IncrementSentPayloadBytes(ctx.Response.ContentLength);
+                                ctx.Timestamp.End = DateTime.UtcNow;
+                                if (ctx.Response != null && ctx.Response.ResponseSent)
+                                {
+                                    Events.HandleResponseSent(this, new ResponseEventArgs(ctx, ctx.Timestamp.TotalMs.Value));
+                                    Statistics.IncrementSentPayloadBytes(ctx.Response.ContentLength);
+                                }
                             }
                         }
 
@@ -624,15 +620,6 @@ namespace WatsonWebserver
 
                 #endregion
             }
-            catch (TaskCanceledException)
-            {
-            }
-            catch (OperationCanceledException)
-            {
-            }
-            catch (HttpListenerException)
-            {
-            }
             catch (Exception e)
             {
                 Events.HandleExceptionEncountered(this, new ExceptionEventArgs(null, e));
@@ -640,20 +627,6 @@ namespace WatsonWebserver
             finally
             {
                 Events.HandleServerStopped(this, EventArgs.Empty);
-            }
-        }
-
-        private double TotalMsFrom(DateTime startTime)
-        {
-            try
-            {
-                DateTime endTime = DateTime.Now;
-                TimeSpan totalTime = (endTime - startTime);
-                return totalTime.TotalMilliseconds;
-            }
-            catch (Exception)
-            {
-                return -1;
             }
         }
 
