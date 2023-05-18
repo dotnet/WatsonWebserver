@@ -387,11 +387,87 @@ namespace WatsonWebserver
             if (String.IsNullOrEmpty(json)) return null;
             return _Serializer.DeserializeJson<T>(json);
         }
-         
+
+        /// <summary>
+        /// Determine if a header exists.
+        /// </summary>
+        /// <param name="key">Header key.</param>
+        /// <returns>True if exists.</returns>
+        public bool HeaderExists(string key)
+        {
+            if (String.IsNullOrEmpty(key)) throw new ArgumentNullException(nameof(key));
+
+            if (Headers != null)
+            {
+                return Headers.AllKeys.Any(k => k.ToLower().Equals(key.ToLower()));
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Determine if a querystring entry exists.
+        /// </summary>
+        /// <param name="key">Querystring key.</param>
+        /// <returns>True if exists.</returns>
+        public bool QuerystringExists(string key)
+        {
+            if (String.IsNullOrEmpty(key)) throw new ArgumentNullException(nameof(key));
+
+            if (Query != null
+                && Query.Elements != null)
+            {
+                return Query.Elements.AllKeys.Any(k => k.ToLower().Equals(key.ToLower()));
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Retrieve a header (or querystring) value.
+        /// </summary>
+        /// <param name="key">Key.</param>
+        /// <returns>Value.</returns>
+        public string RetrieveHeaderValue(string key)
+        {
+            if (String.IsNullOrEmpty(key)) throw new ArgumentNullException(nameof(key));
+
+            if (Headers != null)
+            { 
+                return Headers.Get(key);
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Retrieve a querystring value.
+        /// </summary>
+        /// <param name="key">Key.</param>
+        /// <returns>Value.</returns>
+        public string RetrieveQueryValue(string key)
+        {
+            if (String.IsNullOrEmpty(key)) throw new ArgumentNullException(nameof(key));
+
+            if (Query != null
+                && Query.Elements != null)
+            {
+                string val = Query.Elements.Get(key);
+                if (!String.IsNullOrEmpty(val))
+                {
+                    val = WebUtility.UrlDecode(val);
+                }
+
+                return val;
+            }
+
+            return null;
+        }
+
         #endregion
 
         #region Private-Methods
-          
+
         private byte[] AppendBytes(byte[] orig, byte[] append)
         {
             if (orig == null && append == null) return null;
