@@ -6,6 +6,57 @@
 
 Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS requests, written in C#.
 
+## HostBuilder feature
+
+The HostBuilder feature helps you set up your server much more easily by introducing a chain of settings and routes instead of using the server class directly.
+
+## How do I use HostBuilder?
+
+Here's a full example of how to use HostBuild
+
+```csharp
+var builder = new HostBuilder("127.0.0.1", 8000, false, Home);
+
+builder.MapStaticRoute(WatsonWebserver.HttpMethod.GET, GetUrls, "/links")
+    .MapStaticRoute(WatsonWebserver.HttpMethod.POST, CheckLogin, "/login")
+    .MapStaticRoute(WatsonWebserver.HttpMethod.POST, TestRoute, "/test");
+
+
+
+
+var app = builder.Build();
+app.Start();
+
+Console.WriteLine("Server Started");
+Console.ReadKey();
+
+
+
+
+
+
+static async Task Home(HttpContext ctx)
+{
+    await ctx.Response.Send("from home");
+}
+
+static async Task GetUrls(HttpContext ctx)
+{
+    await ctx.Response.Send("links");
+}
+
+static async Task CheckLogin(HttpContext ctx)
+{
+    await ctx.Response.Send("login");
+}
+static async Task TestRoute(HttpContext ctx)
+{
+    await ctx.Response.Send("test route");
+}
+
+```
+
+
 ## New in v5.0.x
 
 - Migrate from dictionaries to ```NameValueCollection```
