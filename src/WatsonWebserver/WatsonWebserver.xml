@@ -419,6 +419,92 @@
             Exception.
             </summary>
         </member>
+        <member name="T:WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder">
+            <summary>
+            Host builder.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder.Server">
+            <summary>
+            Webserver.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder.#ctor(System.String,System.Int32,System.Boolean,System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task})">
+            <summary>
+            Instantiate.
+            </summary>
+            <param name="ip">IP address on which to listen.</param>
+            <param name="port">Port on which to listen.</param>
+            <param name="ssl">Enable or disable SSL.</param>
+            <param name="defaultRoute">Default route.</param>
+        </member>
+        <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder.MapDynamicRoute(WatsonWebserver.HttpMethod,System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task},System.Text.RegularExpressions.Regex)">
+            <summary>
+            Apply a dynamic route.
+            </summary>
+            <param name="method">HTTP method.</param>
+            <param name="action">Action.</param>
+            <param name="regex">Regular expression.</param>
+            <returns>Host builder.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder.MapParameteRoute(WatsonWebserver.HttpMethod,System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task},System.String)">
+            <summary>
+            Apply a parameter route.
+            </summary>
+            <param name="method">HTTP method.</param>
+            <param name="action">Action.</param>
+            <param name="routePath">Route path.</param>
+            <returns>Host builder.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder.MapStaticRoute(WatsonWebserver.HttpMethod,System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task},System.String)">
+            <summary>
+            Apply a static route.
+            </summary>
+            <param name="method">HTTP method.</param>
+            <param name="action">Action.</param>
+            <param name="routePath">Route path.</param>
+            <returns>Host builder.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder.Build">
+            <summary>
+            Build the server.
+            </summary>
+            <returns>Server.</returns>
+        </member>
+        <member name="T:WatsonWebserver.Extensions.HostBuilderExtension.IHostBuilder`2">
+            <summary>
+            Host builder interface.
+            </summary>
+            <typeparam name="HostBuilder">Host builder.</typeparam>
+            <typeparam name="InputAction">Input action.</typeparam>
+        </member>
+        <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.IHostBuilder`2.MapStaticRoute(WatsonWebserver.HttpMethod,`1,System.String)">
+            <summary>
+            Apply a static route.
+            </summary>
+            <param name="method">HTTP method.</param>
+            <param name="action">Action.</param>
+            <param name="routePath">Route path.</param>
+            <returns>Host builder.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.IHostBuilder`2.MapParameteRoute(WatsonWebserver.HttpMethod,`1,System.String)">
+            <summary>
+            Apply a parameter route.
+            </summary>
+            <param name="method">HTTP method.</param>
+            <param name="action">Action.</param>
+            <param name="routePath">Route path.</param>
+            <returns>Host builder.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.IHostBuilder`2.MapDynamicRoute(WatsonWebserver.HttpMethod,`1,System.Text.RegularExpressions.Regex)">
+            <summary>
+            Apply a dynamic route.
+            </summary>
+            <param name="method">HTTP method.</param>
+            <param name="action">Action.</param>
+            <param name="regex">Regular expression.</param>
+            <returns>Host builder.</returns>
+        </member>
         <member name="T:WatsonWebserver.HttpContext">
             <summary>
             HTTP context including both request and response.

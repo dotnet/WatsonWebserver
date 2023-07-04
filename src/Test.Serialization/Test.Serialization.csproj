@@ -1,17 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-	<TargetFrameworks>netcoreapp3.1;net462;net48;net5.0;net6.0;net7.0</TargetFrameworks>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFrameworks>netcoreapp3.1;net462;net48;net6.0;net7.0</TargetFrameworks>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Inputty" Version="1.0.5" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Inputty" Version="1.0.5" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\WatsonWebserver\WatsonWebserver.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\WatsonWebserver\WatsonWebserver.csproj" />
+	</ItemGroup>
 
 </Project>

@@ -1,101 +1,101 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;netcoreapp3.1;net462;net48;net5.0;net6.0;net7.0</TargetFrameworks>
-	<GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>5.0.3</Version>
-    <Description>Simple, fast, async C# web server for handling REST requests with SSL support, targeted to .NET Core, .NET Standard, and .NET Framework.</Description>
-    <Authors>Joel Christner</Authors>
-    <Company>Joel Christner</Company>
-    <Copyright>(c)2023 Joel Christner</Copyright>
-    <PackageProjectUrl>https://github.com/jchristn/WatsonWebserver</PackageProjectUrl>
-    <PackageLicenseUrl></PackageLicenseUrl>
-    <RepositoryUrl>https://github.com/jchristn/WatsonWebserver</RepositoryUrl>
-    <RepositoryType>Github</RepositoryType>
-    <PackageTags>web server rest restful http https api async ssl</PackageTags>
-    <PackageReleaseNotes>Migrate to NameValueCollection</PackageReleaseNotes>
-    <PackageId>Watson</PackageId>
-    <Product>Watson</Product>
-    <PackageIconUrl></PackageIconUrl>
-    <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
-    <PackageIcon>watson.png</PackageIcon>
-    <SignAssembly>True</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\WatsonWebserver.snk</AssemblyOriginatorKeyFile>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFrameworks>netstandard2.1;netcoreapp3.1;net462;net48;net6.0;net7.0</TargetFrameworks>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<Version>5.1.0</Version>
+		<Description>Simple, fast, async C# web server for handling REST requests with SSL support, targeted to .NET Core, .NET Standard, and .NET Framework.</Description>
+		<Authors>Joel Christner</Authors>
+		<Company>Joel Christner</Company>
+		<Copyright>(c)2023 Joel Christner</Copyright>
+		<PackageProjectUrl>https://github.com/jchristn/WatsonWebserver</PackageProjectUrl>
+		<PackageLicenseUrl></PackageLicenseUrl>
+		<RepositoryUrl>https://github.com/jchristn/WatsonWebserver</RepositoryUrl>
+		<RepositoryType>Github</RepositoryType>
+		<PackageTags>web server rest restful http https api async ssl</PackageTags>
+		<PackageReleaseNotes>HostBuilder capability, thank you @sapurtcomputer30!</PackageReleaseNotes>
+		<PackageId>Watson</PackageId>
+		<Product>Watson</Product>
+		<PackageIconUrl></PackageIconUrl>
+		<PackageLicenseFile>LICENSE.md</PackageLicenseFile>
+		<PackageIcon>watson.png</PackageIcon>
+		<SignAssembly>True</SignAssembly>
+		<AssemblyOriginatorKeyFile>..\WatsonWebserver.snk</AssemblyOriginatorKeyFile>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.1|AnyCPU'">
-    <DocumentationFile>WatsonWebserver.xml</DocumentationFile>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.1|AnyCPU'">
+		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.1|AnyCPU'">
-    <DocumentationFile>WatsonWebserver.xml</DocumentationFile>
-  </PropertyGroup>
-	
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp3.1|AnyCPU'">
-    <DocumentationFile>WatsonWebserver.xml</DocumentationFile>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.1|AnyCPU'">
+		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp3.1|AnyCPU'">
-    <DocumentationFile>WatsonWebserver.xml</DocumentationFile>
-  </PropertyGroup>
-	
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net462|AnyCPU'">
-    <DocumentationFile>WatsonWebserver.xml</DocumentationFile>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp3.1|AnyCPU'">
+		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net462|AnyCPU'">
-    <DocumentationFile>WatsonWebserver.xml</DocumentationFile>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp3.1|AnyCPU'">
+		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net5.0|AnyCPU'">
-    <DocumentationFile>WatsonWebserver.xml</DocumentationFile>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net462|AnyCPU'">
+		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net5.0|AnyCPU'">
-    <DocumentationFile>WatsonWebserver.xml</DocumentationFile>
-  </PropertyGroup>
-	
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6.0|AnyCPU'">
-    <DocumentationFile>WatsonWebserver.xml</DocumentationFile>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net462|AnyCPU'">
+		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net6.0|AnyCPU'">
-    <DocumentationFile>WatsonWebserver.xml</DocumentationFile>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net5.0|AnyCPU'">
+		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
+	</PropertyGroup>
 
-  
-  
-  <ItemGroup>
-    <PackageReference Include="IpMatcher" Version="1.0.4.4" />
-    <PackageReference Include="RegexMatcher" Version="1.0.8" />
-    <PackageReference Include="System.Text.Json" Version="7.0.2" />
-    <PackageReference Include="Timestamps" Version="1.0.2" />
-    <PackageReference Include="UrlMatcher" Version="2.0.1" />
-  </ItemGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net5.0|AnyCPU'">
+		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <None Include="assets\watson.png">
-      <Pack>True</Pack>
-      <PackagePath></PackagePath>
-    </None>
-    <None Include="LICENSE.md">
-      <Pack>True</Pack>
-      <PackagePath></PackagePath>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6.0|AnyCPU'">
+		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <None Update="assets\watson.ico">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="assets\watson.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="WatsonWebserver.xml">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net6.0|AnyCPU'">
+		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
+	</PropertyGroup>
+
+
+
+	<ItemGroup>
+		<PackageReference Include="IpMatcher" Version="1.0.4.4" />
+		<PackageReference Include="RegexMatcher" Version="1.0.8" />
+		<PackageReference Include="System.Text.Json" Version="7.0.2" />
+		<PackageReference Include="Timestamps" Version="1.0.2" />
+		<PackageReference Include="UrlMatcher" Version="2.0.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="assets\watson.png">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+		<None Include="LICENSE.md">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="assets\watson.ico">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Include="assets\watson.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Include="WatsonWebserver.xml">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
 
 </Project>

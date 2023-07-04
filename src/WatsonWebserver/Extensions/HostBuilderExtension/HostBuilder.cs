@@ -1,58 +1,110 @@
 ﻿using System;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace WatsonWebserver.Extensions.HostBuilderExtension
 {
+    /// <summary>
+    /// Host builder.
+    /// </summary>
     public class HostBuilder : IHostBuilder<HostBuilder, Func<HttpContext, Task>>
     {
-        string _ip = "";
-        int _port = 0;
-        bool _ssl = false;
-        Func<HttpContext, Task> _indexRoute;
+        #region Public-Members
 
-        Server server;
-
-
-
-        public HostBuilder(string ip, int port, bool ssl, Func<HttpContext, Task> indexRoute)
-        {
-            _ip = ip;
-            _port = port;
-            _ssl = ssl;
-            this._indexRoute = indexRoute;
-        }
-
-
-        public Server HttpServer
+        /// <summary>
+        /// Webserver.
+        /// </summary>
+        public Server Server
         {
             get
             {
-                if (server is null)
+                if (_Server == null)
                 {
-                    server = new Server(_ip, _port, _ssl, _indexRoute);
-                    return server;
+                    _Server = new Server(_Ip, _Port, _Ssl, _DefaultRoute);
+                    return _Server;
                 }
-                return server;
+                return _Server;
             }
         }
 
-        public HostBuilder MapDynamicRoute(HttpMethod methid, Func<HttpContext, Task> action, Regex rx)
+        #endregion
+
+        #region Private-Members
+
+        private string _Ip = "";
+        private int _Port = 0;
+        private bool _Ssl = false;
+        private Func<HttpContext, Task> _DefaultRoute = null;
+        private Server _Server = null;
+
+        #endregion
+
+        #region Constructors-and-Factories
+
+        /// <summary>
+        /// Instantiate.
+        /// </summary>
+        /// <param name="ip">IP address on which to listen.</param>
+        /// <param name="port">Port on which to listen.</param>
+        /// <param name="ssl">Enable or disable SSL.</param>
+        /// <param name="defaultRoute">Default route.</param>
+        public HostBuilder(string ip, int port, bool ssl, Func<HttpContext, Task> defaultRoute)
         {
-            HttpServer.Routes.Dynamic.Add(methid, rx, action); return this;
+            _Ip = ip;
+            _Port = port;
+            _Ssl = ssl;
+            _DefaultRoute = defaultRoute;
         }
 
-        public HostBuilder MapParameteRoute(HttpMethod methid, Func<HttpContext, Task> action, string routePath = "/home")
+        #endregion
+
+        #region Public-Methods
+
+        /// <summary>
+        /// Apply a dynamic route.
+        /// </summary>
+        /// <param name="method">HTTP method.</param>
+        /// <param name="action">Action.</param>
+        /// <param name="regex">Regular expression.</param>
+        /// <returns>Host builder.</returns>
+        public HostBuilder MapDynamicRoute(HttpMethod method, Func<HttpContext, Task> action, Regex regex)
         {
-            HttpServer.Routes.Parameter.Add(methid, routePath, action); return this;
+            Server.Routes.Dynamic.Add(method, regex, action); return this;
         }
 
-        public HostBuilder MapStaticRoute(HttpMethod methid, Func<HttpContext, Task> action, string routePath = "/home")
+        /// <summary>
+        /// Apply a parameter route.
+        /// </summary>
+        /// <param name="method">HTTP method.</param>
+        /// <param name="action">Action.</param>
+        /// <param name="routePath">Route path.</param>
+        /// <returns>Host builder.</returns>
+        public HostBuilder MapParameteRoute(HttpMethod method, Func<HttpContext, Task> action, string routePath = "/home")
         {
-            HttpServer.Routes.Static.Add(methid, routePath, action); return this;
+            Server.Routes.Parameter.Add(method, routePath, action); return this;
         }
 
+        /// <summary>
+        /// Apply a static route.
+        /// </summary>
+        /// <param name="method">HTTP method.</param>
+        /// <param name="action">Action.</param>
+        /// <param name="routePath">Route path.</param>
+        /// <returns>Host builder.</returns>
+        public HostBuilder MapStaticRoute(HttpMethod method, Func<HttpContext, Task> action, string routePath = "/home")
+        {
+            Server.Routes.Static.Add(method, routePath, action); return this;
+        }
+
+        /// <summary>
+        /// Build the server.
+        /// </summary>
+        /// <returns>Server.</returns>
         public Server Build()
         {
-            return HttpServer;
+            return Server;
         }
+
+        #endregion
     }
 }

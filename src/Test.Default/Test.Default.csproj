@@ -1,34 +1,34 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-	  <TargetFrameworks>netcoreapp3.1;net462;net48;net5.0;net6.0;net7.0</TargetFrameworks>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFrameworks>netcoreapp3.1;net462;net48;net6.0;net7.0</TargetFrameworks>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <None Remove="html\index.html" />
-    <None Remove="img\watson.jpg" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Remove="html\index.html" />
+		<None Remove="img\watson.jpg" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Content Include="html\index.html">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="img\watson.jpg">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
+	<ItemGroup>
+		<Content Include="html\index.html">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Include="img\watson.jpg">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\WatsonWebserver\WatsonWebserver.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\WatsonWebserver\WatsonWebserver.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="large\" />
-  </ItemGroup>
+	<ItemGroup>
+		<Folder Include="large\" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Inputty" Version="1.0.5" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Inputty" Version="1.0.5" />
+	</ItemGroup>
 
 </Project>

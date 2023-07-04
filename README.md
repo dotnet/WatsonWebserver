@@ -6,68 +6,17 @@
 
 Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS requests, written in C#.
 
-## HostBuilder feature
+## New in v5.1.x
 
-The HostBuilder feature helps you set up your server much more easily by introducing a chain of settings and routes instead of using the server class directly.
-
-## How do I use HostBuilder?
-
-Here's a full example of how to use HostBuild
-
-```csharp
-var builder = new HostBuilder("127.0.0.1", 8000, false, Home);
-
-builder.MapStaticRoute(WatsonWebserver.HttpMethod.GET, GetUrls, "/links")
-    .MapStaticRoute(WatsonWebserver.HttpMethod.POST, CheckLogin, "/login")
-    .MapStaticRoute(WatsonWebserver.HttpMethod.POST, TestRoute, "/test");
-
-
-
-
-var app = builder.Build();
-app.Start();
-
-Console.WriteLine("Server Started");
-Console.ReadKey();
-
-
-
-
-
-
-static async Task Home(HttpContext ctx)
-{
-    await ctx.Response.Send("from home");
-}
-
-static async Task GetUrls(HttpContext ctx)
-{
-    await ctx.Response.Send("links");
-}
-
-static async Task CheckLogin(HttpContext ctx)
-{
-    await ctx.Response.Send("login");
-}
-static async Task TestRoute(HttpContext ctx)
-{
-    await ctx.Response.Send("test route");
-}
-
-```
-
-
-## New in v5.0.x
-
-- Migrate from dictionaries to ```NameValueCollection```
-- Reintroduce ```HttpRequest``` methods for checking existence of and retrieving query or header values
+- ```HostBuilder``` feature to quickly build servers, thank you @sapurtcomputer30!
 
 ## Special Thanks
 
 I'd like to extend a special thanks to those that have helped make Watson Webserver better.
 
 - @notesjor @shdwp @Tutch @GeoffMcGrath @jurkovic-nikola @joreg @Job79 @at1993 @MartyIX 
-- @pocsuka @orinem @deathbull @binozo @panboy75 @iain-cyborn @gamerhost31 @nhaberl @grgouala
+- @pocsuka @orinem @deathbull @binozo @panboy75 @iain-cyborn @gamerhost31 @nhaberl 
+- @grgouala @sapurtcomputer30
 
 ## Important Notes
 
@@ -301,6 +250,37 @@ static async Task DownloadChunkedFile(HttpContext ctx)
 
   return;
 }
+```
+
+## HostBuilder
+
+```HostBuilder``` helps you set up your server much more easily by introducing a chain of settings and routes instead of using the server class directly.
+
+```csharp
+using WatsonWebserver.Extensions.HostBuilderExtension;
+
+Server server = new HostBuilder("127.0.0.1", 8000, false, DefaultRoute)
+                .MapStaticRoute(WatsonWebserver.HttpMethod.GET, GetUrlsRoute, "/links")
+                .MapStaticRoute(WatsonWebserver.HttpMethod.POST, CheckLoginRoute, "/login")
+                .MapStaticRoute(WatsonWebserver.HttpMethod.POST, TestRoute, "/test")
+                .Build();
+
+server.Start();
+
+Console.WriteLine("Server started");
+Console.ReadKey();
+
+static async Task DefaultRoute(HttpContext ctx) => 
+    await ctx.Response.Send("Hello from default route!"); 
+
+static async Task GetUrlsRoute(HttpContext ctx) => 
+    await ctx.Response.Send("Here are your links!"); 
+
+static async Task CheckLoginRoute(HttpContext ctx) => 
+    await ctx.Response.Send("Checking your login!"); 
+
+static async Task TestRoute(HttpContext ctx) => 
+    await ctx.Response.Send("Hello from the test route!"); 
 ```
 
 ## Accessing from Outside Localhost
