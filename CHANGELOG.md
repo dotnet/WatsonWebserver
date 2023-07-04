@@ -2,12 +2,16 @@
 
 ## Current Version
 
+v5.1.x
+
+- ```HostBuilder``` feature to quickly build servers, thank you @sapurtcomputer30!
+
+## Previous Versions
+
 v5.0.x
 
 - Migrate from dictionaries to ```NameValueCollection```
 - Reintroduce ```HttpRequest``` methods for checking existence of and retrieving query or header values
-
-## Previous Versions
 
 v4.3.x
 

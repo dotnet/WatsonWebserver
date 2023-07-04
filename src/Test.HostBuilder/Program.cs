@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 using WatsonWebserver;
-using WatsonWebserver.Extensions.HostBuilderExtension;
 
-namespace Test.HostBuilderConsole
+namespace Test.HostBuilder
 {
     public static class Program
     {
@@ -15,7 +14,7 @@ namespace Test.HostBuilderConsole
         {
             Console.WriteLine("Staring webserver on " + (_Ssl ? "https://" : "http://") + _Hostname + ":" + _Port);
 
-            Server server = new HostBuilder(_Hostname, _Port, _Ssl, DefaultRoute)
+            Server server = new WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder(_Hostname, _Port, _Ssl, DefaultRoute)
                 .MapStaticRoute(WatsonWebserver.HttpMethod.GET, Route1, $"/{nameof(Route1)}")
                 .MapStaticRoute(WatsonWebserver.HttpMethod.GET, Route2, $"/{nameof(Route2)}")
                 .Build(); 

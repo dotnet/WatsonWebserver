@@ -23,7 +23,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Routing", "Test.Routin
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Serialization", "Test.Serialization\Test.Serialization.csproj", "{046B735F-103F-49C9-B5A3-CE9E0549CC4F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.HostBuilderConsole", "Test.HostBuilderConsole\Test.HostBuilderConsole.csproj", "{AD20B220-1CFD-47CC-B499-5CB8DA9923DA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.HostBuilder", "Test.HostBuilder\Test.HostBuilder.csproj", "{AD20B220-1CFD-47CC-B499-5CB8DA9923DA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
