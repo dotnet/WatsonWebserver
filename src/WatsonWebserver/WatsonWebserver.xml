@@ -1664,11 +1664,16 @@
             Leave null to use the default OPTIONS handler.
             </summary>
         </member>
-        <member name="F:WatsonWebserver.WatsonWebserverRoutes.PreRouting">
+        <member name="P:WatsonWebserver.WatsonWebserverRoutes.PreRouting">
             <summary>
             Function to call prior to routing.  
             Return 'true' if the connection should be terminated.
             Return 'false' to allow the connection to continue routing.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.WatsonWebserverRoutes.PostRouting">
+            <summary>
+            Function to call after a request has been routed and processed.
             </summary>
         </member>
         <member name="P:WatsonWebserver.WatsonWebserverRoutes.Content">

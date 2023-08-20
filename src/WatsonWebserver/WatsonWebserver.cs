@@ -471,6 +471,8 @@ namespace WatsonWebserver
                                             ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
                                     }
 
+                                    ctx.Timestamp.End = DateTime.UtcNow;
+                                    _Routes.PostRouting?.Invoke(ctx).ConfigureAwait(false);
                                     return;
                                 }
                             }
@@ -493,6 +495,8 @@ namespace WatsonWebserver
                                     ctx.RouteType = RouteTypeEnum.Content;
                                     ctx.Route = cr;
                                     await _Routes.ContentHandler.Process(ctx, token).ConfigureAwait(false);
+                                    ctx.Timestamp.End = DateTime.UtcNow;
+                                    _Routes.PostRouting?.Invoke(ctx).ConfigureAwait(false);
                                     return;
                                 }
                             }
@@ -514,6 +518,8 @@ namespace WatsonWebserver
                                 ctx.RouteType = RouteTypeEnum.Static;
                                 ctx.Route = sr;
                                 await handler(ctx).ConfigureAwait(false);
+                                ctx.Timestamp.End = DateTime.UtcNow;
+                                _Routes.PostRouting?.Invoke(ctx).ConfigureAwait(false);
                                 return;
                             }
 
@@ -536,6 +542,8 @@ namespace WatsonWebserver
                                 ctx.RouteType = RouteTypeEnum.Parameter;
                                 ctx.Route = pr;
                                 await handler(ctx).ConfigureAwait(false);
+                                ctx.Timestamp.End = DateTime.UtcNow;
+                                _Routes.PostRouting?.Invoke(ctx).ConfigureAwait(false);
                                 return;
                             }
 
@@ -556,6 +564,8 @@ namespace WatsonWebserver
                                 ctx.RouteType = RouteTypeEnum.Dynamic;
                                 ctx.Route = dr;
                                 await handler(ctx).ConfigureAwait(false);
+                                ctx.Timestamp.End = DateTime.UtcNow;
+                                _Routes.PostRouting?.Invoke(ctx).ConfigureAwait(false);
                                 return;
                             }
 
@@ -574,6 +584,8 @@ namespace WatsonWebserver
 
                                 ctx.RouteType = RouteTypeEnum.Default;
                                 await _Routes.Default(ctx).ConfigureAwait(false);
+                                ctx.Timestamp.End = DateTime.UtcNow;
+                                _Routes.PostRouting?.Invoke(ctx).ConfigureAwait(false);
                                 return;
                             }
                             else
@@ -588,6 +600,7 @@ namespace WatsonWebserver
                                 ctx.Response.StatusCode = 404;
                                 ctx.Response.ContentType = Pages.Default404Page.ContentType;
                                 await ctx.Response.Send(Pages.Default404Page.Content).ConfigureAwait(false);
+                                _Routes.PostRouting?.Invoke(ctx).ConfigureAwait(false);
                                 return;
                             }
 

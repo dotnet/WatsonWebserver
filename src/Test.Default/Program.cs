@@ -11,7 +11,9 @@ namespace Test
 {
     static class Program
     {
-        static string _Hostname = "localhost";
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+
+        static string _Hostname = "0.0.0.0";
         static int _Port = 8080;
         static bool _Ssl = false;
         static Server _Server = null;
@@ -32,6 +34,7 @@ namespace Test
             _Server.Settings.AccessControl.Mode = AccessControlMode.DefaultPermit;
             _Server.Settings.AccessControl.DenyList.Add("1.1.1.1", "255.255.255.255");
             _Server.Routes.PreRouting = PreRoutingHandler;
+            _Server.Routes.PostRouting = PostRoutingHandler;
             
             _Server.Routes.Content.Add("/html/", true);
             _Server.Routes.Content.Add("/large/", true);
@@ -262,22 +265,28 @@ namespace Test
             return;
         }
 
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         static async Task<bool> PreRoutingHandler(HttpContext ctx)
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             ctx.Metadata = "Hello, world!";
             return false;
         }
 
+        static async Task PostRoutingHandler(HttpContext ctx)
+        {
+            Console.WriteLine(ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery + ": " + ctx.Response.StatusCode + " (" + ctx.Timestamp.TotalMs + "ms)");
+        }
+
         static async Task DefaultRoute(HttpContext ctx)
         {
             // Console.WriteLine(ctx.Metadata.ToString());
+            ctx.Response.Headers.Add("Connection", "close");
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "text/plain";
             await ctx.Response.Send("Default route");
             _Server.Events.Logger(_Server.SerializationHelper.SerializeJson(ctx, true));
-            return; 
+            return;
         }
+
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
     }
 }

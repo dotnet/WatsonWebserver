@@ -488,6 +488,7 @@ namespace WatsonWebserver
             _Response.StatusDescription = GetStatusDescription(StatusCode);
             _Response.SendChunked = ChunkedTransfer;
             _Response.ContentType = ContentType;
+            _Response.KeepAlive = false;
 
             if (Headers != null && Headers.Count > 0)
             {

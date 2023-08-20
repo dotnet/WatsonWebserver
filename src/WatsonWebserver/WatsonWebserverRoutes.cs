@@ -36,7 +36,12 @@ namespace WatsonWebserver
         /// Return 'true' if the connection should be terminated.
         /// Return 'false' to allow the connection to continue routing.
         /// </summary>
-        public Func<HttpContext, Task<bool>> PreRouting = null;
+        public Func<HttpContext, Task<bool>> PreRouting { get; set; } = null;
+
+        /// <summary>
+        /// Function to call after a request has been routed and processed.
+        /// </summary>
+        public Func<HttpContext, Task> PostRouting { get; set; } = null;
 
         /// <summary>
         /// Content routes; i.e. routes to specific files or folders for GET and HEAD requests.
