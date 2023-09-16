@@ -6,6 +6,10 @@
 
 Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS requests, written in C#.
 
+## .NET Foundation
+
+This project is part of the [.NET Foundation](http://www.dotnetfoundation.org/projects) along with other projects like [the .NET Runtime](https://github.com/dotnet/runtime/).
+
 ## New in v5.1.x
 
 - ```HostBuilder``` feature to quickly build servers, thank you @sapurtcomputer30!
