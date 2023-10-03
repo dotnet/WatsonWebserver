@@ -95,7 +95,13 @@ static void Main(string[] args)
   server.Routes.Content.Add("/img/watson.jpg", false);
 
   // add static routes
-  server.Routes.Static.Add(HttpMethod.GET, "/hello/", GetHelloRoute); 
+  server.Routes.Static.Add(HttpMethod.GET, "/hello/", GetHelloRoute);
+  // or...
+  server.Routes.Static.Add(HttpMethod.GET, "/hello/", async (HttpContext ctx) =>
+  {
+      await ctx.Response.Send("Hello from the GET /hello static route!");
+      return;
+  });
 
   // add parameter routes
   server.Routes.Parameter.Add(HttpMethod.GET, "/{version}/bar", GetBarRoute);
