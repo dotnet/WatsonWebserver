@@ -44,6 +44,8 @@ Watson is a webserver that operates on top of the underlying http.sys within the
 
 The dependency on http.sys (or lack thereof) creates subtle differences between the two libraries, however, the configuration and management of each should be consistent.
 
+Watson.Lite is generally less performant than Watson, because the HTTP implementation is in user space.  
+
 ## Important Notes
 
 - Elevation (administrative privileges) may be required if binding an IP other than 127.0.0.1 or localhost
