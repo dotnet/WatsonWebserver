@@ -2,10 +2,12 @@
 
 # Watson Webserver
 
-[![NuGet Version](https://img.shields.io/nuget/v/Watson.svg?style=flat)](https://www.nuget.org/packages/Watson/) [![NuGet](https://img.shields.io/nuget/dt/Watson.svg)](https://www.nuget.org/packages/Watson)
-[![NuGet Version](https://img.shields.io/nuget/v/Watson.Lite.svg?style=flat)](https://www.nuget.org/packages/Watson.Lite/) [![NuGet](https://img.shields.io/nuget/dt/Watson.Lite.svg)](https://www.nuget.org/packages/Watson.Lite)
-
 Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS requests, written in C#.
+
+| Package     | NuGet Version  | Downloads |
+|-------------|----------------|-----------|
+| Watson      | [![NuGet Version](https://img.shields.io/nuget/v/Watson.svg?style=flat)](https://www.nuget.org/packages/Watson/) | [![NuGet](https://img.shields.io/nuget/dt/Watson.svg)](https://www.nuget.org/packages/Watson) |
+| Watson.Lite | [![NuGet Version](https://img.shields.io/nuget/v/Watson.Lite.svg?style=flat)](https://www.nuget.org/packages/Watson.Lite/) | [![NuGet](https://img.shields.io/nuget/dt/Watson.Lite.svg)](https://www.nuget.org/packages/Watson.Lite) |
 
 ## .NET Foundation
 
