@@ -41,19 +41,19 @@ namespace Test.HostBuilder
                     .MapContentRoute("/preauth/content", false, false)
                     .MapStaticRoute(HttpMethod.GET, "/preauth/static", async (HttpContextBase ctx) =>
                     {
-                        Console.WriteLine("Responding from pre-authentication static route /preauth/static");
+                        Console.WriteLine("| Responding from pre-authentication static route /preauth/static");
                         await ctx.Response.Send();
                         return;
                     }, false)
                     .MapParameteRoute(HttpMethod.GET, "/preauth/parameter/{id}", async (HttpContextBase ctx) =>
                     {
-                        Console.WriteLine("Responding from pre-authentication parameter route /preauth/parameter/" + ctx.Request.Url.Parameters["id"]);
+                        Console.WriteLine("| Responding from pre-authentication parameter route /preauth/parameter/" + ctx.Request.Url.Parameters["id"]);
                         await ctx.Response.Send();
                         return;
                     }, false)
                     .MapDynamicRoute(HttpMethod.GET, new Regex("^/preauth/dynamic/\\d+$"), async (HttpContextBase ctx) =>
                     {
-                        Console.WriteLine("Responding from pre-authentication dynamic route /preauth/dynamic");
+                        Console.WriteLine("| Responding from pre-authentication dynamic route /preauth/dynamic");
                         await ctx.Response.Send();
                         return;
                     }, false)
@@ -61,19 +61,19 @@ namespace Test.HostBuilder
                     .MapContentRoute("/postauth/content", false, true)
                     .MapStaticRoute(HttpMethod.GET, "/postauth/static", async (HttpContextBase ctx) =>
                     {
-                        Console.WriteLine("Responding from post-authentication static route /postauth/static");
+                        Console.WriteLine("| Responding from post-authentication static route /postauth/static");
                         await ctx.Response.Send();
                         return;
                     }, false)
                     .MapParameteRoute(HttpMethod.GET, "/postauth/parameter/{id}", async (HttpContextBase ctx) =>
                     {
-                        Console.WriteLine("Responding from post-authentication parameter route /postauth/parameter/" + ctx.Request.Url.Parameters["id"]);
+                        Console.WriteLine("| Responding from post-authentication parameter route /postauth/parameter/" + ctx.Request.Url.Parameters["id"]);
                         await ctx.Response.Send();
                         return;
                     }, false)
                     .MapDynamicRoute(HttpMethod.GET, new Regex("^/postauth/dynamic/\\d+$"), async (HttpContextBase ctx) =>
                     {
-                        Console.WriteLine("Responding from post-authentication dynamic route /postauth/dynamic");
+                        Console.WriteLine("| Responding from post-authentication dynamic route /postauth/dynamic");
                         await ctx.Response.Send();
                         return;
                     }, false)
@@ -88,19 +88,19 @@ namespace Test.HostBuilder
                     .MapContentRoute("/preauth/content", false, false)
                     .MapStaticRoute(HttpMethod.GET, "/preauth/static", async (HttpContextBase ctx) =>
                     {
-                        Console.WriteLine("Responding from pre-authentication static route /preauth/static");
+                        Console.WriteLine("| Responding from pre-authentication static route /preauth/static");
                         await ctx.Response.Send();
                         return;
                     }, false)
                     .MapParameteRoute(HttpMethod.GET, "/preauth/parameter/{id}", async (HttpContextBase ctx) =>
                     {
-                        Console.WriteLine("Responding from pre-authentication parameter route /preauth/parameter/" + ctx.Request.Url.Parameters["id"]);
+                        Console.WriteLine("| Responding from pre-authentication parameter route /preauth/parameter/" + ctx.Request.Url.Parameters["id"]);
                         await ctx.Response.Send();
                         return;
                     }, false)
                     .MapDynamicRoute(HttpMethod.GET, new Regex("^/preauth/dynamic/\\d+$"), async (HttpContextBase ctx) =>
                     {
-                        Console.WriteLine("Responding from pre-authentication dynamic route /preauth/dynamic");
+                        Console.WriteLine("| Responding from pre-authentication dynamic route /preauth/dynamic");
                         await ctx.Response.Send();
                         return;
                     }, false)
@@ -108,19 +108,19 @@ namespace Test.HostBuilder
                     .MapContentRoute("/postauth/content", false, true)
                     .MapStaticRoute(HttpMethod.GET, "/postauth/static", async (HttpContextBase ctx) =>
                     {
-                        Console.WriteLine("Responding from post-authentication static route /postauth/static");
+                        Console.WriteLine("| Responding from post-authentication static route /postauth/static");
                         await ctx.Response.Send();
                         return;
                     }, false)
                     .MapParameteRoute(HttpMethod.GET, "/postauth/parameter/{id}", async (HttpContextBase ctx) =>
                     {
-                        Console.WriteLine("Responding from post-authentication parameter route /postauth/parameter/" + ctx.Request.Url.Parameters["id"]);
+                        Console.WriteLine("| Responding from post-authentication parameter route /postauth/parameter/" + ctx.Request.Url.Parameters["id"]);
                         await ctx.Response.Send();
                         return;
                     }, false)
                     .MapDynamicRoute(HttpMethod.GET, new Regex("^/postauth/dynamic/\\d+$"), async (HttpContextBase ctx) =>
                     {
-                        Console.WriteLine("Responding from post-authentication dynamic route /postauth/dynamic");
+                        Console.WriteLine("| Responding from post-authentication dynamic route /postauth/dynamic");
                         await ctx.Response.Send();
                         return;
                     }, false)
@@ -159,6 +159,7 @@ namespace Test.HostBuilder
                     using (RestResponse resp = req.Send())
                     {
                         Console.WriteLine("Received response: " + resp.StatusCode);
+                        Task.Delay(1000).Wait();
                     }
                 }
             }
@@ -166,7 +167,7 @@ namespace Test.HostBuilder
 
         private static async Task AuthenticationRoute(HttpContextBase @base)
         {
-            Console.WriteLine("In authentication");
+            Console.WriteLine("| In authentication");
         }
 
         static void ExceptionEncountered(object sender, ExceptionEventArgs args)
@@ -193,17 +194,16 @@ namespace Test.HostBuilder
         {
             try
             {
-                Console.WriteLine("Responding from the default route");
+                Console.WriteLine("| Responding from the default route");
                 ctx.Response.Headers.Add("Connection", "close");
                 ctx.Response.StatusCode = 200;
                 ctx.Response.ContentType = "text/plain";
                 await ctx.Response.Send("Default route");
-                _Server.Events.Logger(_Server.Serializer.SerializeJson(ctx, true));
                 return;
             }
             catch (Exception e)
             {
-                Console.WriteLine(_Server.Serializer.SerializeJson(e, true));
+                Console.WriteLine(e.ToString());
                 ctx.Response.StatusCode = 500;
                 await ctx.Response.Send();
                 return;

@@ -4,7 +4,7 @@
 		<TargetFrameworks>netstandard2.1;net462;net48;net6.0;net7.0</TargetFrameworks>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<Version>6.0.0</Version>
+		<Version>6.0.1</Version>
 		<Description>Simple, fast, async C# web server for handling REST requests with SSL support, targeted to .NET Core, .NET Standard, and .NET Framework.  Watson.Lite has no dependency on http.sys.</Description>
 		<Authors>Joel Christner</Authors>
 		<Company>Joel Christner</Company>
@@ -73,8 +73,9 @@
 		<PackageReference Include="IpMatcher" Version="1.0.4.4" />
 		<PackageReference Include="RegexMatcher" Version="1.0.8" />
 		<PackageReference Include="System.Text.Json" Version="7.0.3" />
-		<PackageReference Include="Timestamps" Version="1.0.3" />
+		<PackageReference Include="Timestamps" Version="1.0.5" />
 		<PackageReference Include="UrlMatcher" Version="2.0.1" />
+		<PackageReference Include="Watson.WebserverCore" Version="6.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -91,10 +92,6 @@
 			<PackagePath></PackagePath>
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
-	</ItemGroup>
-
-	<ItemGroup>
-		<ProjectReference Include="..\WatsonWebserver.Core\WatsonWebserver.Core.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

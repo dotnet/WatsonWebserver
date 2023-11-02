@@ -1,10 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.1;net462;net48;net6.0;net7.0</TargetFrameworks>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>..\WatsonWebserver.snk</AssemblyOriginatorKeyFile>
-		<PackageId>Watson.Core</PackageId>
+		<PackageId>Watson.WebserverCore</PackageId>
 		<Title>Watson Webserver Core</Title>
 		<Company>Joel Christner</Company>
 		<Product>Watson.Core</Product>
@@ -21,6 +21,7 @@
 		<PackageLicenseFile>LICENSE.md</PackageLicenseFile>
 		<IncludeSymbols>True</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.1|AnyCPU'">
@@ -28,40 +29,46 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.1|AnyCPU'">
-		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
+		<DocumentationFile>WatsonWebserver.Core.xml</DocumentationFile>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net462|AnyCPU'">
-		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
+		<DocumentationFile>WatsonWebserver.Core.xml</DocumentationFile>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net462|AnyCPU'">
-		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
+		<DocumentationFile>WatsonWebserver.Core.xml</DocumentationFile>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net48|AnyCPU'">
-		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
+		<DocumentationFile>WatsonWebserver.Core.xml</DocumentationFile>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net48|AnyCPU'">
-		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
+		<DocumentationFile>WatsonWebserver.Core.xml</DocumentationFile>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6.0|AnyCPU'">
-		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
+		<DocumentationFile>WatsonWebserver.Core.xml</DocumentationFile>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net6.0|AnyCPU'">
-		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
+		<DocumentationFile>WatsonWebserver.Core.xml</DocumentationFile>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0|AnyCPU'">
-		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
+		<DocumentationFile>WatsonWebserver.Core.xml</DocumentationFile>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0|AnyCPU'">
-		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
+		<DocumentationFile>WatsonWebserver.Core.xml</DocumentationFile>
 	</PropertyGroup>
+
+	<ItemGroup>
+	  <Content Include="Assets\watson.ico">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
+	</ItemGroup>
 
 	<ItemGroup>
 	  <None Include="..\..\LICENSE.md">
@@ -83,9 +90,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Update="Assets\watson.png">
+	  <None Include="Assets\watson.png">
 	    <Pack>True</Pack>
 	    <PackagePath>\</PackagePath>
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Include="WatsonWebserver.Core.xml">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
 	</ItemGroup>
 
