@@ -2,11 +2,25 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFrameworks>netcoreapp3.1;net462;net48;net6.0;net7.0</TargetFrameworks>
+		<TargetFrameworks>net462;net48;net6.0;net7.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <PackageReference Include="Inputty" Version="1.0.6" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\WatsonWebserver.Lite\WatsonWebserver.Lite.csproj" />
 		<ProjectReference Include="..\WatsonWebserver\WatsonWebserver.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="SendJson.bat">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="SendText.bat">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
 
 </Project>

@@ -27,7 +27,7 @@ mcr.microsoft.com/dotnet/core/runtime   3.1                 4b555235dfc0        
 Refer to *IMPORTANT* below for important security notes on this step.
 
 ```
-$ docker run --user root -d -p 8000:8000 watsontest 
+$ docker run --user root -d -p 8080:8080 watsontest 
 ```
 
 5) Connect to Watson in your browser: 

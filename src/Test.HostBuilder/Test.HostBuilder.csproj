@@ -2,11 +2,25 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFrameworks>netcoreapp3.1;net462;net48;net6.0;net7.0</TargetFrameworks>
+		<TargetFrameworks>net462;net48;net6.0;net7.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\WatsonWebserver\WatsonWebserver.csproj" />
+		<PackageReference Include="RestWrapper" Version="3.0.14" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\WatsonWebserver.Lite\WatsonWebserver.Lite.csproj" />
+		<ProjectReference Include="..\WatsonWebserver\WatsonWebserver.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="postauth\content">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="preauth\content">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 
 </Project>

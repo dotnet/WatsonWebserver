@@ -2,15 +2,30 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFrameworks>netcoreapp3.1;net462;net48;net6.0;net7.0</TargetFrameworks>
+		<TargetFrameworks>net6.0;net7.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+		<ProjectReference Include="..\WatsonWebserver.Lite\WatsonWebserver.Lite.csproj" />
+		<ProjectReference Include="..\WatsonWebserver\WatsonWebserver.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\WatsonWebserver\WatsonWebserver.csproj" />
+	  <Folder Include="postauth\" />
+	  <Folder Include="preauth\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="RestWrapper" Version="3.0.14" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="postauth\content">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="preauth\content">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
 
 </Project>

@@ -5,15 +5,18 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using GetSomeInput;
 using WatsonWebserver;
+using WatsonWebserver.Core;
+using WatsonWebserver.Lite;
 
 namespace Test.Serialization
 {
     static class Program
     {
+        static bool _UsingLite = false;
         static string _Hostname = "localhost";
         static int _Port = 8080;
-        static bool _Ssl = false;
-        static Server _Server = null;
+        static WebserverSettings _Settings = null;
+        static WebserverBase _Server = null;
         static bool _UseDefaultSerializer = true;
         static Dictionary<string, string> _Metadata = new Dictionary<string, string>
         {
@@ -21,15 +24,34 @@ namespace Test.Serialization
         };
         static Random _Random = new Random();
 
-        static void Main()
+        static void Main(string[] args)
         {
-            _Server = new Server(_Hostname, _Port, false, DefaultRoute);
+            if (args != null && args.Length > 0)
+            {
+                if (args[0].Equals("lite")) _UsingLite = true;
+            }
+
+            _Settings = new WebserverSettings
+            {
+                Hostname = _Hostname,
+                Port = _Port
+            };
+
+            if (_UsingLite)
+            {
+                Console.WriteLine("Initializing webserver lite");
+                _Server = new WatsonWebserver.Lite.WebserverLite(_Settings, DefaultRoute);
+            }
+            else
+            {
+                Console.WriteLine("Initializing webserver");
+                _Server = new Webserver(_Settings, DefaultRoute);
+            }
+
+            Console.WriteLine("Listening on " + _Settings.Prefix);
             _Server.Events.Logger = Console.WriteLine;
 
             StartServer();
-
-            if (_Ssl) Console.WriteLine("Listening on https://" + _Hostname + ":" + _Port);
-            else Console.WriteLine("Listening on http://" + _Hostname + ":" + _Port);
 
             bool runForever = true;
             while (runForever)
@@ -62,16 +84,16 @@ namespace Test.Serialization
                         _Server.Stop();
                         break;
 
-                    case "dispose":
-                        _Server.Dispose();
-                        break;
-
                     case "stats":
                         Console.WriteLine(_Server.Statistics.ToString());
                         break;
 
                     case "stats reset":
                         _Server.Statistics.Reset();
+                        break;
+
+                    case "dispose":
+                        _Server.Dispose();
                         break;
                 }
             }
@@ -82,16 +104,18 @@ namespace Test.Serialization
             bool isListening = false;
             if (_Server != null) isListening = _Server.IsListening;
 
-            Console.WriteLine("---");
+            Console.WriteLine("");
+            Console.WriteLine("Available commands:");
             Console.WriteLine("  ?              help, this menu");
             Console.WriteLine("  q              quit the application");
             Console.WriteLine("  cls            clear the screen");
             Console.WriteLine("  state          indicate whether or not the server is listening");
             Console.WriteLine("  start          start listening for new connections (is listening: " + isListening + ")");
             Console.WriteLine("  stop           stop listening for new connections  (is listening: " + isListening + ")");
-            Console.WriteLine("  dispose        dispose the server object");
             Console.WriteLine("  stats          display webserver statistics");
             Console.WriteLine("  stats reset    reset webserver statistics");
+            Console.WriteLine("  dispose        dispose of the server");
+            Console.WriteLine("");
         }
 
         static async void StartServer()
@@ -101,17 +125,7 @@ namespace Test.Serialization
             Console.WriteLine("Server started");
         }
 
-        static void ExceptionEncountered(object sender, ExceptionEventArgs args)
-        {
-            _Server.Events.Logger(args.Exception.ToString());
-        }
-
-        static void ServerStopped(object sender, EventArgs args)
-        {
-            _Server.Events.Logger("*** Server stopped");
-        }
-
-        static async Task DefaultRoute(HttpContext ctx)
+        static async Task DefaultRoute(HttpContextBase ctx)
         {
             try
             {
@@ -120,18 +134,18 @@ namespace Test.Serialization
                 if (_UseDefaultSerializer)
                 {
                     serializer = "System.Text.Json";
-                    _Server.SerializationHelper = new DefaultSerializationHelper();
+                    _Server.Serializer = new DefaultSerializationHelper();
                 }
                 else
                 {
                     serializer = "Newtonsoft.Json";
-                    _Server.SerializationHelper = new NewtonsoftSerializer();
+                    _Server.Serializer = new NewtonsoftSerializer();
                 }
 
                 Person p = Person.Random(_Random, serializer);
                 ctx.Response.StatusCode = 200;
                 ctx.Response.ContentType = "application/json";
-                await ctx.Response.Send(_Server.SerializationHelper.SerializeJson(p, true));
+                await ctx.Response.Send(_Server.Serializer.SerializeJson(p, true));
 
                 _UseDefaultSerializer = !_UseDefaultSerializer;
                 return;

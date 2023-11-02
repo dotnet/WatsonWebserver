@@ -3,21 +3,44 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using WatsonWebserver;
+using WatsonWebserver.Core;
 
 namespace Test.Docker
 {
     class Program
     {
-        static Server _Server;
-        static string _Hostname = "localhost";
+        static bool _UsingLite = false;
+        static string _Hostname = "*";
         static int _Port = 8080;
-        
+        static WebserverSettings _Settings = null;
+        static WebserverBase _Server = null;
+
         static void Main(string[] args)
         {
-            _Server= new Server(_Hostname, _Port, false, DefaultRoute);
-            _Server.Start();
+            if (args != null && args.Length > 0)
+            {
+                if (args[0].Equals("lite")) _UsingLite = true;
+            }
 
-            Console.WriteLine("Watson Webserver started on http://" + _Hostname + ":" + _Port);
+            _Settings = new WebserverSettings
+            {
+                Hostname = _Hostname,
+                Port = _Port
+            };
+
+            if (_UsingLite)
+            {
+                Console.WriteLine("Initializing webserver lite");
+                _Server = new WatsonWebserver.Lite.WebserverLite(_Settings, DefaultRoute);
+            }
+            else
+            {
+                Console.WriteLine("Initializing webserver");
+                _Server = new Webserver(_Settings, DefaultRoute);
+            }
+
+            Console.WriteLine("Listening on " + _Settings.Prefix);
+            _Server.Start();
 
             EventWaitHandle waitHandle = new EventWaitHandle(false, EventResetMode.AutoReset);
             bool signal = false;
@@ -28,12 +51,14 @@ namespace Test.Docker
             while (!signal);
         }
          
-        static async Task DefaultRoute(HttpContext ctx)
+        static async Task DefaultRoute(HttpContextBase ctx)
         {
             if (ctx.Request.Method == HttpMethod.GET)
             {
                 if (ctx.Request.Url.Elements == null || ctx.Request.Url.Elements.Length == 0)
                 {
+                    Console.WriteLine("Sending default HTML page");
+
                     ctx.Response.ContentType = "text/html";
                     await ctx.Response.Send(Html);
                     return;
@@ -43,6 +68,8 @@ namespace Test.Docker
                     if (ctx.Request.Url.Elements[0].Equals("watson.ico")
                         || ctx.Request.Url.Elements[0].Equals("favicon.ico"))
                     {
+                        Console.WriteLine("Sending icon " + ctx.Request.Url.Elements[0]);
+
                         ctx.Response.ContentType = "image/png";
                         await ctx.Response.Send(File.ReadAllBytes("./watson.ico"));
                         return;
@@ -50,7 +77,9 @@ namespace Test.Docker
                 }
             }
 
-            ctx.Response.ContentType = "text/plain";
+            Console.WriteLine("Sending 404 Not Found");
+
+            ctx.Response.StatusCode = 404;
             await ctx.Response.Send();
             return;
         }

@@ -1,59 +1,23 @@
 ﻿using System;
+using System.IO;
 using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Timestamps;
+using WatsonWebserver.Core;
 
 namespace WatsonWebserver
 {
     /// <summary>
     /// HTTP context including both request and response.
     /// </summary>
-    public class HttpContext
+    public class HttpContext : HttpContextBase
     {
         #region Public-Members
-
-        /// <summary>
-        /// Time information for start, end, and total runtime.
-        /// </summary>
-        [JsonPropertyOrder(-2)]
-        public Timestamp Timestamp { get; set; } = new Timestamp();
-
-        /// <summary>
-        /// The HTTP request that was received.
-        /// </summary>
-        [JsonPropertyOrder(-1)]
-        public HttpRequest Request { get; private set; } = null;
-
-        /// <summary>
-        /// Type of route.
-        /// </summary>
-        [JsonPropertyOrder(0)]
-        public RouteTypeEnum? RouteType { get; internal set; } = null;
-
-        /// <summary>
-        /// Matched route.
-        /// </summary>
-        [JsonPropertyOrder(1)]
-        public object Route { get; internal set; } = null;
-
-        /// <summary>
-        /// The HTTP response that will be sent.  This object is preconstructed on your behalf and can be modified directly.
-        /// </summary>
-        [JsonPropertyOrder(998)]
-        public HttpResponse Response { get; private set; } = null;
-
-        /// <summary>
-        /// User-supplied metadata.
-        /// </summary>
-        [JsonPropertyOrder(999)]
-        public object Metadata { get; set; } = null;
 
         #endregion
 
         #region Private-Members
-
-        private readonly ISerializationHelper _Serializer = null;
 
         #endregion
 
@@ -67,25 +31,30 @@ namespace WatsonWebserver
 
         }
 
+        /// <summary>
+        /// Instantiate.
+        /// </summary>
+        /// <param name="ctx">HTTP listener context.</param>
+        /// <param name="settings">Settings.</param>
+        /// <param name="events">Events.</param>
+        /// <param name="serializer">Serializer.</param>
         internal HttpContext(
             HttpListenerContext ctx, 
-            WatsonWebserverSettings settings, 
-            WatsonWebserverEvents events,
+            WebserverSettings settings, 
+            WebserverEvents events,
             ISerializationHelper serializer)
         {
             if (events == null) throw new ArgumentNullException(nameof(events));
             if (ctx == null) throw new ArgumentNullException(nameof(ctx));
 
-            _Serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
-            
-            Request = new HttpRequest(ctx, _Serializer); 
-            Response = new HttpResponse(Request, ctx, settings, events, _Serializer); 
+            Request = new HttpRequest(ctx, serializer); 
+            Response = new HttpResponse(Request, ctx, settings, events, serializer); 
         }
 
         #endregion
 
         #region Public-Methods
-         
+
         #endregion
 
         #region Private-Methods

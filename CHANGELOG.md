@@ -2,11 +2,30 @@
 
 ## Current Version
 
+v6.0.x
+
+- Major refactor with breaking changes to consolidate WatsonWebserver and HttpServerLite
+- Consolidated core classes, enums, into WatsonWebserver.Core
+- Modified all test apps to support either webserver implementation
+- Consolidated and unified constructors across both projects
+- Reduced to a single listener prefix 
+- Removed attribute routes (crossing assembly boundaries and precluding use of AOT)
+- Modified Test projects to use base class (to enable testing with Lite version)
+- Modified Test projects to allow argument to be passed to indicate if the lite version should be used
+- Modified SSL configuration to use only X509Certificate2; derive if filename is supplied
+- HttpResponse.StatusDescription now based on StatusCode
+- Created a new routing architecture including routing groups, pre-auth routes, and post-auth routes
+- Amended HostBuilder extension to allow for balance of route types
+- Amended HostBuilder extension to allow for both pre-authentication and post-authentication routes
+- Added Test.Routing project and validated with both implementations
+- Added Test.HostBuilder project and validated with both implementations
+- Added CancellationToken and CancellationTokenSource to HttpContextBase
+
+## Previous Versions
+
 v5.1.x
 
 - ```HostBuilder``` feature to quickly build servers, thank you @sapurtcomputer30!
-
-## Previous Versions
 
 v5.0.x
 

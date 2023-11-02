@@ -1,0 +1,92 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>netstandard2.1;net462;net48;net6.0;net7.0</TargetFrameworks>
+		<SignAssembly>True</SignAssembly>
+		<AssemblyOriginatorKeyFile>..\WatsonWebserver.snk</AssemblyOriginatorKeyFile>
+		<PackageId>Watson.Core</PackageId>
+		<Title>Watson Webserver Core</Title>
+		<Company>Joel Christner</Company>
+		<Product>Watson.Core</Product>
+		<Description>Core library for Watson and Watson.Lite; simple, fast, async C# web servers for handling REST requests with SSL support, targeted to .NET Core, .NET Standard, and .NET Framework.</Description>
+		<Copyright>(c)2023 Joel Christner</Copyright>
+		<PackageProjectUrl>https://github.com/dotnet/WatsonWebserver</PackageProjectUrl>
+		<PackageIcon>watson.png</PackageIcon>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<RepositoryUrl>https://github.com/dotnet/WatsonWebserver</RepositoryUrl>
+		<RepositoryType>github</RepositoryType>
+		<PackageTags>web server rest restful http https api async ssl</PackageTags>
+		<PackageReleaseNotes>Major update with breaking changes</PackageReleaseNotes>
+		<Version>6.0.0</Version>
+		<PackageLicenseFile>LICENSE.md</PackageLicenseFile>
+		<IncludeSymbols>True</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.1|AnyCPU'">
+		<DocumentationFile>WatsonWebserver.Core.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.1|AnyCPU'">
+		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net462|AnyCPU'">
+		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net462|AnyCPU'">
+		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net48|AnyCPU'">
+		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net48|AnyCPU'">
+		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6.0|AnyCPU'">
+		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net6.0|AnyCPU'">
+		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0|AnyCPU'">
+		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0|AnyCPU'">
+		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <None Include="..\..\LICENSE.md">
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	  </None>
+	  <None Include="..\..\README.md">
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	  </None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="IpMatcher" Version="1.0.4.4" />
+		<PackageReference Include="RegexMatcher" Version="1.0.8" />
+		<PackageReference Include="System.Text.Json" Version="7.0.3" />
+		<PackageReference Include="Timestamps" Version="1.0.3" />
+		<PackageReference Include="UrlMatcher" Version="2.0.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="Assets\watson.png">
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	  </None>
+	</ItemGroup>
+
+</Project>

@@ -4,421 +4,6 @@
         <name>WatsonWebserver</name>
     </assembly>
     <members>
-        <member name="T:WatsonWebserver.AccessControlManager">
-            <summary>
-            Access control manager.  Dictates which connections are permitted or denied.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.AccessControlManager.DenyList">
-            <summary>
-            Matcher to match denied addresses.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.AccessControlManager.PermitList">
-            <summary>
-            Matcher to match permitted addresses.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.AccessControlManager.Mode">
-            <summary>
-            Access control mode, either DefaultPermit or DefaultDeny.
-            DefaultPermit: allow everything, except for those explicitly denied.
-            DefaultDeny: deny everything, except for those explicitly permitted.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.AccessControlManager.#ctor">
-            <summary>
-            Instantiate.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.AccessControlManager.#ctor(WatsonWebserver.AccessControlMode)">
-            <summary>
-            Instantiate.
-            </summary> 
-            <param name="mode">Access control mode.</param>
-        </member>
-        <member name="M:WatsonWebserver.AccessControlManager.Permit(System.String)">
-            <summary>
-            Permit or deny a request based on IP address.  
-            When operating in 'default deny', only specified entries are permitted. 
-            When operating in 'default permit', everything is allowed unless explicitly denied.
-            </summary>
-            <param name="ip">The IP address to evaluate.</param>
-            <returns>True if permitted.</returns>
-        </member>
-        <member name="T:WatsonWebserver.AccessControlMode">
-            <summary>
-            Access control mode of operation.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.AccessControlMode.DefaultPermit">
-            <summary>
-            Permit requests from any endpoint by default.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.AccessControlMode.DefaultDeny">
-            <summary>
-            Deny requests from any endpoint by default.
-            </summary>
-        </member>
-        <member name="T:WatsonWebserver.Chunk">
-            <summary>
-            A chunk of data, used when reading from a request where the Transfer-Encoding header includes 'chunked'.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.Chunk.Length">
-            <summary>
-            Length of the data.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.Chunk.Data">
-            <summary>
-            Data.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.Chunk.Metadata">
-            <summary>
-            Any additional metadata that appears on the length line after the length hex value and semicolon.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.Chunk.IsFinalChunk">
-            <summary>
-            Indicates whether or not this is the final chunk, i.e. the chunk length received was zero.
-            </summary>
-        </member>
-        <member name="T:WatsonWebserver.ConnectionEventArgs">
-            <summary>
-            Connection event arguments.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ConnectionEventArgs.Ip">
-            <summary>
-            Requestor IP address.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ConnectionEventArgs.Port">
-            <summary>
-            Request TCP port.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.ConnectionEventArgs.#ctor(System.String,System.Int32)">
-            <summary>
-            Connection event arguments.
-            </summary>
-            <param name="ip">Requestor IP address.</param>
-            <param name="port">Request TCP port.</param>
-        </member>
-        <member name="T:WatsonWebserver.ContentRoute">
-            <summary>
-            Assign a method handler for when requests are received matching the supplied method and path.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ContentRoute.GUID">
-            <summary>
-            Globally-unique identifier.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ContentRoute.Path">
-            <summary>
-            The pattern against which the raw URL should be matched.  
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ContentRoute.IsDirectory">
-            <summary>
-            Indicates whether or not the path specifies a directory.  If so, any matching URL will be handled by the specified handler.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ContentRoute.Metadata">
-            <summary>
-            User-supplied metadata.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.ContentRoute.#ctor(System.String,System.Boolean,System.String,System.Object)">
-            <summary>
-            Create a new route object.
-            </summary> 
-            <param name="path">The pattern against which the raw URL should be matched.</param>
-            <param name="isDirectory">Indicates whether or not the path specifies a directory.  If so, any matching URL will be handled by the specified handler.</param> 
-            <param name="guid">Globally-unique identifier.</param>
-            <param name="metadata">User-supplied metadata.</param>
-        </member>
-        <member name="T:WatsonWebserver.ContentRouteManager">
-            <summary>
-            Content route manager.  Content routes are used for GET and HEAD requests to specific files or entire directories.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ContentRouteManager.BaseDirectory">
-            <summary>
-            Base directory for files and directories accessible via content routes.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.ContentRouteManager.#ctor">
-            <summary>
-            Instantiate the object.
-            </summary> 
-        </member>
-        <member name="M:WatsonWebserver.ContentRouteManager.Add(System.String,System.Boolean,System.String,System.Object)">
-            <summary>
-            Add a route.
-            </summary>
-            <param name="path">URL path, i.e. /path/to/resource.</param>
-            <param name="isDirectory">True if the path represents a directory.</param>
-            <param name="guid">Globally-unique identifier.</param>
-            <param name="metadata">User-supplied metadata.</param>
-        </member>
-        <member name="M:WatsonWebserver.ContentRouteManager.Remove(System.String)">
-            <summary>
-            Remove a route.
-            </summary>
-            <param name="path">URL path.</param>
-        </member>
-        <member name="M:WatsonWebserver.ContentRouteManager.Get(System.String)">
-            <summary>
-            Retrieve a content route.
-            </summary>
-            <param name="path">URL path.</param>
-            <returns>ContentRoute if the route exists, otherwise null.</returns>
-        </member>
-        <member name="M:WatsonWebserver.ContentRouteManager.Exists(System.String)">
-            <summary>
-            Check if a content route exists.
-            </summary>
-            <param name="path">URL path.</param>
-            <returns>True if exists.</returns>
-        </member>
-        <member name="M:WatsonWebserver.ContentRouteManager.Match(System.String,WatsonWebserver.ContentRoute@)">
-            <summary>
-            Retrieve a content route.
-            </summary>
-            <param name="path">URL path.</param>
-            <param name="route">Matching route.</param>
-            <returns>True if a match exists.</returns>
-        </member>
-        <member name="T:WatsonWebserver.ContentRouteHandler">
-            <summary>
-            Content route handler.  Handles GET and HEAD requests to content routes for files and directories. 
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.ContentRouteHandler.ContentFileMode">
-            <summary>
-            The FileMode value to use when accessing files within a content route via a FileStream.  Default is FileMode.Open.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.ContentRouteHandler.ContentFileAccess">
-            <summary>
-            The FileAccess value to use when accessing files within a content route via a FileStream.  Default is FileAccess.Read.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.ContentRouteHandler.ContentFileShare">
-            <summary>
-            The FileShare value to use when accessing files within a content route via a FileStream.  Default is FileShare.Read.
-            </summary>
-        </member>
-        <member name="T:WatsonWebserver.DefaultSerializationHelper">
-            <summary>
-            Default serialization helper.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.DefaultSerializationHelper.DeserializeJson``1(System.String)">
-            <summary>
-            Deserialize JSON to an instance.
-            </summary>
-            <typeparam name="T">Type.</typeparam>
-            <param name="json">JSON string.</param>
-            <returns>Instance.</returns>
-        </member>
-        <member name="M:WatsonWebserver.DefaultSerializationHelper.SerializeJson(System.Object,System.Boolean)">
-            <summary>
-            Serialize object to JSON.
-            </summary>
-            <param name="obj">Object.</param>
-            <param name="pretty">Pretty print.</param>
-            <returns>JSON.</returns>
-        </member>
-        <member name="T:WatsonWebserver.DynamicRoute">
-            <summary>
-            Assign a method handler for when requests are received matching the supplied method and path regex.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.DynamicRoute.GUID">
-            <summary>
-            Globally-unique identifier.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.DynamicRoute.Method">
-            <summary>
-            The HTTP method, i.e. GET, PUT, POST, DELETE, etc.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.DynamicRoute.Path">
-            <summary>
-            The pattern against which the raw URL should be matched.  
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.DynamicRoute.Handler">
-            <summary>
-            The handler for the dynamic route.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.DynamicRoute.Metadata">
-            <summary>
-            User-supplied metadata.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.DynamicRoute.#ctor(WatsonWebserver.HttpMethod,System.Text.RegularExpressions.Regex,System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task},System.String,System.Object)">
-            <summary>
-            Create a new route object.
-            </summary>
-            <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE, etc.</param>
-            <param name="path">The pattern against which the raw URL should be matched.</param>
-            <param name="handler">The method that should be called to handle the request.</param>
-            <param name="guid">Globally-unique identifier.</param>
-            <param name="metadata">User-supplied metadata.</param>
-        </member>
-        <member name="T:WatsonWebserver.DynamicRouteAttribute">
-            <summary>
-            Attribute that is used to mark methods as a dynamic route.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.DynamicRouteAttribute.Method">
-            <summary>
-            The HTTP method, i.e. GET, PUT, POST, DELETE, etc.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.DynamicRouteAttribute.Path">
-            <summary>
-            The pattern against which the raw URL should be matched. Must be convertible to a regular expression. 
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.DynamicRouteAttribute.GUID">
-            <summary>
-            Globally-unique identifier.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.DynamicRouteAttribute.Metadata">
-            <summary>
-            User-supplied metadata.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.DynamicRouteAttribute.#ctor(WatsonWebserver.HttpMethod,System.String,System.String,System.Object)">
-            <summary>
-            Instantiate the object.
-            </summary>
-            <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE, etc.</param>
-            <param name="path">The regular expression pattern against which the raw URL should be matched.</param>
-            <param name="guid">Globally-unique identifier.</param>
-            <param name="metadata">User-supplied metadata.</param>
-        </member>
-        <member name="T:WatsonWebserver.DynamicRouteManager">
-            <summary>
-            Dynamic route manager.  Dynamic routes are used for requests using any HTTP method to any path that can be matched by regular expression.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.DynamicRouteManager.Matcher">
-            <summary>
-            Directly access the underlying regular expression matching library.
-            This is helpful in case you want to specify the matching behavior should multiple matches exist.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.DynamicRouteManager.#ctor">
-            <summary>
-            Instantiate the object.
-            </summary> 
-        </member>
-        <member name="M:WatsonWebserver.DynamicRouteManager.Add(WatsonWebserver.HttpMethod,System.Text.RegularExpressions.Regex,System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task},System.String,System.Object)">
-            <summary>
-            Add a route.
-            </summary>
-            <param name="method">The HTTP method.</param>
-            <param name="path">URL path, i.e. /path/to/resource.</param>
-            <param name="handler">Method to invoke.</param>
-            <param name="guid">Globally-unique identifier.</param>
-            <param name="metadata">User-supplied metadata.</param>
-        </member>
-        <member name="M:WatsonWebserver.DynamicRouteManager.Remove(WatsonWebserver.HttpMethod,System.Text.RegularExpressions.Regex)">
-            <summary>
-            Remove a route.
-            </summary>
-            <param name="method">The HTTP method.</param>
-            <param name="path">URL path.</param>
-        </member>
-        <member name="M:WatsonWebserver.DynamicRouteManager.Exists(WatsonWebserver.HttpMethod,System.Text.RegularExpressions.Regex)">
-            <summary>
-            Check if a content route exists.
-            </summary>
-            <param name="method">The HTTP method.</param>
-            <param name="path">URL path.</param>
-            <returns>True if exists.</returns>
-        </member>
-        <member name="M:WatsonWebserver.DynamicRouteManager.Match(WatsonWebserver.HttpMethod,System.String,WatsonWebserver.DynamicRoute@)">
-            <summary>
-            Match a request method and URL to a handler method.
-            </summary>
-            <param name="method">The HTTP method.</param>
-            <param name="rawUrl">URL path.</param>
-            <param name="dr">Matching route.</param>
-            <returns>Method to invoke.</returns>
-        </member>
-        <member name="T:WatsonWebserver.ExceptionEventArgs">
-            <summary>
-            Exception event arguments.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ExceptionEventArgs.Ip">
-            <summary>
-            IP address.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ExceptionEventArgs.Port">
-            <summary>
-            Port number.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ExceptionEventArgs.Method">
-            <summary>
-            HTTP method.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ExceptionEventArgs.Url">
-            <summary>
-            URL.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ExceptionEventArgs.Query">
-            <summary>
-            Request query.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ExceptionEventArgs.RequestHeaders">
-            <summary>
-            Request headers.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ExceptionEventArgs.RequestContentLength">
-            <summary>
-            Content length.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ExceptionEventArgs.StatusCode">
-            <summary>
-            Response status.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ExceptionEventArgs.ResponseHeaders">
-            <summary>
-            Response headers.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ExceptionEventArgs.ResponseContentLength">
-            <summary>
-            Response content length.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ExceptionEventArgs.Exception">
-            <summary>
-            Exception.
-            </summary>
-        </member>
         <member name="T:WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder">
             <summary>
             Host builder.
@@ -429,40 +14,107 @@
             Webserver.
             </summary>
         </member>
-        <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder.#ctor(System.String,System.Int32,System.Boolean,System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task})">
+        <member name="P:WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder.Settings">
+            <summary>
+            Webserver settings.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder.#ctor(System.String,System.Int32,System.Boolean,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task})">
             <summary>
             Instantiate.
             </summary>
-            <param name="ip">IP address on which to listen.</param>
+            <param name="hostname">IP address on which to listen.</param>
             <param name="port">Port on which to listen.</param>
             <param name="ssl">Enable or disable SSL.</param>
             <param name="defaultRoute">Default route.</param>
         </member>
-        <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder.MapDynamicRoute(WatsonWebserver.HttpMethod,System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task},System.Text.RegularExpressions.Regex)">
+        <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder.#ctor(WatsonWebserver.Core.WebserverSettings,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task})">
             <summary>
-            Apply a dynamic route.
+            Instantiate.
             </summary>
-            <param name="method">HTTP method.</param>
-            <param name="action">Action.</param>
-            <param name="regex">Regular expression.</param>
+            <param name="settings">Webserver settings.</param>
+            <param name="defaultRoute">Default route.</param>
+        </member>
+        <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder.MapPreflightRoute(System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task})">
+            <summary>
+            Map the pre-flight route.
+            </summary>
+            <param name="handler">Handler.</param>
             <returns>Host builder.</returns>
         </member>
-        <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder.MapParameteRoute(WatsonWebserver.HttpMethod,System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task},System.String)">
+        <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder.MapPreRoutingRoute(System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task})">
             <summary>
-            Apply a parameter route.
+            Map the pre-routing route.
             </summary>
-            <param name="method">HTTP method.</param>
-            <param name="action">Action.</param>
-            <param name="routePath">Route path.</param>
+            <param name="handler">Handler.</param>
             <returns>Host builder.</returns>
         </member>
-        <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder.MapStaticRoute(WatsonWebserver.HttpMethod,System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task},System.String)">
+        <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder.MapAuthenticationRoute(System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task})">
+            <summary>
+            Map an authentication route.
+            </summary>
+            <param name="handler">Handler.</param>
+            <returns>Host builder.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder.MapContentRoute(System.String,System.Boolean,System.Boolean)">
+            <summary>
+            Map a content route.
+            </summary>
+            <param name="path">Route path.</param>
+            <param name="isDirectory">Flag to indicate if the path is a directory.</param>
+            <param name="requiresAuthentication">Flag to indicate whether or not the route requires authentication.</param>
+            <returns>Host builder.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder.MapContentHandler(WatsonWebserver.Core.ContentRouteHandler,System.Boolean)">
+            <summary>
+            Apply a content handler.
+            </summary>
+            <param name="handler">Content route handler.</param>
+            <param name="requiresAuthentication">Flag to indicate whether or not the route requires authentication.</param>
+            <returns>Host builder.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder.MapStaticRoute(WatsonWebserver.Core.HttpMethod,System.String,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Boolean)">
             <summary>
             Apply a static route.
             </summary>
             <param name="method">HTTP method.</param>
+            <param name="path">Route path.</param>
             <param name="action">Action.</param>
-            <param name="routePath">Route path.</param>
+            <param name="requiresAuthentication">Boolean to indicate if the route requires authentication.</param>
+            <returns>Host builder.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder.MapParameteRoute(WatsonWebserver.Core.HttpMethod,System.String,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Boolean)">
+            <summary>
+            Apply a parameter route.
+            </summary>
+            <param name="method">HTTP method.</param>
+            <param name="path">Route path.</param>
+            <param name="action">Action.</param>
+            <param name="requiresAuthentication">Boolean to indicate if the route requires authentication.</param>
+            <returns>Host builder.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder.MapDynamicRoute(WatsonWebserver.Core.HttpMethod,System.Text.RegularExpressions.Regex,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Boolean)">
+            <summary>
+            Apply a dynamic route.
+            </summary>
+            <param name="method">HTTP method.</param>
+            <param name="regex">Regular expression.</param>
+            <param name="action">Action.</param>
+            <param name="requiresAuthentication">Boolean to indicate if the route requires authentication.</param>
+            <returns>Host builder.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder.MapDefaultRoute(System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task})">
+            <summary>
+            Map the default route.
+            </summary>
+            <param name="handler">Handler.</param>
+            <returns>Host builder.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder.MapPostRoutingRoute(System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task})">
+            <summary>
+            Map the post-routing route.
+            </summary>
+            <param name="handler">Handler.</param>
             <returns>Host builder.</returns>
         </member>
         <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder.Build">
@@ -471,73 +123,9 @@
             </summary>
             <returns>Server.</returns>
         </member>
-        <member name="T:WatsonWebserver.Extensions.HostBuilderExtension.IHostBuilder`2">
-            <summary>
-            Host builder interface.
-            </summary>
-            <typeparam name="HostBuilder">Host builder.</typeparam>
-            <typeparam name="InputAction">Input action.</typeparam>
-        </member>
-        <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.IHostBuilder`2.MapStaticRoute(WatsonWebserver.HttpMethod,`1,System.String)">
-            <summary>
-            Apply a static route.
-            </summary>
-            <param name="method">HTTP method.</param>
-            <param name="action">Action.</param>
-            <param name="routePath">Route path.</param>
-            <returns>Host builder.</returns>
-        </member>
-        <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.IHostBuilder`2.MapParameteRoute(WatsonWebserver.HttpMethod,`1,System.String)">
-            <summary>
-            Apply a parameter route.
-            </summary>
-            <param name="method">HTTP method.</param>
-            <param name="action">Action.</param>
-            <param name="routePath">Route path.</param>
-            <returns>Host builder.</returns>
-        </member>
-        <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.IHostBuilder`2.MapDynamicRoute(WatsonWebserver.HttpMethod,`1,System.Text.RegularExpressions.Regex)">
-            <summary>
-            Apply a dynamic route.
-            </summary>
-            <param name="method">HTTP method.</param>
-            <param name="action">Action.</param>
-            <param name="regex">Regular expression.</param>
-            <returns>Host builder.</returns>
-        </member>
         <member name="T:WatsonWebserver.HttpContext">
             <summary>
             HTTP context including both request and response.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpContext.Timestamp">
-            <summary>
-            Time information for start, end, and total runtime.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpContext.Request">
-            <summary>
-            The HTTP request that was received.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpContext.RouteType">
-            <summary>
-            Type of route.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpContext.Route">
-            <summary>
-            Matched route.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpContext.Response">
-            <summary>
-            The HTTP response that will be sent.  This object is preconstructed on your behalf and can be modified directly.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpContext.Metadata">
-            <summary>
-            User-supplied metadata.
             </summary>
         </member>
         <member name="M:WatsonWebserver.HttpContext.#ctor">
@@ -545,152 +133,21 @@
             Instantiate the object.
             </summary>
         </member>
-        <member name="T:WatsonWebserver.HttpMethod">
+        <member name="M:WatsonWebserver.HttpContext.#ctor(System.Net.HttpListenerContext,WatsonWebserver.Core.WebserverSettings,WatsonWebserver.Core.WebserverEvents,WatsonWebserver.Core.ISerializationHelper)">
             <summary>
-            HTTP methods, i.e. GET, PUT, POST, DELETE, etc.
+            Instantiate.
             </summary>
-        </member>
-        <member name="F:WatsonWebserver.HttpMethod.GET">
-            <summary>
-            HTTP GET.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.HttpMethod.HEAD">
-            <summary>
-            HTTP HEAD.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.HttpMethod.PUT">
-            <summary>
-            HTTP PUT.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.HttpMethod.POST">
-            <summary>
-            HTTP POST.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.HttpMethod.DELETE">
-            <summary>
-            HTTP DELETE.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.HttpMethod.PATCH">
-            <summary>
-            HTTP PATCH.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.HttpMethod.CONNECT">
-            <summary>
-            HTTP CONNECT.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.HttpMethod.OPTIONS">
-            <summary>
-            HTTP OPTIONS.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.HttpMethod.TRACE">
-            <summary>
-            HTTP TRACE.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.HttpMethod.UNKNOWN">
-            <summary>
-            Unknown method.
-            </summary>
+            <param name="ctx">HTTP listener context.</param>
+            <param name="settings">Settings.</param>
+            <param name="events">Events.</param>
+            <param name="serializer">Serializer.</param>
         </member>
         <member name="T:WatsonWebserver.HttpRequest">
             <summary>
             HTTP request.
             </summary>
         </member>
-        <member name="P:WatsonWebserver.HttpRequest.TimestampUtc">
-            <summary>
-            UTC timestamp from when the request was received.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpRequest.ThreadId">
-            <summary>
-            Thread ID on which the request exists.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpRequest.ProtocolVersion">
-            <summary>
-            The protocol and version.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpRequest.Source">
-            <summary>
-            Source (requestor) IP and port information.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpRequest.Destination">
-            <summary>
-            Destination IP and port information.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpRequest.Method">
-            <summary>
-            The HTTP method used in the request.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpRequest.MethodRaw">
-            <summary>
-            The string version of the HTTP method, useful if Method is UNKNOWN.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpRequest.Url">
-            <summary>
-            URL details.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpRequest.Query">
-            <summary>
-            Query details.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpRequest.Headers">
-            <summary>
-            The headers found in the request.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpRequest.Keepalive">
-            <summary>
-            Specifies whether or not the client requested HTTP keepalives.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpRequest.ChunkedTransfer">
-            <summary>
-            Indicates whether or not chunked transfer encoding was detected.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpRequest.Gzip">
-            <summary>
-            Indicates whether or not the payload has been gzip compressed.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpRequest.Deflate">
-            <summary>
-            Indicates whether or not the payload has been deflate compressed.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpRequest.Useragent">
-            <summary>
-            The useragent specified in the request.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpRequest.ContentType">
-            <summary>
-            The content type as specified by the requestor (client).
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpRequest.ContentLength">
-            <summary>
-            The number of bytes in the request body.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.HttpRequest.Data">
+        <member name="P:WatsonWebserver.HttpRequest.Data">
             <summary>
             The stream from which to read the request body sent by the requestor (client).
             </summary>
@@ -705,7 +162,7 @@
             Retrieve the request body as a string.  This will fully read the stream.
             </summary>
         </member>
-        <member name="F:WatsonWebserver.HttpRequest.ListenerContext">
+        <member name="P:WatsonWebserver.HttpRequest.ListenerContext">
             <summary>
             The original HttpListenerContext from which the HttpRequest was constructed.
             </summary>
@@ -715,7 +172,7 @@
             HTTP request.
             </summary>
         </member>
-        <member name="M:WatsonWebserver.HttpRequest.#ctor(System.Net.HttpListenerContext,WatsonWebserver.ISerializationHelper)">
+        <member name="M:WatsonWebserver.HttpRequest.#ctor(System.Net.HttpListenerContext,WatsonWebserver.Core.ISerializationHelper)">
             <summary>
             HTTP request.
             Instantiate the object using an HttpListenerContext.
@@ -730,14 +187,6 @@
             </summary>
             <param name="token">Cancellation token useful for canceling the request.</param>
             <returns>Chunk.</returns>
-        </member>
-        <member name="M:WatsonWebserver.HttpRequest.DataAsJsonObject``1">
-            <summary>
-            Read the data stream fully and convert the data to the object type specified using JSON deserialization.
-            Note: if you use this method, you will not be able to read from the data stream afterward.
-            </summary>
-            <typeparam name="T">Type.</typeparam>
-            <returns>Object of type specified.</returns>
         </member>
         <member name="M:WatsonWebserver.HttpRequest.HeaderExists(System.String)">
             <summary>
@@ -767,172 +216,9 @@
             <param name="key">Key.</param>
             <returns>Value.</returns>
         </member>
-        <member name="T:WatsonWebserver.HttpRequest.SourceDetails">
-            <summary>
-            Source details.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpRequest.SourceDetails.IpAddress">
-            <summary>
-            IP address of the requestor.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpRequest.SourceDetails.Port">
-            <summary>
-            TCP port from which the request originated on the requestor.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.HttpRequest.SourceDetails.#ctor">
-            <summary>
-            Source details.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.HttpRequest.SourceDetails.#ctor(System.String,System.Int32)">
-            <summary>
-            Source details.
-            </summary>
-            <param name="ip">IP address of the requestor.</param>
-            <param name="port">TCP port from which the request originated on the requestor.</param>
-        </member>
-        <member name="T:WatsonWebserver.HttpRequest.DestinationDetails">
-            <summary>
-            Destination details.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpRequest.DestinationDetails.IpAddress">
-            <summary>
-            IP address to which the request was made.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpRequest.DestinationDetails.Port">
-            <summary>
-            TCP port on which the request was received.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpRequest.DestinationDetails.Hostname">
-            <summary>
-            Hostname to which the request was directed.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpRequest.DestinationDetails.HostnameElements">
-            <summary>
-            Hostname elements.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.HttpRequest.DestinationDetails.#ctor">
-            <summary>
-            Destination details.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.HttpRequest.DestinationDetails.#ctor(System.String,System.Int32,System.String)">
-            <summary>
-            Source details.
-            </summary>
-            <param name="ip">IP address to which the request was made.</param>
-            <param name="port">TCP port on which the request was received.</param>
-            <param name="hostname">Hostname.</param>
-        </member>
-        <member name="T:WatsonWebserver.HttpRequest.UrlDetails">
-            <summary>
-            URL details.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpRequest.UrlDetails.Full">
-            <summary>
-            Full URL.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpRequest.UrlDetails.RawWithQuery">
-            <summary>
-            Raw URL with query.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpRequest.UrlDetails.RawWithoutQuery">
-            <summary>
-            Raw URL without query.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpRequest.UrlDetails.Elements">
-            <summary>
-            Raw URL elements.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpRequest.UrlDetails.Parameters">
-            <summary>
-            Parameters found within the URL, if using parameter routes.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.HttpRequest.UrlDetails.#ctor">
-            <summary>
-            URL details.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.HttpRequest.UrlDetails.#ctor(System.String,System.String)">
-            <summary>
-            URL details.
-            </summary>
-            <param name="fullUrl">Full URL.</param>
-            <param name="rawUrl">Raw URL.</param>
-        </member>
-        <member name="T:WatsonWebserver.HttpRequest.QueryDetails">
-            <summary>
-            Query details.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpRequest.QueryDetails.Querystring">
-            <summary>
-            Querystring, excluding the leading '?'.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpRequest.QueryDetails.Elements">
-            <summary>
-            Query elements.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.HttpRequest.QueryDetails.#ctor">
-            <summary>
-            Query details.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.HttpRequest.QueryDetails.#ctor(System.String)">
-            <summary>
-            Query details.
-            </summary>
-            <param name="fullUrl">Full URL.</param>
-        </member>
         <member name="T:WatsonWebserver.HttpResponse">
             <summary>
             HTTP response.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.HttpResponse.StatusCode">
-            <summary>
-            The HTTP status code to return to the requestor (client).
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.HttpResponse.StatusDescription">
-            <summary>
-            The HTTP status description to return to the requestor (client).
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.HttpResponse.Headers">
-            <summary>
-            User-supplied headers to include in the response.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.HttpResponse.ContentType">
-            <summary>
-            User-supplied content-type to include in the response.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.HttpResponse.ContentLength">
-            <summary>
-            The length of the supplied response data.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.HttpResponse.ChunkedTransfer">
-            <summary>
-            Indicates whether or not chunked transfer encoding should be indicated in the response. 
             </summary>
         </member>
         <member name="P:WatsonWebserver.HttpResponse.DataAsString">
@@ -995,963 +281,74 @@
             <param name="token">Cancellation token useful for canceling the request.</param>
             <returns>True if successful.</returns>
         </member>
-        <member name="M:WatsonWebserver.HttpResponse.SendChunk(System.Byte[],System.Int32,System.Threading.CancellationToken)">
+        <member name="M:WatsonWebserver.HttpResponse.SendChunk(System.Byte[],System.Threading.CancellationToken)">
             <summary>
             Send headers (if not already sent) and a chunk of data using chunked transfer-encoding, and keep the connection in-tact.
             </summary>
             <param name="chunk">Chunk of data.</param>
-            <param name="numBytes">Number of bytes to send from the chunk, i.e. the actual data size (for example, return value of FileStream.ReadAsync(buffer, 0, buffer.Length)).</param>
             <param name="token">Cancellation token useful for canceling the request.</param>
             <returns>True if successful.</returns>
         </member>
-        <member name="M:WatsonWebserver.HttpResponse.SendFinalChunk(System.Byte[],System.Int32,System.Threading.CancellationToken)">
+        <member name="M:WatsonWebserver.HttpResponse.SendFinalChunk(System.Byte[],System.Threading.CancellationToken)">
             <summary>
             Send headers (if not already sent) and the final chunk of data using chunked transfer-encoding and terminate the connection.
             </summary>
-            <param name="chunk">Chunk of data.</param>/// <param name="numBytes">Number of bytes to send from the chunk, i.e. the actual data size (for example, return value of FileStream.ReadAsync(buffer, 0, buffer.Length)).</param>
+            <param name="chunk">Chunk of data.</param>
             <param name="token">Cancellation token useful for canceling the request.</param>
             <returns>True if successful.</returns>
         </member>
-        <member name="M:WatsonWebserver.HttpResponse.DataAsJsonObject``1">
-            <summary>
-            Convert the response data sent using a Send() method to the object type specified using JSON deserialization.
-            </summary>
-            <typeparam name="T">Type.</typeparam>
-            <returns>Object of type specified.</returns>
-        </member>
-        <member name="T:WatsonWebserver.ISerializationHelper">
-            <summary>
-            Serialization helper.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.ISerializationHelper.DeserializeJson``1(System.String)">
-            <summary>
-            Deserialize from JSON to an object of the specified type.
-            </summary>
-            <typeparam name="T">Type.</typeparam>
-            <param name="json">JSON string.</param>
-            <returns>Instance.</returns>
-        </member>
-        <member name="M:WatsonWebserver.ISerializationHelper.SerializeJson(System.Object,System.Boolean)">
-            <summary>
-            Serialize from object to JSON.
-            </summary>
-            <param name="obj">Object.</param>
-            <param name="pretty">Pretty print.</param>
-            <returns>JSON.</returns>
-        </member>
-        <member name="T:WatsonWebserver.MimeTypes">
-            <summary>
-            MIME types and file extensions.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.MimeTypes.#ctor">
-            <summary>
-            Instantiates the object.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.MimeTypes.GetFromExtension(System.String)">
-            <summary>
-            Retrieve MIME type from file extension.
-            </summary>
-            <param name="extension">File extension.</param>
-            <returns>String containing MIME type.</returns>
-        </member>
-        <member name="T:WatsonWebserver.ParameterRoute">
-            <summary>
-            Assign a method handler for when requests are received matching the supplied method and path containing parameters.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ParameterRoute.GUID">
-            <summary>
-            Globally-unique identifier.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ParameterRoute.Method">
-            <summary>
-            The HTTP method, i.e. GET, PUT, POST, DELETE, etc.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ParameterRoute.Path">
-            <summary>
-            The pattern against which the raw URL should be matched.  
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ParameterRoute.Handler">
-            <summary>
-            The handler for the parameter route.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ParameterRoute.Metadata">
-            <summary>
-            User-supplied metadata.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.ParameterRoute.#ctor(WatsonWebserver.HttpMethod,System.String,System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task},System.String,System.Object)">
-            <summary>
-            Create a new route object.
-            </summary>
-            <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE, etc.</param>
-            <param name="path">The pattern against which the raw URL should be matched.</param>
-            <param name="handler">The method that should be called to handle the request.</param>
-            <param name="guid">Globally-unique identifier.</param>
-            <param name="metadata">User-supplied metadata.</param>
-        </member>
-        <member name="T:WatsonWebserver.ParameterRouteAttribute">
-            <summary>
-            Attribute that is used to mark methods as a parameter route.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.ParameterRouteAttribute.Path">
-            <summary>
-            The path to match, i.e. /{version}/api/{id}.
-            If a match is found, the Dictionary found in HttpRequest.Url.Parameters will contain keys for 'version' and 'id'.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.ParameterRouteAttribute.Method">
-            <summary>
-            The HTTP method, i.e. GET, PUT, POST, DELETE, etc.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ParameterRouteAttribute.GUID">
-            <summary>
-            Globally-unique identifier.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ParameterRouteAttribute.Metadata">
-            <summary>
-            User-supplied metadata.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.ParameterRouteAttribute.#ctor(WatsonWebserver.HttpMethod,System.String,System.String,System.Object)">
-            <summary>
-            Instantiate the object.
-            </summary>
-            <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE, etc.</param>
-            <param name="path">The path to match, i.e. /{version}/api/{id}.</param>
-            <param name="guid">Globally-unique identifier.</param>
-            <param name="metadata">User-supplied metadata.</param>
-        </member>
-        <member name="T:WatsonWebserver.ParameterRouteManager">
-            <summary>
-            Parameter route manager.  Parameter routes are used for requests using any HTTP method to any path where parameters are defined in the URL.
-            For example, /{version}/api.
-            For a matching URL, the HttpRequest.Url.Parameters will contain a key called 'version' with the value found in the URL.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ParameterRouteManager.Matcher">
-            <summary>
-            Directly access the underlying URL matching library.
-            This is helpful in case you want to specify the matching behavior should multiple matches exist.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.ParameterRouteManager.#ctor">
-            <summary>
-            Instantiate the object.
-            </summary> 
-        </member>
-        <member name="M:WatsonWebserver.ParameterRouteManager.Add(WatsonWebserver.HttpMethod,System.String,System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task},System.String,System.Object)">
-            <summary>
-            Add a route.
-            </summary>
-            <param name="method">The HTTP method.</param>
-            <param name="path">URL path, i.e. /path/to/resource.</param>
-            <param name="handler">Method to invoke.</param>
-            <param name="guid">Globally-unique identifier.</param>
-            <param name="metadata">User-supplied metadata.</param>
-        </member>
-        <member name="M:WatsonWebserver.ParameterRouteManager.Remove(WatsonWebserver.HttpMethod,System.String)">
-            <summary>
-            Remove a route.
-            </summary>
-            <param name="method">The HTTP method.</param>
-            <param name="path">URL path.</param>
-        </member>
-        <member name="M:WatsonWebserver.ParameterRouteManager.Get(WatsonWebserver.HttpMethod,System.String)">
-            <summary>
-            Retrieve a parameter route.
-            </summary>
-            <param name="method">The HTTP method.</param>
-            <param name="path">URL path.</param>
-            <returns>ParameterRoute if the route exists, otherwise null.</returns>
-        </member>
-        <member name="M:WatsonWebserver.ParameterRouteManager.Exists(WatsonWebserver.HttpMethod,System.String)">
-            <summary>
-            Check if a content route exists.
-            </summary>
-            <param name="method">The HTTP method.</param>
-            <param name="path">URL path.</param>
-            <returns>True if exists.</returns>
-        </member>
-        <member name="M:WatsonWebserver.ParameterRouteManager.Match(WatsonWebserver.HttpMethod,System.String,System.Collections.Specialized.NameValueCollection@,WatsonWebserver.ParameterRoute@)">
-            <summary>
-            Match a request method and URL to a handler method.
-            </summary>
-            <param name="method">The HTTP method.</param>
-            <param name="path">URL path.</param>
-            <param name="vals">Values extracted from the URL.</param>
-            <param name="pr">Matching route.</param>
-            <returns>True if match exists.</returns>
-        </member>
-        <member name="T:WatsonWebserver.RequestEventArgs">
-            <summary>
-            Request event arguments.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.RequestEventArgs.Ip">
-            <summary>
-            IP address.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.RequestEventArgs.Port">
-            <summary>
-            Port number.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.RequestEventArgs.Method">
-            <summary>
-            HTTP method.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.RequestEventArgs.Url">
-            <summary>
-            URL.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.RequestEventArgs.Query">
-            <summary>
-            Query found in the URL.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.RequestEventArgs.Headers">
-            <summary>
-            Request headers.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.RequestEventArgs.ContentLength">
-            <summary>
-            Content length.
-            </summary>
-        </member>
-        <member name="T:WatsonWebserver.ResponseEventArgs">
-            <summary>
-            Response event arguments.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ResponseEventArgs.Ip">
-            <summary>
-            IP address.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ResponseEventArgs.Port">
-            <summary>
-            Port number.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ResponseEventArgs.Method">
-            <summary>
-            HTTP method.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ResponseEventArgs.Url">
-            <summary>
-            URL.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ResponseEventArgs.Query">
-            <summary>
-            Request query.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ResponseEventArgs.RequestHeaders">
-            <summary>
-            Request headers.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ResponseEventArgs.RequestContentLength">
-            <summary>
-            Content length.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ResponseEventArgs.StatusCode">
-            <summary>
-            Response status.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ResponseEventArgs.ResponseHeaders">
-            <summary>
-            Response headers.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ResponseEventArgs.ResponseContentLength">
-            <summary>
-            Response content length.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.ResponseEventArgs.TotalMs">
-            <summary>
-            Total time in processing the request and sending the response, in milliseconds.
-            </summary>
-        </member>
-        <member name="T:WatsonWebserver.RouteTypeEnum">
-            <summary>
-            Route type.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.RouteTypeEnum.Default">
-            <summary>
-            Default route.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.RouteTypeEnum.Content">
-            <summary>
-            Content route.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.RouteTypeEnum.Static">
-            <summary>
-            Static route.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.RouteTypeEnum.Parameter">
-            <summary>
-            Parameter route.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.RouteTypeEnum.Dynamic">
-            <summary>
-            Dynamic route.
-            </summary>
-        </member>
-        <member name="T:WatsonWebserver.StaticRoute">
-            <summary>
-            Assign a method handler for when requests are received matching the supplied method and path.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.StaticRoute.GUID">
-            <summary>
-            Globally-unique identifier.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.StaticRoute.Method">
-            <summary>
-            The HTTP method, i.e. GET, PUT, POST, DELETE, etc.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.StaticRoute.Path">
-            <summary>
-            The raw URL, i.e. /foo/bar/.  Be sure this begins and ends with '/'.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.StaticRoute.Handler">
-            <summary>
-            The handler for the static route.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.StaticRoute.Metadata">
-            <summary>
-            User-supplied metadata.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.StaticRoute.#ctor(WatsonWebserver.HttpMethod,System.String,System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task},System.String,System.Object)">
-            <summary>
-            Create a new route object.
-            </summary>
-            <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE, etc.</param>
-            <param name="path">The raw URL, i.e. /foo/bar/.  Be sure this begins and ends with '/'.</param>
-            <param name="handler">The method that should be called to handle the request.</param>
-            <param name="guid">Globally-unique identifier.</param>
-            <param name="metadata">User-supplied metadata.</param>
-        </member>
-        <member name="T:WatsonWebserver.StaticRouteAttribute">
-            <summary>
-            Attribute that is used to mark methods as a static route.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.StaticRouteAttribute.Path">
-            <summary>
-            The raw URL, i.e. /foo/bar/.  Be sure this begins and ends with '/'.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.StaticRouteAttribute.Method">
-            <summary>
-            The HTTP method, i.e. GET, PUT, POST, DELETE, etc.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.StaticRouteAttribute.GUID">
-            <summary>
-            Globally-unique identifier.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.StaticRouteAttribute.Metadata">
-            <summary>
-            User-supplied metadata.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.StaticRouteAttribute.#ctor(WatsonWebserver.HttpMethod,System.String,System.String,System.Object)">
-            <summary>
-            Instantiate the object.
-            </summary>
-            <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE, etc.</param>
-            <param name="path">The raw URL, i.e. /foo/bar/.  Be sure this begins and ends with '/'.</param>
-            <param name="guid">Globally-unique identifier.</param>
-            <param name="metadata">User-supplied metadata.</param>
-        </member>
-        <member name="T:WatsonWebserver.StaticRouteManager">
-            <summary>
-            Static route manager.  Static routes are used for requests using any HTTP method to a specific path.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.StaticRouteManager.#ctor">
-            <summary>
-            Instantiate the object.
-            </summary> 
-        </member>
-        <member name="M:WatsonWebserver.StaticRouteManager.Add(WatsonWebserver.HttpMethod,System.String,System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task},System.String,System.Object)">
-            <summary>
-            Add a route.
-            </summary>
-            <param name="method">The HTTP method.</param>
-            <param name="path">URL path, i.e. /path/to/resource.</param>
-            <param name="handler">Method to invoke.</param>
-            <param name="guid">Globally-unique identifier.</param>
-            <param name="metadata">User-supplied metadata.</param>
-        </member>
-        <member name="M:WatsonWebserver.StaticRouteManager.Remove(WatsonWebserver.HttpMethod,System.String)">
-            <summary>
-            Remove a route.
-            </summary>
-            <param name="method">The HTTP method.</param>
-            <param name="path">URL path.</param>
-        </member>
-        <member name="M:WatsonWebserver.StaticRouteManager.Get(WatsonWebserver.HttpMethod,System.String)">
-            <summary>
-            Retrieve a static route.
-            </summary>
-            <param name="method">The HTTP method.</param>
-            <param name="path">URL path.</param>
-            <returns>StaticRoute if the route exists, otherwise null.</returns>
-        </member>
-        <member name="M:WatsonWebserver.StaticRouteManager.Exists(WatsonWebserver.HttpMethod,System.String)">
-            <summary>
-            Check if a static route exists.
-            </summary>
-            <param name="method">The HTTP method.</param>
-            <param name="path">URL path.</param>
-            <returns>True if exists.</returns>
-        </member>
-        <member name="M:WatsonWebserver.StaticRouteManager.Match(WatsonWebserver.HttpMethod,System.String,WatsonWebserver.StaticRoute@)">
-            <summary>
-            Match a request method and URL to a handler method.
-            </summary>
-            <param name="method">The HTTP method.</param>
-            <param name="path">URL path.</param>
-            <param name="route">Matching route.</param>
-            <returns>Method to invoke.</returns>
-        </member>
-        <member name="T:WatsonWebserver.Server">
+        <member name="T:WatsonWebserver.Webserver">
             <summary>
             Watson webserver.
             </summary>
         </member>
-        <member name="P:WatsonWebserver.Server.IsListening">
+        <member name="P:WatsonWebserver.Webserver.IsListening">
             <summary>
             Indicates whether or not the server is listening.
             </summary>
         </member>
-        <member name="P:WatsonWebserver.Server.RequestCount">
+        <member name="P:WatsonWebserver.Webserver.RequestCount">
             <summary>
             Number of requests being serviced currently.
             </summary>
         </member>
-        <member name="P:WatsonWebserver.Server.Settings">
+        <member name="M:WatsonWebserver.Webserver.#ctor(WatsonWebserver.Core.WebserverSettings,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task})">
             <summary>
-            Watson webserver settings.
+            Creates a new instance of the webserver.
+            If you do not provide a settings object, default settings will be used, which will cause the webserver to listen on http://localhost:8000, and send events to the console.
             </summary>
-        </member>
-        <member name="P:WatsonWebserver.Server.Routes">
-            <summary>
-            Watson webserver routes.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Server.Statistics">
-            <summary>
-            Watson webserver statistics.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Server.Events">
-            <summary>
-            Set specific actions/callbacks to use when events are raised.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Server.Pages">
-            <summary>
-            Default pages served by Watson webserver.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Server.SerializationHelper">
-            <summary>
-            JSON serialization helper.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.Server.#ctor(WatsonWebserver.WatsonWebserverSettings,System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task})">
-            <summary>
-            Creates a new instance of the Watson webserver.
-            If you do not provide a settings object, default settings will be used, which will cause Watson Webserver to listen on http://127.0.0.1:8000, and send events to the console.
-            </summary>
-            <param name="settings">Waton webserver settings.</param>
+            <param name="settings">Webserver settings.</param>
             <param name="defaultRoute">Method used when a request is received and no matching routes are found.  Commonly used as the 404 handler when routes are used.</param>
         </member>
-        <member name="M:WatsonWebserver.Server.#ctor(System.String,System.Int32,System.Boolean,System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task})">
-            <summary>
-            Creates a new instance of the Watson webserver.
-            </summary>
-            <param name="hostname">Hostname or IP address on which to listen.</param>
-            <param name="port">TCP port on which to listen.</param>
-            <param name="ssl">Specify whether or not SSL should be used (HTTPS).</param>
-            <param name="defaultRoute">Method used when a request is received and no matching routes are found.  Commonly used as the 404 handler when routes are used.</param>
-        </member>
-        <member name="M:WatsonWebserver.Server.#ctor(System.Collections.Generic.List{System.String},System.Int32,System.Boolean,System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task})">
-            <summary>
-            Creates a new instance of the Watson webserver.
-            </summary>
-            <param name="hostnames">Hostnames or IP addresses on which to listen.  Note: multiple listener endpoints are not supported on all platforms.</param>
-            <param name="port">TCP port on which to listen.</param>
-            <param name="ssl">Specify whether or not SSL should be used (HTTPS).</param>
-            <param name="defaultRoute">Method used when a request is received and no matching routes are found.  Commonly used as the 404 handler when routes are used.</param>
-        </member>
-        <member name="M:WatsonWebserver.Server.Dispose">
+        <member name="M:WatsonWebserver.Webserver.Dispose">
             <summary>
             Tear down the server and dispose of background workers.
             Do not use this object after disposal.
             </summary>
         </member>
-        <member name="M:WatsonWebserver.Server.Start(System.Threading.CancellationToken)">
+        <member name="M:WatsonWebserver.Webserver.Start(System.Threading.CancellationToken)">
             <summary>
             Start accepting new connections.
             </summary>
             <param name="token">Cancellation token useful for canceling the server.</param>
         </member>
-        <member name="M:WatsonWebserver.Server.StartAsync(System.Threading.CancellationToken)">
+        <member name="M:WatsonWebserver.Webserver.StartAsync(System.Threading.CancellationToken)">
             <summary>
             Start accepting new connections.
             </summary>
             <param name="token">Cancellation token useful for canceling the server.</param>
             <returns>Task.</returns>
         </member>
-        <member name="M:WatsonWebserver.Server.Stop">
+        <member name="M:WatsonWebserver.Webserver.Stop">
             <summary>
             Stop accepting new connections.
             </summary>
         </member>
-        <member name="M:WatsonWebserver.Server.Dispose(System.Boolean)">
+        <member name="M:WatsonWebserver.Webserver.Dispose(System.Boolean)">
             <summary>
             Tear down the server and dispose of background workers.
             Do not use this object after disposal.
             </summary>
-        </member>
-        <member name="T:WatsonWebserver.WatsonWebserverEvents">
-            <summary>
-            Callbacks/actions to use when various events are encountered.
-            </summary>
-        </member>
-        <member name="F:WatsonWebserver.WatsonWebserverEvents.Logger">
-            <summary>
-            Method to use for sending log messages.
-            </summary>
-        </member>
-        <member name="E:WatsonWebserver.WatsonWebserverEvents.ConnectionReceived">
-            <summary>
-            Event to fire when a connection is received.
-            </summary>
-        </member>
-        <member name="E:WatsonWebserver.WatsonWebserverEvents.RequestReceived">
-            <summary>
-            Event to fire  when a request is received. 
-            </summary>
-        </member>
-        <member name="E:WatsonWebserver.WatsonWebserverEvents.RequestDenied">
-            <summary>
-            Event to fire  when a request is denied due to access control. 
-            </summary>
-        </member>
-        <member name="E:WatsonWebserver.WatsonWebserverEvents.RequestorDisconnected">
-            <summary>
-            Event to fire when a requestor disconnected unexpectedly.
-            </summary>
-        </member>
-        <member name="E:WatsonWebserver.WatsonWebserverEvents.ResponseSent">
-            <summary>
-            Event to fire when a response is sent.
-            </summary>
-        </member>
-        <member name="E:WatsonWebserver.WatsonWebserverEvents.ExceptionEncountered">
-            <summary>
-            Event to fire when an exception is encountered.
-            </summary>
-        </member>
-        <member name="E:WatsonWebserver.WatsonWebserverEvents.ServerStarted">
-            <summary>
-            Event to fire when the server is started.
-            </summary>
-        </member>
-        <member name="E:WatsonWebserver.WatsonWebserverEvents.ServerStopped">
-            <summary>
-            Event to fire when the server is stopped.
-            </summary>
-        </member>
-        <member name="E:WatsonWebserver.WatsonWebserverEvents.ServerDisposing">
-            <summary>
-            Event to fire when the server is being disposed.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.WatsonWebserverEvents.#ctor">
-            <summary>
-            Instantiate the object.
-            </summary>
-        </member>
-        <member name="T:WatsonWebserver.WatsonWebserverPages">
-            <summary>
-            Default pages served by Watson webserver.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverPages.Default404Page">
-            <summary>
-            Page displayed when sending a 404 due to a lack of a route.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverPages.Default500Page">
-            <summary>
-            Page displayed when sending a 500 due to an exception is unhandled within your routes.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.WatsonWebserverPages.#ctor">
-            <summary>
-            Default pages served by Watson webserver.
-            </summary>
-        </member>
-        <member name="T:WatsonWebserver.WatsonWebserverPages.Page">
-            <summary>
-            Page served by Watson webserver.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverPages.Page.ContentType">
-            <summary>
-            Content type.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverPages.Page.Content">
-            <summary>
-            Content.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.WatsonWebserverPages.Page.#ctor(System.String,System.String)">
-            <summary>
-            Page served by Watson webserver.
-            </summary>
-            <param name="contentType">Content type.</param>
-            <param name="content">Content.</param>
-        </member>
-        <member name="T:WatsonWebserver.WatsonWebserverRoutes">
-            <summary>
-            Watson webserver routes.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverRoutes.Preflight">
-            <summary>
-            Function to call when a preflight (OPTIONS) request is received.  
-            Often used to handle CORS.  
-            Leave null to use the default OPTIONS handler.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverRoutes.PreRouting">
-            <summary>
-            Function to call prior to routing.  
-            Return 'true' if the connection should be terminated.
-            Return 'false' to allow the connection to continue routing.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverRoutes.PostRouting">
-            <summary>
-            Function to call after a request has been routed and processed.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverRoutes.Content">
-            <summary>
-            Content routes; i.e. routes to specific files or folders for GET and HEAD requests.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverRoutes.ContentHandler">
-            <summary>
-            Handler for content route requests.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverRoutes.Static">
-            <summary>
-            Static routes; i.e. routes with explicit matching and any HTTP method.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverRoutes.Parameter">
-            <summary>
-            Parameter routes; i.e. routes with parameters embedded in the URL, such as /{version}/api/{id}.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverRoutes.Dynamic">
-            <summary>
-            Dynamic routes; i.e. routes with regex matching and any HTTP method.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverRoutes.Default">
-            <summary>
-            Default route; used when no other routes match.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.WatsonWebserverRoutes.#ctor">
-            <summary>
-            Instantiate the object using default settings.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.WatsonWebserverRoutes.#ctor(WatsonWebserver.WatsonWebserverSettings,System.Func{WatsonWebserver.HttpContext,System.Threading.Tasks.Task})">
-            <summary>
-            Instantiate the object using default settings and the specified default route.
-            </summary>
-        </member>
-        <member name="T:WatsonWebserver.WatsonWebserverSettings">
-            <summary>
-            Watson webserver settings.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverSettings.Prefixes">
-            <summary>
-            Prefixes on which to listen.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverSettings.IO">
-            <summary>
-            Input-output settings.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverSettings.Ssl">
-            <summary>
-            SSL settings.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverSettings.Headers">
-            <summary>
-            Headers that will be added to every response unless previously set.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverSettings.AccessControl">
-            <summary>
-            Access control manager, i.e. default mode of operation, permit list, and deny list.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverSettings.Debug">
-            <summary>
-            Debug logging settings.
-            Be sure to set Events.Logger in order to receive debug messages.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.WatsonWebserverSettings.#ctor">
-            <summary>
-            Watson webserver settings.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.WatsonWebserverSettings.#ctor(System.String,System.Int32,System.Boolean)">
-            <summary>
-            Watson webserver settings.
-            </summary>
-            <param name="hostname">The hostname on which to listen.</param>
-            <param name="port">The port on which to listen.</param>
-            <param name="ssl">Enable or disable SSL.</param>
-        </member>
-        <member name="M:WatsonWebserver.WatsonWebserverSettings.#ctor(System.Collections.Generic.List{System.String},System.Int32,System.Boolean)">
-            <summary>
-            Watson webserver settings.
-            </summary>
-            <param name="hostnames">The hostnames on which to listen.</param>
-            <param name="port">The port on which to listen.</param>
-            <param name="ssl">Enable or disable SSL.</param>
-        </member>
-        <member name="T:WatsonWebserver.WatsonWebserverSettings.IOSettings">
-            <summary>
-            Input-output settings.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverSettings.IOSettings.StreamBufferSize">
-            <summary>
-            Buffer size to use when interacting with streams.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverSettings.IOSettings.MaxRequests">
-            <summary>
-            Maximum number of concurrent requests.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.WatsonWebserverSettings.IOSettings.#ctor">
-            <summary>
-            Input-output settings.
-            </summary>
-        </member>
-        <member name="T:WatsonWebserver.WatsonWebserverSettings.SslSettings">
-            <summary>
-            SSL settings.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverSettings.SslSettings.Enable">
-            <summary>
-            Enable or disable SSL.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverSettings.SslSettings.MutuallyAuthenticate">
-            <summary>
-            Require mutual authentication.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverSettings.SslSettings.AcceptInvalidAcertificates">
-            <summary>
-            Accept invalid certificates including self-signed and those that are unable to be verified.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.WatsonWebserverSettings.SslSettings.#ctor">
-            <summary>
-            SSL settings.
-            </summary>
-        </member>
-        <member name="T:WatsonWebserver.WatsonWebserverSettings.HeaderSettings">
-            <summary>
-            Headers that will be added to every response unless previously set.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverSettings.HeaderSettings.AccessControlAllowOrigin">
-            <summary>
-            Access-Control-Allow-Origin header.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverSettings.HeaderSettings.AccessControlAllowMethods">
-            <summary>
-            Access-Control-Allow-Methods header.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverSettings.HeaderSettings.AccessControlAllowHeaders">
-            <summary>
-            Access-Control-Allow-Headers header.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverSettings.HeaderSettings.AccessControlExposeHeaders">
-            <summary>
-            Access-Control-Expose-Headers header.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverSettings.HeaderSettings.Accept">
-            <summary>
-            Accept header.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverSettings.HeaderSettings.AcceptLanguage">
-            <summary>
-            Accept-Language header.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverSettings.HeaderSettings.AcceptCharset">
-            <summary>
-            Accept-Charset header.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverSettings.HeaderSettings.Connection">
-            <summary>
-            Connection header.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverSettings.HeaderSettings.Host">
-            <summary>
-            Host header.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.WatsonWebserverSettings.HeaderSettings.#ctor">
-            <summary>
-            Headers that will be added to every response unless previously set.
-            </summary>
-        </member>
-        <member name="T:WatsonWebserver.WatsonWebserverSettings.DebugSettings">
-            <summary>
-            Debug logging settings.
-            Be sure to set Events.Logger in order to receive debug messages.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverSettings.DebugSettings.AccessControl">
-            <summary>
-            Enable or disable debug logging of access control.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverSettings.DebugSettings.Routing">
-            <summary>
-            Enable or disable debug logging of routing.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverSettings.DebugSettings.Requests">
-            <summary>
-            Enable or disable debug logging of requests.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverSettings.DebugSettings.Responses">
-            <summary>
-            Enable or disable debug logging of responses.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.WatsonWebserverSettings.DebugSettings.#ctor">
-            <summary>
-            Debug logging settings.
-            Be sure to set Events.Logger in order to receive debug messages.
-            </summary>
-        </member>
-        <member name="T:WatsonWebserver.WatsonWebserverStatistics">
-            <summary>
-            Watson webserver statistics.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverStatistics.StartTime">
-            <summary>
-            The time at which the client or server was started.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverStatistics.UpTime">
-            <summary>
-            The amount of time which the client or server has been up.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverStatistics.ReceivedPayloadBytes">
-            <summary>
-            The number of payload bytes received (incoming request body).
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.WatsonWebserverStatistics.SentPayloadBytes">
-            <summary>
-            The number of payload bytes sent (outgoing request body).
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.WatsonWebserverStatistics.#ctor">
-            <summary>
-            Initialize the statistics object.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.WatsonWebserverStatistics.ToString">
-            <summary>
-            Human-readable version of the object.
-            </summary>
-            <returns>String.</returns>
-        </member>
-        <member name="M:WatsonWebserver.WatsonWebserverStatistics.Reset">
-            <summary>
-            Reset statistics other than StartTime and UpTime.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.WatsonWebserverStatistics.RequestCountByMethod(WatsonWebserver.HttpMethod)">
-            <summary>
-            Retrieve the number of requests received using a specific HTTP method.
-            </summary>
-            <param name="method">HTTP method.</param>
-            <returns>Number of requests received using this method.</returns>
         </member>
     </members>
 </doc>

@@ -1,0 +1,106 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>netstandard2.1;net462;net48;net6.0;net7.0</TargetFrameworks>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<Version>6.0.0</Version>
+		<Description>Simple, fast, async C# web server for handling REST requests with SSL support, targeted to .NET Core, .NET Standard, and .NET Framework.  Watson.Lite has no dependency on http.sys.</Description>
+		<Authors>Joel Christner</Authors>
+		<Company>Joel Christner</Company>
+		<Copyright>(c)2023 Joel Christner</Copyright>
+		<PackageProjectUrl>https://github.com/dotnet/WatsonWebserver</PackageProjectUrl>
+		<PackageLicenseUrl></PackageLicenseUrl>
+		<RepositoryUrl>https://github.com/dotnet/WatsonWebserver</RepositoryUrl>
+		<RepositoryType>Github</RepositoryType>
+		<PackageTags>web server rest restful http https api async ssl</PackageTags>
+		<PackageReleaseNotes>Major update with breaking changes</PackageReleaseNotes>
+		<PackageId>Watson.Lite</PackageId>
+		<Product>Watson.Lite</Product>
+		<PackageIconUrl></PackageIconUrl>
+		<PackageLicenseFile>LICENSE.md</PackageLicenseFile>
+		<PackageIcon>watson.png</PackageIcon>
+		<SignAssembly>True</SignAssembly>
+		<AssemblyOriginatorKeyFile>..\WatsonWebserver.snk</AssemblyOriginatorKeyFile>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<IncludeSymbols>True</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<Title>Watson Webserver Lite</Title>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.1|AnyCPU'">
+		<DocumentationFile>WatsonWebserver.Lite.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.1|AnyCPU'">
+		<DocumentationFile>WatsonWebserver.Lite.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net462|AnyCPU'">
+		<DocumentationFile>WatsonWebserver.Lite.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net462|AnyCPU'">
+		<DocumentationFile>WatsonWebserver.Lite.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net48|AnyCPU'">
+		<DocumentationFile>WatsonWebserver.Lite.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net48|AnyCPU'">
+		<DocumentationFile>WatsonWebserver.Lite.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6.0|AnyCPU'">
+		<DocumentationFile>WatsonWebserver.Lite.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net6.0|AnyCPU'">
+		<DocumentationFile>WatsonWebserver.Lite.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0|AnyCPU'">
+		<DocumentationFile>WatsonWebserver.Lite.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0|AnyCPU'">
+		<DocumentationFile>WatsonWebserver.Lite.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="CavemanTcp" Version="2.0.2" />
+		<PackageReference Include="IpMatcher" Version="1.0.4.4" />
+		<PackageReference Include="RegexMatcher" Version="1.0.8" />
+		<PackageReference Include="System.Text.Json" Version="7.0.3" />
+		<PackageReference Include="Timestamps" Version="1.0.3" />
+		<PackageReference Include="UrlMatcher" Version="2.0.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\..\README.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+		<None Include="assets\watson.png">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+		<None Include="LICENSE.md">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\WatsonWebserver.Core\WatsonWebserver.Core.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="WatsonWebserver.Lite.xml">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+</Project>

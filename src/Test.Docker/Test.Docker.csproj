@@ -2,10 +2,11 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFrameworks>netcoreapp3.1;net462;net48;net6.0;net7.0</TargetFrameworks>
+		<TargetFrameworks>net462;net48;net6.0;net7.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\WatsonWebserver.Lite\WatsonWebserver.Lite.csproj" />
 		<ProjectReference Include="..\WatsonWebserver\WatsonWebserver.csproj" />
 	</ItemGroup>
 
@@ -16,6 +17,12 @@
 		<None Include="watson.ico">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="Docker.md">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
 
 </Project>

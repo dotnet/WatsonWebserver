@@ -1,20 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.1;netcoreapp3.1;net462;net48;net6.0;net7.0</TargetFrameworks>
+		<TargetFrameworks>netstandard2.1;net462;net48;net6.0;net7.0</TargetFrameworks>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<Version>5.1.2</Version>
+		<Version>6.0.0</Version>
 		<Description>Simple, fast, async C# web server for handling REST requests with SSL support, targeted to .NET Core, .NET Standard, and .NET Framework.</Description>
 		<Authors>Joel Christner</Authors>
 		<Company>Joel Christner</Company>
 		<Copyright>(c)2023 Joel Christner</Copyright>
-		<PackageProjectUrl>https://github.com/jchristn/WatsonWebserver</PackageProjectUrl>
+		<PackageProjectUrl>https://github.com/dotnet/WatsonWebserver</PackageProjectUrl>
 		<PackageLicenseUrl></PackageLicenseUrl>
-		<RepositoryUrl>https://github.com/jchristn/WatsonWebserver</RepositoryUrl>
+		<RepositoryUrl>https://github.com/dotnet/WatsonWebserver</RepositoryUrl>
 		<RepositoryType>Github</RepositoryType>
 		<PackageTags>web server rest restful http https api async ssl</PackageTags>
-		<PackageReleaseNotes>HostBuilder capability, thank you @sapurtcomputer30!</PackageReleaseNotes>
+		<PackageReleaseNotes>Major update with breaking changes</PackageReleaseNotes>
 		<PackageId>Watson</PackageId>
 		<Product>Watson</Product>
 		<PackageIconUrl></PackageIconUrl>
@@ -22,6 +22,10 @@
 		<PackageIcon>watson.png</PackageIcon>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>..\WatsonWebserver.snk</AssemblyOriginatorKeyFile>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<IncludeSymbols>True</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<Title>Watson Webserver</Title>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.1|AnyCPU'">
@@ -29,14 +33,6 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.1|AnyCPU'">
-		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp3.1|AnyCPU'">
-		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp3.1|AnyCPU'">
 		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
 	</PropertyGroup>
 
@@ -48,11 +44,11 @@
 		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net5.0|AnyCPU'">
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net48|AnyCPU'">
 		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net5.0|AnyCPU'">
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net48|AnyCPU'">
 		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
 	</PropertyGroup>
 
@@ -64,17 +60,27 @@
 		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0|AnyCPU'">
+		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
+	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0|AnyCPU'">
+		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
+	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="IpMatcher" Version="1.0.4.4" />
 		<PackageReference Include="RegexMatcher" Version="1.0.8" />
-		<PackageReference Include="System.Text.Json" Version="7.0.2" />
-		<PackageReference Include="Timestamps" Version="1.0.2" />
+		<PackageReference Include="System.Text.Json" Version="7.0.3" />
+		<PackageReference Include="Timestamps" Version="1.0.3" />
 		<PackageReference Include="UrlMatcher" Version="2.0.1" />
 	</ItemGroup>
 
 	<ItemGroup>
+		<None Include="..\..\README.md">
+		  <Pack>True</Pack>
+		  <PackagePath>\</PackagePath>
+		</None>
 		<None Include="assets\watson.png">
 			<Pack>True</Pack>
 			<PackagePath></PackagePath>
@@ -87,15 +93,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="assets\watson.ico">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</None>
-		<None Include="assets\watson.png">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</None>
-		<None Include="WatsonWebserver.xml">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</None>
+		<ProjectReference Include="..\WatsonWebserver.Core\WatsonWebserver.Core.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="WatsonWebserver.xml">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
 
 </Project>

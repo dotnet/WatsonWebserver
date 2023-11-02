@@ -6,29 +6,52 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using WatsonWebserver;
+using WatsonWebserver.Core;
+using WatsonWebserver.Lite;
 
 namespace Test
 {
     static class Program
     {
-        static string _Hostname = "127.0.0.1";
+        static bool _UsingLite = false;
+        static string _Hostname = "localhost";
         static int _Port = 8080;
+        static WebserverSettings _Settings = null;
+        static WebserverBase _Server = null;
 
-        static void Main()
+        static void Main(string[] args)
         {
-            List<string> hostnames = new List<string>();
-            hostnames.Add(_Hostname);
+            if (args != null && args.Length > 0)
+            {
+                if (args[0].Equals("lite")) _UsingLite = true;
+            }
 
-            Server server = new Server(hostnames, _Port, false, DefaultRoute);
-            Console.WriteLine("Listening on http://" + _Hostname + ":" + _Port);
+            _Settings = new WebserverSettings
+            {
+                Hostname = _Hostname,
+                Port = _Port
+            };
+
+            if (_UsingLite)
+            {
+                Console.WriteLine("Initializing webserver lite");
+                _Server = new WatsonWebserver.Lite.WebserverLite(_Settings, DefaultRoute);
+            }
+            else
+            {
+                Console.WriteLine("Initializing webserver");
+                _Server = new Webserver(_Settings, DefaultRoute);
+            }
+
+            Console.WriteLine("Listening on " + _Settings.Prefix);
             Console.WriteLine("Use /img/watson.jpg or /txt/test.txt");
-            server.Start();
+            _Server.Start();
 
             Console.WriteLine("Press ENTER to exit");
             Console.ReadLine();
         }
          
-        static async Task DefaultRoute(HttpContext ctx)
+        static async Task DefaultRoute(HttpContextBase ctx)
         {
             try
             {
@@ -48,7 +71,7 @@ namespace Test
                         if (chunk.Length > 0) Console.WriteLine(Encoding.UTF8.GetString(chunk.Data));
                         else Console.WriteLine("");
 
-                        if (chunk.IsFinalChunk)
+                        if (chunk.IsFinal)
                         {
                             Console.WriteLine("*** Final chunk ***");
                             break;
@@ -94,20 +117,19 @@ namespace Test
 
                                         if (bytesRead == buffer.Length)
                                         {
-                                            await ctx.Response.SendChunk(buffer, bytesRead);
+                                            await ctx.Response.SendChunk(buffer);
                                         }
                                         else
                                         {
                                             byte[] temp = new byte[bytesRead];
                                             Buffer.BlockCopy(buffer, 0, temp, 0, bytesRead);
-                                            await ctx.Response.SendChunk(temp, bytesRead);
+                                            await ctx.Response.SendChunk(temp);
                                         }
                                     }
                                     else
                                     {
                                         Console.WriteLine("- Sending final chunk of size " + bytesRead);
 
-                                        /*
                                         if (bytesRead == buffer.Length)
                                         {
                                             await ctx.Response.SendFinalChunk(buffer);
@@ -118,9 +140,6 @@ namespace Test
                                             Buffer.BlockCopy(buffer, 0, temp, 0, bytesRead);
                                             await ctx.Response.SendFinalChunk(temp);
                                         }
-                                        */
-
-                                        await ctx.Response.SendFinalChunk(buffer, bytesRead);
                                     }
 
                                     bytesSent += bytesRead;
@@ -164,20 +183,19 @@ namespace Test
 
                                         if (bytesRead == buffer.Length)
                                         {
-                                            await ctx.Response.SendChunk(buffer, bytesRead);
+                                            await ctx.Response.SendChunk(buffer);
                                         }
                                         else
                                         {
                                             byte[] temp = new byte[bytesRead];
                                             Buffer.BlockCopy(buffer, 0, temp, 0, bytesRead);
-                                            await ctx.Response.SendChunk(temp, bytesRead);
+                                            await ctx.Response.SendChunk(temp);
                                         }
                                     }
                                     else
                                     {
                                         Console.WriteLine("- Sending final chunk of size " + bytesRead);
 
-                                        /*
                                         if (bytesRead == buffer.Length)
                                         {
                                             await ctx.Response.SendFinalChunk(buffer);
@@ -188,9 +206,8 @@ namespace Test
                                             Buffer.BlockCopy(buffer, 0, temp, 0, bytesRead);
                                             await ctx.Response.SendFinalChunk(temp);
                                         }
-                                        */
 
-                                        await ctx.Response.SendFinalChunk(buffer, bytesRead);
+                                        await ctx.Response.SendFinalChunk(buffer);
                                     }
 
                                     bytesSent += bytesRead;

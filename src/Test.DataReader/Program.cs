@@ -3,14 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using GetSomeInput;
 using WatsonWebserver;
+using WatsonWebserver.Core;
+using WatsonWebserver.Lite;
 
 namespace Test
 {
     static class Program
     {
-        static string _Hostname = "127.0.0.1";
+        static bool _UsingLite = false;
+        static string _Hostname = "localhost";
         static int _Port = 8080;
+        static WebserverSettings _Settings = null;
+        static WebserverBase _Server = null;
+        static DefaultSerializationHelper _Serializer = new DefaultSerializationHelper();
 
         private enum Mode
         {
@@ -21,18 +28,37 @@ namespace Test
 
         private static Mode _Mode = Mode.Bytes;
 
-        static void Main()
+        static void Main(string[] args)
         {
-            List<string> hostnames = new List<string>();
-            hostnames.Add(_Hostname); 
-            Server server = new Server(hostnames, _Port, false, DefaultRoute);
-            Console.WriteLine("Listening on http://" + _Hostname + ":" + _Port);
-            server.Start();
+            if (args != null && args.Length > 0)
+            {
+                if (args[0].Equals("lite")) _UsingLite = true;
+            }
+
+            _Settings = new WebserverSettings
+            {
+                Hostname = _Hostname,
+                Port = _Port
+            };
+
+            if (_UsingLite)
+            {
+                Console.WriteLine("Initializing webserver lite");
+                _Server = new WatsonWebserver.Lite.WebserverLite(_Settings, DefaultRoute);
+            }
+            else
+            {
+                Console.WriteLine("Initializing webserver");
+                _Server = new Webserver(_Settings, DefaultRoute);
+            }
+
+            Console.WriteLine("Listening on " + _Settings.Prefix);
+            _Server.Start();
 
             bool runForever = true;
             while (runForever)
             {
-                string userInput = InputString("Command [? for help] >", null, false);
+                string userInput = Inputty.GetString("Command [?/help]:", null, false);
                 switch (userInput.ToLower())
                 {
                     case "?":
@@ -49,24 +75,24 @@ namespace Test
                         break;
 
                     case "state":
-                        Console.WriteLine("Listening: " + server.IsListening);
-                        break;
-
-                    case "dispose":
-                        server.Dispose();
+                        Console.WriteLine("Listening: " + _Server.IsListening);
                         break;
 
                     case "stats":
-                        Console.WriteLine(server.Statistics.ToString());
+                        Console.WriteLine(_Server.Statistics.ToString());
                         break;
 
                     case "stats reset":
-                        server.Statistics.Reset();
+                        _Server.Statistics.Reset();
                         break;
 
                     case "mode":
                         Console.WriteLine("Valid modes: Text, Bytes, Json");
-                        _Mode = (Mode)(Enum.Parse(typeof(Mode), InputString("Mode:", "Text", false)));
+                        _Mode = (Mode)(Enum.Parse(typeof(Mode), Inputty.GetString("Mode:", "Text", false)));
+                        break;
+
+                    case "dispose":
+                        _Server.Dispose();
                         break;
                 }
             }
@@ -74,20 +100,22 @@ namespace Test
 
         static void Menu()
         {
-            Console.WriteLine("---");
+            Console.WriteLine("");
+            Console.WriteLine("Available commands:");
             Console.WriteLine("  ?              help, this menu");
             Console.WriteLine("  q              quit the application");
             Console.WriteLine("  cls            clear the screen");
             Console.WriteLine("  state          indicate whether or not the server is listening");
-            Console.WriteLine("  dispose        dispose the server object");
             Console.WriteLine("  stats          display webserver statistics");
             Console.WriteLine("  stats reset    reset webserver statistics");
             Console.WriteLine("  mode           set data mode, currently: " + _Mode);
+            Console.WriteLine("  dispose        dispose of the server");
+            Console.WriteLine("");
         }
 
-        static async Task DefaultRoute(HttpContext ctx)
+        static async Task DefaultRoute(HttpContextBase ctx)
         {
-            Console.WriteLine(ctx.Request.ToString());
+            Console.WriteLine(_Serializer.SerializeJson(ctx, true));
 
             string dataStr = null;
             byte[] dataBytes = null;
@@ -104,7 +132,7 @@ namespace Test
                     Console.WriteLine("Byte data:" + Environment.NewLine + dataBytes != null ? ByteArrayToHex(dataBytes) : "(null)");
                     break; 
                 case Mode.Json:
-                    p = ctx.Request.DataAsJsonObject<Person>();
+                    p = _Serializer.DeserializeJson<Person>(ctx.Request.DataAsString);
                     Console.WriteLine("Person data (from JSON):" + Environment.NewLine + p != null ? p.ToString() : "(null)");
                     break;
                 default:
@@ -116,32 +144,6 @@ namespace Test
 
             ctx.Response.StatusCode = 200;
             await ctx.Response.Send();
-        }
-
-        static string InputString(string question, string defaultAnswer, bool allowNull)
-        {
-            while (true)
-            {
-                Console.Write(question);
-
-                if (!String.IsNullOrEmpty(defaultAnswer))
-                {
-                    Console.Write(" [" + defaultAnswer + "]");
-                }
-
-                Console.Write(" ");
-
-                string userInput = Console.ReadLine();
-
-                if (String.IsNullOrEmpty(userInput))
-                {
-                    if (!String.IsNullOrEmpty(defaultAnswer)) return defaultAnswer;
-                    if (allowNull) return null;
-                    else continue;
-                }
-
-                return userInput;
-            }
         }
 
         private static string ByteArrayToHex(byte[] data)
