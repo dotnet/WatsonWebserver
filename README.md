@@ -127,7 +127,7 @@ static void Main(string[] args)
 
   // add static routes
   server.Routes.PreAuthentication.Static.Add(HttpMethod.GET, "/hello/", GetHelloRoute);
-  server.Routes.PreAuthentication.Static.Add(HttpMethod.GET, "/howdy/", async (HttpContext ctx) =>
+  server.Routes.PreAuthentication.Static.Add(HttpMethod.GET, "/howdy/", async (HttpContextBase ctx) =>
   {
       await ctx.Response.Send("Hello from the GET /howdy static route!");
       return;
@@ -186,7 +186,7 @@ Refer to ```Test.ChunkServer``` for a sample implementation.
 ### Receiving Chunked Data
 
 ```csharp
-static async Task UploadData(HttpContext ctx)
+static async Task UploadData(HttpContextBase ctx)
 {
   if (ctx.Request.ChunkedTransfer)
   {
@@ -208,7 +208,7 @@ static async Task UploadData(HttpContext ctx)
 ### Sending Chunked Data
 
 ```csharp
-static async Task DownloadChunkedFile(HttpContext ctx)
+static async Task DownloadChunkedFile(HttpContextBase ctx)
 {
   using (FileStream fs = new FileStream("./img/watson.jpg", , FileMode.Open, FileAccess.Read))
   {
