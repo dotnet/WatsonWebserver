@@ -8,6 +8,9 @@ Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS reque
 |-------------|----------------|-----------|
 | Watson      | [![NuGet Version](https://img.shields.io/nuget/v/Watson.svg?style=flat)](https://www.nuget.org/packages/Watson/) | [![NuGet](https://img.shields.io/nuget/dt/Watson.svg)](https://www.nuget.org/packages/Watson) |
 | Watson.Lite | [![NuGet Version](https://img.shields.io/nuget/v/Watson.Lite.svg?style=flat)](https://www.nuget.org/packages/Watson.Lite/) | [![NuGet](https://img.shields.io/nuget/dt/Watson.Lite.svg)](https://www.nuget.org/packages/Watson.Lite) |
+| Watson.Core | [![NuGet Version](https://img.shields.io/nuget/v/Watson.Core.svg?style=flat)](https://www.nuget.org/packages/Watson.Core/) | [![NuGet](https://img.shields.io/nuget/dt/Watson.Core.svg)](https://www.nuget.org/packages/Watson.Core) |
+
+Special thanks to @DamienDennehy for allowing us the use of the ```Watson.Core``` package name in NuGet!
 
 ## .NET Foundation
 
