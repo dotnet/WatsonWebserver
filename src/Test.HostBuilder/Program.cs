@@ -111,19 +111,19 @@ namespace Test.HostBuilder
                         Console.WriteLine("| Responding from post-authentication static route /postauth/static");
                         await ctx.Response.Send();
                         return;
-                    }, false)
+                    }, true)
                     .MapParameteRoute(HttpMethod.GET, "/postauth/parameter/{id}", async (HttpContextBase ctx) =>
                     {
                         Console.WriteLine("| Responding from post-authentication parameter route /postauth/parameter/" + ctx.Request.Url.Parameters["id"]);
                         await ctx.Response.Send();
                         return;
-                    }, false)
+                    }, true)
                     .MapDynamicRoute(HttpMethod.GET, new Regex("^/postauth/dynamic/\\d+$"), async (HttpContextBase ctx) =>
                     {
                         Console.WriteLine("| Responding from post-authentication dynamic route /postauth/dynamic");
                         await ctx.Response.Send();
                         return;
-                    }, false)
+                    }, true)
                     .MapPostRoutingRoute(PostRoutingHandler)
                     .Build();
             }
