@@ -103,10 +103,7 @@ namespace WatsonWebserver.Lite
                 _TokenSource.Dispose();
             }
 
-            Statistics = null;
             Settings = null;
-            Routes = null;
-            Events = null;
         }
 
         /// <summary>
