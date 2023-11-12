@@ -176,12 +176,8 @@ namespace WatsonWebserver
 
                 _HttpListener = null;
                 Settings = null;
-                Routes = null;
                 _TokenSource = null;
                 _AcceptConnections = null;
-
-                Events = null;
-                Statistics = null;
             }
         }
 
