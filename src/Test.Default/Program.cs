@@ -52,6 +52,7 @@ namespace Test
             _Server.Routes.PreAuthentication.Content.Add("/html/", true);
             _Server.Routes.PreAuthentication.Content.Add("/large/", true);
             _Server.Routes.PreAuthentication.Content.Add("/img/watson.jpg", false);
+            _Server.Routes.PreAuthentication.ContentHandler = new ContentRouteHandler(_Server.Routes.PreAuthentication.Content);
 
             _Server.Routes.PreAuthentication.Static.Add(HttpMethod.GET, "/hello", HelloRoute);
             _Server.Routes.PreAuthentication.Static.Add(HttpMethod.GET, "/hola", HolaRoute);

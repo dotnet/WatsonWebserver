@@ -52,6 +52,7 @@ namespace Test
             #region Pre-Authentication-Routes
 
             _Server.Routes.PreAuthentication.Content.Add("/preauth/content", false);
+            _Server.Routes.PreAuthentication.ContentHandler = new ContentRouteHandler(_Server.Routes.PreAuthentication.Content);
 
             _Server.Routes.PreAuthentication.Static.Add(HttpMethod.GET, "/preauth/static", async (HttpContextBase ctx) =>
             {
@@ -88,6 +89,7 @@ namespace Test
             #region Post-Authentication-Routes
 
             _Server.Routes.PostAuthentication.Content.Add("/postauth/content", false);
+            _Server.Routes.PostAuthentication.ContentHandler = new ContentRouteHandler(_Server.Routes.PostAuthentication.Content);
 
             _Server.Routes.PostAuthentication.Static.Add(HttpMethod.GET, "/postauth/static", async (HttpContextBase ctx) =>
             {
