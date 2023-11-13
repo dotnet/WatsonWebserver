@@ -133,6 +133,7 @@ static void Main(string[] args)
   // add content routes
   server.Routes.PreAuthentication.Content.Add("/html/", true);
   server.Routes.PreAuthentication.Content.Add("/img/watson.jpg", false);
+  server.Routes.PreAuthentication.ContentHandler = new ContentRouteHandler(server.Routes.PreAuthentication.Content);
 
   // add static routes
   server.Routes.PreAuthentication.Static.Add(HttpMethod.GET, "/hello/", GetHelloRoute);
