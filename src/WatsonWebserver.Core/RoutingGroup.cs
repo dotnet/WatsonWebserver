@@ -45,22 +45,6 @@ namespace WatsonWebserver.Core
         }
 
         /// <summary>
-        /// Handler for content route requests.
-        /// </summary>
-        public ContentRouteHandler ContentHandler
-        {
-            get
-            {
-                return _ContentHandler;
-            }
-            set
-            {
-                if (value == null) throw new ArgumentNullException(nameof(ContentHandler));
-                _ContentHandler = value;
-            }
-        }
-
-        /// <summary>
         /// Parameter routes.
         /// </summary>
         public ParameterRouteManager Parameter
@@ -98,7 +82,6 @@ namespace WatsonWebserver.Core
 
         private StaticRouteManager _Static = new StaticRouteManager();
         private ContentRouteManager _Content = new ContentRouteManager();
-        private ContentRouteHandler _ContentHandler = null;
         private ParameterRouteManager _Parameter = new ParameterRouteManager();
         private DynamicRouteManager _Dynamic = new DynamicRouteManager();
 
@@ -111,7 +94,7 @@ namespace WatsonWebserver.Core
         /// </summary>
         public RoutingGroup()
         {
-            _ContentHandler = new ContentRouteHandler(_Content);
+
         }
 
         #endregion

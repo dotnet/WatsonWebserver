@@ -337,7 +337,7 @@ namespace WatsonWebserver
 
                                         ctx.RouteType = RouteTypeEnum.Content;
                                         ctx.Route = cr;
-                                        await Routes.PreAuthentication.ContentHandler.Process(ctx).ConfigureAwait(false);
+                                        await Routes.PreAuthentication.Content.Handler(ctx).ConfigureAwait(false);
                                         if (!ctx.Response.ResponseSent) 
                                             throw new InvalidOperationException("Pre-authentication content route for " + ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery + " did not send a response to the HTTP request.");
                                         return;
@@ -468,8 +468,8 @@ namespace WatsonWebserver
                                         }
 
                                         ctx.RouteType = RouteTypeEnum.Content;
-                                        ctx.Route = cr;
-                                        await Routes.PostAuthentication.ContentHandler.Process(ctx).ConfigureAwait(false);
+                                        ctx.Route = cr; 
+                                        await Routes.PostAuthentication.Content.Handler(ctx).ConfigureAwait(false);
                                         if (!ctx.Response.ResponseSent)
                                             throw new InvalidOperationException("Post-authentication content route for " + ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery + " did not send a response to the HTTP request.");
                                         return;

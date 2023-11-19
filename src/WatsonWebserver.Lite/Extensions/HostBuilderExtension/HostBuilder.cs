@@ -146,21 +146,6 @@ namespace WatsonWebserver.Lite.Extensions.HostBuilderExtension
         }
 
         /// <summary>
-        /// Apply a content handler.
-        /// </summary>
-        /// <param name="handler">Content route handler.</param>
-        /// <param name="requiresAuthentication">Flag to indicate whether or not the route requires authentication.</param>
-        /// <returns>Host builder.</returns>
-        public HostBuilder MapContentHandler(ContentRouteHandler handler, bool requiresAuthentication = false)
-        {
-            if (!requiresAuthentication)
-                Server.Routes.PreAuthentication.ContentHandler = handler;
-            else
-                Server.Routes.PostAuthentication.ContentHandler = handler;
-            return this;
-        }
-
-        /// <summary>
         /// Apply a static route.
         /// </summary>
         /// <param name="method">HTTP method.</param>

@@ -2,6 +2,12 @@
 
 ## Current Version
 
+v6.1.x
+
+- Breaking change to move ```ContentRouteHandler``` into ```ContentRouteManager```
+
+## Previous Versions
+
 v6.0.x
 
 - Major refactor with breaking changes to consolidate WatsonWebserver and HttpServerLite
@@ -20,8 +26,6 @@ v6.0.x
 - Added Test.Routing project and validated with both implementations
 - Added Test.HostBuilder project and validated with both implementations
 - Added CancellationToken and CancellationTokenSource to HttpContextBase
-
-## Previous Versions
 
 v5.1.x
 

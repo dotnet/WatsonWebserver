@@ -142,37 +142,6 @@
             <param name="guid">Globally-unique identifier.</param>
             <param name="metadata">User-supplied metadata.</param>
         </member>
-        <member name="T:WatsonWebserver.Core.ContentRouteHandler">
-            <summary>
-            Content route handler.  Handles GET and HEAD requests to content routes for files and directories. 
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.ContentRouteHandler.ContentFileMode">
-            <summary>
-            The FileMode value to use when accessing files within a content route via a FileStream.  Default is FileMode.Open.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.ContentRouteHandler.ContentFileAccess">
-            <summary>
-            The FileAccess value to use when accessing files within a content route via a FileStream.  Default is FileAccess.Read.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.ContentRouteHandler.ContentFileShare">
-            <summary>
-            The FileShare value to use when accessing files within a content route via a FileStream.  Default is FileShare.Read.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.ContentRouteHandler.Process">
-            <summary>
-            Method to invoke to process a content route request.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.Core.ContentRouteHandler.#ctor(WatsonWebserver.Core.ContentRouteManager)">
-            <summary>
-            Instantiate.
-            </summary>
-            <param name="routes">Content route manager.</param>
-        </member>
         <member name="T:WatsonWebserver.Core.ContentRouteManager">
             <summary>
             Content route manager.  Content routes are used for GET and HEAD requests to specific files or entire directories.
@@ -181,6 +150,26 @@
         <member name="P:WatsonWebserver.Core.ContentRouteManager.BaseDirectory">
             <summary>
             Base directory for files and directories accessible via content routes.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.ContentRouteManager.ContentFileMode">
+            <summary>
+            The FileMode value to use when accessing files within a content route via a FileStream.  Default is FileMode.Open.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.ContentRouteManager.ContentFileAccess">
+            <summary>
+            The FileAccess value to use when accessing files within a content route via a FileStream.  Default is FileAccess.Read.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.ContentRouteManager.ContentFileShare">
+            <summary>
+            The FileShare value to use when accessing files within a content route via a FileStream.  Default is FileShare.Read.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.ContentRouteManager.Handler">
+            <summary>
+            Content route handler.
             </summary>
         </member>
         <member name="M:WatsonWebserver.Core.ContentRouteManager.#ctor">
@@ -959,14 +948,6 @@
             <param name="requiresAuthentication">Flag to indicate whether or not the route requires authentication.</param>
             <returns>Host builder.</returns>
         </member>
-        <member name="M:WatsonWebserver.Core.IHostBuilder`2.MapContentHandler(WatsonWebserver.Core.ContentRouteHandler,System.Boolean)">
-            <summary>
-            Apply a content handler.
-            </summary>
-            <param name="handler">Content route handler.</param>
-            <param name="requiresAuthentication">Flag to indicate whether or not the route requires authentication.</param>
-            <returns>Host builder.</returns>
-        </member>
         <member name="M:WatsonWebserver.Core.IHostBuilder`2.MapStaticRoute(WatsonWebserver.Core.HttpMethod,System.String,`1,System.Boolean)">
             <summary>
             Apply a static route.
@@ -1292,11 +1273,6 @@
         <member name="P:WatsonWebserver.Core.RoutingGroup.Content">
             <summary>
             Content routes.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.RoutingGroup.ContentHandler">
-            <summary>
-            Handler for content route requests.
             </summary>
         </member>
         <member name="P:WatsonWebserver.Core.RoutingGroup.Parameter">

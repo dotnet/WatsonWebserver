@@ -56,14 +56,6 @@ namespace WatsonWebserver.Core
         HostBuilder MapContentRoute(string path, bool isDirectory, bool requiresAuthentication = false);
 
         /// <summary>
-        /// Apply a content handler.
-        /// </summary>
-        /// <param name="handler">Content route handler.</param>
-        /// <param name="requiresAuthentication">Flag to indicate whether or not the route requires authentication.</param>
-        /// <returns>Host builder.</returns>
-        HostBuilder MapContentHandler(ContentRouteHandler handler, bool requiresAuthentication = false);
-
-        /// <summary>
         /// Apply a static route.
         /// </summary>
         /// <param name="method">HTTP method.</param>

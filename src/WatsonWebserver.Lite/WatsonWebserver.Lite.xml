@@ -65,14 +65,6 @@
             <param name="requiresAuthentication">Flag to indicate whether or not the route requires authentication.</param>
             <returns>Host builder.</returns>
         </member>
-        <member name="M:WatsonWebserver.Lite.Extensions.HostBuilderExtension.HostBuilder.MapContentHandler(WatsonWebserver.Core.ContentRouteHandler,System.Boolean)">
-            <summary>
-            Apply a content handler.
-            </summary>
-            <param name="handler">Content route handler.</param>
-            <param name="requiresAuthentication">Flag to indicate whether or not the route requires authentication.</param>
-            <returns>Host builder.</returns>
-        </member>
         <member name="M:WatsonWebserver.Lite.Extensions.HostBuilderExtension.HostBuilder.MapStaticRoute(WatsonWebserver.Core.HttpMethod,System.String,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Boolean)">
             <summary>
             Apply a static route.

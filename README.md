@@ -16,24 +16,9 @@ Special thanks to @DamienDennehy for allowing us the use of the ```Watson.Core``
 
 This project is part of the [.NET Foundation](http://www.dotnetfoundation.org/projects) along with other projects like [the .NET Runtime](https://github.com/dotnet/runtime/).
 
-## New in v6.0.x
+## New in v6.1.x
 
-- Major refactor with breaking changes to consolidate WatsonWebserver and HttpServerLite
-- Consolidated core classes, enums, into WatsonWebserver.Core
-- Modified all test apps to support either webserver implementation
-- Consolidated and unified constructors across both projects
-- Reduced to a single listener prefix 
-- Removed attribute routes (crossing assembly boundaries and precluding use of AOT)
-- Modified Test projects to use base class (to enable testing with Lite version)
-- Modified Test projects to allow argument to be passed to indicate if the lite version should be used
-- Modified SSL configuration to use only X509Certificate2; derive if filename is supplied
-- HttpResponse.StatusDescription now based on StatusCode
-- Created a new routing architecture including routing groups, pre-auth routes, and post-auth routes
-- Amended HostBuilder extension to allow for balance of route types
-- Amended HostBuilder extension to allow for both pre-authentication and post-authentication routes
-- Added Test.Routing project and validated with both implementations
-- Added Test.HostBuilder project and validated with both implementations
-- Added CancellationToken and CancellationTokenSource to HttpContextBase
+- Breaking change to move ```ContentRouteHandler``` into ```ContentRouteManager```
 
 ## Special Thanks
 
@@ -42,7 +27,7 @@ I'd like to extend a special thanks to those that have helped make Watson Webser
 - @notesjor @shdwp @Tutch @GeoffMcGrath @jurkovic-nikola @joreg @Job79 @at1993 @MartyIX 
 - @pocsuka @orinem @deathbull @binozo @panboy75 @iain-cyborn @gamerhost31 @nhaberl 
 - @grgouala @sapurtcomputer30 @winkmichael @sqlnew @SaintedPsycho @Return25 @marcussacana 
-- @samisil @Jump-Suit @ChZhongPengCheng33 @bobaoapae @rodgers-r
+- @samisil @Jump-Suit @ChZhongPengCheng33 @bobaoapae @rodgers-r @john144
 
 ## Watson vs Watson.Lite
 
@@ -133,7 +118,6 @@ static void Main(string[] args)
   // add content routes
   server.Routes.PreAuthentication.Content.Add("/html/", true);
   server.Routes.PreAuthentication.Content.Add("/img/watson.jpg", false);
-  server.Routes.PreAuthentication.ContentHandler = new ContentRouteHandler(server.Routes.PreAuthentication.Content);
 
   // add static routes
   server.Routes.PreAuthentication.Static.Add(HttpMethod.GET, "/hello/", GetHelloRoute);
