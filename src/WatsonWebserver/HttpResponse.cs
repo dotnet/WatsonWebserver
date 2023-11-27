@@ -381,7 +381,9 @@ namespace WatsonWebserver
         private async Task<bool> SendInternalAsync(long contentLength, Stream stream, CancellationToken token = default)
         {
             if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and SendFinalChunk().");
-            ContentLength = contentLength;
+
+            if (ContentLength == 0 && contentLength > 0) ContentLength = contentLength;
+
             if (!_HeadersSet) SendHeaders();
 
             try
