@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -273,7 +274,11 @@ namespace WatsonWebserver.Core
 
             filePath = baseDirectory + filePath;
             filePath = filePath.Replace("+", " ").Replace("%20", " ");
-
+            if (filePath.EndsWith("/"))
+            {
+                filePath += "index.html";
+            }
+            filePath = WebUtility.UrlDecode(filePath);
             string contentType = GetContentType(filePath);
 
             if (!File.Exists(filePath))
