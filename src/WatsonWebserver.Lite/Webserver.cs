@@ -476,9 +476,9 @@ namespace WatsonWebserver.Lite
                         {
                             Events.Logger?.Invoke(_Header + "response sent during authentication for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
                                 ctx.Request.Method.ToString() + " " + ctx.Request.Url.Full);
-
-                            return;
                         }
+
+                        return;
                     }
                     else
                     {

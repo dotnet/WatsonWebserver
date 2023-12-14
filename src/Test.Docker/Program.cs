@@ -1,12 +1,13 @@
-﻿using System;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using WatsonWebserver;
-using WatsonWebserver.Core;
-
-namespace Test.Docker
+﻿namespace Test.Docker
 {
+    using System;
+    using System.IO;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using WatsonWebserver;
+    using WatsonWebserver.Core;
+    using WatsonWebserver.Lite;
+
     class Program
     {
         static bool _UsingLite = false;
