@@ -172,6 +172,11 @@
             Content route handler.
             </summary>
         </member>
+        <member name="P:WatsonWebserver.Core.ContentRouteManager.DefaultFiles">
+            <summary>
+            Default filenames on which to search when provided a root URL, e.g. /.
+            </summary>
+        </member>
         <member name="M:WatsonWebserver.Core.ContentRouteManager.#ctor">
             <summary>
             Instantiate the object.

@@ -15,7 +15,7 @@ namespace Test
     {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-        static bool _UsingLite = false;
+        static bool _UsingLite = true;
         static string _Hostname = "localhost";
         static int _Port = 8080;
         static WebserverSettings _Settings = null;
@@ -62,6 +62,12 @@ namespace Test
                 ctx.Response.ContentType = "text/plain";
                 await ctx.Response.Send("Login static route");
                 return;
+            });
+            _Server.Routes.PreAuthentication.Static.Add(HttpMethod.GET, "/redirect", async (ctx) =>
+            {
+                ctx.Response.Headers.Add("Location", "https://github.com/dotnet/watsonwebserver");
+                ctx.Response.StatusCode = 302;
+                await ctx.Response.Send();
             });
 
             _Server.Routes.PreAuthentication.Parameter.Matcher.Logger = Console.WriteLine;

@@ -48,7 +48,7 @@ namespace WatsonWebserver.Core
         {
             get
             {
-                return StatusCodeToDescription(StatusCode);
+                return GetStatusDescription(StatusCode);
             }
         }
 
@@ -181,7 +181,7 @@ namespace WatsonWebserver.Core
 
         #region Private-Methods
 
-        private string StatusCodeToDescription(int statusCode)
+        private string GetStatusDescription(int statusCode)
         {
             //
             // Helpful links:
@@ -226,7 +226,7 @@ namespace WatsonWebserver.Core
                 case 301:
                     return "Moved Permanently";
                 case 302:
-                    return "Found";
+                    return "Moved Temporarily";
                 case 303:
                     return "See Other";
                 case 304:
@@ -272,7 +272,7 @@ namespace WatsonWebserver.Core
                     return "URI Too Long";
                 case 415:
                     return "Unsupported Media Type";
-                case 416: 
+                case 416:
                     return "Range Not Satisfiable";
                 case 417:
                     return "Expectation Failed";

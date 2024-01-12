@@ -65,6 +65,22 @@ namespace WatsonWebserver.Core
             }
         }
 
+        /// <summary>
+        /// Default filenames on which to search when provided a root URL, e.g. /.
+        /// </summary>
+        public List<string> DefaultFiles
+        {
+            get
+            {
+                return _DefaultFiles;
+            }
+            set
+            {
+                if (value == null) value = new List<string>();
+                _DefaultFiles = value;
+            }
+        }
+
         #endregion
 
         #region Private-Members
@@ -73,6 +89,21 @@ namespace WatsonWebserver.Core
         private readonly object _Lock = new object();
         private string _BaseDirectory = AppDomain.CurrentDomain.BaseDirectory;
         private Func<HttpContextBase, Task> _Handler = null;
+        private List<string> _DefaultFiles = new List<string>
+        {
+            "index.html",
+            "index.html",
+            "default.html",
+            "default.htm",
+            "home.html",
+            "home.htm",
+            "home.cgi",
+            "welcome.html",
+            "welcome.htm",
+            "index.php",
+            "default.aspx",
+            "default.asp"
+        };
 
         #endregion
 
@@ -253,6 +284,10 @@ namespace WatsonWebserver.Core
             if (ctx.Request == null) throw new ArgumentNullException(nameof(ctx.Request));
             if (ctx.Response == null) throw new ArgumentNullException(nameof(ctx.Response));
 
+            string baseDirectory = BaseDirectory;
+            baseDirectory = baseDirectory.Replace("\\", "/");
+            if (!baseDirectory.EndsWith("/")) baseDirectory += "/";
+
             if (ctx.Request.Method != HttpMethod.GET
                 && ctx.Request.Method != HttpMethod.HEAD)
             {
@@ -267,12 +302,27 @@ namespace WatsonWebserver.Core
                 while (filePath.StartsWith("/")) filePath = filePath.Substring(1);
             }
 
-            string baseDirectory = BaseDirectory;
-            baseDirectory = baseDirectory.Replace("\\", "/");
-            if (!baseDirectory.EndsWith("/")) baseDirectory += "/";
+            bool isDirectory = 
+                filePath.EndsWith("/") 
+                || String.IsNullOrEmpty(filePath)
+                || Directory.Exists(baseDirectory + filePath);
+
+            if (isDirectory && !filePath.EndsWith("/")) filePath += "/";
 
             filePath = baseDirectory + filePath;
             filePath = filePath.Replace("+", " ").Replace("%20", " ");
+
+            if (isDirectory && _DefaultFiles.Count > 0)
+            {
+                foreach (string defaultFile in _DefaultFiles)
+                {
+                    if (File.Exists(filePath + defaultFile))
+                    {
+                        filePath = filePath + defaultFile;
+                        break;
+                    }
+                }
+            }
 
             string contentType = GetContentType(filePath);
 
