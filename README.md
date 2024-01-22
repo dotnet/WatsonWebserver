@@ -27,7 +27,7 @@ I'd like to extend a special thanks to those that have helped make Watson Webser
 - @notesjor @shdwp @Tutch @GeoffMcGrath @jurkovic-nikola @joreg @Job79 @at1993 @MartyIX 
 - @pocsuka @orinem @deathbull @binozo @panboy75 @iain-cyborn @gamerhost31 @nhaberl 
 - @grgouala @sapurtcomputer30 @winkmichael @sqlnew @SaintedPsycho @Return25 @marcussacana 
-- @samisil @Jump-Suit @ChZhongPengCheng33 @bobaoapae @rodgers-r @john144 @zedle
+- @samisil @Jump-Suit @ChZhongPengCheng33 @bobaoapae @rodgers-r @john144 @zedle @GitHubProUser67
 
 ## Watson vs Watson.Lite
 

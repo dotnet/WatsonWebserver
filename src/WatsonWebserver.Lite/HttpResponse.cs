@@ -585,12 +585,11 @@ namespace WatsonWebserver.Lite
                 {
                     await _Stream.WriteAsync(headers, 0, headers.Length, token).ConfigureAwait(false);
                     await _Stream.FlushAsync(token).ConfigureAwait(false);
-                    _HeadersSent = true; // We use the flag at our advantage, so we can effectively check for dead wires.
+                    _HeadersSent = true; 
                 }
                 catch (ObjectDisposedException)
                 {
-                    /* Always check if the stream is disposed, some clients are picky about this and cut the wire in the middle of a request.
-                     * C# documentation explicitly mention catching the disposed object, as we cannot know in advance if the stream is disposed. */
+                    return false;
                 }
             }
 
@@ -621,8 +620,7 @@ namespace WatsonWebserver.Lite
                 }
                 catch (ObjectDisposedException)
                 {
-                    /* Always check if the stream is disposed, some clients are picky about this and cut the wire in the middle of a request.
-                     * C# documentation explicitly mention catching the disposed object, as we cannot know in advance if the stream is disposed. */
+                    return false;
                 }
             }
 
@@ -631,13 +629,11 @@ namespace WatsonWebserver.Lite
                 try
                 {
                     _Stream.Close();
-                    ResponseSent = true; /* We use the flag at our advantage, so we can effectively check for dead wires, sounds a bit unsafe,
-                                          * at this specific place but we can assume the stream was cut if the closing operation didn't complete. */
+                    ResponseSent = true;
                 }
                 catch (ObjectDisposedException)
                 {
-                    /* Always check if the stream is disposed, some clients are picky about this and cut the wire in the middle of a request.
-                     * C# documentation explicitly mention catching the disposed object, as we cannot know in advance if the stream is disposed. */
+                    return false;
                 }
             }
 
