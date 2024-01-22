@@ -588,7 +588,8 @@ namespace WatsonWebserver.Lite
                 }
                 catch (ObjectDisposedException)
                 {
-                    // Always check if the stream is disposed, some clients are picky about this and cut the wire in the middle of a request.
+                    /* Always check if the stream is disposed, some clients are picky about this and cut the wire in the middle of a request.
+                     * C# documentation explicitly mention catching the disposed object, as we cannot know in advance if the stream is disposed. */
                 }
                 _HeadersSent = true;
             }
