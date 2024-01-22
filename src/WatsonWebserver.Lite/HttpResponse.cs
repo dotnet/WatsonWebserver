@@ -581,9 +581,17 @@ namespace WatsonWebserver.Lite
             if (!_HeadersSent)
             {
                 byte[] headers = GetHeaderBytes(); 
-                await _Stream.WriteAsync(headers, 0, headers.Length, token).ConfigureAwait(false);
-                await _Stream.FlushAsync(token).ConfigureAwait(false);
-                _HeadersSent = true;
+                try
+                {
+                    await _Stream.WriteAsync(headers, 0, headers.Length, token).ConfigureAwait(false);
+                    await _Stream.FlushAsync(token).ConfigureAwait(false);
+                    _HeadersSent = true; // We use the flag at our advantage, so we can effectively check for dead wires.
+                }
+                catch (ObjectDisposedException)
+                {
+                    /* Always check if the stream is disposed, some clients are picky about this and cut the wire in the middle of a request.
+                     * C# documentation explicitly mention catching the disposed object, as we cannot know in advance if the stream is disposed. */
+                }
             }
 
             if (contentLength > 0 && stream != null && stream.CanRead)
@@ -593,27 +601,44 @@ namespace WatsonWebserver.Lite
                 byte[] buffer = new byte[_StreamBufferSize];
                 int bytesToRead = _StreamBufferSize;
                 int bytesRead = 0;
-
-                while (bytesRemaining > 0)
-                {
-                    if (bytesRemaining > _StreamBufferSize) bytesToRead = _StreamBufferSize;
-                    else bytesToRead = (int)bytesRemaining;
-
-                    bytesRead = await stream.ReadAsync(buffer, 0, bytesToRead, token).ConfigureAwait(false);
-                    if (bytesRead > 0)
-                    { 
-                        await _Stream.WriteAsync(buffer, 0, bytesRead, token).ConfigureAwait(false);
-                        bytesRemaining -= bytesRead;
-                    }
-                }
                  
-                await _Stream.FlushAsync(token).ConfigureAwait(false);
+                try
+                {
+                    while (bytesRemaining > 0)
+                    {
+                        if (bytesRemaining > _StreamBufferSize) bytesToRead = _StreamBufferSize;
+                        else bytesToRead = (int)bytesRemaining;
+
+                        bytesRead = await stream.ReadAsync(buffer, 0, bytesToRead, token).ConfigureAwait(false);
+                        if (bytesRead > 0)
+                        { 
+                            await _Stream.WriteAsync(buffer, 0, bytesRead, token).ConfigureAwait(false);
+                            bytesRemaining -= bytesRead;
+                        }
+                    }
+				
+                    await _Stream.FlushAsync(token).ConfigureAwait(false);
+                }
+                catch (ObjectDisposedException)
+                {
+                    /* Always check if the stream is disposed, some clients are picky about this and cut the wire in the middle of a request.
+                     * C# documentation explicitly mention catching the disposed object, as we cannot know in advance if the stream is disposed. */
+                }
             }
 
             if (close)
             { 
-                _Stream.Close();
-                ResponseSent = true;
+                try
+                {
+                    _Stream.Close();
+                    ResponseSent = true; /* We use the flag at our advantage, so we can effectively check for dead wires, sounds a bit unsafe,
+                                          * at this specific place but we can assume the stream was cut if the closing operation didn't complete. */
+                }
+                catch (ObjectDisposedException)
+                {
+                    /* Always check if the stream is disposed, some clients are picky about this and cut the wire in the middle of a request.
+                     * C# documentation explicitly mention catching the disposed object, as we cannot know in advance if the stream is disposed. */
+                }
             }
 
             return true;
