@@ -601,30 +601,22 @@ namespace WatsonWebserver.Lite
                 byte[] buffer = new byte[_StreamBufferSize];
                 int bytesToRead = _StreamBufferSize;
                 int bytesRead = 0;
-
-                while (bytesRemaining > 0)
-                {
-                    if (bytesRemaining > _StreamBufferSize) bytesToRead = _StreamBufferSize;
-                    else bytesToRead = (int)bytesRemaining;
-
-                    bytesRead = await stream.ReadAsync(buffer, 0, bytesToRead, token).ConfigureAwait(false);
-                    if (bytesRead > 0)
-                    { 
-                        try
-                        {
-                            await _Stream.WriteAsync(buffer, 0, bytesRead, token).ConfigureAwait(false);
-                        }
-                        catch (ObjectDisposedException)
-                        {
-                            /* Always check if the stream is disposed, some clients are picky about this and cut the wire in the middle of a request.
-                             * C# documentation explicitly mention catching the disposed object, as we cannot know in advance if the stream is disposed. */
-                        }
-                        bytesRemaining -= bytesRead;
-                    }
-                }
                  
                 try
                 {
+                    while (bytesRemaining > 0)
+                    {
+                        if (bytesRemaining > _StreamBufferSize) bytesToRead = _StreamBufferSize;
+                        else bytesToRead = (int)bytesRemaining;
+
+                        bytesRead = await stream.ReadAsync(buffer, 0, bytesToRead, token).ConfigureAwait(false);
+                        if (bytesRead > 0)
+                        { 
+                            await _Stream.WriteAsync(buffer, 0, bytesRead, token).ConfigureAwait(false);
+                            bytesRemaining -= bytesRead;
+                        }
+                    }
+				
                     await _Stream.FlushAsync(token).ConfigureAwait(false);
                 }
                 catch (ObjectDisposedException)
