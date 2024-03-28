@@ -4,11 +4,11 @@
 		<TargetFrameworks>netstandard2.1;net462;net48;net6.0;net7.0;net8.0</TargetFrameworks>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<Version>6.1.6</Version>
+		<Version>6.1.8</Version>
 		<Description>Simple, fast, async C# web server for handling REST requests with SSL support, targeted to .NET Core, .NET Standard, and .NET Framework.</Description>
 		<Authors>Joel Christner</Authors>
 		<Company>Joel Christner</Company>
-		<Copyright>(c)2023 Joel Christner</Copyright>
+		<Copyright>(c)2024 Joel Christner</Copyright>
 		<PackageProjectUrl>https://github.com/dotnet/WatsonWebserver</PackageProjectUrl>
 		<PackageLicenseUrl></PackageLicenseUrl>
 		<RepositoryUrl>https://github.com/dotnet/WatsonWebserver</RepositoryUrl>
@@ -20,8 +20,6 @@
 		<PackageIconUrl></PackageIconUrl>
 		<PackageLicenseFile>LICENSE.md</PackageLicenseFile>
 		<PackageIcon>watson.png</PackageIcon>
-		<SignAssembly>True</SignAssembly>
-		<AssemblyOriginatorKeyFile>..\WatsonWebserver.snk</AssemblyOriginatorKeyFile>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<IncludeSymbols>True</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
@@ -69,12 +67,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="IpMatcher" Version="1.0.4.4" />
-		<PackageReference Include="RegexMatcher" Version="1.0.8" />
-		<PackageReference Include="System.Text.Json" Version="8.0.1" />
-		<PackageReference Include="Timestamps" Version="1.0.6" />
-		<PackageReference Include="UrlMatcher" Version="2.0.1" />
-		<PackageReference Include="Watson.Core" Version="6.1.6" />
+		<PackageReference Include="Watson.Core" Version="6.1.8" />
 	</ItemGroup>
 
 	<ItemGroup>

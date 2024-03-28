@@ -2,9 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.1;net462;net48;net6.0;net7.0;net8.0</TargetFrameworks>
-		<Version>6.1.7</Version>
-		<SignAssembly>True</SignAssembly>
-		<AssemblyOriginatorKeyFile>..\WatsonWebserver.snk</AssemblyOriginatorKeyFile>
+		<Version>6.1.8</Version>
 		<PackageId>Watson.Core</PackageId>
 		<Title>Watson Webserver Core</Title>
 		<Company>Joel Christner</Company>
