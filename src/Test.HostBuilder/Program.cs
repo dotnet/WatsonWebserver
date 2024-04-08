@@ -45,7 +45,7 @@ namespace Test.HostBuilder
                         await ctx.Response.Send();
                         return;
                     }, false)
-                    .MapParameteRoute(HttpMethod.GET, "/preauth/parameter/{id}", async (HttpContextBase ctx) =>
+                    .MapParameterRoute(HttpMethod.GET, "/preauth/parameter/{id}", async (HttpContextBase ctx) =>
                     {
                         Console.WriteLine("| Responding from pre-authentication parameter route /preauth/parameter/" + ctx.Request.Url.Parameters["id"]);
                         await ctx.Response.Send();
@@ -65,7 +65,7 @@ namespace Test.HostBuilder
                         await ctx.Response.Send();
                         return;
                     }, false)
-                    .MapParameteRoute(HttpMethod.GET, "/postauth/parameter/{id}", async (HttpContextBase ctx) =>
+                    .MapParameterRoute(HttpMethod.GET, "/postauth/parameter/{id}", async (HttpContextBase ctx) =>
                     {
                         Console.WriteLine("| Responding from post-authentication parameter route /postauth/parameter/" + ctx.Request.Url.Parameters["id"]);
                         await ctx.Response.Send();
@@ -92,7 +92,7 @@ namespace Test.HostBuilder
                         await ctx.Response.Send();
                         return;
                     }, false)
-                    .MapParameteRoute(HttpMethod.GET, "/preauth/parameter/{id}", async (HttpContextBase ctx) =>
+                    .MapParameterRoute(HttpMethod.GET, "/preauth/parameter/{id}", async (HttpContextBase ctx) =>
                     {
                         Console.WriteLine("| Responding from pre-authentication parameter route /preauth/parameter/" + ctx.Request.Url.Parameters["id"]);
                         await ctx.Response.Send();
@@ -112,7 +112,7 @@ namespace Test.HostBuilder
                         await ctx.Response.Send();
                         return;
                     }, true)
-                    .MapParameteRoute(HttpMethod.GET, "/postauth/parameter/{id}", async (HttpContextBase ctx) =>
+                    .MapParameterRoute(HttpMethod.GET, "/postauth/parameter/{id}", async (HttpContextBase ctx) =>
                     {
                         Console.WriteLine("| Responding from post-authentication parameter route /postauth/parameter/" + ctx.Request.Url.Parameters["id"]);
                         await ctx.Response.Send();

@@ -73,8 +73,19 @@ namespace WatsonWebserver.Core
         /// <param name="action">Action.</param>
         /// <param name="requiresAuthentication">Flag to indicate whether or not the route requires authentication.</param>
         /// <returns>Host builder.</returns>
+        [Obsolete("Use MapParameterRoute instead.")]
         HostBuilder MapParameteRoute(HttpMethod method, string path, InputAction action, bool requiresAuthentication = false);
 
+        /// <summary>
+        /// Apply a parameter route.
+        /// </summary>
+        /// <param name="method">HTTP method.</param>
+        /// <param name="path">Route path.</param>
+        /// <param name="action">Action.</param>
+        /// <param name="requiresAuthentication">Flag to indicate whether or not the route requires authentication.</param>
+        /// <returns>Host builder.</returns>
+        HostBuilder MapParameterRoute(HttpMethod method, string path, InputAction action, bool requiresAuthentication = false);
+        
         /// <summary>
         /// Apply a dynamic route.
         /// </summary>
