@@ -172,6 +172,19 @@ namespace WatsonWebserver.Extensions.HostBuilderExtension
         /// <returns>Host builder.</returns>
         public HostBuilder MapParameteRoute(HttpMethod method, string path, Func<HttpContextBase, Task> action, bool requiresAuthentication = false)
         {
+            return MapParameterRoute(method, path, action, requiresAuthentication);
+        }
+        
+        /// <summary>
+        /// Apply a parameter route.
+        /// </summary>
+        /// <param name="method">HTTP method.</param>
+        /// <param name="path">Route path.</param>
+        /// <param name="action">Action.</param>
+        /// <param name="requiresAuthentication">Boolean to indicate if the route requires authentication.</param>
+        /// <returns>Host builder.</returns>
+        public HostBuilder MapParameterRoute(HttpMethod method, string path, Func<HttpContextBase, Task> action, bool requiresAuthentication = false)
+        {
             if (!requiresAuthentication)
                 Server.Routes.PreAuthentication.Parameter.Add(method, path, action);
             else

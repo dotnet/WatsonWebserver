@@ -85,6 +85,16 @@
             <param name="requiresAuthentication">Boolean to indicate if the route requires authentication.</param>
             <returns>Host builder.</returns>
         </member>
+        <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder.MapParameterRoute(WatsonWebserver.Core.HttpMethod,System.String,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Boolean)">
+            <summary>
+                Apply a parameter route.
+            </summary>
+            <param name="method">HTTP method.</param>
+            <param name="path">Route path.</param>
+            <param name="action">Action.</param>
+            <param name="requiresAuthentication">Boolean to indicate if the route requires authentication.</param>
+            <returns>Host builder.</returns>
+        </member>
         <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder.MapDynamicRoute(WatsonWebserver.Core.HttpMethod,System.Text.RegularExpressions.Regex,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Boolean)">
             <summary>
             Apply a dynamic route.

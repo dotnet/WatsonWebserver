@@ -973,6 +973,16 @@
             <param name="requiresAuthentication">Flag to indicate whether or not the route requires authentication.</param>
             <returns>Host builder.</returns>
         </member>
+        <member name="M:WatsonWebserver.Core.IHostBuilder`2.MapParameterRoute(WatsonWebserver.Core.HttpMethod,System.String,`1,System.Boolean)">
+            <summary>
+                Apply a parameter route.
+            </summary>
+            <param name="method">HTTP method.</param>
+            <param name="path">Route path.</param>
+            <param name="action">Action.</param>
+            <param name="requiresAuthentication">Flag to indicate whether or not the route requires authentication.</param>
+            <returns>Host builder.</returns>
+        </member>
         <member name="M:WatsonWebserver.Core.IHostBuilder`2.MapDynamicRoute(WatsonWebserver.Core.HttpMethod,System.Text.RegularExpressions.Regex,`1,System.Boolean)">
             <summary>
             Apply a dynamic route.
