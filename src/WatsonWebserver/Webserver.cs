@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Text.Json.Serialization;
 using WatsonWebserver.Core;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace WatsonWebserver
 {
@@ -554,7 +555,10 @@ namespace WatsonWebserver
                             {
                                 ctx.Response.StatusCode = 404;
                                 ctx.Response.ContentType = DefaultPages.Pages[404].ContentType;
-                                await ctx.Response.Send(DefaultPages.Pages[404].Content).ConfigureAwait(false);
+                                if (ctx.Response.ChunkedTransfer)
+                                    await ctx.Response.SendFinalChunk(Encoding.UTF8.GetBytes(DefaultPages.Pages[404].Content)).ConfigureAwait(false);
+                                else
+                                    await ctx.Response.Send(DefaultPages.Pages[404].Content).ConfigureAwait(false);
                                 return;
                             }
 
@@ -564,7 +568,10 @@ namespace WatsonWebserver
                         {
                             ctx.Response.StatusCode = 500;
                             ctx.Response.ContentType = DefaultPages.Pages[500].ContentType;
-                            await ctx.Response.Send(DefaultPages.Pages[500].Content).ConfigureAwait(false);
+                            if (ctx.Response.ChunkedTransfer)
+                                await ctx.Response.SendFinalChunk(Encoding.UTF8.GetBytes(DefaultPages.Pages[500].Content)).ConfigureAwait(false);
+                            else
+                                await ctx.Response.Send(DefaultPages.Pages[500].Content).ConfigureAwait(false);
                             Events.HandleExceptionEncountered(this, new ExceptionEventArgs(ctx, eInner));
                         }
                         finally
@@ -577,7 +584,10 @@ namespace WatsonWebserver
                                 {
                                     ctx.Response.StatusCode = 500;
                                     ctx.Response.ContentType = DefaultPages.Pages[500].ContentType;
-                                    await ctx.Response.Send(DefaultPages.Pages[500].Content).ConfigureAwait(false);
+                                    if (ctx.Response.ChunkedTransfer)
+                                        await ctx.Response.SendFinalChunk(Encoding.UTF8.GetBytes(DefaultPages.Pages[500].Content)).ConfigureAwait(false);
+                                    else
+                                        await ctx.Response.Send(DefaultPages.Pages[500].Content).ConfigureAwait(false);
                                 }
 
                                 ctx.Timestamp.End = DateTime.UtcNow;

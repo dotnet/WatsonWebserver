@@ -618,7 +618,10 @@ namespace WatsonWebserver.Lite
                 {
                     ctx.Response.StatusCode = 404;
                     ctx.Response.ContentType = DefaultPages.Pages[404].ContentType;
-                    await ctx.Response.Send(DefaultPages.Pages[404].Content, _Token).ConfigureAwait(false);
+                    if (ctx.Response.ChunkedTransfer)
+                        await ctx.Response.SendFinalChunk(Encoding.UTF8.GetBytes(DefaultPages.Pages[404].Content), _Token).ConfigureAwait(false);
+                    else
+                        await ctx.Response.Send(DefaultPages.Pages[404].Content, _Token).ConfigureAwait(false);
                     return;
                 }
 
@@ -633,7 +636,10 @@ namespace WatsonWebserver.Lite
 
                     try
                     {
-                        await ctx.Response.Send(DefaultPages.Pages[500].Content, _Token).ConfigureAwait(false);
+                        if (ctx.Response.ChunkedTransfer)
+                            await ctx.Response.SendFinalChunk(Encoding.UTF8.GetBytes(DefaultPages.Pages[500].Content), _Token).ConfigureAwait(false);
+                        else
+                            await ctx.Response.Send(DefaultPages.Pages[500].Content, _Token).ConfigureAwait(false);
                     }
                     catch
                     {
@@ -657,7 +663,10 @@ namespace WatsonWebserver.Lite
                     {
                         ctx.Response.StatusCode = 500;
                         ctx.Response.ContentType = DefaultPages.Pages[500].ContentType;
-                        await ctx.Response.Send(DefaultPages.Pages[500].Content).ConfigureAwait(false);
+                        if (ctx.Response.ChunkedTransfer)
+                            await ctx.Response.SendFinalChunk(Encoding.UTF8.GetBytes(DefaultPages.Pages[500].Content)).ConfigureAwait(false);
+                        else
+                            await ctx.Response.Send(DefaultPages.Pages[500].Content).ConfigureAwait(false);
                     }
 
                     ctx.Timestamp.End = DateTime.UtcNow;
