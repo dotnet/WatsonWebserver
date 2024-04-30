@@ -975,7 +975,7 @@
         </member>
         <member name="M:WatsonWebserver.Core.IHostBuilder`2.MapParameterRoute(WatsonWebserver.Core.HttpMethod,System.String,`1,System.Boolean)">
             <summary>
-                Apply a parameter route.
+            Apply a parameter route.
             </summary>
             <param name="method">HTTP method.</param>
             <param name="path">Route path.</param>

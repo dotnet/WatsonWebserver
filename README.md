@@ -24,10 +24,11 @@ This project is part of the [.NET Foundation](http://www.dotnetfoundation.org/pr
 
 I'd like to extend a special thanks to those that have helped make Watson Webserver better.
 
-- @notesjor @shdwp @Tutch @GeoffMcGrath @jurkovic-nikola @joreg @Job79 @at1993 @MartyIX 
-- @pocsuka @orinem @deathbull @binozo @panboy75 @iain-cyborn @gamerhost31 @nhaberl 
-- @grgouala @sapurtcomputer30 @winkmichael @sqlnew @SaintedPsycho @Return25 @marcussacana 
-- @samisil @Jump-Suit @ChZhongPengCheng33 @bobaoapae @rodgers-r @john144 @zedle @GitHubProUser67
+- @notesjor @shdwp @Tutch @GeoffMcGrath @jurkovic-nikola @joreg @Job79 @at1993 
+- @MartyIX @pocsuka @orinem @deathbull @binozo @panboy75 @iain-cyborn @gamerhost31 
+- @nhaberl @grgouala @sapurtcomputer30 @winkmichael @sqlnew @SaintedPsycho @Return25 
+- @marcussacana @samisil @Jump-Suit @ChZhongPengCheng33 @bobaoapae @rodgers-r 
+- @john144 @zedle @GitHubProUser67 @bemoty
 
 ## Watson vs Watson.Lite
 

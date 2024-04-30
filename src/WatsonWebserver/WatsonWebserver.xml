@@ -87,7 +87,7 @@
         </member>
         <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder.MapParameterRoute(WatsonWebserver.Core.HttpMethod,System.String,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Boolean)">
             <summary>
-                Apply a parameter route.
+            Apply a parameter route.
             </summary>
             <param name="method">HTTP method.</param>
             <param name="path">Route path.</param>
