@@ -91,7 +91,7 @@ using WatsonWebserver;
 
 static void Main(string[] args)
 {
-  Server server = new Server("127.0.0.1", 9000, false, DefaultRoute);
+  Webserver server = new Server("127.0.0.1", 9000, false, DefaultRoute);
   server.Start();
   Console.ReadLine();
 }
@@ -114,7 +114,7 @@ using WatsonWebserver;
 
 static void Main(string[] args)
 {
-  Server server = new Server("127.0.0.1", 9000, false, DefaultRoute);
+  Webserver server = new Server("127.0.0.1", 9000, false, DefaultRoute);
 
   // add content routes
   server.Routes.PreAuthentication.Content.Add("/html/", true);
@@ -161,7 +161,7 @@ static async Task DefaultRoute(HttpContextBase ctx) =>
 ## Permit or Deny by IP or Network
 
 ```csharp
-Server server = new Server("127.0.0.1", 9000, false, DefaultRoute);
+Webserver server = new Server("127.0.0.1", 9000, false, DefaultRoute);
 
 // set default permit (permit any) with deny list to block specific IP addresses or networks
 server.Settings.AccessControl.Mode = AccessControlMode.DefaultPermit;
@@ -239,7 +239,7 @@ Refer to ```Test.HostBuilder``` for a full sample implementation.
 ```csharp
 using WatsonWebserver.Extensions.HostBuilderExtension;
 
-Server server = new HostBuilder("127.0.0.1", 8000, false, DefaultRoute)
+Webserver server = new HostBuilder("127.0.0.1", 8000, false, DefaultRoute)
   .MapStaticRoute(HttpMethod.GET, GetUrlsRoute, "/links")
   .MapStaticRoute(HttpMethod.POST, CheckLoginRoute, "/login")
   .MapStaticRoute(HttpMethod.POST, TestRoute, "/test")
