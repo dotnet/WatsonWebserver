@@ -69,7 +69,7 @@ namespace WatsonWebserver.Lite
             if (settings == null) settings = new WebserverSettings(); 
 
             Settings = settings;
-            WebserverConstants.HeaderHost = settings.Hostname + ":" + settings.Port;
+            Settings.Headers.DefaultHeaders[WebserverConstants.HeaderHost] = settings.Hostname + ":" + settings.Port;
             Routes = new WebserverRoutes(Settings, defaultRoute);
 
             _Header = "[Webserver " + Settings.Prefix + "] ";
