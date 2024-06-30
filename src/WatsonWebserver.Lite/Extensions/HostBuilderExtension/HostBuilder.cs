@@ -135,13 +135,18 @@ namespace WatsonWebserver.Lite.Extensions.HostBuilderExtension
         /// <param name="path">Route path.</param>
         /// <param name="isDirectory">Flag to indicate if the path is a directory.</param>
         /// <param name="requiresAuthentication">Flag to indicate whether or not the route requires authentication.</param>
+        /// <param name="exceptionHandler">Method to invoke when handling exceptions.</param>
         /// <returns>Host builder.</returns>
-        public HostBuilder MapContentRoute(string path, bool isDirectory, bool requiresAuthentication = false)
+        public HostBuilder MapContentRoute(
+            string path, 
+            bool isDirectory, 
+            bool requiresAuthentication = false,
+            Func<HttpContextBase, Exception, Task> exceptionHandler = null)
         {
             if (!requiresAuthentication)
-                Server.Routes.PreAuthentication.Content.Add(path, isDirectory);
+                Server.Routes.PreAuthentication.Content.Add(path, isDirectory, exceptionHandler);
             else
-                Server.Routes.PostAuthentication.Content.Add(path, isDirectory);
+                Server.Routes.PostAuthentication.Content.Add(path, isDirectory, exceptionHandler);
             return this;
         }
 
@@ -150,15 +155,21 @@ namespace WatsonWebserver.Lite.Extensions.HostBuilderExtension
         /// </summary>
         /// <param name="method">HTTP method.</param>
         /// <param name="path">Route path.</param>
-        /// <param name="action">Action.</param>
+        /// <param name="handler">Route handler.</param>
+        /// <param name="exceptionHandler">Method to invoke when handling exceptions.</param>
         /// <param name="requiresAuthentication">Boolean to indicate if the route requires authentication.</param>
         /// <returns>Host builder.</returns>
-        public HostBuilder MapStaticRoute(HttpMethod method, string path, Func<HttpContextBase, Task> action, bool requiresAuthentication = false)
+        public HostBuilder MapStaticRoute(
+            HttpMethod method, 
+            string path, 
+            Func<HttpContextBase, Task> handler,
+            Func<HttpContextBase, Exception, Task> exceptionHandler = null,
+            bool requiresAuthentication = false)
         {
             if (!requiresAuthentication)
-                Server.Routes.PreAuthentication.Static.Add(method, path, action);
+                Server.Routes.PreAuthentication.Static.Add(method, path, handler, exceptionHandler);
             else
-                Server.Routes.PostAuthentication.Static.Add(method, path, action);
+                Server.Routes.PostAuthentication.Static.Add(method, path, handler, exceptionHandler);
             return this;
         }
 
@@ -167,28 +178,40 @@ namespace WatsonWebserver.Lite.Extensions.HostBuilderExtension
         /// </summary>
         /// <param name="method">HTTP method.</param>
         /// <param name="path">Route path.</param>
-        /// <param name="action">Action.</param>
+        /// <param name="handler">Route handler.</param>
+        /// <param name="exceptionHandler">Method to invoke when handling exceptions.</param>
         /// <param name="requiresAuthentication">Boolean to indicate if the route requires authentication.</param>
         /// <returns>Host builder.</returns>
-        public HostBuilder MapParameteRoute(HttpMethod method, string path, Func<HttpContextBase, Task> action, bool requiresAuthentication = false)
+        public HostBuilder MapParameteRoute(
+            HttpMethod method, 
+            string path, 
+            Func<HttpContextBase, Task> handler,
+            Func<HttpContextBase, Exception, Task> exceptionHandler = null,
+            bool requiresAuthentication = false)
         {
-            return MapParameterRoute(method, path, action, requiresAuthentication);
+            return MapParameterRoute(method, path, handler, exceptionHandler, requiresAuthentication);
         }
-        
+
         /// <summary>
         /// Apply a parameter route.
         /// </summary>
         /// <param name="method">HTTP method.</param>
         /// <param name="path">Route path.</param>
-        /// <param name="action">Action.</param>
+        /// <param name="handler">Route handler.</param>
+        /// <param name="exceptionHandler">Method to invoke when handling exceptions.</param>
         /// <param name="requiresAuthentication">Boolean to indicate if the route requires authentication.</param>
         /// <returns>Host builder.</returns>
-        public HostBuilder MapParameterRoute(HttpMethod method, string path, Func<HttpContextBase, Task> action, bool requiresAuthentication = false)
+        public HostBuilder MapParameterRoute(
+            HttpMethod method, 
+            string path, 
+            Func<HttpContextBase, Task> handler, 
+            Func<HttpContextBase, Exception, Task> exceptionHandler = null,
+            bool requiresAuthentication = false)
         {
             if (!requiresAuthentication)
-                Server.Routes.PreAuthentication.Parameter.Add(method, path, action);
+                Server.Routes.PreAuthentication.Parameter.Add(method, path, handler, exceptionHandler);
             else
-                Server.Routes.PostAuthentication.Parameter.Add(method, path, action);
+                Server.Routes.PostAuthentication.Parameter.Add(method, path, handler, exceptionHandler);
             return this;
         }
 
@@ -197,15 +220,21 @@ namespace WatsonWebserver.Lite.Extensions.HostBuilderExtension
         /// </summary>
         /// <param name="method">HTTP method.</param>
         /// <param name="regex">Regular expression.</param>
-        /// <param name="action">Action.</param>
+        /// <param name="handler">Route handler.</param>
+        /// <param name="exceptionHandler">Method to invoke when handling exceptions.</param>
         /// <param name="requiresAuthentication">Boolean to indicate if the route requires authentication.</param>
         /// <returns>Host builder.</returns>
-        public HostBuilder MapDynamicRoute(HttpMethod method, Regex regex, Func<HttpContextBase, Task> action, bool requiresAuthentication = false)
+        public HostBuilder MapDynamicRoute(
+            HttpMethod method, 
+            Regex regex, 
+            Func<HttpContextBase, Task> handler, 
+            Func<HttpContextBase, Exception, Task> exceptionHandler = null,
+            bool requiresAuthentication = false)
         {
             if (!requiresAuthentication)
-                Server.Routes.PreAuthentication.Dynamic.Add(method, regex, action);
+                Server.Routes.PreAuthentication.Dynamic.Add(method, regex, handler, exceptionHandler);
             else
-                Server.Routes.PostAuthentication.Dynamic.Add(method, regex, action);
+                Server.Routes.PostAuthentication.Dynamic.Add(method, regex, handler, exceptionHandler);
             return this;
         }
 

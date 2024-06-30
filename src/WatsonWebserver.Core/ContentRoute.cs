@@ -35,6 +35,12 @@ namespace WatsonWebserver.Core
         public bool IsDirectory { get; set; } = false;
 
         /// <summary>
+        /// The handler to invoke when exceptions are raised.
+        /// </summary>
+        [JsonIgnore]
+        public Func<HttpContextBase, Exception, Task> ExceptionHandler { get; set; } = null;
+
+        /// <summary>
         /// User-supplied metadata.
         /// </summary>
         [JsonPropertyOrder(999)]
@@ -53,16 +59,24 @@ namespace WatsonWebserver.Core
         /// </summary> 
         /// <param name="path">The pattern against which the raw URL should be matched.</param>
         /// <param name="isDirectory">Indicates whether or not the path specifies a directory.  If so, any matching URL will be handled by the specified handler.</param> 
+        /// <param name="exceptionHandler">The method that should be called to handle exceptions.</param>
         /// <param name="guid">Globally-unique identifier.</param>
         /// <param name="metadata">User-supplied metadata.</param>
-        public ContentRoute(string path, bool isDirectory, Guid guid = default(Guid), object metadata = null)
+        public ContentRoute(
+            string path, 
+            bool isDirectory, 
+            Func<HttpContextBase, Exception, Task> exceptionHandler = null,
+            Guid guid = default(Guid), 
+            object metadata = null)
         {
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));            
             Path = path.ToLower();
             IsDirectory = isDirectory;
+            ExceptionHandler = exceptionHandler;
 
             if (guid == default(Guid)) GUID = Guid.NewGuid();
             else GUID = guid;
+
             if (metadata != null) Metadata = metadata;
         }
 

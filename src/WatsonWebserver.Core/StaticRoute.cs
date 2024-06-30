@@ -40,6 +40,12 @@ namespace WatsonWebserver.Core
         public Func<HttpContextBase, Task> Handler { get; set; } = null;
 
         /// <summary>
+        /// The handler to invoke when exceptions are raised.
+        /// </summary>
+        [JsonIgnore]
+        public Func<HttpContextBase, Exception, Task> ExceptionHandler { get; set; } = null;
+
+        /// <summary>
         /// User-supplied metadata.
         /// </summary>
         [JsonPropertyOrder(999)]
@@ -59,9 +65,16 @@ namespace WatsonWebserver.Core
         /// <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE, etc.</param>
         /// <param name="path">The raw URL, i.e. /foo/bar/.  Be sure this begins and ends with '/'.</param>
         /// <param name="handler">The method that should be called to handle the request.</param>
+        /// <param name="exceptionHandler">The method that should be called to handle exceptions.</param>
         /// <param name="guid">Globally-unique identifier.</param>
         /// <param name="metadata">User-supplied metadata.</param>
-        public StaticRoute(HttpMethod method, string path, Func<HttpContextBase, Task> handler, Guid guid = default, object metadata = null)
+        public StaticRoute(
+            HttpMethod method, 
+            string path, 
+            Func<HttpContextBase, Task> handler, 
+            Func<HttpContextBase, Exception, Task> exceptionHandler = null,
+            Guid guid = default, 
+            object metadata = null)
         {
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
             if (handler == null) throw new ArgumentNullException(nameof(handler));
@@ -73,6 +86,7 @@ namespace WatsonWebserver.Core
             if (!Path.EndsWith("/")) Path = Path + "/";
 
             Handler = handler;
+            ExceptionHandler = exceptionHandler;
 
             if (guid == default(Guid)) GUID = Guid.NewGuid();
             else GUID = guid;

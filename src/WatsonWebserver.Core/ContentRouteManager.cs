@@ -125,13 +125,19 @@ namespace WatsonWebserver.Core
         /// Add a route.
         /// </summary>
         /// <param name="path">URL path, i.e. /path/to/resource.</param>
-        /// <param name="isDirectory">True if the path represents a directory.</param>
+        /// <param name="isDirectory">True if the path represents a directory.</param> 
+        /// <param name="exceptionHandler">The method that should be called to handle exceptions.</param>
         /// <param name="guid">Globally-unique identifier.</param>
         /// <param name="metadata">User-supplied metadata.</param>
-        public void Add(string path, bool isDirectory, Guid guid = default(Guid), object metadata = null)
+        public void Add(
+            string path, 
+            bool isDirectory, 
+            Func<HttpContextBase, Exception, Task> exceptionHandler = null,
+            Guid guid = default(Guid), 
+            object metadata = null)
         {
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path)); 
-            Add(new ContentRoute(path, isDirectory, guid, metadata));
+            Add(new ContentRoute(path, isDirectory, exceptionHandler, guid, metadata));
         }
 
         /// <summary>

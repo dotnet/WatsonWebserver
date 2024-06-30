@@ -2,11 +2,15 @@
 
 ## Current Version
 
+v6.2.x
+
+- Support for specifying exception handler for static, content, parameter, and dynamic routes (thank you @nomadeon)
+
+## Previous Versions
+
 v6.1.x
 
 - Breaking change to move ```ContentRouteHandler``` into ```ContentRouteManager```
-
-## Previous Versions
 
 v6.0.x
 

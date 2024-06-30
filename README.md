@@ -16,9 +16,9 @@ Special thanks to @DamienDennehy for allowing us the use of the ```Watson.Core``
 
 This project is part of the [.NET Foundation](http://www.dotnetfoundation.org/projects) along with other projects like [the .NET Runtime](https://github.com/dotnet/runtime/).
 
-## New in v6.1.x
+## New in v6.2.x
 
-- Breaking change to move ```ContentRouteHandler``` into ```ContentRouteManager```
+- Support for specifying exception handler for static, content, parameter, and dynamic routes (thank you @nomadeon)
 
 ## Special Thanks
 
@@ -28,7 +28,7 @@ I'd like to extend a special thanks to those that have helped make Watson Webser
 - @MartyIX @pocsuka @orinem @deathbull @binozo @panboy75 @iain-cyborn @gamerhost31 
 - @nhaberl @grgouala @sapurtcomputer30 @winkmichael @sqlnew @SaintedPsycho @Return25 
 - @marcussacana @samisil @Jump-Suit @ChZhongPengCheng33 @bobaoapae @rodgers-r 
-- @john144 @zedle @GitHubProUser67 @bemoty @bemon
+- @john144 @zedle @GitHubProUser67 @bemoty @bemon @nomadeon
 
 ## Watson vs Watson.Lite
 
@@ -156,6 +156,20 @@ static async Task GetFoo(HttpContextBase ctx) =>
 
 static async Task DefaultRoute(HttpContextBase ctx) =>
   await ctx.Response.Send("Hello from the default route!");
+```
+
+## Route with Exception Handler
+
+```csharp
+server.Routes.PreAuthentication.Static.Add(HttpMethod.GET, "/hello/", GetHelloRoute, MyExceptionRoute);
+
+static async Task GetHelloRoute(HttpContextBase ctx) => throw new Exception("Whoops!");
+
+static async Task MyExceptionRoute(HttpContextBase ctx, Exception e)
+{
+  ctx.Response.StatusCode = 500;
+  await ctx.Response.Send(e.Message);
+}
 ```
 
 ## Permit or Deny by IP or Network

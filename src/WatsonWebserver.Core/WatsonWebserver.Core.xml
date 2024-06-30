@@ -128,17 +128,23 @@
             Indicates whether or not the path specifies a directory.  If so, any matching URL will be handled by the specified handler.
             </summary>
         </member>
+        <member name="P:WatsonWebserver.Core.ContentRoute.ExceptionHandler">
+            <summary>
+            The handler to invoke when exceptions are raised.
+            </summary>
+        </member>
         <member name="P:WatsonWebserver.Core.ContentRoute.Metadata">
             <summary>
             User-supplied metadata.
             </summary>
         </member>
-        <member name="M:WatsonWebserver.Core.ContentRoute.#ctor(System.String,System.Boolean,System.Guid,System.Object)">
+        <member name="M:WatsonWebserver.Core.ContentRoute.#ctor(System.String,System.Boolean,System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},System.Guid,System.Object)">
             <summary>
             Create a new route object.
             </summary> 
             <param name="path">The pattern against which the raw URL should be matched.</param>
             <param name="isDirectory">Indicates whether or not the path specifies a directory.  If so, any matching URL will be handled by the specified handler.</param> 
+            <param name="exceptionHandler">The method that should be called to handle exceptions.</param>
             <param name="guid">Globally-unique identifier.</param>
             <param name="metadata">User-supplied metadata.</param>
         </member>
@@ -182,12 +188,13 @@
             Instantiate the object.
             </summary> 
         </member>
-        <member name="M:WatsonWebserver.Core.ContentRouteManager.Add(System.String,System.Boolean,System.Guid,System.Object)">
+        <member name="M:WatsonWebserver.Core.ContentRouteManager.Add(System.String,System.Boolean,System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},System.Guid,System.Object)">
             <summary>
             Add a route.
             </summary>
             <param name="path">URL path, i.e. /path/to/resource.</param>
-            <param name="isDirectory">True if the path represents a directory.</param>
+            <param name="isDirectory">True if the path represents a directory.</param> 
+            <param name="exceptionHandler">The method that should be called to handle exceptions.</param>
             <param name="guid">Globally-unique identifier.</param>
             <param name="metadata">User-supplied metadata.</param>
         </member>
@@ -265,18 +272,24 @@
             The handler for the dynamic route.
             </summary>
         </member>
+        <member name="P:WatsonWebserver.Core.DynamicRoute.ExceptionHandler">
+            <summary>
+            The handler to invoke when exceptions are raised.
+            </summary>
+        </member>
         <member name="P:WatsonWebserver.Core.DynamicRoute.Metadata">
             <summary>
             User-supplied metadata.
             </summary>
         </member>
-        <member name="M:WatsonWebserver.Core.DynamicRoute.#ctor(WatsonWebserver.Core.HttpMethod,System.Text.RegularExpressions.Regex,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Guid,System.Object)">
+        <member name="M:WatsonWebserver.Core.DynamicRoute.#ctor(WatsonWebserver.Core.HttpMethod,System.Text.RegularExpressions.Regex,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},System.Guid,System.Object)">
             <summary>
             Create a new route object.
             </summary>
             <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE, etc.</param>
             <param name="path">The pattern against which the raw URL should be matched.</param>
-            <param name="handler">The method that should be called to handle the request.</param>
+            <param name="handler">The method that should be called to handle the request.</param> 
+            <param name="exceptionHandler">The method that should be called to handle exceptions.</param>
             <param name="guid">Globally-unique identifier.</param>
             <param name="metadata">User-supplied metadata.</param>
         </member>
@@ -296,13 +309,14 @@
             Instantiate the object.
             </summary> 
         </member>
-        <member name="M:WatsonWebserver.Core.DynamicRouteManager.Add(WatsonWebserver.Core.HttpMethod,System.Text.RegularExpressions.Regex,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Guid,System.Object)">
+        <member name="M:WatsonWebserver.Core.DynamicRouteManager.Add(WatsonWebserver.Core.HttpMethod,System.Text.RegularExpressions.Regex,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},System.Guid,System.Object)">
             <summary>
             Add a route.
             </summary>
             <param name="method">The HTTP method.</param>
             <param name="path">URL path, i.e. /path/to/resource.</param>
-            <param name="handler">Method to invoke.</param>
+            <param name="handler">Method to invoke.</param> 
+            <param name="exceptionHandler">The method that should be called to handle exceptions.</param>
             <param name="guid">Globally-unique identifier.</param>
             <param name="metadata">User-supplied metadata.</param>
         </member>
@@ -944,52 +958,57 @@
             <param name="handler">Handler.</param>
             <returns>Host builder.</returns>
         </member>
-        <member name="M:WatsonWebserver.Core.IHostBuilder`2.MapContentRoute(System.String,System.Boolean,System.Boolean)">
+        <member name="M:WatsonWebserver.Core.IHostBuilder`2.MapContentRoute(System.String,System.Boolean,System.Boolean,System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task})">
             <summary>
             Map a content route.
             </summary>
             <param name="path">Route path.</param>
             <param name="isDirectory">Flag to indicate if the path is a directory.</param>
             <param name="requiresAuthentication">Flag to indicate whether or not the route requires authentication.</param>
+            <param name="exceptionHandler">Method to invoke when handling exceptions.</param>
             <returns>Host builder.</returns>
         </member>
-        <member name="M:WatsonWebserver.Core.IHostBuilder`2.MapStaticRoute(WatsonWebserver.Core.HttpMethod,System.String,`1,System.Boolean)">
+        <member name="M:WatsonWebserver.Core.IHostBuilder`2.MapStaticRoute(WatsonWebserver.Core.HttpMethod,System.String,`1,System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},System.Boolean)">
             <summary>
             Apply a static route.
             </summary>
             <param name="method">HTTP method.</param>
             <param name="path">Route path.</param>
-            <param name="action">Action.</param>
+            <param name="handler">Route handler.</param>
+            <param name="exceptionHandler">Method to invoke when handling exceptions.</param>
             <param name="requiresAuthentication">Flag to indicate whether or not the route requires authentication.</param>
             <returns>Host builder.</returns>
         </member>
-        <member name="M:WatsonWebserver.Core.IHostBuilder`2.MapParameteRoute(WatsonWebserver.Core.HttpMethod,System.String,`1,System.Boolean)">
+        <member name="M:WatsonWebserver.Core.IHostBuilder`2.MapParameteRoute(WatsonWebserver.Core.HttpMethod,System.String,`1,System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},System.Boolean)">
             <summary>
             Apply a parameter route.
             </summary>
             <param name="method">HTTP method.</param>
             <param name="path">Route path.</param>
-            <param name="action">Action.</param>
+            <param name="handler">Route handler.</param>
+            <param name="exceptionHandler">Method to invoke when handling exceptions.</param>
             <param name="requiresAuthentication">Flag to indicate whether or not the route requires authentication.</param>
             <returns>Host builder.</returns>
         </member>
-        <member name="M:WatsonWebserver.Core.IHostBuilder`2.MapParameterRoute(WatsonWebserver.Core.HttpMethod,System.String,`1,System.Boolean)">
+        <member name="M:WatsonWebserver.Core.IHostBuilder`2.MapParameterRoute(WatsonWebserver.Core.HttpMethod,System.String,`1,System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},System.Boolean)">
             <summary>
             Apply a parameter route.
             </summary>
             <param name="method">HTTP method.</param>
             <param name="path">Route path.</param>
-            <param name="action">Action.</param>
+            <param name="handler">Route handler.</param>
+            <param name="exceptionHandler">Method to invoke when handling exceptions.</param>
             <param name="requiresAuthentication">Flag to indicate whether or not the route requires authentication.</param>
             <returns>Host builder.</returns>
         </member>
-        <member name="M:WatsonWebserver.Core.IHostBuilder`2.MapDynamicRoute(WatsonWebserver.Core.HttpMethod,System.Text.RegularExpressions.Regex,`1,System.Boolean)">
+        <member name="M:WatsonWebserver.Core.IHostBuilder`2.MapDynamicRoute(WatsonWebserver.Core.HttpMethod,System.Text.RegularExpressions.Regex,`1,System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},System.Boolean)">
             <summary>
             Apply a dynamic route.
             </summary>
             <param name="method">HTTP method.</param>
             <param name="regex">Regular expression.</param>
-            <param name="action">Action.</param>
+            <param name="handler">Route handler.</param>
+            <param name="exceptionHandler">Method to invoke when handling exceptions.</param>
             <param name="requiresAuthentication">Flag to indicate whether or not the route requires authentication.</param>
             <returns>Host builder.</returns>
         </member>
@@ -1056,18 +1075,24 @@
             The handler for the parameter route.
             </summary>
         </member>
+        <member name="P:WatsonWebserver.Core.ParameterRoute.ExceptionHandler">
+            <summary>
+            The handler to invoke when exceptions are raised.
+            </summary>
+        </member>
         <member name="P:WatsonWebserver.Core.ParameterRoute.Metadata">
             <summary>
             User-supplied metadata.
             </summary>
         </member>
-        <member name="M:WatsonWebserver.Core.ParameterRoute.#ctor(WatsonWebserver.Core.HttpMethod,System.String,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Guid,System.Object)">
+        <member name="M:WatsonWebserver.Core.ParameterRoute.#ctor(WatsonWebserver.Core.HttpMethod,System.String,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},System.Guid,System.Object)">
             <summary>
             Create a new route object.
             </summary>
             <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE, etc.</param>
             <param name="path">The pattern against which the raw URL should be matched.</param>
             <param name="handler">The method that should be called to handle the request.</param>
+            <param name="exceptionHandler">The method that should be called to handle exceptions.</param>
             <param name="guid">Globally-unique identifier.</param>
             <param name="metadata">User-supplied metadata.</param>
         </member>
@@ -1089,13 +1114,14 @@
             Instantiate the object.
             </summary> 
         </member>
-        <member name="M:WatsonWebserver.Core.ParameterRouteManager.Add(WatsonWebserver.Core.HttpMethod,System.String,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Guid,System.Object)">
+        <member name="M:WatsonWebserver.Core.ParameterRouteManager.Add(WatsonWebserver.Core.HttpMethod,System.String,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},System.Guid,System.Object)">
             <summary>
             Add a route.
             </summary>
             <param name="method">The HTTP method.</param>
             <param name="path">URL path, i.e. /path/to/resource.</param>
-            <param name="handler">Method to invoke.</param>
+            <param name="handler">Method to invoke.</param> 
+            <param name="exceptionHandler">The method that should be called to handle exceptions.</param>
             <param name="guid">Globally-unique identifier.</param>
             <param name="metadata">User-supplied metadata.</param>
         </member>
@@ -1330,18 +1356,24 @@
             The handler for the static route.
             </summary>
         </member>
+        <member name="P:WatsonWebserver.Core.StaticRoute.ExceptionHandler">
+            <summary>
+            The handler to invoke when exceptions are raised.
+            </summary>
+        </member>
         <member name="P:WatsonWebserver.Core.StaticRoute.Metadata">
             <summary>
             User-supplied metadata.
             </summary>
         </member>
-        <member name="M:WatsonWebserver.Core.StaticRoute.#ctor(WatsonWebserver.Core.HttpMethod,System.String,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Guid,System.Object)">
+        <member name="M:WatsonWebserver.Core.StaticRoute.#ctor(WatsonWebserver.Core.HttpMethod,System.String,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},System.Guid,System.Object)">
             <summary>
             Create a new route object.
             </summary>
             <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE, etc.</param>
             <param name="path">The raw URL, i.e. /foo/bar/.  Be sure this begins and ends with '/'.</param>
             <param name="handler">The method that should be called to handle the request.</param>
+            <param name="exceptionHandler">The method that should be called to handle exceptions.</param>
             <param name="guid">Globally-unique identifier.</param>
             <param name="metadata">User-supplied metadata.</param>
         </member>
@@ -1355,13 +1387,14 @@
             Instantiate the object.
             </summary> 
         </member>
-        <member name="M:WatsonWebserver.Core.StaticRouteManager.Add(WatsonWebserver.Core.HttpMethod,System.String,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Guid,System.Object)">
+        <member name="M:WatsonWebserver.Core.StaticRouteManager.Add(WatsonWebserver.Core.HttpMethod,System.String,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},System.Guid,System.Object)">
             <summary>
             Add a route.
             </summary>
             <param name="method">The HTTP method.</param>
             <param name="path">URL path, i.e. /path/to/resource.</param>
-            <param name="handler">Method to invoke.</param>
+            <param name="handler">Method to invoke.</param> 
+            <param name="exceptionHandler">The method that should be called to handle exceptions.</param>
             <param name="guid">Globally-unique identifier.</param>
             <param name="metadata">User-supplied metadata.</param>
         </member>

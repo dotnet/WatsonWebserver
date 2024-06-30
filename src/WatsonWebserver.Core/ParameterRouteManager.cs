@@ -59,17 +59,24 @@ namespace WatsonWebserver.Core
         /// </summary>
         /// <param name="method">The HTTP method.</param>
         /// <param name="path">URL path, i.e. /path/to/resource.</param>
-        /// <param name="handler">Method to invoke.</param>
+        /// <param name="handler">Method to invoke.</param> 
+        /// <param name="exceptionHandler">The method that should be called to handle exceptions.</param>
         /// <param name="guid">Globally-unique identifier.</param>
         /// <param name="metadata">User-supplied metadata.</param>
-        public void Add(HttpMethod method, string path, Func<HttpContextBase, Task> handler, Guid guid = default(Guid), object metadata = null)
+        public void Add(
+            HttpMethod method, 
+            string path, 
+            Func<HttpContextBase, Task> handler, 
+            Func<HttpContextBase, Exception, Task> exceptionHandler = null,
+            Guid guid = default(Guid), 
+            object metadata = null)
         {
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
             if (handler == null) throw new ArgumentNullException(nameof(handler));
 
             lock (_Lock)
             {
-                ParameterRoute pr = new ParameterRoute(method, path, handler, guid, metadata);
+                ParameterRoute pr = new ParameterRoute(method, path, handler, exceptionHandler, guid, metadata);
                 _Routes.Add(pr, handler);
             }
         }

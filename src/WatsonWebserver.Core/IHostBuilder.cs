@@ -52,48 +52,77 @@ namespace WatsonWebserver.Core
         /// <param name="path">Route path.</param>
         /// <param name="isDirectory">Flag to indicate if the path is a directory.</param>
         /// <param name="requiresAuthentication">Flag to indicate whether or not the route requires authentication.</param>
+        /// <param name="exceptionHandler">Method to invoke when handling exceptions.</param>
         /// <returns>Host builder.</returns>
-        HostBuilder MapContentRoute(string path, bool isDirectory, bool requiresAuthentication = false);
+        HostBuilder MapContentRoute(
+            string path, 
+            bool isDirectory, 
+            bool requiresAuthentication = false,
+            Func<HttpContextBase, Exception, Task> exceptionHandler = null);
 
         /// <summary>
         /// Apply a static route.
         /// </summary>
         /// <param name="method">HTTP method.</param>
         /// <param name="path">Route path.</param>
-        /// <param name="action">Action.</param>
+        /// <param name="handler">Route handler.</param>
+        /// <param name="exceptionHandler">Method to invoke when handling exceptions.</param>
         /// <param name="requiresAuthentication">Flag to indicate whether or not the route requires authentication.</param>
         /// <returns>Host builder.</returns>
-        HostBuilder MapStaticRoute(HttpMethod method, string path, InputAction action, bool requiresAuthentication = false);
+        HostBuilder MapStaticRoute(
+            HttpMethod method, 
+            string path, 
+            InputAction handler,
+            Func<HttpContextBase, Exception, Task> exceptionHandler = null,
+            bool requiresAuthentication = false);
 
         /// <summary>
         /// Apply a parameter route.
         /// </summary>
         /// <param name="method">HTTP method.</param>
         /// <param name="path">Route path.</param>
-        /// <param name="action">Action.</param>
+        /// <param name="handler">Route handler.</param>
+        /// <param name="exceptionHandler">Method to invoke when handling exceptions.</param>
         /// <param name="requiresAuthentication">Flag to indicate whether or not the route requires authentication.</param>
         /// <returns>Host builder.</returns>
         [Obsolete("Use MapParameterRoute instead.")]
-        HostBuilder MapParameteRoute(HttpMethod method, string path, InputAction action, bool requiresAuthentication = false);
+        HostBuilder MapParameteRoute(
+            HttpMethod method, 
+            string path, 
+            InputAction handler,
+            Func<HttpContextBase, Exception, Task> exceptionHandler = null,
+            bool requiresAuthentication = false);
 
         /// <summary>
         /// Apply a parameter route.
         /// </summary>
         /// <param name="method">HTTP method.</param>
         /// <param name="path">Route path.</param>
-        /// <param name="action">Action.</param>
+        /// <param name="handler">Route handler.</param>
+        /// <param name="exceptionHandler">Method to invoke when handling exceptions.</param>
         /// <param name="requiresAuthentication">Flag to indicate whether or not the route requires authentication.</param>
         /// <returns>Host builder.</returns>
-        HostBuilder MapParameterRoute(HttpMethod method, string path, InputAction action, bool requiresAuthentication = false);
-        
+        HostBuilder MapParameterRoute(
+            HttpMethod method, 
+            string path, 
+            InputAction handler,
+            Func<HttpContextBase, Exception, Task> exceptionHandler = null,
+            bool requiresAuthentication = false);
+
         /// <summary>
         /// Apply a dynamic route.
         /// </summary>
         /// <param name="method">HTTP method.</param>
         /// <param name="regex">Regular expression.</param>
-        /// <param name="action">Action.</param>
+        /// <param name="handler">Route handler.</param>
+        /// <param name="exceptionHandler">Method to invoke when handling exceptions.</param>
         /// <param name="requiresAuthentication">Flag to indicate whether or not the route requires authentication.</param>
         /// <returns>Host builder.</returns>
-        HostBuilder MapDynamicRoute(HttpMethod method, Regex regex, InputAction action, bool requiresAuthentication = false);
+        HostBuilder MapDynamicRoute(
+            HttpMethod method, 
+            Regex regex, 
+            InputAction handler,
+            Func<HttpContextBase, Exception, Task> exceptionHandler = null,
+            bool requiresAuthentication = false);
     }
 }

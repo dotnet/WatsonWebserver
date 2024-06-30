@@ -41,6 +41,12 @@ namespace WatsonWebserver.Core
         public Func<HttpContextBase, Task> Handler { get; set; } = null;
 
         /// <summary>
+        /// The handler to invoke when exceptions are raised.
+        /// </summary>
+        [JsonIgnore]
+        public Func<HttpContextBase, Exception, Task> ExceptionHandler { get; set; } = null;
+
+        /// <summary>
         /// User-supplied metadata.
         /// </summary>
         [JsonPropertyOrder(999)]
@@ -59,10 +65,17 @@ namespace WatsonWebserver.Core
         /// </summary>
         /// <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE, etc.</param>
         /// <param name="path">The pattern against which the raw URL should be matched.</param>
-        /// <param name="handler">The method that should be called to handle the request.</param>
+        /// <param name="handler">The method that should be called to handle the request.</param> 
+        /// <param name="exceptionHandler">The method that should be called to handle exceptions.</param>
         /// <param name="guid">Globally-unique identifier.</param>
         /// <param name="metadata">User-supplied metadata.</param>
-        public DynamicRoute(HttpMethod method, Regex path, Func<HttpContextBase, Task> handler, Guid guid = default(Guid), object metadata = null)
+        public DynamicRoute(
+            HttpMethod method, 
+            Regex path, 
+            Func<HttpContextBase, Task> handler, 
+            Func<HttpContextBase, Exception, Task> exceptionHandler = null,
+            Guid guid = default(Guid), 
+            object metadata = null)
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
             if (handler == null) throw new ArgumentNullException(nameof(handler));
@@ -70,6 +83,7 @@ namespace WatsonWebserver.Core
             Method = method;
             Path = path;
             Handler = handler;
+            ExceptionHandler = exceptionHandler;
 
             if (guid == default(Guid)) GUID = Guid.NewGuid();
             else GUID = guid;

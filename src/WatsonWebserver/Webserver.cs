@@ -313,7 +313,17 @@ namespace WatsonWebserver
 
                                         ctx.RouteType = RouteTypeEnum.Static;
                                         ctx.Route = sr;
-                                        await handler(ctx).ConfigureAwait(false);
+
+                                        try
+                                        {
+                                            await handler(ctx).ConfigureAwait(false);
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            if (sr.ExceptionHandler != null) await sr.ExceptionHandler(ctx, e);
+                                            else throw;
+                                        }
+
                                         if (!ctx.Response.ResponseSent) 
                                             throw new InvalidOperationException("Pre-authentication static route for " + ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery + " did not send a response to the HTTP request.");
                                         return;
@@ -338,8 +348,18 @@ namespace WatsonWebserver
 
                                         ctx.RouteType = RouteTypeEnum.Content;
                                         ctx.Route = cr;
-                                        await Routes.PreAuthentication.Content.Handler(ctx).ConfigureAwait(false);
-                                        if (!ctx.Response.ResponseSent) 
+
+                                        try
+                                        {
+                                            await Routes.PreAuthentication.Content.Handler(ctx).ConfigureAwait(false);
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            if (cr.ExceptionHandler != null) await cr.ExceptionHandler(ctx, e);
+                                            else throw;
+                                        }
+
+                                        if (!ctx.Response.ResponseSent)
                                             throw new InvalidOperationException("Pre-authentication content route for " + ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery + " did not send a response to the HTTP request.");
                                         return;
                                     }
@@ -365,7 +385,17 @@ namespace WatsonWebserver
 
                                         ctx.RouteType = RouteTypeEnum.Parameter;
                                         ctx.Route = pr;
-                                        await handler(ctx).ConfigureAwait(false);
+
+                                        try
+                                        {
+                                            await handler(ctx).ConfigureAwait(false);
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            if (pr.ExceptionHandler != null) await pr.ExceptionHandler(ctx, e);
+                                            else throw;
+                                        }
+
                                         if (!ctx.Response.ResponseSent)
                                             throw new InvalidOperationException("Pre-authentication parameter route for " + ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery + " did not send a response to the HTTP request.");
                                         return;
@@ -390,7 +420,17 @@ namespace WatsonWebserver
 
                                         ctx.RouteType = RouteTypeEnum.Dynamic;
                                         ctx.Route = dr;
-                                        await handler(ctx).ConfigureAwait(false);
+
+                                        try
+                                        {
+                                            await handler(ctx).ConfigureAwait(false);
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            if (dr.ExceptionHandler != null) await dr.ExceptionHandler(ctx, e);
+                                            else throw;
+                                        }
+
                                         if (!ctx.Response.ResponseSent)
                                             throw new InvalidOperationException("Pre-authentication dynamic route for " + ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery + " did not send a response to the HTTP request.");
                                         return;
@@ -445,7 +485,17 @@ namespace WatsonWebserver
 
                                         ctx.RouteType = RouteTypeEnum.Static;
                                         ctx.Route = sr;
-                                        await handler(ctx).ConfigureAwait(false);
+
+                                        try
+                                        {
+                                            await handler(ctx).ConfigureAwait(false);
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            if (sr.ExceptionHandler != null) await sr.ExceptionHandler(ctx, e);
+                                            else throw;
+                                        }
+
                                         if (!ctx.Response.ResponseSent)
                                             throw new InvalidOperationException("Post-authentication static route for " + ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery + " did not send a response to the HTTP request.");
                                         return;
@@ -469,8 +519,18 @@ namespace WatsonWebserver
                                         }
 
                                         ctx.RouteType = RouteTypeEnum.Content;
-                                        ctx.Route = cr; 
-                                        await Routes.PostAuthentication.Content.Handler(ctx).ConfigureAwait(false);
+                                        ctx.Route = cr;
+
+                                        try
+                                        {
+                                            await Routes.PreAuthentication.Content.Handler(ctx).ConfigureAwait(false);
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            if (cr.ExceptionHandler != null) await cr.ExceptionHandler(ctx, e);
+                                            else throw;
+                                        }
+
                                         if (!ctx.Response.ResponseSent)
                                             throw new InvalidOperationException("Post-authentication content route for " + ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery + " did not send a response to the HTTP request.");
                                         return;
@@ -497,7 +557,17 @@ namespace WatsonWebserver
 
                                         ctx.RouteType = RouteTypeEnum.Parameter;
                                         ctx.Route = pr;
-                                        await handler(ctx).ConfigureAwait(false);
+
+                                        try
+                                        {
+                                            await handler(ctx).ConfigureAwait(false);
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            if (pr.ExceptionHandler != null) await pr.ExceptionHandler(ctx, e);
+                                            else throw;
+                                        }
+
                                         if (!ctx.Response.ResponseSent)
                                             throw new InvalidOperationException("Post-authentication parameter route for " + ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery + " did not send a response to the HTTP request.");
                                         return;
@@ -522,7 +592,17 @@ namespace WatsonWebserver
 
                                         ctx.RouteType = RouteTypeEnum.Dynamic;
                                         ctx.Route = dr;
-                                        await handler(ctx).ConfigureAwait(false);
+
+                                        try
+                                        {
+                                            await handler(ctx).ConfigureAwait(false);
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            if (dr.ExceptionHandler != null) await dr.ExceptionHandler(ctx, e);
+                                            else throw;
+                                        }
+
                                         if (!ctx.Response.ResponseSent)
                                             throw new InvalidOperationException("Post-authentication dynamic route for " + ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery + " did not send a response to the HTTP request.");
                                         return;

@@ -1,21 +1,21 @@
 ﻿using GetSomeInput;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using WatsonWebserver;
-using WatsonWebserver.Core;
-using WatsonWebserver.Lite;
-
 namespace Test
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Text.RegularExpressions;
+    using System.Threading.Tasks;
+    using WatsonWebserver;
+    using WatsonWebserver.Core;
+    using WatsonWebserver.Lite;
+
     static class Program
     {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-        static bool _UsingLite = true;
+        static bool _UsingLite = false;
         static string _Hostname = "localhost";
         static int _Port = 8080;
         static WebserverSettings _Settings = null;
@@ -73,7 +73,7 @@ namespace Test
             _Server.Routes.PreAuthentication.Parameter.Matcher.Logger = Console.WriteLine;
             _Server.Routes.PreAuthentication.Parameter.Add(HttpMethod.GET, "/user/{id}", GetUserByIdRoute);
             _Server.Routes.PreAuthentication.Parameter.Add(HttpMethod.GET, "/{version}/param1/{id}", ParameterRoute1);
-            _Server.Routes.PreAuthentication.Parameter.Add(HttpMethod.GET, "/{version}/param1/{id}", ParameterRoute2, Guid.NewGuid(), "TestMetadata");
+            _Server.Routes.PreAuthentication.Parameter.Add(HttpMethod.GET, "/{version}/param1/{id}", ParameterRoute2, null, Guid.NewGuid(), "TestMetadata");
 
             _Server.Routes.PreAuthentication.Dynamic.Add(HttpMethod.GET, new Regex("^/bar$"), BarRoute);
             _Server.Routes.PreAuthentication.Dynamic.Add(HttpMethod.PUT, new Regex("^/foo$"), FooWithoutIdRoute);
