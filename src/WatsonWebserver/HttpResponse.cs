@@ -297,7 +297,7 @@ namespace WatsonWebserver
                 case 203:
                     return "Non-Authoritative Information";
                 case 204:
-                    return "No Contact";
+                    return "No Content";
                 case 205:
                     return "Reset Content";
                 case 206:
