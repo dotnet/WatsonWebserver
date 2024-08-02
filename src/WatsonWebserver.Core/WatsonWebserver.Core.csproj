@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.1;net462;net48;net6.0;net7.0;net8.0</TargetFrameworks>
-		<Version>6.2.1</Version>
+		<Version>6.2.2</Version>
 		<PackageId>Watson.Core</PackageId>
 		<Title>Watson Webserver Core</Title>
 		<Company>Joel Christner</Company>
@@ -84,7 +84,7 @@
 		<PackageReference Include="RegexMatcher" Version="1.0.8" />
 		<PackageReference Include="System.Text.Json" Version="8.0.4" />
 		<PackageReference Include="Timestamps" Version="1.0.9" />
-		<PackageReference Include="UrlMatcher" Version="2.0.1" />
+		<PackageReference Include="UrlMatcher" Version="3.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>

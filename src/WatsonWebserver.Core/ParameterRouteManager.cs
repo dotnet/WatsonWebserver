@@ -18,23 +18,10 @@ namespace WatsonWebserver.Core
     {
         #region Public-Members
 
-        /// <summary>
-        /// Directly access the underlying URL matching library.
-        /// This is helpful in case you want to specify the matching behavior should multiple matches exist.
-        /// </summary>
-        public Matcher Matcher
-        {
-            get
-            {
-                return _Matcher;
-            }
-        }
-
         #endregion
 
         #region Private-Members
 
-        private Matcher _Matcher = new Matcher();
         private readonly object _Lock = new object();
         private Dictionary<ParameterRoute, Func<HttpContextBase, Task>> _Routes = new Dictionary<ParameterRoute, Func<HttpContextBase, Task>>();
 
@@ -163,7 +150,7 @@ namespace WatsonWebserver.Core
             {
                 foreach (KeyValuePair<ParameterRoute, Func<HttpContextBase, Task>> route in _Routes)
                 {
-                    if (_Matcher.Match(
+                    if (Matcher.Match(
                         consolidatedPath,
                         BuildConsolidatedPath(route.Key.Method, route.Key.Path), 
                         out vals))

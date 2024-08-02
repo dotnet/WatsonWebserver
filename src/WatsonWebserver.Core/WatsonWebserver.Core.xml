@@ -1103,12 +1103,6 @@
             For a matching URL, the HttpRequest.Url.Parameters will contain a key called 'version' with the value found in the URL.
             </summary>
         </member>
-        <member name="P:WatsonWebserver.Core.ParameterRouteManager.Matcher">
-            <summary>
-            Directly access the underlying URL matching library.
-            This is helpful in case you want to specify the matching behavior should multiple matches exist.
-            </summary>
-        </member>
         <member name="M:WatsonWebserver.Core.ParameterRouteManager.#ctor">
             <summary>
             Instantiate the object.

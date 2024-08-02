@@ -70,10 +70,9 @@ namespace Test
                 await ctx.Response.Send();
             });
 
-            _Server.Routes.PreAuthentication.Parameter.Matcher.Logger = Console.WriteLine;
             _Server.Routes.PreAuthentication.Parameter.Add(HttpMethod.GET, "/user/{id}", GetUserByIdRoute);
             _Server.Routes.PreAuthentication.Parameter.Add(HttpMethod.GET, "/{version}/param1/{id}", ParameterRoute1);
-            _Server.Routes.PreAuthentication.Parameter.Add(HttpMethod.GET, "/{version}/param1/{id}", ParameterRoute2, null, Guid.NewGuid(), "TestMetadata");
+            _Server.Routes.PreAuthentication.Parameter.Add(HttpMethod.GET, "/{version}/param2/{id}", ParameterRoute2, null, Guid.NewGuid(), "TestMetadata");
 
             _Server.Routes.PreAuthentication.Dynamic.Add(HttpMethod.GET, new Regex("^/bar$"), BarRoute);
             _Server.Routes.PreAuthentication.Dynamic.Add(HttpMethod.PUT, new Regex("^/foo$"), FooWithoutIdRoute);
