@@ -26,7 +26,7 @@ I'd like to extend a special thanks to those that have helped make Watson Webser
 
 - @notesjor @shdwp @Tutch @GeoffMcGrath @jurkovic-nikola @joreg @Job79 @at1993 
 - @MartyIX @pocsuka @orinem @deathbull @binozo @panboy75 @iain-cyborn @gamerhost31 
-- @nhaberl @grgouala @sapurtcomputer30 @winkmichael @sqlnew @SaintedPsycho @Return25 
+- @nhaberl @grgouala @imrostami @winkmichael @sqlnew @SaintedPsycho @Return25 
 - @marcussacana @samisil @Jump-Suit @ChZhongPengCheng33 @bobaoapae @rodgers-r 
 - @john144 @zedle @GitHubProUser67 @bemoty @bemon @nomadeon
 
@@ -246,7 +246,7 @@ static async Task DownloadChunkedFile(HttpContextBase ctx)
 
 ## HostBuilder
 
-```HostBuilder``` helps you set up your server much more easily by introducing a chain of settings and routes instead of using the server class directly.  Special thanks to @sapurtcomputer30 for producing this fine feature!
+```HostBuilder``` helps you set up your server much more easily by introducing a chain of settings and routes instead of using the server class directly.  Special thanks to @imrostami for producing this fine feature!
 
 Refer to ```Test.HostBuilder``` for a full sample implementation.
 
