@@ -350,41 +350,40 @@ namespace WatsonWebserver.Lite
                 {
                     #region Subsequent-Line
 
-                    string[] headerLine = headers[i].Split(':');
-                    if (headerLine.Length == 2)
+                    int headerLineSplit = headers[i].IndexOf(':');
+                    string key = headers[i].Substring(0, headerLineSplit).Trim();
+                    string val = headers[i].Substring(headerLineSplit + 1).Trim();
+                    
+
+                    if (String.IsNullOrEmpty(key)) continue;
+                    string keyEval = key.ToLower();
+
+                    if (keyEval.Equals("keep-alive"))
                     {
-                        string key = headerLine[0].Trim();
-                        string val = headerLine[1].Trim();
-
-                        if (String.IsNullOrEmpty(key)) continue;
-                        string keyEval = key.ToLower();
-
-                        if (keyEval.Equals("keep-alive"))
-                        {
-                            Keepalive = Convert.ToBoolean(val);
-                        }
-                        else if (keyEval.Equals("user-agent"))
-                        {
-                            Useragent = val;
-                        }
-                        else if (keyEval.Equals("content-length"))
-                        {
-                            ContentLength = Convert.ToInt32(val);
-                        }
-                        else if (keyEval.Equals("content-type"))
-                        {
-                            ContentType = val;
-                        }
-                        else if (keyEval.ToLower().Equals("x-amz-content-sha256"))
-                        {
-                            if (val.ToLower().Contains("streaming"))
-                            {
-                                ChunkedTransfer = true;
-                            }
-                        }
-
-                        Headers.Add(key, val);
+                        Keepalive = Convert.ToBoolean(val);
                     }
+                    else if (keyEval.Equals("user-agent"))
+                    {
+                        Useragent = val;
+                    }
+                    else if (keyEval.Equals("content-length"))
+                    {
+                        ContentLength = Convert.ToInt32(val);
+                    }
+                    else if (keyEval.Equals("content-type"))
+                    {
+                        ContentType = val;
+                    }
+                    else if (keyEval.ToLower().Equals("x-amz-content-sha256"))
+                    {
+                        if (val.ToLower().Contains("streaming"))
+                        {
+                            ChunkedTransfer = true;
+                        }
+                    }
+
+                    Headers.Add(key, val);
+                    
 
                     #endregion
                 }
