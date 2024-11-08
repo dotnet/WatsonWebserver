@@ -32,57 +32,59 @@ I'd like to extend a special thanks to those that have helped make Watson Webser
 
 ## Watson vs Watson.Lite
 
-Watson is a webserver that operates on top of the underlying http.sys within the operating system.  Watson.Lite was created by merging [HttpServerLite](https://github.com/jchristn/HttpServerLite).  Watson.Lite does not have a dependency on http.sys, and is implemented using a TCP implementation provided by [CavemanTcp](https://github.com/jchristn/cavemantcp).
+Watson is a webserver that operates on top of the underlying `http.sys` within the operating system.  Watson.Lite was created by merging [HttpServerLite](https://github.com/jchristn/HttpServerLite).  Watson.Lite does not have a dependency on `http.sys`, and is implemented using a TCP implementation provided by [CavemanTcp](https://github.com/jchristn/cavemantcp).
 
-The dependency on http.sys (or lack thereof) creates subtle differences between the two libraries, however, the configuration and management of each should be consistent.
+The dependency on `http.sys` (or lack thereof) creates subtle differences between the two libraries, however, the configuration and management of each should be consistent.
 
 Watson.Lite is generally less performant than Watson, because the HTTP implementation is in user space.  
 
 ## Important Notes
 
-- Elevation (administrative privileges) may be required if binding an IP other than 127.0.0.1 or localhost
+- Elevation (administrative privileges) may be required if binding an IP other than `127.0.0.1` or `localhost`
 - For Watson:
   - The HTTP HOST header must match the specified binding
   - For SSL, the underlying computer certificate store will be used
 - For Watson.Lite:
   - Watson.Lite uses a TCP listener; your server must be started with an IP address, not a hostname
   - The HTTP HOST header does not need to match, since the listener must be defined by IP address
-  - For SSL, the certificate filename, filename and password, or ```X509Certificate2``` must be supplied
+  - For SSL, the certificate filename, filename and password, or `X509Certificate2` must be supplied
 
 ## Routing
 
-Watson and Watson.Lite always routes in the following order (configure using ```Webserver.Routes```):
+Watson and Watson.Lite always routes in the following order (configure using `Webserver.Routes`):
 
-- ```.Preflight``` - handling preflight requests (generally with HTTP method ```OPTIONS```)
-- ```.PreRouting``` - always invoked before any routing determination is made
-- ```.PreAuthentication``` - a routing group, comprised of:
-  - ```.Static``` - static routes, e.g. an HTTP method and an explicit URL
-  - ```.Content``` - file serving routes, e.g. a directory where files can be read
-  - ```.Parameter``` - routes where variables are specified in the path, e.g. ```/user/{id}```
-  - ```.Dynamic``` - routes where the URL is defined by a regular expression
-- ```.AuthenticateRequest``` - demarcation route between unauthenticated and authenticated routes
-- ```.PostAuthentication``` - a routing group with a structure identical to ```.PreAuthentication```
-- ```.Default``` - the default route; all requests go here if not routed previously
-- ```.PostRouting``` - always invoked, generally for logging and telemetry
+- `.Preflight` - handling preflight requests (generally with HTTP method `OPTIONS`)
+- `.PreRouting` - always invoked before any routing determination is made
+- `.PreAuthentication` - a routing group, comprised of:
+  - `.Static` - static routes, e.g. an HTTP method and an explicit URL
+  - `.Content` - file serving routes, e.g. a directory where files can be read
+  - `.Parameter` - routes where variables are specified in the path, e.g. `/user/{id}`
+  - `.Dynamic` - routes where the URL is defined by a regular expression
+- `.AuthenticateRequest` - demarcation route between unauthenticated and authenticated routes
+- `.PostAuthentication` - a routing group with a structure identical to `.PreAuthentication`
+- `.Default` - the default route; all requests go here if not routed previously
+- `.PostRouting` - always invoked, generally for logging and telemetry
 
-If you do not wish to use authentication, you should map your routes in the ```.PreAuthentication``` routing group (though technically they can be placed in ```.PostAuthentication``` or ```.Default``` assuming the ```AuthenticateRequest``` method is null.
+If you do not wish to use authentication, you should map your routes in the `.PreAuthentication` routing group (though technically they can be placed in `.PostAuthentication` or `.Default` assuming the `AuthenticateRequest` method is null.
 
-As a general rule, never try to send data to an ```HttpResponse``` while in the ```.PostRouting``` route.  If a response has already been sent, the attempt inside of ```.PostRouting``` will fail.
+As a general rule, never try to send data to an `HttpResponse` while in the `.PostRouting` route.  If a response has already been sent, the attempt inside of `.PostRouting` will fail.
 
 ## Authentication
 
-It is recommended that you implement authentication in ```.AuthenticateRequest```.  Should a request fail authentication, return a response within that route.  The ```HttpContextBase``` class has properties that can hold authentication-related or session-related metadata, specifically, ```.Metadata```.
+It is recommended that you implement authentication in `.AuthenticateRequest`.  Should a request fail authentication, return a response within that route.  The `HttpContextBase` class has properties that can hold authentication-related or session-related metadata, specifically, `.Metadata`.
 
 ## Access Control
 
 By default, Watson and Watson.Lite will permit all inbound connections.
 
-- If you want to block certain IPs or networks, use ```Server.AccessControl.DenyList.Add(ip, netmask)```
+- If you want to block certain IPs or networks, use `Server.AccessControl.DenyList.Add(ip, netmask)`
 - If you only want to allow certain IPs or networks, and block all others, use:
-  - ```Server.AccessControl.Mode = AccessControlMode.DefaultDeny```
-  - ```Server.AccessControl.PermitList.Add(ip, netmask)```
+  - `Server.AccessControl.Mode = AccessControlMode.DefaultDeny`
+  - `Server.AccessControl.PermitList.Add(ip, netmask)`
   
 ## Simple Example
+
+Refer to `Test.Default` for a full example.
 
 ```csharp
 using System.IO;
@@ -91,7 +93,8 @@ using WatsonWebserver;
 
 static void Main(string[] args)
 {
-  Webserver server = new Server("127.0.0.1", 9000, false, DefaultRoute);
+  WebserverSettings settings = new WebserverSettings("127.0.0.1", 9000);
+  Webserver server = new Webserver(settings, DefaultRoute);
   server.Start();
   Console.ReadLine();
 }
@@ -100,11 +103,11 @@ static async Task DefaultRoute(HttpContextBase ctx) =>
   await ctx.Response.Send("Hello from the default route!");
 ```
 
-Then, open your browser to ```http://127.0.0.1:9000/```.
+Then, open your browser to `http://127.0.0.1:9000/`.
 
 ## Example with Routes
 
-Refer to ```Test.Routing``` for a full example.
+Refer to `Test.Routing` for a full example.
 
 ```csharp
 using System.IO;
@@ -114,7 +117,8 @@ using WatsonWebserver;
 
 static void Main(string[] args)
 {
-  Webserver server = new Server("127.0.0.1", 9000, false, DefaultRoute);
+  WebserverSettings settings = new WebserverSettings("127.0.0.1", 9000);
+  Webserver server = new Webserver(settings, DefaultRoute);
 
   // add content routes
   server.Routes.PreAuthentication.Content.Add("/html/", true);
@@ -175,7 +179,7 @@ static async Task MyExceptionRoute(HttpContextBase ctx, Exception e)
 ## Permit or Deny by IP or Network
 
 ```csharp
-Webserver server = new Server("127.0.0.1", 9000, false, DefaultRoute);
+Webserver server = new Webserver("127.0.0.1", 9000, false, DefaultRoute);
 
 // set default permit (permit any) with deny list to block specific IP addresses or networks
 server.Settings.AccessControl.Mode = AccessControlMode.DefaultPermit;
@@ -188,9 +192,9 @@ server.Settings.AccessControl.PermitList.Add("127.0.0.1", "255.255.255.255");
 
 ## Chunked Transfer-Encoding
 
-Watson supports both receiving chunked data and sending chunked data (indicated by the header ```Transfer-Encoding: chunked```).
+Watson supports both receiving chunked data and sending chunked data (indicated by the header `Transfer-Encoding: chunked`).
 
-Refer to ```Test.ChunkServer``` for a sample implementation.
+Refer to `Test.ChunkServer` for a sample implementation.
 
 ### Receiving Chunked Data
 
@@ -246,9 +250,9 @@ static async Task DownloadChunkedFile(HttpContextBase ctx)
 
 ## HostBuilder
 
-```HostBuilder``` helps you set up your server much more easily by introducing a chain of settings and routes instead of using the server class directly.  Special thanks to @sapurtcomputer30 for producing this fine feature!
+`HostBuilder` helps you set up your server much more easily by introducing a chain of settings and routes instead of using the server class directly.  Special thanks to @sapurtcomputer30 for producing this fine feature!
 
-Refer to ```Test.HostBuilder``` for a full sample implementation.
+Refer to `Test.HostBuilder` for a full sample implementation.
 
 ```csharp
 using WatsonWebserver.Extensions.HostBuilderExtension;
@@ -281,41 +285,41 @@ static async Task TestRoute(HttpContextBase ctx) =>
 
 ### Watson
 
-When you configure Watson to listen on ```127.0.0.1``` or ```localhost```, it will only respond to requests received from within the local machine.
+When you configure Watson to listen on `127.0.0.1` or `localhost`, it will only respond to requests received from within the local machine.
 
-To configure access from other nodes outside of ```localhost```, use the following:
+To configure access from other nodes outside of `localhost`, use the following:
 
 - Specify the exact DNS hostname upon which Watson should listen in the Server constructor
 - The HOST header on HTTP requests MUST match the supplied listener value (operating system limitation)
-- If you want to listen on more than one hostname or IP address, use ```*``` or ```+```.  You MUST run as administrator (operating system limitation)
+- If you want to listen on more than one hostname or IP address, use `*` or `+`.  You MUST run as administrator (operating system limitation)
 - If you want to use a port number less than 1024, you MUST run as administrator (operating system limitation)
 - Open a port on your firewall to permit traffic on the TCP port upon which Watson is listening
-- You may have to add URL ACLs, i.e. URL bindings, within the operating system using the ```netsh``` command:
-  - Check for existing bindings using ```netsh http show urlacl```
-  - Add a binding using ```netsh http add urlacl url=http://[hostname]:[port]/ user=everyone listen=yes```
-  - Where ```hostname``` and ```port``` are the values you are using in the constructor
+- You may have to add URL ACLs, i.e. URL bindings, within the operating system using the `netsh` command:
+  - Check for existing bindings using `netsh http show urlacl`
+  - Add a binding using `netsh http add urlacl url=http://[hostname]:[port]/ user=everyone listen=yes`
+  - Where `hostname` and `port` are the values you are using in the constructor
   - If you are using SSL, you will need to install the certificate in the certificate store and retrieve the thumbprint
   - Refer to https://github.com/jchristn/WatsonWebserver/wiki/Using-SSL-on-Windows for more information, or if you are using SSL
 - If you're still having problems, start a discussion here, and I will do my best to help and update the documentation.
 
 ### Watson.Lite
 
-When you configure Watson.Lite to listen on ```127.0.0.1```, it will only respond to requests received from within the local machine.
+When you configure Watson.Lite to listen on `127.0.0.1`, it will only respond to requests received from within the local machine.
 
 To configure access from other nodes outside of the local machine, use the following:
 
 - Specify the IP address of the network interface on which Watson.Lite should listen
-- If you want to listen on more than one network interface, use ```*``` or ```+```.  You MUST run as administrator (operating system limitation)
+- If you want to listen on more than one network interface, use `*` or `+`.  You MUST run as administrator (operating system limitation)
 - If you want to use a port number less than 1024, you MUST run as administrator (operating system limitation)
 - Open a port on your firewall to permit traffic on the TCP port upon which Watson is listening
 - If you are using SSL, you will need to have one of the following when instantiating:
-  - The ```X509Certificate2``` object
+  - The `X509Certificate2` object
   - The filename and password to the certificate
 - If you're still having problems, start a discussion here, and I will do my best to help and update the documentation.
 
 ## Running in Docker
 
-Please refer to the ```Test.Docker``` project and the ```Docker.md``` file therein.
+Please refer to the `Test.Docker` project and the `Docker.md` file therein.
 
 ## Version History
 
