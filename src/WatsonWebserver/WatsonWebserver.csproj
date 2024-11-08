@@ -2,10 +2,9 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.1;net462;net48;net6.0;net7.0;net8.0</TargetFrameworks>
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<Version>6.2.2</Version>
+		<Version>6.2.3</Version>
 		<Description>Simple, fast, async C# web server for handling REST requests with SSL support, targeted to .NET Core, .NET Standard, and .NET Framework.</Description>
+		<PackageReleaseNotes>Dependency update</PackageReleaseNotes>
 		<Authors>Joel Christner</Authors>
 		<Company>Joel Christner</Company>
 		<Copyright>(c)2024 Joel Christner</Copyright>
@@ -14,7 +13,6 @@
 		<RepositoryUrl>https://github.com/dotnet/WatsonWebserver</RepositoryUrl>
 		<RepositoryType>Github</RepositoryType>
 		<PackageTags>web server rest restful http https api async ssl</PackageTags>
-		<PackageReleaseNotes>Major update with breaking changes</PackageReleaseNotes>
 		<PackageId>Watson</PackageId>
 		<Product>Watson</Product>
 		<PackageIconUrl></PackageIconUrl>
@@ -24,50 +22,13 @@
 		<IncludeSymbols>True</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<Title>Watson Webserver</Title>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.1|AnyCPU'">
-		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.1|AnyCPU'">
-		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net462|AnyCPU'">
-		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net462|AnyCPU'">
-		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net48|AnyCPU'">
-		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net48|AnyCPU'">
-		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6.0|AnyCPU'">
-		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net6.0|AnyCPU'">
-		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0|AnyCPU'">
-		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0|AnyCPU'">
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Watson.Core" Version="6.2.2" />
+		<PackageReference Include="Watson.Core" Version="6.2.3" />
 	</ItemGroup>
 
 	<ItemGroup>
