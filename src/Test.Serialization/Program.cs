@@ -1,15 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-using GetSomeInput;
-using WatsonWebserver;
-using WatsonWebserver.Core;
-using WatsonWebserver.Lite;
-
-namespace Test.Serialization
+﻿namespace Test.Serialization
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+    using GetSomeInput;
+    using Newtonsoft.Json;
+    using Newtonsoft.Json.Serialization;
+    using WatsonWebserver;
+    using WatsonWebserver.Core;
+    using WatsonWebserver.Lite;
+
     static class Program
     {
         static bool _UsingLite = false;

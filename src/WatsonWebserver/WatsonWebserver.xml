@@ -249,60 +249,25 @@
             </summary>
         </member>
         <member name="M:WatsonWebserver.HttpResponse.Send(System.Threading.CancellationToken)">
-            <summary>
-            Send headers and no data to the requestor and terminate the connection.
-            </summary>
-            <param name="token">Cancellation token useful for canceling the request.</param>
-            <returns>True if successful.</returns>
+            <inheritdoc />
         </member>
         <member name="M:WatsonWebserver.HttpResponse.Send(System.Int64,System.Threading.CancellationToken)">
-            <summary>
-            Send headers with a specified content length and no data to the requestor and terminate the connection.  Useful for HEAD requests where the content length must be set.
-            </summary>
-            <param name="token">Cancellation token useful for canceling the request.</param>
-            <param name="contentLength">Content length.</param>
-            <returns>True if successful.</returns>
+            <inheritdoc />
         </member>
         <member name="M:WatsonWebserver.HttpResponse.Send(System.String,System.Threading.CancellationToken)">
-            <summary>
-            Send headers and data to the requestor and terminate the connection.
-            </summary>
-            <param name="data">Data.</param>
-            <param name="token">Cancellation token useful for canceling the request.</param>
-            <returns>True if successful.</returns>
+            <inheritdoc />
         </member>
         <member name="M:WatsonWebserver.HttpResponse.Send(System.Byte[],System.Threading.CancellationToken)">
-            <summary>
-            Send headers and data to the requestor and terminate the connection.
-            </summary>
-            <param name="data">Data.</param>
-            <param name="token">Cancellation token useful for canceling the request.</param>
-            <returns>True if successful.</returns>
+            <inheritdoc />
         </member>
         <member name="M:WatsonWebserver.HttpResponse.Send(System.Int64,System.IO.Stream,System.Threading.CancellationToken)">
-            <summary>
-            Send headers and data to the requestor and terminate.
-            </summary>
-            <param name="contentLength">Number of bytes to send.</param>
-            <param name="stream">Stream containing the data.</param>
-            <param name="token">Cancellation token useful for canceling the request.</param>
-            <returns>True if successful.</returns>
+            <inheritdoc />
         </member>
-        <member name="M:WatsonWebserver.HttpResponse.SendChunk(System.Byte[],System.Threading.CancellationToken)">
-            <summary>
-            Send headers (if not already sent) and a chunk of data using chunked transfer-encoding, and keep the connection in-tact.
-            </summary>
-            <param name="chunk">Chunk of data.</param>
-            <param name="token">Cancellation token useful for canceling the request.</param>
-            <returns>True if successful.</returns>
+        <member name="M:WatsonWebserver.HttpResponse.SendChunk(System.Byte[],System.Boolean,System.Threading.CancellationToken)">
+            <inheritdoc />
         </member>
-        <member name="M:WatsonWebserver.HttpResponse.SendFinalChunk(System.Byte[],System.Threading.CancellationToken)">
-            <summary>
-            Send headers (if not already sent) and the final chunk of data using chunked transfer-encoding and terminate the connection.
-            </summary>
-            <param name="chunk">Chunk of data.</param>
-            <param name="token">Cancellation token useful for canceling the request.</param>
-            <returns>True if successful.</returns>
+        <member name="M:WatsonWebserver.HttpResponse.SendEvent(System.String,System.Boolean,System.Threading.CancellationToken)">
+            <inheritdoc />
         </member>
         <member name="T:WatsonWebserver.Webserver">
             <summary>

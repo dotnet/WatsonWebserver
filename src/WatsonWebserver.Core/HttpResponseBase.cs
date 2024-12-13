@@ -1,20 +1,20 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using Timestamps;
-
-namespace WatsonWebserver.Core
+﻿namespace WatsonWebserver.Core
 {
+    using System;
+    using System.Collections.Concurrent;
+    using System.Collections.Generic;
+    using System.Collections.Specialized;
+    using System.IO;
+    using System.Linq;
+    using System.Net;
+    using System.Net.Sockets;
+    using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using System.Text.Json;
+    using System.Text.Json.Serialization;
+    using Timestamps;
+
     /// <summary>
     /// HTTP response.
     /// </summary>
@@ -83,6 +83,11 @@ namespace WatsonWebserver.Core
         /// Indicates whether or not chunked transfer encoding should be indicated in the response. 
         /// </summary>
         public bool ChunkedTransfer { get; set; } = false;
+
+        /// <summary>
+        /// Indicates whether or not server-sent events should be indicated in the response. 
+        /// </summary>
+        public bool ServerSentEvents { get; set; } = false;
 
         /// <summary>
         /// Retrieve the response body sent using a Send() or SendAsync() method.
@@ -162,20 +167,25 @@ namespace WatsonWebserver.Core
         public abstract Task<bool> Send(long contentLength, Stream stream, CancellationToken token = default);
         
         /// <summary>
-        /// Send headers (if not already sent) and a chunk of data using chunked transfer-encoding, and keep the connection in-tact.
+        /// Send headers (if not already sent) and a chunk of data using chunked transfer-encoding.
+        /// The connection will be kept in-tact unless isFinal is set to true.
         /// </summary>
         /// <param name="chunk">Chunk of data.</param>
+        /// <param name="isFinal">Boolean indicating if this is the final chunk.</param>
         /// <param name="token">Cancellation token useful for canceling the request.</param>
         /// <returns>True if successful.</returns>
-        public abstract Task<bool> SendChunk(byte[] chunk, CancellationToken token = default);
+        public abstract Task<bool> SendChunk(byte[] chunk, bool isFinal, CancellationToken token = default);
 
         /// <summary>
-        /// Send headers (if not already sent) and the final chunk of data using chunked transfer-encoding and terminate the connection.
+        /// Send headers (if not already sent) and a server-sent event.
+        /// Watson will handle prepending 'data: ' to your event data.
+        /// The connection will be kept in-tact unless isFinal is set to true.
         /// </summary>
-        /// <param name="chunk">Chunk of data.</param>
+        /// <param name="eventData">Event data.</param>
+        /// <param name="isFinal">Boolean indicating if this is the final chunk.</param>
         /// <param name="token">Cancellation token useful for canceling the request.</param>
         /// <returns>True if successful.</returns>
-        public abstract Task<bool> SendFinalChunk(byte[] chunk, CancellationToken token = default);
+        public abstract Task<bool> SendEvent(string eventData, bool isFinal, CancellationToken token = default);
 
         #endregion
 

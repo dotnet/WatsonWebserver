@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using IpMatcher;
-
-namespace WatsonWebserver.Core
+﻿namespace WatsonWebserver.Core
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+    using IpMatcher;
+
     /// <summary>
     /// Access control manager.  Dictates which connections are permitted or denied.
     /// </summary>

@@ -1,5 +1,4 @@
-﻿using GetSomeInput;
-namespace Test
+﻿namespace Test
 {
     using System;
     using System.Collections.Generic;
@@ -7,6 +6,7 @@ namespace Test
     using System.Text;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
+    using GetSomeInput;
     using WatsonWebserver;
     using WatsonWebserver.Core;
     using WatsonWebserver.Lite;

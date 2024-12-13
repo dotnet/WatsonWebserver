@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Text;
-
-namespace WatsonWebserver.Core
+﻿namespace WatsonWebserver.Core
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Collections.Specialized;
+    using System.Text;
+
     /// <summary>
     /// Request event arguments.
     /// </summary>

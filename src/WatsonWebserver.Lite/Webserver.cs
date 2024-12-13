@@ -1,19 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using CavemanTcp;
-using WatsonWebserver.Core;
-
-namespace WatsonWebserver.Lite
+﻿namespace WatsonWebserver.Lite
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Collections.Specialized;
+    using System.IO;
+    using System.Linq;
+    using System.Net;
+    using System.Reflection;
+    using System.Security.Cryptography.X509Certificates;
+    using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using CavemanTcp;
+    using WatsonWebserver.Core;
+
     /// <summary>
     /// HttpServerLite web server.
     /// </summary>
@@ -699,7 +699,7 @@ namespace WatsonWebserver.Lite
                     ctx.Response.StatusCode = 404;
                     ctx.Response.ContentType = DefaultPages.Pages[404].ContentType;
                     if (ctx.Response.ChunkedTransfer)
-                        await ctx.Response.SendFinalChunk(Encoding.UTF8.GetBytes(DefaultPages.Pages[404].Content), _Token).ConfigureAwait(false);
+                        await ctx.Response.SendChunk(Encoding.UTF8.GetBytes(DefaultPages.Pages[404].Content), true, _Token).ConfigureAwait(false);
                     else
                         await ctx.Response.Send(DefaultPages.Pages[404].Content, _Token).ConfigureAwait(false);
                     return;
@@ -717,7 +717,7 @@ namespace WatsonWebserver.Lite
                     try
                     {
                         if (ctx.Response.ChunkedTransfer)
-                            await ctx.Response.SendFinalChunk(Encoding.UTF8.GetBytes(DefaultPages.Pages[500].Content), _Token).ConfigureAwait(false);
+                            await ctx.Response.SendChunk(Encoding.UTF8.GetBytes(DefaultPages.Pages[500].Content), true, _Token).ConfigureAwait(false);
                         else
                             await ctx.Response.Send(DefaultPages.Pages[500].Content, _Token).ConfigureAwait(false);
                     }
@@ -744,7 +744,7 @@ namespace WatsonWebserver.Lite
                         ctx.Response.StatusCode = 500;
                         ctx.Response.ContentType = DefaultPages.Pages[500].ContentType;
                         if (ctx.Response.ChunkedTransfer)
-                            await ctx.Response.SendFinalChunk(Encoding.UTF8.GetBytes(DefaultPages.Pages[500].Content)).ConfigureAwait(false);
+                            await ctx.Response.SendChunk(Encoding.UTF8.GetBytes(DefaultPages.Pages[500].Content), true, _Token).ConfigureAwait(false);
                         else
                             await ctx.Response.Send(DefaultPages.Pages[500].Content).ConfigureAwait(false);
                     }

@@ -1,11 +1,11 @@
-﻿using System;
-using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using WatsonWebserver.Core;
-
-namespace WatsonWebserver.Extensions.HostBuilderExtension
+﻿namespace WatsonWebserver.Extensions.HostBuilderExtension
 {
+    using System;
+    using System.Runtime.InteropServices;
+    using System.Text.RegularExpressions;
+    using System.Threading.Tasks;
+    using WatsonWebserver.Core;
+
     /// <summary>
     /// Host builder.
     /// </summary>

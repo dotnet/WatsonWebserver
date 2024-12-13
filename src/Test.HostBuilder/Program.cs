@@ -1,14 +1,14 @@
-﻿using RestWrapper;
-using System;
-using System.Collections.Generic;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using WatsonWebserver;
-using WatsonWebserver.Core;
-using WatsonWebserver.Lite;
-
-namespace Test.HostBuilder
+﻿namespace Test.HostBuilder
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Text.RegularExpressions;
+    using System.Threading.Tasks;
+    using RestWrapper;
+    using WatsonWebserver;
+    using WatsonWebserver.Core;
+    using WatsonWebserver.Lite;
+
     public static class Program
     {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
@@ -20,7 +20,7 @@ namespace Test.HostBuilder
         static WebserverSettings _Settings = null;
         static WebserverBase _Server = null;
 
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             if (args != null && args.Length > 0)
             {
@@ -156,7 +156,7 @@ namespace Test.HostBuilder
 
                 using (RestRequest req = new RestRequest(url))
                 {
-                    using (RestResponse resp = req.Send())
+                    using (RestResponse resp = await req.SendAsync())
                     {
                         Console.WriteLine("Received response: " + resp.StatusCode);
                         Task.Delay(1000).Wait();

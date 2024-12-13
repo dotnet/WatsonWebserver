@@ -1,10 +1,10 @@
-﻿using System;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using WatsonWebserver.Core;
-
-namespace WatsonWebserver.Lite.Extensions.HostBuilderExtension
+﻿namespace WatsonWebserver.Lite.Extensions.HostBuilderExtension
 {
+    using System;
+    using System.Text.RegularExpressions;
+    using System.Threading.Tasks;
+    using WatsonWebserver.Core;
+
     /// <summary>
     /// Host builder.
     /// </summary>

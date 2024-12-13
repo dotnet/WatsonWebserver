@@ -1,25 +1,27 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using WatsonWebserver;
-using WatsonWebserver.Core;
-using WatsonWebserver.Lite;
-
-namespace Test
+﻿namespace Test
 {
-    static class Program
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using WatsonWebserver;
+    using WatsonWebserver.Core;
+    using WatsonWebserver.Lite;
+
+    public static class Program
     {
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+
         static bool _UsingLite = false;
         static string _Hostname = "localhost";
         static int _Port = 8080;
         static WebserverSettings _Settings = null;
         static WebserverBase _Server = null;
 
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             if (args != null && args.Length > 0)
             {
@@ -117,13 +119,13 @@ namespace Test
 
                                         if (bytesRead == buffer.Length)
                                         {
-                                            await ctx.Response.SendChunk(buffer);
+                                            await ctx.Response.SendChunk(buffer, false);
                                         }
                                         else
                                         {
                                             byte[] temp = new byte[bytesRead];
                                             Buffer.BlockCopy(buffer, 0, temp, 0, bytesRead);
-                                            await ctx.Response.SendChunk(temp);
+                                            await ctx.Response.SendChunk(temp, false);
                                         }
                                     }
                                     else
@@ -132,13 +134,13 @@ namespace Test
 
                                         if (bytesRead == buffer.Length)
                                         {
-                                            await ctx.Response.SendFinalChunk(buffer);
+                                            await ctx.Response.SendChunk(buffer, true);
                                         }
                                         else
                                         {
                                             byte[] temp = new byte[bytesRead];
                                             Buffer.BlockCopy(buffer, 0, temp, 0, bytesRead);
-                                            await ctx.Response.SendFinalChunk(temp);
+                                            await ctx.Response.SendChunk(temp, true);
                                         }
                                     }
 
@@ -183,13 +185,13 @@ namespace Test
 
                                         if (bytesRead == buffer.Length)
                                         {
-                                            await ctx.Response.SendChunk(buffer);
+                                            await ctx.Response.SendChunk(buffer, false);
                                         }
                                         else
                                         {
                                             byte[] temp = new byte[bytesRead];
                                             Buffer.BlockCopy(buffer, 0, temp, 0, bytesRead);
-                                            await ctx.Response.SendChunk(temp);
+                                            await ctx.Response.SendChunk(temp, false);
                                         }
                                     }
                                     else
@@ -198,16 +200,14 @@ namespace Test
 
                                         if (bytesRead == buffer.Length)
                                         {
-                                            await ctx.Response.SendFinalChunk(buffer);
+                                            await ctx.Response.SendChunk(buffer, true);
                                         }
                                         else
                                         {
                                             byte[] temp = new byte[bytesRead];
                                             Buffer.BlockCopy(buffer, 0, temp, 0, bytesRead);
-                                            await ctx.Response.SendFinalChunk(temp);
+                                            await ctx.Response.SendChunk(temp, true);
                                         }
-
-                                        await ctx.Response.SendFinalChunk(buffer);
                                     }
 
                                     bytesSent += bytesRead;
@@ -230,6 +230,8 @@ namespace Test
             {
                 Console.WriteLine(e.ToString());
             }
-        } 
+        }
+
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
     }
 }

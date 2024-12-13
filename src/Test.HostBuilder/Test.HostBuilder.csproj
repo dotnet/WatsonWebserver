@@ -2,14 +2,15 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFrameworks>net462;net48;net6.0;net7.0;net8.0</TargetFrameworks>
+		<TargetFrameworks>net462;net48;net6.0;net8.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="RestWrapper" Version="3.0.14" />
+		<PackageReference Include="RestWrapper" Version="3.1.2" />
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\WatsonWebserver.Core\WatsonWebserver.Core.csproj" />
 		<ProjectReference Include="..\WatsonWebserver.Lite\WatsonWebserver.Lite.csproj" />
 		<ProjectReference Include="..\WatsonWebserver\WatsonWebserver.csproj" />
 	</ItemGroup>

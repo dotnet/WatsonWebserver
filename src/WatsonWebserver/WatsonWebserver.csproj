@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.1;net462;net48;net6.0;net7.0;net8.0</TargetFrameworks>
-		<Version>6.2.3</Version>
+		<TargetFrameworks>netstandard2.1;net462;net48;net6.0;net8.0</TargetFrameworks>
+		<Version>6.3.0</Version>
 		<Description>Simple, fast, async C# web server for handling REST requests with SSL support, targeted to .NET Core, .NET Standard, and .NET Framework.</Description>
 		<PackageReleaseNotes>Dependency update</PackageReleaseNotes>
 		<Authors>Joel Christner</Authors>
@@ -28,10 +28,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Watson.Core" Version="6.2.3" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<None Include="..\..\README.md">
 		  <Pack>True</Pack>
 		  <PackagePath>\</PackagePath>
@@ -45,6 +41,10 @@
 			<PackagePath></PackagePath>
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="Watson.Core" Version="6.3.1" />
 	</ItemGroup>
 
 	<ItemGroup>

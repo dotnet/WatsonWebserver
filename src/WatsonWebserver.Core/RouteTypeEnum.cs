@@ -1,7 +1,7 @@
-﻿using System.Runtime.Serialization;
-
-namespace WatsonWebserver.Core
+﻿namespace WatsonWebserver.Core
 {
+    using System.Runtime.Serialization;
+
     /// <summary>
     /// Route type.
     /// </summary>

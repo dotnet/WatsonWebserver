@@ -1,15 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using GetSomeInput;
-using WatsonWebserver;
-using WatsonWebserver.Core;
-using WatsonWebserver.Lite;
-
-namespace Test
+﻿namespace Test
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+    using GetSomeInput;
+    using WatsonWebserver;
+    using WatsonWebserver.Core;
+    using WatsonWebserver.Lite;
+
     static class Program
     {
         static bool _UsingLite = false;

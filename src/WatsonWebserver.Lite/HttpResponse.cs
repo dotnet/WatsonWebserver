@@ -1,22 +1,22 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Sockets;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Xml.Linq;
-using CavemanTcp;
-using WatsonWebserver.Core;
-
-namespace WatsonWebserver.Lite
+﻿namespace WatsonWebserver.Lite
 {
+    using System;
+    using System.Collections;
+    using System.Collections.Concurrent;
+    using System.Collections.Generic;
+    using System.Collections.Specialized;
+    using System.IO;
+    using System.Linq;
+    using System.Net;
+    using System.Net.Sockets;
+    using System.Text;
+    using System.Text.Json.Serialization;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using System.Xml.Linq;
+    using CavemanTcp;
+    using WatsonWebserver.Core;
+
     /// <summary>
     /// Response to an HTTP request.
     /// </summary>
@@ -127,21 +127,14 @@ namespace WatsonWebserver.Lite
 
         #region Public-Methods
 
-        /// <summary>
-        /// Send headers with a specified content length and no data to the requestor and terminate the connection.  Useful for HEAD requests where the content length must be set.
-        /// </summary> 
-        /// <param name="token">Cancellation token for canceling the request.</param>
+        /// <inheritdoc />
         public override async Task<bool> Send(CancellationToken token = default)
         {
             if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and SendFinalChunk().");
             return await SendInternalAsync(0, null, true, token).ConfigureAwait(false);
         }
 
-        /// <summary>
-        /// Send headers with a specified content length and no data to the requestor and terminate the connection.  Useful for HEAD requests where the content length must be set.
-        /// </summary> 
-        /// <param name="contentLength">Value to set in Content-Length header.</param>
-        /// <param name="token">Cancellation token for canceling the request.</param>
+        /// <inheritdoc />
         public override async Task<bool> Send(long contentLength, CancellationToken token = default)
         {
             if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and SendFinalChunk().");
@@ -149,11 +142,7 @@ namespace WatsonWebserver.Lite
             return await SendInternalAsync(0, null, true, token).ConfigureAwait(false);
         }
 
-        /// <summary>
-        /// Send headers and data to the requestor and terminate the connection.
-        /// </summary>
-        /// <param name="data">Data.</param> 
-        /// <param name="token">Cancellation token for canceling the request.</param>
+        /// <inheritdoc />
         public override async Task<bool> Send(string data, CancellationToken token = default)
         {
             if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and SendFinalChunk().");
@@ -167,11 +156,7 @@ namespace WatsonWebserver.Lite
             return await SendInternalAsync(bytes.Length, ms, true, token).ConfigureAwait(false);
         }
 
-        /// <summary>
-        /// Send headers and data to the requestor and terminate the connection.
-        /// </summary>
-        /// <param name="data">Data.</param> 
-        /// <param name="token">Cancellation token for canceling the request.</param>
+        /// <inheritdoc />
         public override async Task<bool> Send(byte[] data, CancellationToken token = default)
         {
             if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and SendFinalChunk().");
@@ -184,12 +169,7 @@ namespace WatsonWebserver.Lite
             return await SendInternalAsync(data.Length, ms, true, token).ConfigureAwait(false);
         }
 
-        /// <summary>
-        /// Send headers and data to the requestor and terminate the connection.
-        /// </summary>
-        /// <param name="contentLength">Number of bytes to read from the stream.</param>
-        /// <param name="stream">Stream containing response data.</param>
-        /// <param name="token">Cancellation token for canceling the request.</param>
+        /// <inheritdoc />
         public override async Task<bool> Send(long contentLength, Stream stream, CancellationToken token = default)
         {
             if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and SendFinalChunk().");
@@ -199,13 +179,8 @@ namespace WatsonWebserver.Lite
             return await SendInternalAsync(contentLength, stream, true, token).ConfigureAwait(false);
         }
 
-        /// <summary>
-        /// Send headers (if not already sent) and a chunk of data using chunked transfer-encoding, and keep the connection in-tact.
-        /// </summary>
-        /// <param name="chunk">Chunk of data.</param>
-        /// <param name="token">Cancellation token useful for canceling the request.</param>
-        /// <returns>True if successful.</returns>
-        public override async Task<bool> SendChunk(byte[] chunk, CancellationToken token = default)
+        /// <inheritdoc />
+        public override async Task<bool> SendChunk(byte[] chunk, bool isFinal, CancellationToken token = default)
         {
             if (!ChunkedTransfer) throw new IOException("Response is not configured to use chunked transfer-encoding.  Set ChunkedTransfer to true first, otherwise use Send().");
             if (!_HeadersSet) SetDefaultHeaders();
@@ -215,22 +190,16 @@ namespace WatsonWebserver.Lite
 
             try
             {
-                if (chunk == null || chunk.Length < 1) chunk = new byte[0];
-
-                byte[] chunkBytes = new byte[0];
+                if (chunk == null || chunk.Length < 1) chunk = Array.Empty<byte>();
 
                 using (MemoryStream ms = new MemoryStream())
                 {
-                    chunkBytes = AppendBytes(chunkBytes, Encoding.UTF8.GetBytes(Convert.ToString(chunk.Length, 16)));
-                    chunkBytes = AppendBytes(chunkBytes, Encoding.UTF8.GetBytes("\r\n"));
-
-                    chunkBytes = AppendBytes(chunkBytes, chunk);
-                    chunkBytes = AppendBytes(chunkBytes, Encoding.UTF8.GetBytes("\r\n"));
-
-                    await ms.WriteAsync(chunkBytes, 0, chunkBytes.Length, token).ConfigureAwait(false);
+                    byte[] message = AppendBytes(Encoding.UTF8.GetBytes(chunk.Length.ToString("X") + "\r\n"), chunk);
+                    message = AppendBytes(message, Encoding.UTF8.GetBytes("\r\n"));
+                    if (isFinal) message = AppendBytes(message, Encoding.UTF8.GetBytes("0\r\n\r\n"));
+                    await ms.WriteAsync(message, 0, message.Length, token).ConfigureAwait(false);
                     ms.Seek(0, SeekOrigin.Begin);
-
-                    await SendInternalAsync(chunkBytes.Length, ms, false, token).ConfigureAwait(false);
+                    await SendInternalAsync(message.Length, ms, isFinal, token).ConfigureAwait(false);
                 }
             }
             catch (Exception)
@@ -241,45 +210,40 @@ namespace WatsonWebserver.Lite
             return true;
         }
 
-        /// <summary>
-        /// Send headers (if not already sent) and the final chunk of data using chunked transfer-encoding and terminate the connection.
-        /// </summary>
-        /// <param name="chunk">Chunk of data.</param>
-        /// <param name="token">Cancellation token useful for canceling the request.</param>
-        /// <returns>True if successful.</returns>
-        public override async Task<bool> SendFinalChunk(byte[] chunk, CancellationToken token = default)
+        /// <inheritdoc />
+        public override async Task<bool> SendEvent(string eventData, bool isFinal, CancellationToken token = default)
         {
-            if (!ChunkedTransfer) throw new IOException("Response is not configured to use chunked transfer-encoding.  Set ChunkedTransfer to true first, otherwise use Send().");
+            if (!ServerSentEvents) throw new IOException("Response is not configured to use server-sent events.  Set ServerSentEvents to true first, otherwise use Send().");
             if (!_HeadersSet) SetDefaultHeaders();
 
-            if (chunk != null && chunk.Length > 0)
-                ContentLength += chunk.Length;
+            if (!String.IsNullOrEmpty(eventData)) 
+                ContentLength += eventData.Length;
 
             try
             {
-                if (chunk == null || chunk.Length < 1) chunk = new byte[0];
+                if (String.IsNullOrEmpty(eventData)) eventData = "";
+
+                string dataLine = "data: " + eventData + "\n\n";
+
+                byte[] message = Encoding.UTF8.GetBytes(
+                    Encoding.UTF8.GetBytes(dataLine).Length.ToString("X") 
+                    + "\r\n"
+                    + dataLine 
+                    + "\r\n");
 
                 using (MemoryStream ms = new MemoryStream())
                 {
-                    byte[] chunkBytes = AppendBytes(new byte[0], new byte[0]);
+                    await ms.WriteAsync(message, 0, message.Length, token).ConfigureAwait(false);
 
-                    if (chunk.Length > 0)
+                    if (isFinal)
                     {
-                        chunkBytes = AppendBytes(chunkBytes, Encoding.UTF8.GetBytes(Convert.ToString(chunk.Length, 16)));
-                        chunkBytes = AppendBytes(chunkBytes, Encoding.UTF8.GetBytes("\r\n"));
-
-                        chunkBytes = AppendBytes(chunkBytes, chunk);
-                        chunkBytes = AppendBytes(chunkBytes, Encoding.UTF8.GetBytes("\r\n"));
+                        byte[] finalBytes = Encoding.UTF8.GetBytes("0\r\n\r\n");
+                        await ms.WriteAsync(finalBytes, 0, finalBytes.Length, token).ConfigureAwait(false);
                     }
 
-                    chunkBytes = AppendBytes(chunkBytes, Encoding.UTF8.GetBytes("0"));
-                    chunkBytes = AppendBytes(chunkBytes, Encoding.UTF8.GetBytes("\r\n"));
-                    chunkBytes = AppendBytes(chunkBytes, Encoding.UTF8.GetBytes("\r\n"));
-                    
-                    await ms.WriteAsync(chunkBytes, 0, chunkBytes.Length, token).ConfigureAwait(false);
                     ms.Seek(0, SeekOrigin.Begin);
-
-                    await SendInternalAsync(chunkBytes.Length, ms, true, token).ConfigureAwait(false);
+                    byte[] bytes = ms.ToArray();
+                    await SendInternalAsync(bytes.Length, ms, isFinal, token).ConfigureAwait(false);
                 }
             }
             catch (Exception)
@@ -305,7 +269,7 @@ namespace WatsonWebserver.Lite
 
         private byte[] GetHeaderBytes()
         {
-            byte[] ret = new byte[0];
+            byte[] ret = Array.Empty<byte>();
 
             ret = AppendBytes(ret, Encoding.UTF8.GetBytes(ProtocolVersion + " " + StatusCode + " " + GetStatusDescription(StatusCode) + "\r\n"));
 
@@ -504,21 +468,34 @@ namespace WatsonWebserver.Lite
 
         private void SetDefaultHeaders()
         {
-            if (_HeaderSettings != null && Headers != null)
+            if (!_HeadersSet)
             {
-                foreach (KeyValuePair<string, string> defaultHeader in _HeaderSettings.DefaultHeaders)
-                {
-                    string key = defaultHeader.Key;
-                    string val = defaultHeader.Value;
+                if (ChunkedTransfer || ServerSentEvents)
+                    Headers.Add("Transfer-Encoding", "chunked");
 
-                    if (!Headers.AllKeys.Any(k => k.ToLower().Equals(key.ToLower())))
+                if (ServerSentEvents)
+                {
+                    Headers.Add("Content-Type", "text/event-stream; charset=utf-8");
+                    Headers.Add("Cache-Control", "no-cache");
+                    Headers.Add("Connection", "keep-alive");
+                }
+
+                if (_HeaderSettings != null && Headers != null)
+                {
+                    foreach (KeyValuePair<string, string> defaultHeader in _HeaderSettings.DefaultHeaders)
                     {
-                        Headers.Add(key, val);
+                        string key = defaultHeader.Key;
+                        string val = defaultHeader.Value;
+
+                        if (!Headers.AllKeys.Any(k => k.ToLower().Equals(key.ToLower())))
+                        {
+                            Headers.Add(key, val);
+                        }
                     }
                 }
-            }
 
-            _HeadersSet = true;
+                _HeadersSet = true;
+            }
         }
 
         private byte[] ReadStreamFully(Stream input)
@@ -544,7 +521,8 @@ namespace WatsonWebserver.Lite
         private void SetContentLength(long contentLength)
         {
             if (_HeaderSettings.IncludeContentLength
-                && !ChunkedTransfer)
+                && !ChunkedTransfer
+                && !ServerSentEvents)
             {
                 if (Headers.Count > 0)
                 {

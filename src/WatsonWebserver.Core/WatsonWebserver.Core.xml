@@ -247,6 +247,44 @@
             <param name="pretty">Pretty print.</param>
             <returns>JSON.</returns>
         </member>
+        <member name="T:WatsonWebserver.Core.DestinationDetails">
+            <summary>
+            Destination details.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.DestinationDetails.IpAddress">
+            <summary>
+            IP address to which the request was made.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.DestinationDetails.Port">
+            <summary>
+            TCP port on which the request was received.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.DestinationDetails.Hostname">
+            <summary>
+            Hostname to which the request was directed.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.DestinationDetails.HostnameElements">
+            <summary>
+            Hostname elements.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.DestinationDetails.#ctor">
+            <summary>
+            Destination details.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.DestinationDetails.#ctor(System.String,System.Int32,System.String)">
+            <summary>
+            Source details.
+            </summary>
+            <param name="ip">IP address to which the request was made.</param>
+            <param name="port">TCP port on which the request was received.</param>
+            <param name="hostname">Hostname.</param>
+        </member>
         <member name="T:WatsonWebserver.Core.DynamicRoute">
             <summary>
             Assign a method handler for when requests are received matching the supplied method and path regex.
@@ -662,139 +700,6 @@
             <param name="key">Key.</param>
             <returns>Value.</returns>
         </member>
-        <member name="T:WatsonWebserver.Core.HttpRequestBase.SourceDetails">
-            <summary>
-            Source details.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.HttpRequestBase.SourceDetails.IpAddress">
-            <summary>
-            IP address of the requestor.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.HttpRequestBase.SourceDetails.Port">
-            <summary>
-            TCP port from which the request originated on the requestor.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.Core.HttpRequestBase.SourceDetails.#ctor">
-            <summary>
-            Source details.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.Core.HttpRequestBase.SourceDetails.#ctor(System.String,System.Int32)">
-            <summary>
-            Source details.
-            </summary>
-            <param name="ip">IP address of the requestor.</param>
-            <param name="port">TCP port from which the request originated on the requestor.</param>
-        </member>
-        <member name="T:WatsonWebserver.Core.HttpRequestBase.DestinationDetails">
-            <summary>
-            Destination details.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.HttpRequestBase.DestinationDetails.IpAddress">
-            <summary>
-            IP address to which the request was made.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.HttpRequestBase.DestinationDetails.Port">
-            <summary>
-            TCP port on which the request was received.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.HttpRequestBase.DestinationDetails.Hostname">
-            <summary>
-            Hostname to which the request was directed.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.HttpRequestBase.DestinationDetails.HostnameElements">
-            <summary>
-            Hostname elements.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.Core.HttpRequestBase.DestinationDetails.#ctor">
-            <summary>
-            Destination details.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.Core.HttpRequestBase.DestinationDetails.#ctor(System.String,System.Int32,System.String)">
-            <summary>
-            Source details.
-            </summary>
-            <param name="ip">IP address to which the request was made.</param>
-            <param name="port">TCP port on which the request was received.</param>
-            <param name="hostname">Hostname.</param>
-        </member>
-        <member name="T:WatsonWebserver.Core.HttpRequestBase.UrlDetails">
-            <summary>
-            URL details.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.HttpRequestBase.UrlDetails.Full">
-            <summary>
-            Full URL.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.HttpRequestBase.UrlDetails.RawWithQuery">
-            <summary>
-            Raw URL with query.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.HttpRequestBase.UrlDetails.RawWithoutQuery">
-            <summary>
-            Raw URL without query.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.HttpRequestBase.UrlDetails.Elements">
-            <summary>
-            Raw URL elements.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.HttpRequestBase.UrlDetails.Parameters">
-            <summary>
-            Parameters found within the URL, if using parameter routes.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.Core.HttpRequestBase.UrlDetails.#ctor">
-            <summary>
-            URL details.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.Core.HttpRequestBase.UrlDetails.#ctor(System.String,System.String)">
-            <summary>
-            URL details.
-            </summary>
-            <param name="fullUrl">Full URL.</param>
-            <param name="rawUrl">Raw URL.</param>
-        </member>
-        <member name="T:WatsonWebserver.Core.HttpRequestBase.QueryDetails">
-            <summary>
-            Query details.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.HttpRequestBase.QueryDetails.Querystring">
-            <summary>
-            Querystring, excluding the leading '?'.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.HttpRequestBase.QueryDetails.Elements">
-            <summary>
-            Query elements.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.Core.HttpRequestBase.QueryDetails.#ctor">
-            <summary>
-            Query details.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.Core.HttpRequestBase.QueryDetails.#ctor(System.String)">
-            <summary>
-            Query details.
-            </summary>
-            <param name="fullUrl">Full URL.</param>
-        </member>
         <member name="T:WatsonWebserver.Core.HttpResponseBase">
             <summary>
             HTTP response.
@@ -838,6 +743,11 @@
         <member name="P:WatsonWebserver.Core.HttpResponseBase.ChunkedTransfer">
             <summary>
             Indicates whether or not chunked transfer encoding should be indicated in the response. 
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.HttpResponseBase.ServerSentEvents">
+            <summary>
+            Indicates whether or not server-sent events should be indicated in the response. 
             </summary>
         </member>
         <member name="P:WatsonWebserver.Core.HttpResponseBase.DataAsString">
@@ -900,19 +810,24 @@
             <param name="token">Cancellation token useful for canceling the request.</param>
             <returns>True if successful.</returns>
         </member>
-        <member name="M:WatsonWebserver.Core.HttpResponseBase.SendChunk(System.Byte[],System.Threading.CancellationToken)">
+        <member name="M:WatsonWebserver.Core.HttpResponseBase.SendChunk(System.Byte[],System.Boolean,System.Threading.CancellationToken)">
             <summary>
-            Send headers (if not already sent) and a chunk of data using chunked transfer-encoding, and keep the connection in-tact.
+            Send headers (if not already sent) and a chunk of data using chunked transfer-encoding.
+            The connection will be kept in-tact unless isFinal is set to true.
             </summary>
             <param name="chunk">Chunk of data.</param>
+            <param name="isFinal">Boolean indicating if this is the final chunk.</param>
             <param name="token">Cancellation token useful for canceling the request.</param>
             <returns>True if successful.</returns>
         </member>
-        <member name="M:WatsonWebserver.Core.HttpResponseBase.SendFinalChunk(System.Byte[],System.Threading.CancellationToken)">
+        <member name="M:WatsonWebserver.Core.HttpResponseBase.SendEvent(System.String,System.Boolean,System.Threading.CancellationToken)">
             <summary>
-            Send headers (if not already sent) and the final chunk of data using chunked transfer-encoding and terminate the connection.
+            Send headers (if not already sent) and a server-sent event.
+            Watson will handle prepending 'data: ' to your event data.
+            The connection will be kept in-tact unless isFinal is set to true.
             </summary>
-            <param name="chunk">Chunk of data.</param>
+            <param name="eventData">Event data.</param>
+            <param name="isFinal">Boolean indicating if this is the final chunk.</param>
             <param name="token">Cancellation token useful for canceling the request.</param>
             <returns>True if successful.</returns>
         </member>
@@ -1152,6 +1067,32 @@
             <param name="pr">Matching route.</param>
             <returns>True if match exists.</returns>
         </member>
+        <member name="T:WatsonWebserver.Core.QueryDetails">
+            <summary>
+            Query details.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.QueryDetails.Querystring">
+            <summary>
+            Querystring, excluding the leading '?'.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.QueryDetails.Elements">
+            <summary>
+            Query elements.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.QueryDetails.#ctor">
+            <summary>
+            Query details.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.QueryDetails.#ctor(System.String)">
+            <summary>
+            Query details.
+            </summary>
+            <param name="fullUrl">Full URL.</param>
+        </member>
         <member name="T:WatsonWebserver.Core.RequestEventArgs">
             <summary>
             Request event arguments.
@@ -1325,6 +1266,33 @@
             Instantiate.
             </summary>
         </member>
+        <member name="T:WatsonWebserver.Core.SourceDetails">
+            <summary>
+            Source details.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.SourceDetails.IpAddress">
+            <summary>
+            IP address of the requestor.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.SourceDetails.Port">
+            <summary>
+            TCP port from which the request originated on the requestor.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.SourceDetails.#ctor">
+            <summary>
+            Source details.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.SourceDetails.#ctor(System.String,System.Int32)">
+            <summary>
+            Source details.
+            </summary>
+            <param name="ip">IP address of the requestor.</param>
+            <param name="port">TCP port from which the request originated on the requestor.</param>
+        </member>
         <member name="T:WatsonWebserver.Core.StaticRoute">
             <summary>
             Assign a method handler for when requests are received matching the supplied method and path.
@@ -1423,6 +1391,48 @@
             <param name="path">URL path.</param>
             <param name="route">Matching route.</param>
             <returns>Method to invoke.</returns>
+        </member>
+        <member name="T:WatsonWebserver.Core.UrlDetails">
+            <summary>
+            URL details.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.UrlDetails.Full">
+            <summary>
+            Full URL.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.UrlDetails.RawWithQuery">
+            <summary>
+            Raw URL with query.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.UrlDetails.RawWithoutQuery">
+            <summary>
+            Raw URL without query.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.UrlDetails.Elements">
+            <summary>
+            Raw URL elements.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.UrlDetails.Parameters">
+            <summary>
+            Parameters found within the URL, if using parameter routes.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.UrlDetails.#ctor">
+            <summary>
+            URL details.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.UrlDetails.#ctor(System.String,System.String)">
+            <summary>
+            URL details.
+            </summary>
+            <param name="fullUrl">Full URL.</param>
+            <param name="rawUrl">Raw URL.</param>
         </member>
         <member name="T:WatsonWebserver.Core.WebserverBase">
             <summary>

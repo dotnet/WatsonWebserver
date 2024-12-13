@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace WatsonWebserver.Core
+﻿namespace WatsonWebserver.Core
 {
+    using System;
+    using System.Collections.Generic;
+
     /// <summary>
     /// MIME types and file extensions.
     /// </summary>

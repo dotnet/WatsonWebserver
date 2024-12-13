@@ -1,14 +1,14 @@
-﻿using System;
-using System.IO;
-using System.Net;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using CavemanTcp;
-using Timestamps;
-using WatsonWebserver.Core;
-
-namespace WatsonWebserver.Lite
+﻿namespace WatsonWebserver.Lite
 {
+    using System;
+    using System.IO;
+    using System.Net;
+    using System.Text.Json;
+    using System.Text.Json.Serialization;
+    using CavemanTcp;
+    using Timestamps;
+    using WatsonWebserver.Core;
+
     /// <summary>
     /// HTTP context including both request and response.
     /// </summary>

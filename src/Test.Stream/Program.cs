@@ -1,13 +1,13 @@
-﻿using System;
-using System.IO;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using WatsonWebserver;
-using WatsonWebserver.Core;
-
-namespace Test
+﻿namespace Test
 {
+    using System;
+    using System.IO;
+    using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using WatsonWebserver;
+    using WatsonWebserver.Core;
+
     class Program
     {
         static bool _UsingLite = false;

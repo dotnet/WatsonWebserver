@@ -1,13 +1,13 @@
-﻿using System;
-using System.IO;
-using System.Net;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using Timestamps;
-using WatsonWebserver.Core;
-
-namespace WatsonWebserver
+﻿namespace WatsonWebserver
 {
+    using System;
+    using System.IO;
+    using System.Net;
+    using System.Text.Json;
+    using System.Text.Json.Serialization;
+    using Timestamps;
+    using WatsonWebserver.Core;
+
     /// <summary>
     /// HTTP context including both request and response.
     /// </summary>

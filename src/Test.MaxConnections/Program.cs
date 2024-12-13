@@ -1,11 +1,11 @@
-﻿using System;
-using System.Threading.Tasks;
-using WatsonWebserver;
-using WatsonWebserver.Core;
-using RestWrapper;
-
-namespace Test.MaxConnections
+﻿namespace Test.MaxConnections
 {
+    using System;
+    using System.Threading.Tasks;
+    using WatsonWebserver;
+    using WatsonWebserver.Core;
+    using RestWrapper;
+
     class Program
     {
         static bool _UsingLite = false;
@@ -69,12 +69,16 @@ namespace Test.MaxConnections
             return;
         }
 
-        static void ClientTask()
+        static async Task ClientTask()
         {
             Console.WriteLine("Sending request");
-            RestRequest req = new RestRequest("http://" + _Hostname + ":" + _Port + "/");
-            RestResponse resp = req.Send();
-            Console.WriteLine("Response received: " + resp.StatusDescription);
+            using (RestRequest req = new RestRequest("http://" + _Hostname + ":" + _Port + "/"))
+            {
+                using (RestResponse resp = await req.SendAsync())
+                {
+                    Console.WriteLine("Response received: " + resp.StatusDescription);
+                }
+            }
         }
     }
 }

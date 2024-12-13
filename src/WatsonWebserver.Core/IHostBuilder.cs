@@ -1,9 +1,9 @@
-﻿using System;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-
-namespace WatsonWebserver.Core
+﻿namespace WatsonWebserver.Core
 {
+    using System;
+    using System.Text.RegularExpressions;
+    using System.Threading.Tasks;
+
     /// <summary>
     /// Host builder interface.
     /// </summary>

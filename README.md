@@ -16,9 +16,11 @@ Special thanks to @DamienDennehy for allowing us the use of the ```Watson.Core``
 
 This project is part of the [.NET Foundation](http://www.dotnetfoundation.org/projects) along with other projects like [the .NET Runtime](https://github.com/dotnet/runtime/).
 
-## New in v6.2.x
+## New in v6.3.x
 
-- Support for specifying exception handler for static, content, parameter, and dynamic routes (thank you @nomadeon)
+- Minor change to chunked transfer, i.e. `SendChunk` now accepts `isFinal` as a `Boolean` property
+- Added support for server-sent events, included `Test.ServerSentEvents` project
+- Minor internal refactor
 
 ## Special Thanks
 
@@ -232,15 +234,47 @@ static async Task DownloadChunkedFile(HttpContextBase ctx)
     while (true)
     {
       int bytesRead = await fs.ReadAsync(buffer, 0, buffer.Length);
+      byte[] data = new byte[bytesRead];
+      Buffer.BlockCopy(buffer, 0, bytesRead, data, 0); // only copy the read data
+
       if (bytesRead > 0)
       {
-        await ctx.Response.SendChunk(buffer, bytesRead);
+        await ctx.Response.SendChunk(data, false);
       }
       else
       {
-        await ctx.Response.SendFinalChunk(null, 0);
+        await ctx.Response.SendChunk(Array.Empty<byte>(), true);
         break;
       }
+    }
+  }
+
+  return;
+}
+```
+
+## Server-Sent Events
+
+Watson supports sending server-sent events.  Refer to `Test.ServerSentEvents` for a sample implementation.  The `SendEvent` method handles prepending `data: ` and the following `\n\n` to your message.
+
+### Sending Events
+
+```csharp
+static async Task SendEvents(HttpContextBase ctx)
+{
+  ctx.Response.StatusCode = 200;
+  ctx.Response.ServerSentEvents = true;
+
+  while (true)
+  {
+    string data = GetNextEvent(); // your implementation
+    if (!String.IsNullOrEmpty(data))
+    {
+      await ctx.Response.SendEvent(data);
+    }
+    else
+    {
+      break;
     }
   }
 

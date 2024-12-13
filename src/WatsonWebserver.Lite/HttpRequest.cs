@@ -1,19 +1,19 @@
-﻿using System;
-using System.Collections.Specialized;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading;
-using System.Threading.Tasks;
-using CavemanTcp;
-using Timestamps;
-using WatsonWebserver.Core;
-
-namespace WatsonWebserver.Lite
+﻿namespace WatsonWebserver.Lite
 {
+    using System;
+    using System.Collections.Specialized;
+    using System.Globalization;
+    using System.IO;
+    using System.Linq;
+    using System.Net;
+    using System.Text;
+    using System.Text.Json.Serialization;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using CavemanTcp;
+    using Timestamps;
+    using WatsonWebserver.Core;
+
     /// <summary>
     /// Data extracted from an incoming HTTP request.
     /// </summary>
@@ -423,7 +423,7 @@ namespace WatsonWebserver.Lite
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
             if (!input.CanRead) throw new InvalidOperationException("Input stream is not readable");
-            if (contentLength < 1) return new byte[0];
+            if (contentLength < 1) return Array.Empty<byte>();
 
             byte[] buffer = new byte[_StreamBufferSize];
             long bytesRemaining = contentLength;

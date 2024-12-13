@@ -1,14 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Globalization;
-using System.Linq;
-using System.Net;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-
-namespace WatsonWebserver.Core
+﻿namespace WatsonWebserver.Core
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Collections.Specialized;
+    using System.Globalization;
+    using System.Linq;
+    using System.Net;
+    using System.Text.Json;
+    using System.Text.Json.Serialization;
+
     /// <summary>
     /// Default serialization helper.
     /// </summary>
