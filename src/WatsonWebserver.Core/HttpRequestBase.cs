@@ -45,7 +45,7 @@
         /// The protocol and version.
         /// </summary>
         [JsonPropertyOrder(-9)]
-        public string ProtocolVersion { get; set; } = null;
+        public string ProtocolVersion { get; set; } = "HTTP/1.1";
 
         /// <summary>
         /// Source (requestor) IP and port information.

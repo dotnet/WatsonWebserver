@@ -32,7 +32,7 @@
         /// The protocol and version.
         /// </summary>
         [JsonPropertyOrder(-4)]
-        public string ProtocolVersion { get; set; } = null;
+        public string ProtocolVersion { get; set; } = "HTTP/1.1";
 
         /// <summary>
         /// The HTTP status code to return to the requestor (client).

@@ -397,6 +397,7 @@
         {
             if (_HeadersSet) throw new IOException("Headers already sent.");
 
+            _Response.ProtocolVersion = new Version(1, 1);
             _Response.ContentLength64 = ContentLength;
             _Response.StatusCode = StatusCode;
             _Response.StatusDescription = GetStatusDescription(StatusCode);

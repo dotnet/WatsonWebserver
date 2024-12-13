@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.1;net462;net48;net6.0;net8.0</TargetFrameworks>
-		<Version>6.3.0</Version>
+		<Version>6.3.2</Version>
 		<Description>Simple, fast, async C# web server for handling REST requests with SSL support, targeted to .NET Core, .NET Standard, and .NET Framework.</Description>
 		<PackageReleaseNotes>Dependency update</PackageReleaseNotes>
 		<Authors>Joel Christner</Authors>
@@ -44,7 +44,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Watson.Core" Version="6.3.1" />
+	  <PackageReference Include="Watson.Core" Version="6.3.2" />
 	</ItemGroup>
 
 	<ItemGroup>
