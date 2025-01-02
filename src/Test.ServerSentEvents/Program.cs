@@ -16,7 +16,7 @@
         static int _Port = 8080;
         static WebserverSettings _Settings = null;
         static WebserverBase _Server = null;
-
+        
         static async Task Main(string[] args)
         {
             if (args != null && args.Length > 0)
@@ -55,7 +55,7 @@
             {
                 if (ctx.Request.Url.RawWithoutQuery.Equals("/txt/test.txt"))
                 {
-                    Console.WriteLine("- User requested /txt/test.txt");
+                    Console.WriteLine("- User requested /txt/test.txt using " + ctx.Request.ProtocolVersion);
                     ctx.Response.StatusCode = 200;
                     ctx.Response.ServerSentEvents = true;
 

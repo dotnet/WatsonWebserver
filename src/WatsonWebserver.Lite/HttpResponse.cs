@@ -471,7 +471,10 @@
             if (!_HeadersSet)
             {
                 if (ChunkedTransfer || ServerSentEvents)
+                {
+                    ProtocolVersion = "HTTP/1.1";
                     Headers.Add("Transfer-Encoding", "chunked");
+                }
 
                 if (ServerSentEvents)
                 {
