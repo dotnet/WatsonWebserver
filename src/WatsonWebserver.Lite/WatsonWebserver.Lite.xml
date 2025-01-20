@@ -165,11 +165,13 @@
             Instantiate the object.
             </summary>
         </member>
-        <member name="M:WatsonWebserver.Lite.HttpRequest.#ctor(System.String,System.IO.Stream,System.String)">
+        <member name="M:WatsonWebserver.Lite.HttpRequest.#ctor(WatsonWebserver.Core.WebserverSettings,System.String,System.String,System.IO.Stream,System.String)">
             <summary>
             Create an HttpRequest.
             </summary>
-            <param name="ipPort">IP:port of the requestor.</param>
+            <param name="settings">Settings.</param>
+            <param name="sourceIpPort">IP:port of the requestor.</param>
+            <param name="destIpPort">IP:port of the destination.</param>
             <param name="stream">Client stream.</param>
             <param name="requestHeader">Request header.</param>
             <returns>HttpRequest.</returns>

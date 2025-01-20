@@ -19,7 +19,9 @@
         #endregion
 
         #region Private-Members
-         
+
+        private WebserverSettings _Settings = null;
+
         #endregion
 
         #region Constructors-and-Factories
@@ -33,20 +35,23 @@
         }
 
         internal HttpContext(
-            string ipPort, 
+            WebserverSettings settings,
+            WebserverEvents events,
+            string sourceIpPort, 
+            string destIpPort,
             Stream stream, 
             string requestHeader, 
-            WebserverEvents events, 
-            WebserverSettings.HeaderSettings headers,
             int streamBufferSize)
-        { 
+        {
+            if (settings == null) throw new ArgumentNullException(nameof(settings));
             if (String.IsNullOrEmpty(requestHeader)) throw new ArgumentNullException(nameof(requestHeader));
             if (stream == null) throw new ArgumentNullException(nameof(stream));
-            if (headers == null) throw new ArgumentNullException(nameof(headers));
             if (streamBufferSize < 1) throw new ArgumentOutOfRangeException(nameof(streamBufferSize));
 
-            Request = new HttpRequest(ipPort, stream, requestHeader);
-            Response = new HttpResponse(ipPort, headers, stream, Request, events, streamBufferSize);
+            _Settings = settings;
+
+            Request = new HttpRequest(_Settings, sourceIpPort, destIpPort, stream, requestHeader);
+            Response = new HttpResponse(sourceIpPort, _Settings.Headers, stream, Request, events, streamBufferSize);
         }
 
         #endregion

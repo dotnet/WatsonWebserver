@@ -15,8 +15,8 @@
     {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-        static bool _UsingLite = false;
-        static string _Hostname = "localhost";
+        static bool _UsingLite = true;
+        static string _Hostname = "127.0.0.1";
         static int _Port = 8080;
         static WebserverSettings _Settings = null;
         static WebserverBase _Server = null;
@@ -153,6 +153,7 @@
 
         static void ExceptionEncountered(object sender, ExceptionEventArgs args)
         {
+            Console.WriteLine(args.Exception.ToString());
             _Server.Events.Logger(args.Exception.ToString());
         }
 
@@ -165,8 +166,8 @@
         {
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "application/json";
-            await ctx.Response.Send(_Server.Serializer.SerializeJson(ctx, true));
-            _Server.Events.Logger(_Server.Serializer.SerializeJson(ctx, true));
+            await ctx.Response.Send(_Server.Serializer.SerializeJson(ctx.Request, true));
+            _Server.Events.Logger(_Server.Serializer.SerializeJson(ctx.Request, true));
             return;
         }
 
@@ -175,7 +176,7 @@
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "text/plain";
             await ctx.Response.Send("Hello static route");
-            _Server.Events.Logger(_Server.Serializer.SerializeJson(ctx, true));
+            _Server.Events.Logger(_Server.Serializer.SerializeJson(ctx.Request, true));
             return;
         }
 
@@ -185,7 +186,7 @@
             ctx.Response.StatusCode = 200;
             ctx.Response.ContentType = "text/plain";
             await ctx.Response.Send("Get user by ID " + id + " route");
-            _Server.Events.Logger(_Server.Serializer.SerializeJson(ctx, true));
+            _Server.Events.Logger(_Server.Serializer.SerializeJson(ctx.Request, true));
             return;
         }
 
@@ -245,6 +246,7 @@
 
         static async Task<bool> PreRoutingHandler(HttpContextBase ctx)
         {
+            Console.WriteLine("In pre-routing handler");
             ctx.Metadata = "Hello, world!";
             return false;
         }
@@ -262,7 +264,7 @@
                 ctx.Response.StatusCode = 200;
                 ctx.Response.ContentType = "text/plain";
                 await ctx.Response.Send("Default route");
-                _Server.Events.Logger(_Server.Serializer.SerializeJson(ctx, true));
+                _Server.Events.Logger(_Server.Serializer.SerializeJson(ctx.Request, true));
                 return;
             }
             catch (Exception e)

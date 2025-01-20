@@ -75,8 +75,10 @@
 
         #region Private-Members
 
+        private WebserverSettings _Settings = null;
         private int _StreamBufferSize = 65536;
-        private string _IpPort;
+        private string _SourceIpPort;
+        private string _DestIpPort;
         private string _RequestHeader = null;  
         private byte[] _DataAsBytes = null; 
         private NameValueCollection _Headers = new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
@@ -96,19 +98,26 @@
         /// <summary>
         /// Create an HttpRequest.
         /// </summary>
-        /// <param name="ipPort">IP:port of the requestor.</param>
+        /// <param name="settings">Settings.</param>
+        /// <param name="sourceIpPort">IP:port of the requestor.</param>
+        /// <param name="destIpPort">IP:port of the destination.</param>
         /// <param name="stream">Client stream.</param>
         /// <param name="requestHeader">Request header.</param>
         /// <returns>HttpRequest.</returns>
-        public HttpRequest(string ipPort, Stream stream, string requestHeader)
+        public HttpRequest(WebserverSettings settings, string sourceIpPort, string destIpPort, Stream stream, string requestHeader)
         {
-            if (String.IsNullOrEmpty(ipPort)) throw new ArgumentNullException(nameof(ipPort));
+            if (settings == null) throw new ArgumentNullException(nameof(settings));
+            if (String.IsNullOrEmpty(sourceIpPort)) throw new ArgumentNullException(nameof(sourceIpPort));
+            if (String.IsNullOrEmpty(destIpPort)) throw new ArgumentNullException(nameof(destIpPort));
             if (String.IsNullOrEmpty(requestHeader)) throw new ArgumentNullException(nameof(requestHeader));
             if (stream == null) throw new ArgumentNullException(nameof(stream));
             if (!stream.CanRead) throw new IOException("Cannot read from supplied stream.");
 
-            _IpPort = ipPort;
+            _Settings = settings;
+            _SourceIpPort = sourceIpPort;
+            _DestIpPort = destIpPort;
             _RequestHeader = requestHeader;
+
             Data = stream;
 
             Build();
@@ -302,7 +311,8 @@
         { 
             #region Initial-Values
 
-            Source = new SourceDetails(IpFromIpPort(_IpPort), PortFromIpPort(_IpPort));
+            Source = new SourceDetails(Common.IpFromIpPort(_SourceIpPort), Common.PortFromIpPort(_SourceIpPort));
+            Destination = new DestinationDetails(Common.IpFromIpPort(_DestIpPort), Common.PortFromIpPort(_DestIpPort), Common.IpFromIpPort(_DestIpPort));
             ThreadId = Thread.CurrentThread.ManagedThreadId; 
              
             #endregion
@@ -338,8 +348,10 @@
                         tempPath = tempUrl;
                     }
 
+                    string fullUrl = (_Settings.Ssl.Enable ? "https://" : "http://") + _Settings.Hostname + ":" + _Settings.Port + tempPath;
+
                     Method = (HttpMethod)Enum.Parse(typeof(HttpMethod), requestLine[0], true); 
-                    Url = new UrlDetails(null, tempPath);
+                    Url = new UrlDetails(fullUrl, tempPath);
                     Query = new QueryDetails(requestLine[1]);
                      
                     ProtocolVersion = requestLine[2]; 
@@ -445,32 +457,6 @@
                 byte[] ret = ms.ToArray();
                 return ret;
             }
-        }
-
-        private string IpFromIpPort(string ipPort)
-        {
-            if (String.IsNullOrEmpty(ipPort)) throw new ArgumentNullException(nameof(ipPort));
-
-            int colonIndex = ipPort.LastIndexOf(':');
-            if (colonIndex != -1)
-            {
-                return ipPort.Substring(0, colonIndex);
-            }
-
-            return null;
-        }
-
-        private int PortFromIpPort(string ipPort)
-        {
-            if (String.IsNullOrEmpty(ipPort)) throw new ArgumentNullException(nameof(ipPort));
-
-            int colonIndex = ipPort.LastIndexOf(':');
-            if (colonIndex != -1)
-            {
-                return Convert.ToInt32(ipPort.Substring(colonIndex + 1));
-            }
-
-            return 0;
         }
 
         #endregion

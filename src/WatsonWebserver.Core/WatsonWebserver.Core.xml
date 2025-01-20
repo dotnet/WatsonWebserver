@@ -1434,6 +1434,13 @@
             <param name="fullUrl">Full URL.</param>
             <param name="rawUrl">Raw URL.</param>
         </member>
+        <member name="M:WatsonWebserver.Core.UrlDetails.ParameterExists(System.String)">
+            <summary>
+            Check if a parameter exists.
+            </summary>
+            <param name="key">Key.</param>
+            <returns>True if exists.</returns>
+        </member>
         <member name="T:WatsonWebserver.Core.WebserverBase">
             <summary>
             Webserver base.

@@ -136,6 +136,19 @@
 
         #region Public-Methods
 
+        /// <summary>
+        /// Check if a parameter exists.
+        /// </summary>
+        /// <param name="key">Key.</param>
+        /// <returns>True if exists.</returns>
+        public bool ParameterExists(string key)
+        {
+            if (String.IsNullOrEmpty(key)) throw new ArgumentNullException(nameof(key));
+            if (_Parameters == null) return false;
+            if (_Parameters.AllKeys.Contains(key)) return true;
+            return false;
+        }
+
         #endregion
 
         #region Private-Methods
