@@ -200,10 +200,17 @@
             #region Parse-IP-Port
 
             string sourceIpPort = args.Client.IpPort;
-            string destIpPort = Settings.Hostname + ":" + Settings.Port;
             string ip = null;
             int port = 0;
             Common.ParseIpPort(sourceIpPort, out ip, out port);
+
+            string destIpPort = Settings.Hostname + ":" + Settings.Port;
+            if (args.LocalEndpoint != null)
+            {
+                IPEndPoint localEndpoint = (IPEndPoint)args.LocalEndpoint;
+                destIpPort = localEndpoint.Address.ToString() + ":" + localEndpoint.Port;
+            }
+
             HttpContext ctx = null;
 
             Events.HandleConnectionReceived(this, new ConnectionEventArgs(ip, port));
