@@ -56,6 +56,42 @@
             Deny requests from any endpoint by default.
             </summary>
         </member>
+        <member name="T:WatsonWebserver.Core.AuthorizationDetails">
+            <summary>
+            Authorization details.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.AuthorizationDetails.Value">
+            <summary>
+            Value.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.AuthorizationDetails.Username">
+            <summary>
+            Username.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.AuthorizationDetails.Password">
+            <summary>
+            Password.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.AuthorizationDetails.BearerToken">
+            <summary>
+            Bearer token.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.AuthorizationDetails.#ctor">
+            <summary>
+            Authorization details.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.AuthorizationDetails.#ctor(System.String)">
+            <summary>
+            Authorization details.
+            </summary>
+            <param name="value">Value from the Authorization header.</param>
+        </member>
         <member name="T:WatsonWebserver.Core.Chunk">
             <summary>
             A chunk of data, used when reading from a request where the Transfer-Encoding header includes 'chunked'.
@@ -612,6 +648,11 @@
         <member name="P:WatsonWebserver.Core.HttpRequestBase.Headers">
             <summary>
             The headers found in the request.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.HttpRequestBase.Authorization">
+            <summary>
+            Authorization details.
             </summary>
         </member>
         <member name="P:WatsonWebserver.Core.HttpRequestBase.Keepalive">

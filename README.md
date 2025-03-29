@@ -96,7 +96,7 @@ using WatsonWebserver;
 static void Main(string[] args)
 {
   WebserverSettings settings = new WebserverSettings("127.0.0.1", 9000);
-  Webserver server = new Webserver(settings, DefaultRoute);
+  WebserverBase server = new WebserverBase(settings, DefaultRoute);
   server.Start();
   Console.ReadLine();
 }
@@ -120,7 +120,7 @@ using WatsonWebserver;
 static void Main(string[] args)
 {
   WebserverSettings settings = new WebserverSettings("127.0.0.1", 9000);
-  Webserver server = new Webserver(settings, DefaultRoute);
+  WebserverBase server = new Webserver(settings, DefaultRoute);
 
   // add content routes
   server.Routes.PreAuthentication.Content.Add("/html/", true);

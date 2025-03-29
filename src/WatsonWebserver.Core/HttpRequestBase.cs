@@ -101,6 +101,22 @@
         }
 
         /// <summary>
+        /// Authorization details.
+        /// </summary>
+        public AuthorizationDetails Authorization
+        {
+            get
+            {
+                if (_Headers != null && _Headers.AllKeys.Contains("Authorization"))
+                {
+                    return new AuthorizationDetails(_Headers.Get("Authorization"));
+                }
+
+                return new AuthorizationDetails();
+            }
+        }
+
+        /// <summary>
         /// Specifies whether or not the client requested HTTP keepalives.
         /// </summary>
         public bool Keepalive { get; set; } = false;
