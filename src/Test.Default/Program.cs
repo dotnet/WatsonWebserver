@@ -258,6 +258,8 @@
 
         static async Task DefaultRoute(HttpContextBase ctx)
         {
+            Console.WriteLine(_Server.Serializer.SerializeJson(ctx.Request, true));
+
             try
             {
                 ctx.Response.Headers.Add("Connection", "close");
@@ -269,7 +271,7 @@
             }
             catch (Exception e)
             {
-                Console.WriteLine(_Server.Serializer.SerializeJson(e, true));
+                Console.WriteLine(e.ToString());
                 ctx.Response.StatusCode = 500;
                 await ctx.Response.Send();
                 return;

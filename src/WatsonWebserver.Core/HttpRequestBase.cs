@@ -51,13 +51,35 @@
         /// Source (requestor) IP and port information.
         /// </summary>
         [JsonPropertyOrder(-8)]
-        public SourceDetails Source { get; set; } = new SourceDetails();
+        public SourceDetails Source
+        {
+            get
+            {
+                return _Source;
+            }
+            set
+            {
+                if (value == null) value = new SourceDetails();
+                _Source = value;
+            }
+        }
 
         /// <summary>
         /// Destination IP and port information.
         /// </summary>
         [JsonPropertyOrder(-7)]
-        public DestinationDetails Destination { get; set; } = new DestinationDetails();
+        public DestinationDetails Destination
+        {
+            get
+            {
+                return _Destination;
+            }
+            set
+            {
+                if (value == null) value = new DestinationDetails();
+                _Destination = value;
+            }
+        }
 
         /// <summary>
         /// The HTTP method used in the request.
@@ -75,13 +97,35 @@
         /// URL details.
         /// </summary>
         [JsonPropertyOrder(-4)]
-        public UrlDetails Url { get; set; } = new UrlDetails();
+        public UrlDetails Url
+        {
+            get
+            {
+                return _Url;
+            }
+            set
+            {
+                if (value == null) value = new UrlDetails();
+                _Url = value;
+            }
+        }
 
         /// <summary>
         /// Query details.
         /// </summary>
         [JsonPropertyOrder(-3)]
-        public QueryDetails Query { get; set; } = new QueryDetails();
+        public QueryDetails Query
+        {
+            get
+            {
+                return _Query;
+            }
+            set
+            {
+                if (value == null) value = new QueryDetails();
+                _Query = value;
+            }
+        }
 
         /// <summary>
         /// The headers found in the request.
@@ -135,7 +179,7 @@
         /// Indicates whether or not the payload has been deflate compressed.
         /// </summary>
         public bool Deflate { get; set; } = false;
-         
+
         /// <summary>
         /// The useragent specified in the request.
         /// </summary>
@@ -175,6 +219,10 @@
 
         #region Private-Members
 
+        private SourceDetails _Source = new SourceDetails();
+        private DestinationDetails _Destination = new DestinationDetails();
+        private UrlDetails _Url = new UrlDetails();
+        private QueryDetails _Query = new QueryDetails();
         private NameValueCollection _Headers = new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
 
         #endregion
