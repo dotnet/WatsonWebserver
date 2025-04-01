@@ -31,14 +31,15 @@
         {
             get
             {
-                if (_FullUrl.Contains("?"))
+                if (!String.IsNullOrEmpty(_FullUrl))
                 {
-                    return _FullUrl.Substring(_FullUrl.IndexOf("?") + 1, (_FullUrl.Length - _FullUrl.IndexOf("?") - 1));
+                    if (_FullUrl.Contains("?"))
+                    {
+                        return _FullUrl.Substring(_FullUrl.IndexOf("?") + 1, (_FullUrl.Length - _FullUrl.IndexOf("?") - 1));
+                    }
                 }
-                else
-                {
-                    return null;
-                }
+
+                return null;
             }
         }
 
@@ -100,7 +101,6 @@
         public QueryDetails(string fullUrl)
         {
             if (String.IsNullOrEmpty(fullUrl)) throw new ArgumentNullException(nameof(fullUrl));
-
             _FullUrl = fullUrl;
         }
 
