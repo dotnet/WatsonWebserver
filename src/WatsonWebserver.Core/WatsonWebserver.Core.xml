@@ -1438,6 +1438,26 @@
             URL details.
             </summary>
         </member>
+        <member name="P:WatsonWebserver.Core.UrlDetails.Uri">
+            <summary>
+            URI.  This value may be null based on how the UrlDetails object was initialized.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.UrlDetails.Scheme">
+            <summary>
+            Scheme name for the URI.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.UrlDetails.Host">
+            <summary>
+            Host name from the URI.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.UrlDetails.Port">
+            <summary>
+            Port number from the URI.
+            </summary>
+        </member>
         <member name="P:WatsonWebserver.Core.UrlDetails.Full">
             <summary>
             Full URL.

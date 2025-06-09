@@ -25,6 +25,53 @@
         #region Public-Members
 
         /// <summary>
+        /// URI.  This value may be null based on how the UrlDetails object was initialized.
+        /// </summary>
+        public Uri Uri
+        {
+            get
+            {
+                return _Uri;
+            }
+        }
+
+        /// <summary>
+        /// Scheme name for the URI.
+        /// </summary>
+        public string Scheme
+        {
+            get
+            {
+                if (_Uri != null) return _Uri.Scheme;
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Host name from the URI.
+        /// </summary>
+        public string Host
+        {
+            get
+            {
+                if (_Uri != null) return _Uri.Host;
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Port number from the URI.
+        /// </summary>
+        public int? Port
+        {
+            get
+            {
+                if (_Uri != null) return _Uri.Port;
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Full URL.
         /// </summary>
         public string Full { get; set; } = null;
@@ -101,10 +148,11 @@
             }
         }
 
-        #endregion
+        #endregion 
 
         #region Private-Members
-        
+
+        private Uri _Uri = null;
         private NameValueCollection _Parameters = new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
 
         #endregion
@@ -127,6 +175,8 @@
         public UrlDetails(string fullUrl, string rawUrl)
         {
             if (String.IsNullOrEmpty(rawUrl)) throw new ArgumentNullException(nameof(rawUrl));
+
+            _Uri = new Uri(fullUrl);
 
             Full = fullUrl;
             RawWithQuery = rawUrl;

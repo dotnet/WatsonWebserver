@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.0;netstandard2.1;net462;net48;net6.0;net8.0</TargetFrameworks>
-		<Version>6.3.9</Version>
+		<Version>6.3.10</Version>
 		<Description>Simple, fast, async C# web server for handling REST requests with SSL support, targeted to .NET Core, .NET Standard, and .NET Framework.  Watson.Lite has no dependency on http.sys.</Description>
 		<PackageReleaseNotes>Dependency update</PackageReleaseNotes>
 		<Authors>Joel Christner</Authors>
@@ -29,7 +29,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="CavemanTcp" Version="2.0.9" />
-		<PackageReference Include="Watson.Core" Version="6.3.9" />
+		<PackageReference Include="Watson.Core" Version="6.3.10" />
 	</ItemGroup>
 
 	<ItemGroup>
