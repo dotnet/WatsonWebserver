@@ -96,7 +96,7 @@ using WatsonWebserver;
 static void Main(string[] args)
 {
   WebserverSettings settings = new WebserverSettings("127.0.0.1", 9000);
-  WebserverBase server = new WebserverBase(settings, DefaultRoute);
+  WebserverBase server = new Webserver(settings, DefaultRoute);
   server.Start();
   Console.ReadLine();
 }
