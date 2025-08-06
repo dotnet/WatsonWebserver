@@ -30,7 +30,7 @@ I'd like to extend a special thanks to those that have helped make Watson Webser
 - @MartyIX @pocsuka @orinem @deathbull @binozo @panboy75 @iain-cyborn @gamerhost31 
 - @nhaberl @grgouala @sapurtcomputer30 @winkmichael @sqlnew @SaintedPsycho @Return25 
 - @marcussacana @samisil @Jump-Suit @ChZhongPengCheng33 @bobaoapae @rodgers-r 
-- @john144 @zedle @GitHubProUser67 @bemoty @bemon @nomadeon
+- @john144 @zedle @GitHubProUser67 @bemoty @bemon @nomadeon @Infiziert90
 
 ## Watson vs Watson.Lite
 
@@ -50,6 +50,7 @@ Watson.Lite is generally less performant than Watson, because the HTTP implement
   - Watson.Lite uses a TCP listener; your server must be started with an IP address, not a hostname
   - The HTTP HOST header does not need to match, since the listener must be defined by IP address
   - For SSL, the certificate filename, filename and password, or `X509Certificate2` must be supplied
+  - When a request body is present, certain browsers may require that you fully read the request body server-side before redirecting or responding to the request
 
 ## Routing
 
