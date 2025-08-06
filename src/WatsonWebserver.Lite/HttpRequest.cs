@@ -452,6 +452,10 @@
                         ms.Write(buffer, 0, read);
                         bytesRemaining -= read;
                     }
+                    else
+                    {
+                        throw new IOException("Connection closed before reading to the end of the stream.");
+                    }
                 }
 
                 byte[] ret = ms.ToArray();

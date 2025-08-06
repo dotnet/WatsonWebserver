@@ -176,6 +176,8 @@
             if (String.IsNullOrEmpty(hostname)) hostname = "localhost";
             if (port < 0) throw new ArgumentOutOfRangeException(nameof(port));
 
+            if (hostname.Equals("::")) hostname = "[::]";
+
             _Ssl.Enable = ssl;
             _Hostname = hostname;
             _Port = port;
