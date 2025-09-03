@@ -141,6 +141,22 @@
             }
         }
 
+        /// <summary>
+        /// When true, the machine's hostname will be used instead of the value specified in Hostname.
+        /// </summary>
+        public bool UseMachineHostname
+        {
+            get
+            {
+                if (Hostname == "*" || Hostname == "+") return true;
+                return _UseMachineHostname;
+            }
+            set
+            {
+                _UseMachineHostname = (Hostname == "*" || Hostname == "+") || value;
+            }
+        }
+
         #endregion
 
         #region Private-Members
@@ -152,6 +168,7 @@
         private AccessControlManager _AccessControl = new AccessControlManager(AccessControlMode.DefaultPermit);
         private DebugSettings _Debug = new DebugSettings();
         private HeaderSettings _Headers = new HeaderSettings();
+        private bool _UseMachineHostname = false;
 
         #endregion
 
@@ -161,7 +178,7 @@
         /// Webserver settings.
         /// </summary>
         public WebserverSettings()
-        { 
+        {
 
         }
 
@@ -190,7 +207,7 @@
         #endregion
 
         #region Private-Methods
-        
+
         #endregion
 
         #region Public-Classes
@@ -357,7 +374,7 @@
             /// </summary>
             public SslSettings()
             {
-            } 
+            }
         }
 
         /// <summary>
@@ -369,7 +386,7 @@
             /// Automatically set content length if not already set.
             /// </summary>
             public bool IncludeContentLength { get; set; } = true;
-            
+
             /// <summary>
             /// Headers to add to each request.
             /// </summary>
@@ -424,7 +441,7 @@
             /// Enable or disable debug logging of routing.
             /// </summary>
             public bool Routing { get; set; } = false;
-              
+
             /// <summary>
             /// Enable or disable debug logging of requests.
             /// </summary>
