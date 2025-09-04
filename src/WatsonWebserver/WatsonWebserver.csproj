@@ -1,56 +1,56 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup>
-		<TargetFrameworks>netstandard2.0;netstandard2.1;net462;net48;net6.0;net8.0</TargetFrameworks>
-		<Version>6.3.12</Version>
-		<Description>Simple, fast, async C# web server for handling REST requests with SSL support, targeted to .NET Core, .NET Standard, and .NET Framework.</Description>
-		<PackageReleaseNotes>Dependency update</PackageReleaseNotes>
-		<Authors>Joel Christner</Authors>
-		<Company>Joel Christner</Company>
-		<Copyright>(c)2025 Joel Christner</Copyright>
-		<PackageProjectUrl>https://github.com/dotnet/WatsonWebserver</PackageProjectUrl>
-		<PackageLicenseUrl></PackageLicenseUrl>
-		<RepositoryUrl>https://github.com/dotnet/WatsonWebserver</RepositoryUrl>
-		<RepositoryType>Github</RepositoryType>
-		<PackageTags>web server rest restful http https api async ssl</PackageTags>
-		<PackageId>Watson</PackageId>
-		<Product>Watson</Product>
-		<PackageIconUrl></PackageIconUrl>
-		<PackageLicenseFile>LICENSE.md</PackageLicenseFile>
-		<PackageIcon>watson.png</PackageIcon>
-		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<IncludeSymbols>True</IncludeSymbols>
-		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
-		<Title>Watson Webserver</Title>
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<DocumentationFile>WatsonWebserver.xml</DocumentationFile>
-	</PropertyGroup>
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net462;net48;net6.0;net8.0</TargetFrameworks>
+    <Version>6.3.12</Version>
+    <Description>Simple, fast, async C# web server for handling REST requests with SSL support, targeted to .NET Core, .NET Standard, and .NET Framework.</Description>
+    <PackageReleaseNotes>Dependency update</PackageReleaseNotes>
+    <Authors>Joel Christner</Authors>
+    <Company>Joel Christner</Company>
+    <Copyright>(c)2025 Joel Christner</Copyright>
+    <PackageProjectUrl>https://github.com/dotnet/WatsonWebserver</PackageProjectUrl>
+    <PackageLicenseUrl></PackageLicenseUrl>
+    <RepositoryUrl>https://github.com/dotnet/WatsonWebserver</RepositoryUrl>
+    <RepositoryType>Github</RepositoryType>
+    <PackageTags>web server rest restful http https api async ssl</PackageTags>
+    <PackageId>Watson</PackageId>
+    <Product>Watson</Product>
+    <PackageIconUrl></PackageIconUrl>
+    <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
+    <PackageIcon>watson.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <IncludeSymbols>True</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <Title>Watson Webserver</Title>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <DocumentationFile>WatsonWebserver.xml</DocumentationFile>
+  </PropertyGroup>
 
-	<ItemGroup>
-		<None Include="..\..\README.md">
-		  <Pack>True</Pack>
-		  <PackagePath>\</PackagePath>
-		</None>
-		<None Include="assets\watson.png">
-			<Pack>True</Pack>
-			<PackagePath></PackagePath>
-		</None>
-		<None Include="LICENSE.md">
-			<Pack>True</Pack>
-			<PackagePath></PackagePath>
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</None>
-	</ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="assets\watson.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+    <None Include="LICENSE.md">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 
-	<ItemGroup>
-	  <PackageReference Include="Watson.Core" Version="6.3.12" />
-	</ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\WatsonWebserver.Core\WatsonWebserver.Core.csproj" />
+  </ItemGroup>
 
-	<ItemGroup>
-	  <None Update="WatsonWebserver.xml">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	</ItemGroup>
+  <ItemGroup>
+    <None Update="WatsonWebserver.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 
 </Project>

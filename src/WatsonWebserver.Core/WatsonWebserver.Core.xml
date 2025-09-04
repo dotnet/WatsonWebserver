@@ -1587,6 +1587,22 @@
             Stop accepting new connections.
             </summary>
         </member>
+        <member name="M:WatsonWebserver.Core.WebserverBase.GetBestLocalHostName">
+            <summary>
+            Robustly retrieves and sanitizes a valid hostname for the local machine
+            by trying several strategies in order of preference.
+            This method is safe to use on all platforms, including iOS and Android.
+            </summary>
+            <returns>An RFC-compliant valid hostname, with a final fallback to "localhost".</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebserverBase.SanitizeHostName(System.String)">
+            <summary>
+            Converts a string into a valid RFC 1123 hostname.
+            It removes invalid characters, converts to lowercase, and handles hyphens.
+            </summary>
+            <param name="potentialName">The name to sanitize.</param>
+            <returns>A valid hostname, or null if the string contains no valid characters.</returns>
+        </member>
         <member name="T:WatsonWebserver.Core.WebserverConstants">
             <summary>
             Webserver constants.
@@ -1966,6 +1982,11 @@
             <summary>
             Debug logging settings.
             Be sure to set Events.Logger in order to receive debug messages.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebserverSettings.UseMachineHostname">
+            <summary>
+            When true, the machine's hostname will be used instead of the value specified in Hostname.
             </summary>
         </member>
         <member name="M:WatsonWebserver.Core.WebserverSettings.#ctor">

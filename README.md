@@ -316,6 +316,47 @@ static async Task TestRoute(HttpContextBase ctx) =>
     await ctx.Response.Send("Hello from the test route!"); 
 ```
 
+## Hostname Handling for HTTP Responses
+
+To correctly handle the `Host` HTTP header, a new boolean property, `UseMachineHostname`, has been introduced in `WebserverSettings`. This is especially important when using wildcard bindings.
+
+-   **Wildcard Binding Behavior**: When `Hostname` is set to `*` or `+`, the server will **mandatorily** use the machine's actual hostname for the `Host` header in HTTP responses. This prevents `UriFormatException` on modern .NET runtimes. In this scenario, `UseMachineHostname` is forced to `true`.
+
+-   **Default Behavior**: For any other hostname (e.g., `localhost` or an IP address), this feature is **disabled by default**. The `Host` header will use the value specified in the `Hostname` setting.
+
+-   **Manual Activation**: You can force the use of the machine's hostname for any binding by setting `UseMachineHostname = true` in the settings.
+
+### Usage
+
+**Example 1: Using a Wildcard (Mandatory Machine Hostname)**
+
+```csharp
+// The server detects the wildcard and mandatorily uses the machine's hostname for the Host header.
+var server = new Server("*", 9000, false, DefaultRoute);
+server.Start();
+```
+
+**Example 2: Manually Enabling for a Specific Hostname**
+
+```csharp
+// By default, the Host header would be "localhost:9000".
+// By setting UseMachineHostname = true, we force it to use the machine's actual hostname.
+var settings = new WebserverSettings("localhost", 9000);
+settings.UseMachineHostname = true; 
+var server = new Server(settings, DefaultRoute);
+server.Start();
+```
+
+### Hostname Examples
+
+When `UseMachineHostname` is active, the retrieved hostname will vary depending on the operating system and network configuration. Here are some typical examples (after sanitization):
+
+-   **Windows**: `desktop-a1b2c3d`
+-   **macOS**: `marcos-macbook-pro.local`
+-   **Linux**: `ubuntu-server`
+-   **Android**: `pixel-7-pro`
+-   **iOS**: `marcos-iphone.local`
+
 ## Accessing from Outside Localhost
 
 ### Watson
