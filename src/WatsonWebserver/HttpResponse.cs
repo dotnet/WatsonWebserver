@@ -187,15 +187,19 @@
 
             try
             {
-                if (chunk == null || chunk.Length < 1) chunk = Array.Empty<byte>();
-                await _OutputStream.WriteAsync(chunk, 0, chunk.Length, token).ConfigureAwait(false);
+                // When SendChunked = true, http.sys expects us to write raw chunk data
+                // and it will handle the chunked encoding format automatically
+                if (chunk != null && chunk.Length > 0)
+                {
+                    await _OutputStream.WriteAsync(chunk, 0, chunk.Length, token).ConfigureAwait(false);
+                }
+
                 await _OutputStream.FlushAsync(token).ConfigureAwait(false);
 
                 if (isFinal)
                 {
-                    byte[] endChunk = Array.Empty<byte>();
-                    await _OutputStream.WriteAsync(endChunk, 0, endChunk.Length, token).ConfigureAwait(false);
-                    await _OutputStream.FlushAsync(token).ConfigureAwait(false);
+                    // For http.sys, we need to close the stream to signal the final chunk
+                    // http.sys will automatically send the "0\r\n\r\n" final chunk marker
                     _OutputStream.Close();
                     if (_Response != null) _Response.Close();
                     ResponseSent = true;
