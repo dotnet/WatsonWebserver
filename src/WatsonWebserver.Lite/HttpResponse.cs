@@ -130,14 +130,14 @@
         /// <inheritdoc />
         public override async Task<bool> Send(CancellationToken token = default)
         {
-            if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and SendFinalChunk().");
+            if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and to finalize the chunk response SendChunk(..., isFinal: true).");
             return await SendInternalAsync(0, null, true, token).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
         public override async Task<bool> Send(long contentLength, CancellationToken token = default)
         {
-            if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and SendFinalChunk().");
+            if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and to finalize the chunk response SendChunk(..., isFinal: true).");
             ContentLength = contentLength;
             return await SendInternalAsync(0, null, true, token).ConfigureAwait(false);
         }
@@ -145,7 +145,7 @@
         /// <inheritdoc />
         public override async Task<bool> Send(string data, CancellationToken token = default)
         {
-            if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and SendFinalChunk().");
+            if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and to finalize the chunk response SendChunk(..., isFinal: true).");
             if (String.IsNullOrEmpty(data))
                 return await SendInternalAsync(0, null, true, token).ConfigureAwait(false);
 
@@ -159,7 +159,7 @@
         /// <inheritdoc />
         public override async Task<bool> Send(byte[] data, CancellationToken token = default)
         {
-            if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and SendFinalChunk().");
+            if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and to finalize the chunk response SendChunk(..., isFinal: true).");
             if (data == null || data.Length < 1)
                 return await SendInternalAsync(0, null, true, token).ConfigureAwait(false);
 
@@ -172,7 +172,7 @@
         /// <inheritdoc />
         public override async Task<bool> Send(long contentLength, Stream stream, CancellationToken token = default)
         {
-            if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and SendFinalChunk().");
+            if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer-encoding.  Use SendChunk() and to finalize the chunk response SendChunk(..., isFinal: true).");
             if (contentLength <= 0 || stream == null || !stream.CanRead)
                 return await SendInternalAsync(0, null, true, token).ConfigureAwait(false);
 
