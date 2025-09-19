@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Read(//c/Code/Dotnet/WatsonWebserver-6.0/**)"
-    ],
-    "deny": [],
-    "ask": []
-  }
-}
