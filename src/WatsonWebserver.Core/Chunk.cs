@@ -9,8 +9,6 @@
     /// </summary>
     public class Chunk
     {
-        #region Public-Members
-
         /// <summary>
         /// Length of the data.
         /// </summary>
@@ -42,31 +40,13 @@
         /// </summary>
         public bool IsFinal { get; set; } = false;
 
-        #endregion
-
-        #region Private-Members
-
         private int _Length = 0;
 
-        #endregion
-
-        #region Constructors-and-Factories
-
         /// <summary>
-        /// Instantiate.
+        /// A chunk of data, used when reading from a request where the Transfer-Encoding header includes 'chunked'.
         /// </summary>
         public Chunk()
         {
         }
-
-        #endregion
-
-        #region Public-Methods
-
-        #endregion
-
-        #region Private-Methods
-
-        #endregion
     }
 }

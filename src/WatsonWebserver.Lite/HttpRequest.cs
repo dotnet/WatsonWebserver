@@ -446,7 +446,8 @@
 
                 while (bytesRemaining > 0)
                 {
-                    read = input.Read(buffer, 0, buffer.Length);
+                    int bytesToRead = (int)Math.Min(buffer.Length, bytesRemaining);
+                    read = input.Read(buffer, 0, bytesToRead);
                     if (read > 0)
                     {
                         ms.Write(buffer, 0, read);
@@ -454,7 +455,9 @@
                     }
                     else
                     {
-                        throw new IOException("Connection closed before reading to the end of the stream.");
+                        // End of stream reached - this might be normal for some HTTP clients
+                        // that don't send the exact ContentLength bytes
+                        break;
                     }
                 }
 

@@ -35,6 +35,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Authentication", "Test
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.ServerSentEvents", "Test.ServerSentEvents\Test.ServerSentEvents.csproj", "{A84FF99F-A011-4BC2-A093-59A302D45D5B}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.All", "Test.All\Test.All.csproj", "{C1234567-89AB-CDEF-0123-456789ABCDEF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -105,6 +107,10 @@ Global
 		{A84FF99F-A011-4BC2-A093-59A302D45D5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A84FF99F-A011-4BC2-A093-59A302D45D5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A84FF99F-A011-4BC2-A093-59A302D45D5B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C1234567-89AB-CDEF-0123-456789ABCDEF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C1234567-89AB-CDEF-0123-456789ABCDEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C1234567-89AB-CDEF-0123-456789ABCDEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C1234567-89AB-CDEF-0123-456789ABCDEF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -119,7 +119,7 @@
         </member>
         <member name="M:WatsonWebserver.Core.Chunk.#ctor">
             <summary>
-            Instantiate.
+            A chunk of data, used when reading from a request where the Transfer-Encoding header includes 'chunked'.
             </summary>
         </member>
         <member name="T:WatsonWebserver.Core.ConnectionEventArgs">

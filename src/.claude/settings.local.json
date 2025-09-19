@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Code/Dotnet/WatsonWebserver-6.0/**)",
+      "Bash(dotnet --version)",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet run:*)",
+      "Bash(taskkill:*)",
+      "Bash(tasklist)",
+      "Bash(findstr:*)",
+      "Bash(cmd /c:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

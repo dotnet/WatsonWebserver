@@ -216,34 +216,35 @@
             if (!ServerSentEvents) throw new IOException("Response is not configured to use server-sent events.  Set ServerSentEvents to true first, otherwise use Send().");
             if (!_HeadersSet) SetDefaultHeaders();
 
-            if (!String.IsNullOrEmpty(eventData)) 
+            if (!String.IsNullOrEmpty(eventData))
                 ContentLength += eventData.Length;
 
             try
             {
                 if (String.IsNullOrEmpty(eventData)) eventData = "";
 
+                // Format SSE data properly
                 string dataLine = "data: " + eventData + "\n\n";
-
-                byte[] message = Encoding.UTF8.GetBytes(
-                    Encoding.UTF8.GetBytes(dataLine).Length.ToString("X") 
-                    + "\r\n"
-                    + dataLine 
-                    + "\r\n");
+                byte[] dataBytes = Encoding.UTF8.GetBytes(dataLine);
 
                 using (MemoryStream ms = new MemoryStream())
                 {
-                    await ms.WriteAsync(message, 0, message.Length, token).ConfigureAwait(false);
+                    // Create RFC 7230 compliant chunk: hex-length\r\n + data + \r\n
+                    byte[] chunkHeader = Encoding.UTF8.GetBytes(dataBytes.Length.ToString("X") + "\r\n");
+                    byte[] chunkTrailer = Encoding.UTF8.GetBytes("\r\n");
+
+                    await ms.WriteAsync(chunkHeader, 0, chunkHeader.Length, token).ConfigureAwait(false);
+                    await ms.WriteAsync(dataBytes, 0, dataBytes.Length, token).ConfigureAwait(false);
+                    await ms.WriteAsync(chunkTrailer, 0, chunkTrailer.Length, token).ConfigureAwait(false);
 
                     if (isFinal)
                     {
-                        byte[] finalBytes = Encoding.UTF8.GetBytes("0\r\n\r\n");
-                        await ms.WriteAsync(finalBytes, 0, finalBytes.Length, token).ConfigureAwait(false);
+                        byte[] finalChunk = Encoding.UTF8.GetBytes("0\r\n\r\n");
+                        await ms.WriteAsync(finalChunk, 0, finalChunk.Length, token).ConfigureAwait(false);
                     }
 
                     ms.Seek(0, SeekOrigin.Begin);
-                    byte[] bytes = ms.ToArray();
-                    await SendInternalAsync(bytes.Length, ms, isFinal, token).ConfigureAwait(false);
+                    await SendInternalAsync(ms.Length, ms, isFinal, token).ConfigureAwait(false);
                 }
             }
             catch (Exception)
