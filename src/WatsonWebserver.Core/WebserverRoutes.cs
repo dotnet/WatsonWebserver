@@ -10,8 +10,6 @@
     /// </summary>
     public class WebserverRoutes
     {
-        #region Public-Members
-
         /// <summary>
         /// Method to invoke when an OPTIONS request is received.
         /// </summary>
@@ -77,22 +75,19 @@
         }
 
         /// <summary>
+        /// Catch-all exception route; used as an exception route of last resort.
+        /// </summary>
+        public Func<HttpContextBase, Exception, Task> Exception { get; set; } = null;
+
+        /// <summary>
         /// Method invoked after routing, primarily to emit logging and telemetry.
         /// </summary>
         public Func<HttpContextBase, Task> PostRouting { get; set; } = null;
-
-        #endregion
-
-        #region Private-Members
 
         private WebserverSettings _Settings = null;
         private RoutingGroup _PreAuthentication = new RoutingGroup();
         private RoutingGroup _PostAuthentication = new RoutingGroup();
         private Func<HttpContextBase, Task> _Default = null;
-
-        #endregion
-
-        #region Constructors-and-Factories
 
         /// <summary>
         /// Instantiate.
@@ -112,15 +107,5 @@
             _Settings = settings ?? throw new ArgumentNullException(nameof(settings));
             Default = defaultRoute ?? throw new ArgumentNullException(nameof(defaultRoute));
         }
-
-        #endregion
-
-        #region Public-Methods
-
-        #endregion
-
-        #region Private-Methods
-
-        #endregion
     }
 }

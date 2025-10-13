@@ -649,12 +649,20 @@
                         }
                         catch (Exception eInner)
                         {
-                            ctx.Response.StatusCode = 500;
-                            ctx.Response.ContentType = DefaultPages.Pages[500].ContentType;
-                            if (ctx.Response.ChunkedTransfer)
-                                await ctx.Response.SendChunk(Encoding.UTF8.GetBytes(DefaultPages.Pages[500].Content), true).ConfigureAwait(false);
+                            if (Routes.Exception != null)
+                            {
+                                await Routes.Exception(ctx, eInner);
+                            }
                             else
-                                await ctx.Response.Send(DefaultPages.Pages[500].Content).ConfigureAwait(false);
+                            {
+                                ctx.Response.StatusCode = 500;
+                                ctx.Response.ContentType = DefaultPages.Pages[500].ContentType;
+                                if (ctx.Response.ChunkedTransfer)
+                                    await ctx.Response.SendChunk(Encoding.UTF8.GetBytes(DefaultPages.Pages[500].Content), true).ConfigureAwait(false);
+                                else
+                                    await ctx.Response.Send(DefaultPages.Pages[500].Content).ConfigureAwait(false);
+                            }
+
                             Events.HandleExceptionEncountered(this, new ExceptionEventArgs(ctx, eInner));
                         }
                         finally
