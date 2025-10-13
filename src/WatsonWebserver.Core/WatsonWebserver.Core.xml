@@ -1247,6 +1247,46 @@
             <param name="ctx">Context.</param>
             <param name="totalMs">Total milliseconds.</param>
         </member>
+        <member name="T:WatsonWebserver.Core.RouteImplementation">
+            <summary>
+            Implementation of a route, allowing for varying signatures, with and without cancellation tokens.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.RouteImplementation.#ctor(System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.CancellationToken,System.Threading.Tasks.Task})">
+            <summary>
+            Creates a RouteImplementation from a function with CancellationToken.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.RouteImplementation.#ctor(System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task})">
+            <summary>
+            Creates a RouteImplementation from a function without CancellationToken.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.RouteImplementation.op_Implicit(System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task})~WatsonWebserver.Core.RouteImplementation">
+            <summary>
+            Implicit conversion from Func without CancellationToken.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.RouteImplementation.op_Implicit(System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.CancellationToken,System.Threading.Tasks.Task})~WatsonWebserver.Core.RouteImplementation">
+            <summary>
+            Implicit conversion from Func with CancellationToken.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.RouteImplementation.InvokeAsync(WatsonWebserver.Core.HttpContextBase,System.Threading.CancellationToken)">
+            <summary>
+            Invokes the implementation.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.RouteImplementation.IsNull">
+            <summary>
+            Checks if the implementation is null.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.RouteImplementation.op_Implicit(WatsonWebserver.Core.RouteImplementation)~System.Boolean">
+            <summary>
+            Implicit conversion to bool for null checking.
+            </summary>
+        </member>
         <member name="T:WatsonWebserver.Core.RouteTypeEnum">
             <summary>
             Route type.
@@ -1919,6 +1959,11 @@
         <member name="P:WatsonWebserver.Core.WebserverRoutes.Default">
             <summary>
             Default route, when no other routes are available.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebserverRoutes.Exception">
+            <summary>
+            Catch-all exception route; used as an exception route of last resort.
             </summary>
         </member>
         <member name="P:WatsonWebserver.Core.WebserverRoutes.PostRouting">
