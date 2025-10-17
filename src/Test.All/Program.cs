@@ -70,16 +70,6 @@ namespace Test.All
             }
 
             Console.WriteLine();
-            Console.WriteLine("Press any key to exit...");
-            try
-            {
-                Console.ReadKey();
-            }
-            catch (InvalidOperationException)
-            {
-                // Handle non-interactive console environments
-                Console.WriteLine("Running in non-interactive mode - exiting.");
-            }
         }
 
         #endregion
@@ -763,12 +753,15 @@ namespace Test.All
 
                 for (int i = 1; i <= 10; i++)
                 {
-                    string eventData = $"Event {i}";
                     bool isFinal = (i == 10);
 
-                    await ctx.Response.SendEvent(eventData, isFinal).ConfigureAwait(false);
+                    await ctx.Response.SendEvent(new ServerSentEvent
+                    {
+                        Id = i.ToString(),
+                        Data = $"Event {i}"
+                    }, isFinal).ConfigureAwait(false);
 
-                    Console.WriteLine($"      Sent: {eventData}");
+                    Console.WriteLine($"      Sent: Id {i.ToString()} Data Event {i}");
 
                     if (!isFinal)
                         await Task.Delay(250).ConfigureAwait(false);
@@ -785,21 +778,37 @@ namespace Test.All
                 Console.WriteLine("    Testing chunked encoding edge cases...");
 
                 // Test empty chunk
-                await ctx.Response.SendChunk(new byte[0], false).ConfigureAwait(false);
+                if (!await ctx.Response.SendChunk(new byte[0], false, ctx.Token).ConfigureAwait(false))
+                {
+                    Console.WriteLine("      Client disconnected after empty chunk");
+                    return;
+                }
                 Console.WriteLine("      Sent: Empty chunk");
 
                 // Test single byte chunk
-                await ctx.Response.SendChunk(new byte[] { 65 }, false).ConfigureAwait(false); // 'A'
+                if (!await ctx.Response.SendChunk(new byte[] { 65 }, false, ctx.Token).ConfigureAwait(false))
+                {
+                    Console.WriteLine("      Client disconnected after single byte chunk");
+                    return;
+                }
                 Console.WriteLine("      Sent: Single byte chunk (A)");
 
                 // Test chunk with CRLF data
                 byte[] crlfData = Encoding.UTF8.GetBytes("Line1\r\nLine2\r\n");
-                await ctx.Response.SendChunk(crlfData, false).ConfigureAwait(false);
+                if (!await ctx.Response.SendChunk(crlfData, false, ctx.Token).ConfigureAwait(false))
+                {
+                    Console.WriteLine("      Client disconnected after CRLF chunk");
+                    return;
+                }
                 Console.WriteLine("      Sent: CRLF data chunk");
 
                 // Test Unicode data
                 byte[] unicodeData = Encoding.UTF8.GetBytes("Unicode: 世界 🌍 测试");
-                await ctx.Response.SendChunk(unicodeData, false).ConfigureAwait(false);
+                if (!await ctx.Response.SendChunk(unicodeData, false, ctx.Token).ConfigureAwait(false))
+                {
+                    Console.WriteLine("      Client disconnected after Unicode chunk");
+                    return;
+                }
                 Console.WriteLine("      Sent: Unicode data chunk");
 
                 // Test large chunk (1KB)
@@ -808,11 +817,19 @@ namespace Test.All
                 {
                     largeData[i] = (byte)(i % 256);
                 }
-                await ctx.Response.SendChunk(largeData, false).ConfigureAwait(false);
+                if (!await ctx.Response.SendChunk(largeData, false, ctx.Token).ConfigureAwait(false))
+                {
+                    Console.WriteLine("      Client disconnected after large chunk");
+                    return;
+                }
                 Console.WriteLine("      Sent: Large chunk (1KB)");
 
                 // Final chunk
-                await ctx.Response.SendChunk(Encoding.UTF8.GetBytes("Final"), true).ConfigureAwait(false);
+                if (!await ctx.Response.SendChunk(Encoding.UTF8.GetBytes("Final"), true, ctx.Token).ConfigureAwait(false))
+                {
+                    Console.WriteLine("      Client disconnected before final chunk");
+                    return;
+                }
                 Console.WriteLine("      Sent: Final chunk");
             });
 
@@ -824,29 +841,60 @@ namespace Test.All
 
                 Console.WriteLine("    Testing SSE with various data types...");
 
-                // Empty event
-                await ctx.Response.SendEvent("", false).ConfigureAwait(false);
-                Console.WriteLine("      Sent: Empty event");
-
                 // Event with newlines
-                await ctx.Response.SendEvent("Line1\nLine2\nLine3", false).ConfigureAwait(false);
+                if (!await ctx.Response.SendEvent(new ServerSentEvent
+                {
+                    Data = "Line1\nLine2\nLine3"
+                }, false, ctx.Token).ConfigureAwait(false))
+                {
+                    Console.WriteLine("      Client disconnected after multi-line event");
+                    return;
+                }
                 Console.WriteLine("      Sent: Multi-line event");
 
                 // Event with special characters
-                await ctx.Response.SendEvent("Special: <>&\"'", false).ConfigureAwait(false);
+                if (!await ctx.Response.SendEvent(new ServerSentEvent
+                {
+                    Data = "Special: <>&\"'"
+                }, false, ctx.Token).ConfigureAwait(false))
+                {
+                    Console.WriteLine("      Client disconnected after special characters event");
+                    return;
+                }
                 Console.WriteLine("      Sent: Special characters event");
 
                 // Unicode event
-                await ctx.Response.SendEvent("Unicode: 世界 🌍 测试", false).ConfigureAwait(false);
+                if (!await ctx.Response.SendEvent(new ServerSentEvent
+                {
+                    Data = "Unicode: 世界 🌍 测试"
+                }, false, ctx.Token).ConfigureAwait(false))
+                {
+                    Console.WriteLine("      Client disconnected after Unicode event");
+                    return;
+                }
                 Console.WriteLine("      Sent: Unicode event");
 
                 // Large event
                 string largeEvent = new string('X', 1000);
-                await ctx.Response.SendEvent(largeEvent, false).ConfigureAwait(false);
+                if (!await ctx.Response.SendEvent(new ServerSentEvent
+                {
+                    Data = largeEvent
+                }, false, ctx.Token).ConfigureAwait(false))
+                {
+                    Console.WriteLine("      Client disconnected after large event");
+                    return;
+                }
                 Console.WriteLine("      Sent: Large event (1000 chars)");
 
                 // Final event
-                await ctx.Response.SendEvent("Final event", true).ConfigureAwait(false);
+                if (!await ctx.Response.SendEvent(new ServerSentEvent
+                {
+                    Data = "Final event"
+                }, true, ctx.Token).ConfigureAwait(false))
+                {
+                    Console.WriteLine("      Client disconnected before final event");
+                    return;
+                }
                 Console.WriteLine("      Sent: Final event");
             });
 

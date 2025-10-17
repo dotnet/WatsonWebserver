@@ -69,10 +69,14 @@
                         byte[] buffer = new byte[16];
                         long bytesRemaining = fileSize;
 
+                        int id = 0;
+
                         while (bytesRemaining > 0)
                         {
                             Thread.Sleep(500);
                             int bytesRead = await fs.ReadAsync(buffer, 0, buffer.Length);
+
+                            id++;
 
                             if (bytesRead > 0)
                             {
@@ -84,13 +88,21 @@
 
                                     if (bytesRead == buffer.Length)
                                     {
-                                        await ctx.Response.SendEvent(Encoding.UTF8.GetString(buffer), false);
+                                        await ctx.Response.SendEvent(new ServerSentEvent
+                                        {
+                                            Id = id.ToString(),
+                                            Data = Encoding.UTF8.GetString(buffer)
+                                        }, false);
                                     }
                                     else
                                     {
                                         byte[] temp = new byte[bytesRead];
                                         Buffer.BlockCopy(buffer, 0, temp, 0, bytesRead);
-                                        await ctx.Response.SendEvent(Encoding.UTF8.GetString(temp), false);
+                                        await ctx.Response.SendEvent(new ServerSentEvent
+                                        {
+                                            Id = id.ToString(),
+                                            Data = Encoding.UTF8.GetString(temp)
+                                        }, false);
                                     }
                                 }
                                 else
@@ -99,13 +111,21 @@
 
                                     if (bytesRead == buffer.Length)
                                     {
-                                        await ctx.Response.SendEvent(Encoding.UTF8.GetString(buffer), true);
+                                        await ctx.Response.SendEvent(new ServerSentEvent
+                                        {
+                                            Id = id.ToString(),
+                                            Data = Encoding.UTF8.GetString(buffer)
+                                        }, true);
                                     }
                                     else
                                     {
                                         byte[] temp = new byte[bytesRead];
                                         Buffer.BlockCopy(buffer, 0, temp, 0, bytesRead);
-                                        await ctx.Response.SendEvent(Encoding.UTF8.GetString(temp), true);
+                                        await ctx.Response.SendEvent(new ServerSentEvent
+                                        {
+                                            Id = id.ToString(),
+                                            Data = Encoding.UTF8.GetString(temp)
+                                        }, true);
                                     }
                                 }
 

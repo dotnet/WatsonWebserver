@@ -861,13 +861,13 @@
             <param name="token">Cancellation token useful for canceling the request.</param>
             <returns>True if successful.</returns>
         </member>
-        <member name="M:WatsonWebserver.Core.HttpResponseBase.SendEvent(System.String,System.Boolean,System.Threading.CancellationToken)">
+        <member name="M:WatsonWebserver.Core.HttpResponseBase.SendEvent(WatsonWebserver.Core.ServerSentEvent,System.Boolean,System.Threading.CancellationToken)">
             <summary>
             Send headers (if not already sent) and a server-sent event.
             Watson will handle prepending 'data: ' to your event data.
             The connection will be kept in-tact unless isFinal is set to true.
             </summary>
-            <param name="eventData">Event data.</param>
+            <param name="sse">Server sent event.</param>
             <param name="isFinal">Boolean indicating if this is the final chunk.</param>
             <param name="token">Cancellation token useful for canceling the request.</param>
             <returns>True if successful.</returns>
@@ -1346,6 +1346,42 @@
             <summary>
             Instantiate.
             </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.ServerSentEvent">
+            <summary>
+            Server sent event.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.ServerSentEvent.Id">
+            <summary>
+            ID.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.ServerSentEvent.Event">
+            <summary>
+            Event.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.ServerSentEvent.Data">
+            <summary>
+            Data.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.ServerSentEvent.Retry">
+            <summary>
+            Retry.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.ServerSentEvent.#ctor">
+            <summary>
+            Server sent event.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.ServerSentEvent.ToEventString">
+            <summary>
+            Create a string representation useful for transmission.
+            </summary>
+            <returns>String.</returns>
         </member>
         <member name="T:WatsonWebserver.Core.SourceDetails">
             <summary>

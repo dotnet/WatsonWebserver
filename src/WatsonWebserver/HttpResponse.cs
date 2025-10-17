@@ -214,27 +214,23 @@
         }
 
         /// <inheritdoc />
-        public override async Task<bool> SendEvent(string eventData, bool isFinal, CancellationToken token = default)
+        public override async Task<bool> SendEvent(ServerSentEvent sse, bool isFinal, CancellationToken token = default)
         {
             if (!ServerSentEvents) throw new IOException("Response is not configured to use server-sent events.  Set ServerSentEvents to true first, otherwise use Send().");
             if (!_HeadersSet) SendHeaders();
-
-            if (!String.IsNullOrEmpty(eventData))
-                ContentLength += eventData.Length;
+            if (sse == null) throw new ArgumentNullException(nameof(sse));
+            
+            string msg = sse.ToEventString();
+            if (String.IsNullOrEmpty(msg)) throw new ArgumentException("A null or unpopulated server-sent event object was supplied.");
 
             try
             {
-                if (String.IsNullOrEmpty(eventData)) eventData = "";
-
-                byte[] dataBytes = Encoding.UTF8.GetBytes("data: " + eventData + "\n\n");
-                await _OutputStream.WriteAsync(dataBytes, 0, dataBytes.Length, token).ConfigureAwait(false);
+                byte[] msgBytes = Encoding.UTF8.GetBytes(msg);
+                await _OutputStream.WriteAsync(msgBytes, 0, msgBytes.Length, token).ConfigureAwait(false);
                 await _OutputStream.FlushAsync(token).ConfigureAwait(false);
 
                 if (isFinal)
                 {
-                    byte[] endChunk = Array.Empty<byte>();
-                    await _OutputStream.WriteAsync(endChunk, 0, endChunk.Length, token).ConfigureAwait(false);
-                    await _OutputStream.FlushAsync(token).ConfigureAwait(false);
                     _OutputStream.Close();
                     if (_Response != null) _Response.Close();
                     ResponseSent = true;

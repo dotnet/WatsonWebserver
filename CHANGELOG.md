@@ -2,6 +2,12 @@
 
 ## Current Version
 
+v6.4.x
+
+- Minor breaking changes to server-sent events
+
+## Previous Versions
+
 v6.3.x
 
 - Minor change to chunked transfer, i.e. `SendChunk` now accepts `isFinal` as a `Boolean` property
@@ -11,8 +17,6 @@ v6.3.x
 v6.2.x
 
 - Support for specifying exception handler for static, content, parameter, and dynamic routes (thank you @nomadeon)
-
-## Previous Versions
 
 v6.1.x
 

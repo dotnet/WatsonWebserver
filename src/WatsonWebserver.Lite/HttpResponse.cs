@@ -84,7 +84,7 @@
         private WebserverSettings.HeaderSettings _HeaderSettings = null;
         private int _StreamBufferSize = 65536;
         private Stream _Stream;
-        private HttpRequestBase _Request;  
+        private HttpRequestBase _Request;
         private WebserverEvents _Events = new WebserverEvents();
 
         #endregion
@@ -100,11 +100,11 @@
         }
 
         internal HttpResponse(
-            string ipPort, 
-            WebserverSettings.HeaderSettings headers, 
-            Stream stream, 
-            HttpRequestBase req, 
-            WebserverEvents events, 
+            string ipPort,
+            WebserverSettings.HeaderSettings headers,
+            Stream stream,
+            HttpRequestBase req,
+            WebserverEvents events,
             int bufferSize)
         {
             if (String.IsNullOrEmpty(ipPort)) throw new ArgumentNullException(nameof(ipPort));
@@ -120,7 +120,7 @@
             _Request = req;
             _Stream = stream;
             _Events = events;
-            _StreamBufferSize = bufferSize; 
+            _StreamBufferSize = bufferSize;
         }
 
         #endregion
@@ -165,7 +165,7 @@
 
             MemoryStream ms = new MemoryStream();
             await ms.WriteAsync(data, 0, data.Length, token).ConfigureAwait(false);
-            ms.Seek(0, SeekOrigin.Begin); 
+            ms.Seek(0, SeekOrigin.Begin);
             return await SendInternalAsync(data.Length, ms, true, token).ConfigureAwait(false);
         }
 
@@ -190,6 +190,13 @@
 
             try
             {
+                // Skip empty chunks when not final to avoid sending "0\r\n\r\n" which signals end of response
+                // This matches Watson (http.sys) behavior which skips empty chunks
+                if ((chunk == null || chunk.Length < 1) && !isFinal)
+                {
+                    return true;
+                }
+
                 if (chunk == null || chunk.Length < 1) chunk = Array.Empty<byte>();
 
                 using (MemoryStream ms = new MemoryStream())
@@ -199,60 +206,42 @@
                     if (isFinal) message = AppendBytes(message, Encoding.UTF8.GetBytes("0\r\n\r\n"));
                     await ms.WriteAsync(message, 0, message.Length, token).ConfigureAwait(false);
                     ms.Seek(0, SeekOrigin.Begin);
-                    await SendInternalAsync(message.Length, ms, isFinal, token).ConfigureAwait(false);
+                    bool result = await SendInternalAsync(message.Length, ms, isFinal, token).ConfigureAwait(false);
+                    return result;
                 }
             }
             catch (Exception)
             {
                 return false;
             }
-
-            return true;
         }
 
         /// <inheritdoc />
-        public override async Task<bool> SendEvent(string eventData, bool isFinal, CancellationToken token = default)
+        public override async Task<bool> SendEvent(ServerSentEvent sse, bool isFinal, CancellationToken token = default)
         {
             if (!ServerSentEvents) throw new IOException("Response is not configured to use server-sent events.  Set ServerSentEvents to true first, otherwise use Send().");
             if (!_HeadersSet) SetDefaultHeaders();
+            if (sse == null) throw new ArgumentNullException(nameof(sse));
 
-            if (!String.IsNullOrEmpty(eventData))
-                ContentLength += eventData.Length;
+            string msg = sse.ToEventString();
+            if (String.IsNullOrEmpty(msg)) throw new ArgumentException("A null or unpopulated server-sent event object was supplied.");
 
             try
             {
-                if (String.IsNullOrEmpty(eventData)) eventData = "";
-
-                // Format SSE data properly
-                string dataLine = "data: " + eventData + "\n\n";
-                byte[] dataBytes = Encoding.UTF8.GetBytes(dataLine);
+                byte[] dataBytes = Encoding.UTF8.GetBytes(msg);
 
                 using (MemoryStream ms = new MemoryStream())
                 {
-                    // Create RFC 7230 compliant chunk: hex-length\r\n + data + \r\n
-                    byte[] chunkHeader = Encoding.UTF8.GetBytes(dataBytes.Length.ToString("X") + "\r\n");
-                    byte[] chunkTrailer = Encoding.UTF8.GetBytes("\r\n");
-
-                    await ms.WriteAsync(chunkHeader, 0, chunkHeader.Length, token).ConfigureAwait(false);
                     await ms.WriteAsync(dataBytes, 0, dataBytes.Length, token).ConfigureAwait(false);
-                    await ms.WriteAsync(chunkTrailer, 0, chunkTrailer.Length, token).ConfigureAwait(false);
-
-                    if (isFinal)
-                    {
-                        byte[] finalChunk = Encoding.UTF8.GetBytes("0\r\n\r\n");
-                        await ms.WriteAsync(finalChunk, 0, finalChunk.Length, token).ConfigureAwait(false);
-                    }
-
                     ms.Seek(0, SeekOrigin.Begin);
-                    await SendInternalAsync(ms.Length, ms, isFinal, token).ConfigureAwait(false);
+                    bool result = await SendInternalAsync(ms.Length, ms, isFinal, token).ConfigureAwait(false);
+                    return result;
                 }
             }
             catch (Exception)
             {
                 return false;
             }
-
-            return true;
         }
 
         /// <summary>
@@ -282,7 +271,7 @@
             }
 
             bool contentLengthSet = false;
-            if (!ChunkedTransfer && ContentLength >= 0)
+            if (!ChunkedTransfer && !ServerSentEvents && ContentLength >= 0)
             {
                 ret = AppendBytes(ret, Encoding.UTF8.GetBytes(WebserverConstants.HeaderContentLength + ": " + ContentLength + "\r\n"));
                 contentLengthSet = true;
@@ -296,7 +285,7 @@
             }
 
             ret = AppendBytes(
-                ret, 
+                ret,
                 Encoding.UTF8.GetBytes(WebserverConstants.HeaderDate + ": " + DateTime.UtcNow.ToString(WebserverConstants.HeaderDateValueFormat) + "\r\n"));
 
             for (int i = 0; i < Headers.Count; i++)
@@ -471,13 +460,12 @@
         {
             if (!_HeadersSet)
             {
-                if (ChunkedTransfer || ServerSentEvents)
+                if (ChunkedTransfer)
                 {
                     ProtocolVersion = "HTTP/1.1";
                     Headers.Add("Transfer-Encoding", "chunked");
                 }
-
-                if (ServerSentEvents)
+                else if (ServerSentEvents)
                 {
                     Headers.Add("Content-Type", "text/event-stream; charset=utf-8");
                     Headers.Add("Cache-Control", "no-cache");
@@ -549,7 +537,8 @@
         {
             if (_HeaderSettings.IncludeContentLength
                 && contentLength > 0
-                && !ChunkedTransfer)
+                && !ChunkedTransfer
+                && !ServerSentEvents)
             {
                 ContentLength = contentLength;
             }
@@ -562,15 +551,16 @@
 
             if (!_HeadersSent)
             {
-                byte[] headers = GetHeaderBytes(); 
+                byte[] headers = GetHeaderBytes();
                 try
                 {
                     await _Stream.WriteAsync(headers, 0, headers.Length, token).ConfigureAwait(false);
                     await _Stream.FlushAsync(token).ConfigureAwait(false);
-                    _HeadersSent = true; 
+                    _HeadersSent = true;
                 }
                 catch (ObjectDisposedException)
                 {
+                    // Stream closed before headers could be sent - genuine failure
                     return false;
                 }
             }
@@ -582,7 +572,7 @@
                 byte[] buffer = new byte[_StreamBufferSize];
                 int bytesToRead = _StreamBufferSize;
                 int bytesRead = 0;
-                 
+
                 try
                 {
                     while (bytesRemaining > 0)
@@ -592,30 +582,43 @@
 
                         bytesRead = await stream.ReadAsync(buffer, 0, bytesToRead, token).ConfigureAwait(false);
                         if (bytesRead > 0)
-                        { 
+                        {
                             await _Stream.WriteAsync(buffer, 0, bytesRead, token).ConfigureAwait(false);
                             bytesRemaining -= bytesRead;
                         }
                     }
-				
+
                     await _Stream.FlushAsync(token).ConfigureAwait(false);
                 }
                 catch (ObjectDisposedException)
                 {
+                    // Stream closed during data write
+                    // If headers were sent, mark response as sent to prevent "did not send response" exception
+                    // But still return false to indicate the send operation failed
+                    if (_HeadersSent)
+                    {
+                        ResponseSent = true;
+                    }
                     return false;
                 }
             }
 
+            // If we've reached this point and sent headers/data successfully, mark response as sent
+            // This must be done before attempting stream close, since close might fail
+            if (close && _HeadersSent)
+            {
+                ResponseSent = true;
+            }
+
             if (close)
-            { 
+            {
                 try
                 {
                     _Stream.Close();
-                    ResponseSent = true;
                 }
                 catch (ObjectDisposedException)
                 {
-                    return false;
+                    // Stream already closed, but response was marked sent above
                 }
             }
 
