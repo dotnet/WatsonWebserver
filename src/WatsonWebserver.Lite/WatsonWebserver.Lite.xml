@@ -255,7 +255,7 @@
         <member name="M:WatsonWebserver.Lite.HttpResponse.SendChunk(System.Byte[],System.Boolean,System.Threading.CancellationToken)">
             <inheritdoc />
         </member>
-        <member name="M:WatsonWebserver.Lite.HttpResponse.SendEvent(System.String,System.Boolean,System.Threading.CancellationToken)">
+        <member name="M:WatsonWebserver.Lite.HttpResponse.SendEvent(WatsonWebserver.Core.ServerSentEvent,System.Boolean,System.Threading.CancellationToken)">
             <inheritdoc />
         </member>
         <member name="M:WatsonWebserver.Lite.HttpResponse.Close">

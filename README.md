@@ -16,11 +16,10 @@ Special thanks to @DamienDennehy for allowing us the use of the ```Watson.Core``
 
 This project is part of the [.NET Foundation](http://www.dotnetfoundation.org/projects) along with other projects like [the .NET Runtime](https://github.com/dotnet/runtime/).
 
-## New in v6.3.x
+## New in v6.4.x
 
-- Minor change to chunked transfer, i.e. `SendChunk` now accepts `isFinal` as a `Boolean` property
-- Added support for server-sent events, included `Test.ServerSentEvents` project
-- Minor internal refactor
+- Minor breaking changes to server-sent events
+- Bugfixes 
 
 ## Special Thanks
 
@@ -256,7 +255,7 @@ static async Task DownloadChunkedFile(HttpContextBase ctx)
 
 ## Server-Sent Events
 
-Watson supports sending server-sent events.  Refer to `Test.ServerSentEvents` for a sample implementation.  The `SendEvent` method handles prepending `data: ` and the following `\n\n` to your message.
+Watson supports sending server-sent events.  Refer to `Test.ServerSentEvents` for a sample implementation.  The `SendEvent` method handles formatting `ServerSentEvent` objects for transmission to the client.
 
 ### Sending Events
 
@@ -266,17 +265,17 @@ static async Task SendEvents(HttpContextBase ctx)
   ctx.Response.StatusCode = 200;
   ctx.Response.ServerSentEvents = true;
 
-  while (true)
+  for (int i = 1; i <= 10; i++)
   {
-    string data = GetNextEvent(); // your implementation
-    if (!String.IsNullOrEmpty(data))
+    ServerSentEvent ev = new ServerSentEvent 
     {
-      await ctx.Response.SendEvent(data);
-    }
-    else
-    {
-      break;
-    }
+      Id = i.ToString(),
+      Event = "my-event-type",
+      Data = $"Event number {i.ToString()}",
+    };
+
+    bool isFinal = (i == 10);
+    await ctx.Response.SendEvent(ev, isFinal);
   }
 
   return;
