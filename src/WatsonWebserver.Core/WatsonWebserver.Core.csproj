@@ -2,9 +2,9 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.0;netstandard2.1;net462;net48;net6.0;net8.0</TargetFrameworks>
-		<Version>6.3.17</Version>
+		<Version>6.4.0</Version>
 		<Description>Core library for Watson and Watson.Lite; simple, fast, async C# web servers for handling REST requests with SSL support, targeted to .NET Core, .NET Standard, and .NET Framework.</Description>
-		<PackageReleaseNotes>Dependency update</PackageReleaseNotes>
+		<PackageReleaseNotes>Better support for server-sent events</PackageReleaseNotes>
 
 		<PackageId>Watson.Core</PackageId>
 		<Title>Watson Webserver Core</Title>

@@ -181,11 +181,11 @@
         /// Watson will handle prepending 'data: ' to your event data.
         /// The connection will be kept in-tact unless isFinal is set to true.
         /// </summary>
-        /// <param name="eventData">Event data.</param>
+        /// <param name="sse">Server sent event.</param>
         /// <param name="isFinal">Boolean indicating if this is the final chunk.</param>
         /// <param name="token">Cancellation token useful for canceling the request.</param>
         /// <returns>True if successful.</returns>
-        public abstract Task<bool> SendEvent(string eventData, bool isFinal, CancellationToken token = default);
+        public abstract Task<bool> SendEvent(ServerSentEvent sse, bool isFinal, CancellationToken token = default);
 
         #endregion
 
