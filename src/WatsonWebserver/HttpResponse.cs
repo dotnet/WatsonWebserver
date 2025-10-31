@@ -202,15 +202,18 @@
                     // http.sys will automatically send the "0\r\n\r\n" final chunk marker
                     _OutputStream.Close();
                     if (_Response != null) _Response.Close();
-                    ResponseSent = true;
                 }
+
+                return true;
             }
             catch (Exception)
             {
                 return false;
             }
-
-            return true;
+            finally
+            {
+                if (isFinal) ResponseSent = true;
+            }
         }
 
         /// <inheritdoc />
@@ -237,7 +240,6 @@
                     await _OutputStream.FlushAsync(token).ConfigureAwait(false);
                     _OutputStream.Close();
                     if (_Response != null) _Response.Close();
-                    ResponseSent = true;
                 }
 
                 return true;
@@ -245,6 +247,10 @@
             catch (Exception)
             {
                 return false;
+            }
+            finally
+            {
+                if (isFinal) ResponseSent = true;
             }
         }
 
