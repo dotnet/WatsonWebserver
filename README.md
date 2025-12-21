@@ -16,10 +16,9 @@ Special thanks to @DamienDennehy for allowing us the use of the ```Watson.Core``
 
 This project is part of the [.NET Foundation](http://www.dotnetfoundation.org/projects) along with other projects like [the .NET Runtime](https://github.com/dotnet/runtime/).
 
-## New in v6.4.x
+## New in v6.5.x
 
-- Minor breaking changes to server-sent events
-- Bugfixes 
+- OpenAPI and Swagger support, refer to `Test.OpenApi` project and `README.md`
 
 ## Special Thanks
 
