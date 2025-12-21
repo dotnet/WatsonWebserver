@@ -174,15 +174,21 @@
             User-supplied metadata.
             </summary>
         </member>
-        <member name="M:WatsonWebserver.Core.ContentRoute.#ctor(System.String,System.Boolean,System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},System.Guid,System.Object)">
+        <member name="P:WatsonWebserver.Core.ContentRoute.OpenApiMetadata">
+            <summary>
+            OpenAPI documentation metadata for this route.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.ContentRoute.#ctor(System.String,System.Boolean,System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},System.Guid,System.Object,WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata)">
             <summary>
             Create a new route object.
-            </summary> 
+            </summary>
             <param name="path">The pattern against which the raw URL should be matched.</param>
-            <param name="isDirectory">Indicates whether or not the path specifies a directory.  If so, any matching URL will be handled by the specified handler.</param> 
+            <param name="isDirectory">Indicates whether or not the path specifies a directory.  If so, any matching URL will be handled by the specified handler.</param>
             <param name="exceptionHandler">The method that should be called to handle exceptions.</param>
             <param name="guid">Globally-unique identifier.</param>
             <param name="metadata">User-supplied metadata.</param>
+            <param name="openApiMetadata">OpenAPI documentation metadata.</param>
         </member>
         <member name="T:WatsonWebserver.Core.ContentRouteManager">
             <summary>
@@ -224,15 +230,22 @@
             Instantiate the object.
             </summary> 
         </member>
-        <member name="M:WatsonWebserver.Core.ContentRouteManager.Add(System.String,System.Boolean,System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},System.Guid,System.Object)">
+        <member name="M:WatsonWebserver.Core.ContentRouteManager.Add(System.String,System.Boolean,System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},System.Guid,System.Object,WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata)">
             <summary>
             Add a route.
             </summary>
             <param name="path">URL path, i.e. /path/to/resource.</param>
-            <param name="isDirectory">True if the path represents a directory.</param> 
+            <param name="isDirectory">True if the path represents a directory.</param>
             <param name="exceptionHandler">The method that should be called to handle exceptions.</param>
             <param name="guid">Globally-unique identifier.</param>
             <param name="metadata">User-supplied metadata.</param>
+            <param name="openApiMetadata">OpenAPI documentation metadata.</param>
+        </member>
+        <member name="M:WatsonWebserver.Core.ContentRouteManager.GetAll">
+            <summary>
+            Retrieve all routes.
+            </summary>
+            <returns>List of content routes.</returns>
         </member>
         <member name="M:WatsonWebserver.Core.ContentRouteManager.Remove(System.String)">
             <summary>
@@ -356,16 +369,22 @@
             User-supplied metadata.
             </summary>
         </member>
-        <member name="M:WatsonWebserver.Core.DynamicRoute.#ctor(WatsonWebserver.Core.HttpMethod,System.Text.RegularExpressions.Regex,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},System.Guid,System.Object)">
+        <member name="P:WatsonWebserver.Core.DynamicRoute.OpenApiMetadata">
+            <summary>
+            OpenAPI documentation metadata for this route.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.DynamicRoute.#ctor(WatsonWebserver.Core.HttpMethod,System.Text.RegularExpressions.Regex,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},System.Guid,System.Object,WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata)">
             <summary>
             Create a new route object.
             </summary>
             <param name="method">The HTTP method, i.e. GET, PUT, POST, DELETE, etc.</param>
             <param name="path">The pattern against which the raw URL should be matched.</param>
-            <param name="handler">The method that should be called to handle the request.</param> 
+            <param name="handler">The method that should be called to handle the request.</param>
             <param name="exceptionHandler">The method that should be called to handle exceptions.</param>
             <param name="guid">Globally-unique identifier.</param>
             <param name="metadata">User-supplied metadata.</param>
+            <param name="openApiMetadata">OpenAPI documentation metadata.</param>
         </member>
         <member name="T:WatsonWebserver.Core.DynamicRouteManager">
             <summary>
@@ -383,16 +402,23 @@
             Instantiate the object.
             </summary> 
         </member>
-        <member name="M:WatsonWebserver.Core.DynamicRouteManager.Add(WatsonWebserver.Core.HttpMethod,System.Text.RegularExpressions.Regex,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},System.Guid,System.Object)">
+        <member name="M:WatsonWebserver.Core.DynamicRouteManager.Add(WatsonWebserver.Core.HttpMethod,System.Text.RegularExpressions.Regex,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},System.Guid,System.Object,WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata)">
             <summary>
             Add a route.
             </summary>
             <param name="method">The HTTP method.</param>
             <param name="path">URL path, i.e. /path/to/resource.</param>
-            <param name="handler">Method to invoke.</param> 
+            <param name="handler">Method to invoke.</param>
             <param name="exceptionHandler">The method that should be called to handle exceptions.</param>
             <param name="guid">Globally-unique identifier.</param>
             <param name="metadata">User-supplied metadata.</param>
+            <param name="openApiMetadata">OpenAPI documentation metadata.</param>
+        </member>
+        <member name="M:WatsonWebserver.Core.DynamicRouteManager.GetAll">
+            <summary>
+            Retrieve all routes.
+            </summary>
+            <returns>List of dynamic routes.</returns>
         </member>
         <member name="M:WatsonWebserver.Core.DynamicRouteManager.Remove(WatsonWebserver.Core.HttpMethod,System.Text.RegularExpressions.Regex)">
             <summary>
@@ -1006,6 +1032,1034 @@
             <param name="extension">File extension.</param>
             <returns>String containing MIME type.</returns>
         </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiDocumentGenerator">
+            <summary>
+            Generates OpenAPI 3.0 specification documents from WatsonWebserver routes.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiDocumentGenerator.SerializerOptions">
+            <summary>
+            JSON serializer options used for generating the OpenAPI document.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiDocumentGenerator.#ctor">
+            <summary>
+            Instantiate the object.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiDocumentGenerator.Generate(WatsonWebserver.Core.WebserverRoutes,WatsonWebserver.Core.OpenApi.OpenApiSettings)">
+            <summary>
+            Generate an OpenAPI JSON document from the webserver routes.
+            </summary>
+            <param name="routes">The webserver routes.</param>
+            <param name="settings">OpenAPI settings.</param>
+            <returns>OpenAPI JSON string.</returns>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiParameterMetadata">
+            <summary>
+            OpenAPI parameter metadata for documenting request parameters.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiParameterMetadata.Name">
+            <summary>
+            The name of the parameter. Parameter names are case-sensitive.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiParameterMetadata.In">
+            <summary>
+            The location of the parameter (query, header, path, or cookie).
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiParameterMetadata.Description">
+            <summary>
+            A brief description of the parameter.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiParameterMetadata.Required">
+            <summary>
+            Whether the parameter is required.
+            Path parameters are always required and this should be true for them.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiParameterMetadata.Deprecated">
+            <summary>
+            Whether the parameter is deprecated and should be transitioned out of usage.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiParameterMetadata.AllowEmptyValue">
+            <summary>
+            Whether empty values are allowed for this parameter.
+            Only applies to query parameters.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiParameterMetadata.Schema">
+            <summary>
+            The schema defining the type used for the parameter.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiParameterMetadata.Example">
+            <summary>
+            Example of the parameter's potential value.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiParameterMetadata.#ctor">
+            <summary>
+            Instantiate the object.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiParameterMetadata.Path(System.String,System.String,WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata)">
+            <summary>
+            Create a path parameter.
+            </summary>
+            <param name="name">Parameter name.</param>
+            <param name="description">Parameter description.</param>
+            <param name="schema">Parameter schema.</param>
+            <returns>OpenApiParameterMetadata.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiParameterMetadata.Query(System.String,System.String,System.Boolean,WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata)">
+            <summary>
+            Create a query parameter.
+            </summary>
+            <param name="name">Parameter name.</param>
+            <param name="description">Parameter description.</param>
+            <param name="required">Whether the parameter is required.</param>
+            <param name="schema">Parameter schema.</param>
+            <returns>OpenApiParameterMetadata.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiParameterMetadata.Header(System.String,System.String,System.Boolean,WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata)">
+            <summary>
+            Create a header parameter.
+            </summary>
+            <param name="name">Header name.</param>
+            <param name="description">Parameter description.</param>
+            <param name="required">Whether the parameter is required.</param>
+            <param name="schema">Parameter schema.</param>
+            <returns>OpenApiParameterMetadata.</returns>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiRequestBodyMetadata">
+            <summary>
+            OpenAPI request body metadata for documenting request payloads.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiRequestBodyMetadata.Description">
+            <summary>
+            A brief description of the request body.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiRequestBodyMetadata.Required">
+            <summary>
+            Whether the request body is required.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiRequestBodyMetadata.Content">
+            <summary>
+            The content of the request body, keyed by media type (e.g., "application/json").
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiRequestBodyMetadata.#ctor">
+            <summary>
+            Instantiate the object.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiRequestBodyMetadata.Json(WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata,System.String,System.Boolean)">
+            <summary>
+            Create a JSON request body.
+            </summary>
+            <param name="schema">The schema for the JSON content.</param>
+            <param name="description">Description of the request body.</param>
+            <param name="required">Whether the request body is required.</param>
+            <returns>OpenApiRequestBodyMetadata.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiRequestBodyMetadata.FormData(WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata,System.String,System.Boolean)">
+            <summary>
+            Create a form data request body.
+            </summary>
+            <param name="schema">The schema for the form data.</param>
+            <param name="description">Description of the request body.</param>
+            <param name="required">Whether the request body is required.</param>
+            <returns>OpenApiRequestBodyMetadata.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiRequestBodyMetadata.Multipart(WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata,System.String,System.Boolean)">
+            <summary>
+            Create a multipart form data request body (for file uploads).
+            </summary>
+            <param name="schema">The schema for the multipart data.</param>
+            <param name="description">Description of the request body.</param>
+            <param name="required">Whether the request body is required.</param>
+            <returns>OpenApiRequestBodyMetadata.</returns>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiMediaTypeMetadata">
+            <summary>
+            OpenAPI media type metadata for content negotiation.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiMediaTypeMetadata.Schema">
+            <summary>
+            The schema defining the content type.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiMediaTypeMetadata.Example">
+            <summary>
+            Example of the media type content.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiMediaTypeMetadata.Examples">
+            <summary>
+            Examples of the media type content, keyed by example name.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiExampleMetadata">
+            <summary>
+            OpenAPI example metadata.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiExampleMetadata.Summary">
+            <summary>
+            Short description for the example.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiExampleMetadata.Description">
+            <summary>
+            Long description for the example.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiExampleMetadata.Value">
+            <summary>
+            Embedded literal example value.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiExampleMetadata.ExternalValue">
+            <summary>
+            URL pointing to an external example.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiResponseMetadata">
+            <summary>
+            OpenAPI response metadata for documenting API responses.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiResponseMetadata.Description">
+            <summary>
+            A description of the response. Required by OpenAPI specification.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiResponseMetadata.Content">
+            <summary>
+            The content of the response, keyed by media type (e.g., "application/json").
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiResponseMetadata.Headers">
+            <summary>
+            Headers returned with the response, keyed by header name.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiResponseMetadata.#ctor">
+            <summary>
+            Instantiate the object.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiResponseMetadata.Create(System.String)">
+            <summary>
+            Create a simple response with just a description.
+            </summary>
+            <param name="description">Response description.</param>
+            <returns>OpenApiResponseMetadata.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiResponseMetadata.Json(System.String,WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata)">
+            <summary>
+            Create a JSON response.
+            </summary>
+            <param name="description">Response description.</param>
+            <param name="schema">The schema for the JSON content.</param>
+            <returns>OpenApiResponseMetadata.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiResponseMetadata.Text(System.String)">
+            <summary>
+            Create a text response.
+            </summary>
+            <param name="description">Response description.</param>
+            <returns>OpenApiResponseMetadata.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiResponseMetadata.Binary(System.String,System.String)">
+            <summary>
+            Create a binary/file response.
+            </summary>
+            <param name="description">Response description.</param>
+            <param name="mediaType">The media type (e.g., "application/octet-stream", "image/png").</param>
+            <returns>OpenApiResponseMetadata.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiResponseMetadata.Ok(WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata)">
+            <summary>
+            Create a 200 OK response with JSON content.
+            </summary>
+            <param name="schema">The schema for the JSON content.</param>
+            <returns>OpenApiResponseMetadata.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiResponseMetadata.Created(WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata)">
+            <summary>
+            Create a 201 Created response.
+            </summary>
+            <param name="schema">The schema for the created resource.</param>
+            <returns>OpenApiResponseMetadata.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiResponseMetadata.NoContent">
+            <summary>
+            Create a 204 No Content response.
+            </summary>
+            <returns>OpenApiResponseMetadata.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiResponseMetadata.BadRequest(WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata)">
+            <summary>
+            Create a 400 Bad Request response.
+            </summary>
+            <param name="schema">Optional error schema.</param>
+            <returns>OpenApiResponseMetadata.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiResponseMetadata.Unauthorized">
+            <summary>
+            Create a 401 Unauthorized response.
+            </summary>
+            <returns>OpenApiResponseMetadata.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiResponseMetadata.Forbidden">
+            <summary>
+            Create a 403 Forbidden response.
+            </summary>
+            <returns>OpenApiResponseMetadata.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiResponseMetadata.NotFound">
+            <summary>
+            Create a 404 Not Found response.
+            </summary>
+            <returns>OpenApiResponseMetadata.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiResponseMetadata.InternalError(WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata)">
+            <summary>
+            Create a 500 Internal Server Error response.
+            </summary>
+            <param name="schema">Optional error schema.</param>
+            <returns>OpenApiResponseMetadata.</returns>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiHeaderMetadata">
+            <summary>
+            OpenAPI header metadata for response headers.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiHeaderMetadata.Description">
+            <summary>
+            A description of the header.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiHeaderMetadata.Required">
+            <summary>
+            Whether the header is required.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiHeaderMetadata.Deprecated">
+            <summary>
+            Whether the header is deprecated.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiHeaderMetadata.Schema">
+            <summary>
+            The schema defining the header's type.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiRouteHandler">
+            <summary>
+            Route handler for serving OpenAPI JSON documents.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiRouteHandler.Create(System.Func{WatsonWebserver.Core.WebserverRoutes},WatsonWebserver.Core.OpenApi.OpenApiSettings)">
+            <summary>
+            Create a route handler that serves the OpenAPI JSON document.
+            </summary>
+            <param name="routesProvider">Function that returns the current webserver routes.</param>
+            <param name="settings">OpenAPI settings.</param>
+            <returns>Route handler function.</returns>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata">
+            <summary>
+            OpenAPI route metadata for documenting API endpoints.
+            Attach this to route objects to generate OpenAPI documentation.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata.OperationId">
+            <summary>
+            Unique string used to identify the operation.
+            The operationId is case-sensitive and must be unique among all operations.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata.Summary">
+            <summary>
+            A short summary of what the operation does.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata.Description">
+            <summary>
+            A verbose explanation of the operation behavior.
+            CommonMark syntax may be used for rich text representation.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata.Tags">
+            <summary>
+            A list of tags for API documentation control.
+            Tags can be used for logical grouping of operations.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata.Deprecated">
+            <summary>
+            Whether this operation is deprecated and should be transitioned out of usage.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata.Parameters">
+            <summary>
+            A list of parameters applicable for this operation.
+            Path parameters from the route are automatically extracted if not specified.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata.RequestBody">
+            <summary>
+            The request body applicable for this operation.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata.Responses">
+            <summary>
+            The list of possible responses, keyed by HTTP status code.
+            Use "default" for the default response.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata.Security">
+            <summary>
+            A list of security scheme names required for this operation.
+            An empty list means no security is required.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata.Servers">
+            <summary>
+            An alternative server array to service this operation.
+            If not specified, the default servers are used.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata.ExternalDocs">
+            <summary>
+            Additional external documentation for this operation.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata.#ctor">
+            <summary>
+            Instantiate the object.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata.Create(System.String,System.String[])">
+            <summary>
+            Create route metadata with a summary.
+            </summary>
+            <param name="summary">Short summary of the operation.</param>
+            <param name="tags">Optional tags for grouping.</param>
+            <returns>OpenApiRouteMetadata.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata.WithTag(System.String)">
+            <summary>
+            Add a tag to the operation.
+            </summary>
+            <param name="tag">The tag name.</param>
+            <returns>This instance for chaining.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata.WithTags(System.String[])">
+            <summary>
+            Add multiple tags to the operation.
+            </summary>
+            <param name="tags">The tag names.</param>
+            <returns>This instance for chaining.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata.WithDescription(System.String)">
+            <summary>
+            Set the operation description.
+            </summary>
+            <param name="description">The description.</param>
+            <returns>This instance for chaining.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata.WithParameter(WatsonWebserver.Core.OpenApi.OpenApiParameterMetadata)">
+            <summary>
+            Add a parameter to the operation.
+            </summary>
+            <param name="parameter">The parameter metadata.</param>
+            <returns>This instance for chaining.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata.WithRequestBody(WatsonWebserver.Core.OpenApi.OpenApiRequestBodyMetadata)">
+            <summary>
+            Set the request body for the operation.
+            </summary>
+            <param name="requestBody">The request body metadata.</param>
+            <returns>This instance for chaining.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata.WithResponse(System.Int32,WatsonWebserver.Core.OpenApi.OpenApiResponseMetadata)">
+            <summary>
+            Add a response to the operation.
+            </summary>
+            <param name="statusCode">HTTP status code (e.g., 200, 404).</param>
+            <param name="response">The response metadata.</param>
+            <returns>This instance for chaining.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata.WithDefaultResponse(WatsonWebserver.Core.OpenApi.OpenApiResponseMetadata)">
+            <summary>
+            Add a default response to the operation.
+            </summary>
+            <param name="response">The response metadata.</param>
+            <returns>This instance for chaining.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata.AsDeprecated">
+            <summary>
+            Mark the operation as deprecated.
+            </summary>
+            <returns>This instance for chaining.</returns>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiServerMetadata">
+            <summary>
+            OpenAPI server metadata.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiServerMetadata.Url">
+            <summary>
+            A URL to the target host.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiServerMetadata.Description">
+            <summary>
+            A description of the server.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiServerMetadata.Variables">
+            <summary>
+            A map of server variables for URL template substitution.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiServerVariableMetadata">
+            <summary>
+            OpenAPI server variable metadata.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiServerVariableMetadata.Default">
+            <summary>
+            The default value to use for substitution.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiServerVariableMetadata.Description">
+            <summary>
+            A description for the server variable.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiServerVariableMetadata.Enum">
+            <summary>
+            An enumeration of allowed values.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiExternalDocsMetadata">
+            <summary>
+            OpenAPI external documentation metadata.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiExternalDocsMetadata.Description">
+            <summary>
+            A description of the target documentation.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiExternalDocsMetadata.Url">
+            <summary>
+            The URL for the target documentation.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata">
+            <summary>
+            OpenAPI schema metadata for describing data types.
+            Used for request bodies, response bodies, and parameters.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata.Type">
+            <summary>
+            The data type of the schema (e.g., "string", "integer", "boolean", "array", "object").
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata.Format">
+            <summary>
+            The data format (e.g., "int32", "int64", "float", "double", "date", "date-time", "email", "uri").
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata.Description">
+            <summary>
+            A description of the schema.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata.Nullable">
+            <summary>
+            Whether the value can be null.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata.Items">
+            <summary>
+            Schema for array items. Only applicable when Type is "array".
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata.Properties">
+            <summary>
+            Properties of an object schema. Only applicable when Type is "object".
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata.Required">
+            <summary>
+            List of required property names. Only applicable when Type is "object".
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata.Ref">
+            <summary>
+            Reference to a component schema (e.g., "#/components/schemas/User").
+            When set, other properties are typically ignored.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata.Example">
+            <summary>
+            An example value for the schema.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata.Default">
+            <summary>
+            Default value for the schema.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata.Enum">
+            <summary>
+            Enumeration of allowed values.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata.Minimum">
+            <summary>
+            Minimum value for numeric types.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata.Maximum">
+            <summary>
+            Maximum value for numeric types.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata.MinLength">
+            <summary>
+            Minimum length for string types.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata.MaxLength">
+            <summary>
+            Maximum length for string types.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata.Pattern">
+            <summary>
+            Regular expression pattern for string validation.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata.#ctor">
+            <summary>
+            Instantiate the object.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata.Create(System.String,System.String)">
+            <summary>
+            Create a schema for a primitive type.
+            </summary>
+            <param name="type">The data type.</param>
+            <param name="format">The data format.</param>
+            <returns>OpenApiSchemaMetadata.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata.CreateRef(System.String)">
+            <summary>
+            Create a schema reference to a component.
+            </summary>
+            <param name="schemaName">The name of the schema in components.</param>
+            <returns>OpenApiSchemaMetadata.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata.CreateArray(WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata)">
+            <summary>
+            Create an array schema.
+            </summary>
+            <param name="itemSchema">The schema for array items.</param>
+            <returns>OpenApiSchemaMetadata.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata.String(System.String)">
+            <summary>
+            Create a string schema.
+            </summary>
+            <param name="format">Optional format (e.g., "date", "date-time", "email", "uri").</param>
+            <returns>OpenApiSchemaMetadata.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata.Integer(System.String)">
+            <summary>
+            Create an integer schema.
+            </summary>
+            <param name="format">Optional format ("int32" or "int64"). Defaults to "int32".</param>
+            <returns>OpenApiSchemaMetadata.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata.Number(System.String)">
+            <summary>
+            Create a number schema.
+            </summary>
+            <param name="format">Optional format ("float" or "double").</param>
+            <returns>OpenApiSchemaMetadata.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata.Boolean">
+            <summary>
+            Create a boolean schema.
+            </summary>
+            <returns>OpenApiSchemaMetadata.</returns>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiSettings">
+            <summary>
+            Settings for OpenAPI document generation.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSettings.Info">
+            <summary>
+            API information.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSettings.Servers">
+            <summary>
+            List of servers where the API is hosted.
+            If empty, the current server is used.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSettings.Tags">
+            <summary>
+            Tags for grouping operations.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSettings.DocumentPath">
+            <summary>
+            Path to serve the OpenAPI JSON document.
+            Default is "/openapi.json".
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSettings.SwaggerUiPath">
+            <summary>
+            Path to serve the Swagger UI.
+            Default is "/swagger".
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSettings.EnableSwaggerUi">
+            <summary>
+            Whether to enable Swagger UI.
+            Default is true.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSettings.IncludePreAuthRoutes">
+            <summary>
+            Whether to include routes from PreAuthentication group.
+            Default is true.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSettings.IncludePostAuthRoutes">
+            <summary>
+            Whether to include routes from PostAuthentication group.
+            Default is true.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSettings.IncludeContentRoutes">
+            <summary>
+            Whether to include content routes (file serving) in documentation.
+            Default is false.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSettings.SecuritySchemes">
+            <summary>
+            Security definitions for the API.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSettings.Security">
+            <summary>
+            Global security requirements that apply to all operations.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSettings.ExternalDocs">
+            <summary>
+            External documentation reference.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiSettings.#ctor">
+            <summary>
+            Instantiate the object.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiSettings.#ctor(System.String,System.String)">
+            <summary>
+            Instantiate the object with API title and version.
+            </summary>
+            <param name="title">API title.</param>
+            <param name="version">API version.</param>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiInfo">
+            <summary>
+            OpenAPI Info object containing API metadata.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiInfo.Title">
+            <summary>
+            The title of the API. Required.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiInfo.Version">
+            <summary>
+            The version of the API document. Required.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiInfo.Description">
+            <summary>
+            A description of the API.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiInfo.TermsOfService">
+            <summary>
+            A URL to the Terms of Service for the API.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiInfo.Contact">
+            <summary>
+            Contact information for the API.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiInfo.License">
+            <summary>
+            License information for the API.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiContact">
+            <summary>
+            Contact information for the API.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiContact.Name">
+            <summary>
+            The name of the contact person/organization.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiContact.Url">
+            <summary>
+            The URL for the contact.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiContact.Email">
+            <summary>
+            The email address of the contact.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiLicense">
+            <summary>
+            License information for the API.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiLicense.Name">
+            <summary>
+            The license name. Required.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiLicense.Url">
+            <summary>
+            A URL to the license.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiServer">
+            <summary>
+            Server object representing a server URL.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiServer.Url">
+            <summary>
+            A URL to the target host. Required.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiServer.Description">
+            <summary>
+            A description of the server.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiTag">
+            <summary>
+            Tag object for grouping operations.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiTag.Name">
+            <summary>
+            The name of the tag. Required.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiTag.Description">
+            <summary>
+            A description for the tag.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiTag.ExternalDocs">
+            <summary>
+            External documentation for the tag.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiExternalDocs">
+            <summary>
+            External documentation object.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiExternalDocs.Description">
+            <summary>
+            A description of the target documentation.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiExternalDocs.Url">
+            <summary>
+            The URL for the target documentation. Required.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiSecurityScheme">
+            <summary>
+            Security scheme definition.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSecurityScheme.Type">
+            <summary>
+            The type of security scheme.
+            Valid values: "apiKey", "http", "oauth2", "openIdConnect".
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSecurityScheme.Description">
+            <summary>
+            A description for the security scheme.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSecurityScheme.Name">
+            <summary>
+            The name of the header, query, or cookie parameter.
+            Required for apiKey type.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSecurityScheme.In">
+            <summary>
+            The location of the API key.
+            Valid values: "query", "header", "cookie".
+            Required for apiKey type.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSecurityScheme.Scheme">
+            <summary>
+            The name of the HTTP authorization scheme.
+            Required for http type.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSecurityScheme.BearerFormat">
+            <summary>
+            Bearer format hint for documentation.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.ParameterLocation">
+            <summary>
+            The location of a parameter in an HTTP request.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.Core.OpenApi.ParameterLocation.Query">
+            <summary>
+            Parameter is passed in the query string (e.g., ?foo=bar).
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.Core.OpenApi.ParameterLocation.Header">
+            <summary>
+            Parameter is passed in an HTTP header.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.Core.OpenApi.ParameterLocation.Path">
+            <summary>
+            Parameter is part of the URL path (e.g., /users/{id}).
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.Core.OpenApi.ParameterLocation.Cookie">
+            <summary>
+            Parameter is passed as a cookie.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.RouteManagerExtensions">
+            <summary>
+            Extension methods for adding routes with OpenAPI documentation.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.RouteManagerExtensions.Add(WatsonWebserver.Core.StaticRouteManager,WatsonWebserver.Core.HttpMethod,System.String,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Action{WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata},System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task})">
+            <summary>
+            Add a static route with OpenAPI documentation.
+            </summary>
+            <param name="manager">The static route manager.</param>
+            <param name="method">HTTP method.</param>
+            <param name="path">URL path.</param>
+            <param name="handler">Route handler.</param>
+            <param name="configureOpenApi">Action to configure OpenAPI metadata.</param>
+            <param name="exceptionHandler">Optional exception handler.</param>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.RouteManagerExtensions.Add(WatsonWebserver.Core.ParameterRouteManager,WatsonWebserver.Core.HttpMethod,System.String,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Action{WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata},System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task})">
+            <summary>
+            Add a parameter route with OpenAPI documentation.
+            </summary>
+            <param name="manager">The parameter route manager.</param>
+            <param name="method">HTTP method.</param>
+            <param name="path">URL path with parameters (e.g., "/users/{id}").</param>
+            <param name="handler">Route handler.</param>
+            <param name="configureOpenApi">Action to configure OpenAPI metadata.</param>
+            <param name="exceptionHandler">Optional exception handler.</param>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.RouteManagerExtensions.Add(WatsonWebserver.Core.DynamicRouteManager,WatsonWebserver.Core.HttpMethod,System.Text.RegularExpressions.Regex,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Action{WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata},System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task})">
+            <summary>
+            Add a dynamic route with OpenAPI documentation.
+            </summary>
+            <param name="manager">The dynamic route manager.</param>
+            <param name="method">HTTP method.</param>
+            <param name="path">Regex pattern for the path.</param>
+            <param name="handler">Route handler.</param>
+            <param name="configureOpenApi">Action to configure OpenAPI metadata.</param>
+            <param name="exceptionHandler">Optional exception handler.</param>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.SwaggerUiHandler">
+            <summary>
+            Route handler for serving Swagger UI.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.SwaggerUiHandler.Create(System.String,System.String)">
+            <summary>
+            Create a route handler that serves the Swagger UI HTML page.
+            </summary>
+            <param name="openApiPath">Path to the OpenAPI JSON document.</param>
+            <param name="title">Page title. Defaults to "API Documentation".</param>
+            <returns>Route handler function.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.SwaggerUiHandler.GenerateSwaggerHtml(System.String,System.String)">
+            <summary>
+            Generate the Swagger UI HTML page.
+            </summary>
+            <param name="openApiPath">Path to the OpenAPI JSON document.</param>
+            <param name="title">Page title.</param>
+            <returns>HTML string.</returns>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.WebserverExtensions">
+            <summary>
+            Extension methods for adding OpenAPI support to WebserverBase.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.WebserverExtensions.UseOpenApi(WatsonWebserver.Core.WebserverBase,System.Action{WatsonWebserver.Core.OpenApi.OpenApiSettings})">
+            <summary>
+            Add OpenAPI documentation endpoints to the webserver.
+            </summary>
+            <param name="server">The webserver instance.</param>
+            <param name="configure">Optional configuration action.</param>
+            <returns>The webserver instance for chaining.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.WebserverExtensions.UseOpenApi(WatsonWebserver.Core.WebserverBase,WatsonWebserver.Core.OpenApi.OpenApiSettings)">
+            <summary>
+            Add OpenAPI documentation endpoints to the webserver with pre-configured settings.
+            </summary>
+            <param name="server">The webserver instance.</param>
+            <param name="settings">Pre-configured OpenAPI settings.</param>
+            <returns>The webserver instance for chaining.</returns>
+        </member>
         <member name="T:WatsonWebserver.Core.ParameterRoute">
             <summary>
             Assign a method handler for when requests are received matching the supplied method and path containing parameters.
@@ -1041,7 +2095,12 @@
             User-supplied metadata.
             </summary>
         </member>
-        <member name="M:WatsonWebserver.Core.ParameterRoute.#ctor(WatsonWebserver.Core.HttpMethod,System.String,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},System.Guid,System.Object)">
+        <member name="P:WatsonWebserver.Core.ParameterRoute.OpenApiMetadata">
+            <summary>
+            OpenAPI documentation metadata for this route.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.ParameterRoute.#ctor(WatsonWebserver.Core.HttpMethod,System.String,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},System.Guid,System.Object,WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata)">
             <summary>
             Create a new route object.
             </summary>
@@ -1051,6 +2110,7 @@
             <param name="exceptionHandler">The method that should be called to handle exceptions.</param>
             <param name="guid">Globally-unique identifier.</param>
             <param name="metadata">User-supplied metadata.</param>
+            <param name="openApiMetadata">OpenAPI documentation metadata.</param>
         </member>
         <member name="T:WatsonWebserver.Core.ParameterRouteManager">
             <summary>
@@ -1064,16 +2124,23 @@
             Instantiate the object.
             </summary> 
         </member>
-        <member name="M:WatsonWebserver.Core.ParameterRouteManager.Add(WatsonWebserver.Core.HttpMethod,System.String,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},System.Guid,System.Object)">
+        <member name="M:WatsonWebserver.Core.ParameterRouteManager.Add(WatsonWebserver.Core.HttpMethod,System.String,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},System.Guid,System.Object,WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata)">
             <summary>
             Add a route.
             </summary>
             <param name="method">The HTTP method.</param>
             <param name="path">URL path, i.e. /path/to/resource.</param>
-            <param name="handler">Method to invoke.</param> 
+            <param name="handler">Method to invoke.</param>
             <param name="exceptionHandler">The method that should be called to handle exceptions.</param>
             <param name="guid">Globally-unique identifier.</param>
             <param name="metadata">User-supplied metadata.</param>
+            <param name="openApiMetadata">OpenAPI documentation metadata.</param>
+        </member>
+        <member name="M:WatsonWebserver.Core.ParameterRouteManager.GetAll">
+            <summary>
+            Retrieve all routes.
+            </summary>
+            <returns>List of parameter routes.</returns>
         </member>
         <member name="M:WatsonWebserver.Core.ParameterRouteManager.Remove(WatsonWebserver.Core.HttpMethod,System.String)">
             <summary>
@@ -1445,7 +2512,12 @@
             User-supplied metadata.
             </summary>
         </member>
-        <member name="M:WatsonWebserver.Core.StaticRoute.#ctor(WatsonWebserver.Core.HttpMethod,System.String,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},System.Guid,System.Object)">
+        <member name="P:WatsonWebserver.Core.StaticRoute.OpenApiMetadata">
+            <summary>
+            OpenAPI documentation metadata for this route.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.StaticRoute.#ctor(WatsonWebserver.Core.HttpMethod,System.String,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},System.Guid,System.Object,WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata)">
             <summary>
             Create a new route object.
             </summary>
@@ -1455,6 +2527,7 @@
             <param name="exceptionHandler">The method that should be called to handle exceptions.</param>
             <param name="guid">Globally-unique identifier.</param>
             <param name="metadata">User-supplied metadata.</param>
+            <param name="openApiMetadata">OpenAPI documentation metadata.</param>
         </member>
         <member name="T:WatsonWebserver.Core.StaticRouteManager">
             <summary>
@@ -1466,16 +2539,23 @@
             Instantiate the object.
             </summary> 
         </member>
-        <member name="M:WatsonWebserver.Core.StaticRouteManager.Add(WatsonWebserver.Core.HttpMethod,System.String,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},System.Guid,System.Object)">
+        <member name="M:WatsonWebserver.Core.StaticRouteManager.Add(WatsonWebserver.Core.HttpMethod,System.String,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},System.Guid,System.Object,WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata)">
             <summary>
             Add a route.
             </summary>
             <param name="method">The HTTP method.</param>
             <param name="path">URL path, i.e. /path/to/resource.</param>
-            <param name="handler">Method to invoke.</param> 
+            <param name="handler">Method to invoke.</param>
             <param name="exceptionHandler">The method that should be called to handle exceptions.</param>
             <param name="guid">Globally-unique identifier.</param>
             <param name="metadata">User-supplied metadata.</param>
+            <param name="openApiMetadata">OpenAPI documentation metadata.</param>
+        </member>
+        <member name="M:WatsonWebserver.Core.StaticRouteManager.GetAll">
+            <summary>
+            Retrieve all routes.
+            </summary>
+            <returns>List of static routes.</returns>
         </member>
         <member name="M:WatsonWebserver.Core.StaticRouteManager.Remove(WatsonWebserver.Core.HttpMethod,System.String)">
             <summary>

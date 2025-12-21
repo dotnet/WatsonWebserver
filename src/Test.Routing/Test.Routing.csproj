@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
+		<TargetFrameworks>net8.0;net10.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -11,21 +11,21 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="postauth\" />
-	  <Folder Include="preauth\" />
+		<Folder Include="postauth\" />
+		<Folder Include="preauth\" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="RestWrapper" Version="3.0.14" />
+		<PackageReference Include="RestWrapper" Version="3.0.14" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Update="postauth\content">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	  <None Update="preauth\content">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
+		<None Update="postauth\content">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="preauth\content">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 
 </Project>

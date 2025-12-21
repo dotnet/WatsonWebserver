@@ -6,6 +6,7 @@
     using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
+    using WatsonWebserver.Core.OpenApi;
 
     /// <summary>
     /// Content route manager.  Content routes are used for GET and HEAD requests to specific files or entire directories.
@@ -125,19 +126,33 @@
         /// Add a route.
         /// </summary>
         /// <param name="path">URL path, i.e. /path/to/resource.</param>
-        /// <param name="isDirectory">True if the path represents a directory.</param> 
+        /// <param name="isDirectory">True if the path represents a directory.</param>
         /// <param name="exceptionHandler">The method that should be called to handle exceptions.</param>
         /// <param name="guid">Globally-unique identifier.</param>
         /// <param name="metadata">User-supplied metadata.</param>
+        /// <param name="openApiMetadata">OpenAPI documentation metadata.</param>
         public void Add(
-            string path, 
-            bool isDirectory, 
+            string path,
+            bool isDirectory,
             Func<HttpContextBase, Exception, Task> exceptionHandler = null,
-            Guid guid = default(Guid), 
-            object metadata = null)
+            Guid guid = default(Guid),
+            object metadata = null,
+            OpenApiRouteMetadata openApiMetadata = null)
         {
-            if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path)); 
-            Add(new ContentRoute(path, isDirectory, exceptionHandler, guid, metadata));
+            if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
+            Add(new ContentRoute(path, isDirectory, exceptionHandler, guid, metadata, openApiMetadata));
+        }
+
+        /// <summary>
+        /// Retrieve all routes.
+        /// </summary>
+        /// <returns>List of content routes.</returns>
+        public IReadOnlyList<ContentRoute> GetAll()
+        {
+            lock (_Lock)
+            {
+                return _Routes.ToList().AsReadOnly();
+            }
         }
 
         /// <summary>

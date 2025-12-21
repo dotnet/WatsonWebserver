@@ -4,11 +4,11 @@
 
 Simple, scalable, fast, async web server for processing RESTful HTTP/HTTPS requests, written in C#.
 
-| Package     | NuGet Version  | Downloads |
-|-------------|----------------|-----------|
-| Watson      | [![NuGet Version](https://img.shields.io/nuget/v/Watson.svg?style=flat)](https://www.nuget.org/packages/Watson/) | [![NuGet](https://img.shields.io/nuget/dt/Watson.svg)](https://www.nuget.org/packages/Watson) |
-| Watson.Lite | [![NuGet Version](https://img.shields.io/nuget/v/Watson.Lite.svg?style=flat)](https://www.nuget.org/packages/Watson.Lite/) | [![NuGet](https://img.shields.io/nuget/dt/Watson.Lite.svg)](https://www.nuget.org/packages/Watson.Lite) |
-| Watson.Core | [![NuGet Version](https://img.shields.io/nuget/v/Watson.Core.svg?style=flat)](https://www.nuget.org/packages/Watson.Core/) | [![NuGet](https://img.shields.io/nuget/dt/Watson.Core.svg)](https://www.nuget.org/packages/Watson.Core) |
+| Package       | NuGet Version  | Downloads |
+|---------------|----------------|-----------|
+| Watson        | [![NuGet Version](https://img.shields.io/nuget/v/Watson.svg?style=flat)](https://www.nuget.org/packages/Watson/) | [![NuGet](https://img.shields.io/nuget/dt/Watson.svg)](https://www.nuget.org/packages/Watson) |
+| Watson.Lite   | [![NuGet Version](https://img.shields.io/nuget/v/Watson.Lite.svg?style=flat)](https://www.nuget.org/packages/Watson.Lite/) | [![NuGet](https://img.shields.io/nuget/dt/Watson.Lite.svg)](https://www.nuget.org/packages/Watson.Lite) |
+| Watson.Core   | [![NuGet Version](https://img.shields.io/nuget/v/Watson.Core.svg?style=flat)](https://www.nuget.org/packages/Watson.Core/) | [![NuGet](https://img.shields.io/nuget/dt/Watson.Core.svg)](https://www.nuget.org/packages/Watson.Core) |
 
 Special thanks to @DamienDennehy for allowing us the use of the ```Watson.Core``` package name in NuGet!
 
@@ -311,8 +311,189 @@ static async Task GetUrlsRoute(HttpContextBase ctx) =>
 static async Task CheckLoginRoute(HttpContextBase ctx) => 
     await ctx.Response.Send("Checking your login!"); 
 
-static async Task TestRoute(HttpContextBase ctx) => 
-    await ctx.Response.Send("Hello from the test route!"); 
+static async Task TestRoute(HttpContextBase ctx) =>
+    await ctx.Response.Send("Hello from the test route!");
+```
+
+## OpenAPI / Swagger Support
+
+Watson and Watson.Lite include built-in OpenAPI 3.0 documentation generation and Swagger UI. No additional packages are required - OpenAPI support is included in `WatsonWebserver.Core`.
+
+Refer to `Test.OpenApi` for a complete working example.
+
+### Basic Setup
+
+```csharp
+using WatsonWebserver;
+using WatsonWebserver.Core;
+using WatsonWebserver.Core.OpenApi;
+
+WebserverSettings settings = new WebserverSettings("localhost", 8080);
+Webserver server = new Webserver(settings, DefaultRoute);
+
+// Enable OpenAPI with Swagger UI
+server.UseOpenApi(openApi =>
+{
+    openApi.Info.Title = "My API";
+    openApi.Info.Version = "1.0.0";
+    openApi.Info.Description = "My API description";
+});
+
+server.Start();
+```
+
+After starting the server:
+- **OpenAPI JSON:** `http://localhost:8080/openapi.json`
+- **Swagger UI:** `http://localhost:8080/swagger`
+
+### Documenting Routes
+
+Add OpenAPI documentation to routes using the `openApiMetadata` parameter. The fluent API makes it easy to build complete documentation:
+
+```csharp
+using WatsonWebserver.Core.OpenApi;
+
+// GET route with query parameters
+server.Routes.PreAuthentication.Static.Add(
+    HttpMethod.GET,
+    "/api/users",
+    GetUsersHandler,
+    openApiMetadata: OpenApiRouteMetadata.Create("Get all users", "Users")
+        .WithDescription("Returns a list of all users, optionally filtered by status")
+        .WithParameter(OpenApiParameterMetadata.Query("active", "Filter by active status", false, OpenApiSchemaMetadata.Boolean()))
+        .WithParameter(OpenApiParameterMetadata.Query("limit", "Maximum number of results", false, OpenApiSchemaMetadata.Integer()))
+        .WithResponse(200, OpenApiResponseMetadata.Json(
+            "List of users",
+            OpenApiSchemaMetadata.CreateArray(OpenApiSchemaMetadata.CreateRef("User")))));
+
+// GET route with path parameter
+server.Routes.PreAuthentication.Parameter.Add(
+    HttpMethod.GET,
+    "/api/users/{id}",
+    GetUserByIdHandler,
+    openApiMetadata: OpenApiRouteMetadata.Create("Get user by ID", "Users")
+        .WithDescription("Retrieves a specific user by their unique identifier")
+        .WithParameter(OpenApiParameterMetadata.Path("id", "User ID", OpenApiSchemaMetadata.Integer()))
+        .WithResponse(200, OpenApiResponseMetadata.Json("User found", OpenApiSchemaMetadata.CreateRef("User")))
+        .WithResponse(404, OpenApiResponseMetadata.NotFound()));
+
+// POST route with request body
+server.Routes.PreAuthentication.Static.Add(
+    HttpMethod.POST,
+    "/api/users",
+    CreateUserHandler,
+    openApiMetadata: OpenApiRouteMetadata.Create("Create user", "Users")
+        .WithDescription("Creates a new user in the system")
+        .WithRequestBody(OpenApiRequestBodyMetadata.Json(
+            new OpenApiSchemaMetadata
+            {
+                Type = "object",
+                Properties = new Dictionary<string, OpenApiSchemaMetadata>
+                {
+                    ["name"] = OpenApiSchemaMetadata.String(),
+                    ["email"] = OpenApiSchemaMetadata.String("email"),
+                    ["age"] = OpenApiSchemaMetadata.Integer()
+                },
+                Required = new List<string> { "name", "email" }
+            },
+            "User data to create",
+            required: true))
+        .WithResponse(201, OpenApiResponseMetadata.Created(OpenApiSchemaMetadata.CreateRef("User")))
+        .WithResponse(400, OpenApiResponseMetadata.BadRequest()));
+
+// DELETE route
+server.Routes.PreAuthentication.Parameter.Add(
+    HttpMethod.DELETE,
+    "/api/users/{id}",
+    DeleteUserHandler,
+    openApiMetadata: OpenApiRouteMetadata.Create("Delete user", "Users")
+        .WithParameter(OpenApiParameterMetadata.Path("id", "User ID", OpenApiSchemaMetadata.Integer()))
+        .WithResponse(204, OpenApiResponseMetadata.NoContent())
+        .WithResponse(404, OpenApiResponseMetadata.NotFound()));
+```
+
+### OpenAPI Settings
+
+```csharp
+server.UseOpenApi(openApi =>
+{
+    // API Information (required)
+    openApi.Info.Title = "My API";
+    openApi.Info.Version = "1.0.0";
+    openApi.Info.Description = "API description";
+    openApi.Info.Contact = new OpenApiContact
+    {
+        Name = "Support",
+        Email = "support@example.com",
+        Url = "https://example.com/support"
+    };
+    openApi.Info.License = new OpenApiLicense
+    {
+        Name = "MIT",
+        Url = "https://opensource.org/licenses/MIT"
+    };
+
+    // Tags for grouping endpoints in Swagger UI
+    openApi.Tags.Add(new OpenApiTag { Name = "Users", Description = "User management operations" });
+    openApi.Tags.Add(new OpenApiTag { Name = "Products", Description = "Product catalog operations" });
+
+    // Security schemes (for authenticated APIs)
+    openApi.SecuritySchemes["ApiKey"] = new OpenApiSecurityScheme
+    {
+        Type = "apiKey",
+        Name = "X-API-Key",
+        In = "header",
+        Description = "API key for authorization"
+    };
+
+    // Or use Bearer token authentication
+    openApi.SecuritySchemes["Bearer"] = new OpenApiSecurityScheme
+    {
+        Type = "http",
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        Description = "JWT authorization header"
+    };
+
+    // Customize endpoint paths
+    openApi.DocumentPath = "/openapi.json";  // Default
+    openApi.SwaggerUiPath = "/swagger";       // Default
+    openApi.EnableSwaggerUi = true;           // Default
+
+    // Control which routes are documented
+    openApi.IncludePreAuthRoutes = true;      // Default
+    openApi.IncludePostAuthRoutes = true;     // Default
+    openApi.IncludeContentRoutes = false;     // Default (file-serving routes)
+});
+```
+
+### Schema Helper Methods
+
+The `OpenApiSchemaMetadata` class provides convenient factory methods for common types:
+
+```csharp
+OpenApiSchemaMetadata.String()              // string
+OpenApiSchemaMetadata.String("email")       // string with format (email, date-time, uri, etc.)
+OpenApiSchemaMetadata.Integer()             // integer (int32)
+OpenApiSchemaMetadata.Long()                // integer (int64)
+OpenApiSchemaMetadata.Number()              // number (double)
+OpenApiSchemaMetadata.Boolean()             // boolean
+OpenApiSchemaMetadata.CreateArray(items)    // array of items
+OpenApiSchemaMetadata.CreateRef("User")     // $ref to #/components/schemas/User
+```
+
+### Response Helper Methods
+
+The `OpenApiResponseMetadata` class provides factory methods for common responses:
+
+```csharp
+OpenApiResponseMetadata.Json("Description", schema)  // 200 with JSON body
+OpenApiResponseMetadata.Created(schema)              // 201 Created
+OpenApiResponseMetadata.NoContent()                  // 204 No Content
+OpenApiResponseMetadata.BadRequest()                 // 400 Bad Request
+OpenApiResponseMetadata.Unauthorized()               // 401 Unauthorized
+OpenApiResponseMetadata.Forbidden()                  // 403 Forbidden
+OpenApiResponseMetadata.NotFound()                   // 404 Not Found
 ```
 
 ## Hostname Handling for HTTP Responses

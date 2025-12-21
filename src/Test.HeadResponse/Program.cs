@@ -24,7 +24,14 @@
         {
             if (args != null && args.Length > 0)
             {
-                if (args[0].Equals("lite")) _UsingLite = true;
+                foreach (string arg in args)
+                {
+                    if (arg.Equals("-lite", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _UsingLite = true;
+                        break;
+                    }
+                }
             }
 
             _Settings = new WebserverSettings

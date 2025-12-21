@@ -7,6 +7,7 @@
     using System.Threading.Tasks;
     using System.Text.Json;
     using System.Text.Json.Serialization;
+    using WatsonWebserver.Core.OpenApi;
 
     /// <summary>
     /// Assign a method handler for when requests are received matching the supplied method and path.
@@ -51,6 +52,12 @@
         [JsonPropertyOrder(999)]
         public object Metadata { get; set; } = null;
 
+        /// <summary>
+        /// OpenAPI documentation metadata for this route.
+        /// </summary>
+        [JsonPropertyOrder(998)]
+        public OpenApiRouteMetadata OpenApiMetadata { get; set; } = null;
+
         #endregion
 
         #region Private-Members
@@ -68,19 +75,21 @@
         /// <param name="exceptionHandler">The method that should be called to handle exceptions.</param>
         /// <param name="guid">Globally-unique identifier.</param>
         /// <param name="metadata">User-supplied metadata.</param>
+        /// <param name="openApiMetadata">OpenAPI documentation metadata.</param>
         public StaticRoute(
-            HttpMethod method, 
-            string path, 
-            Func<HttpContextBase, Task> handler, 
+            HttpMethod method,
+            string path,
+            Func<HttpContextBase, Task> handler,
             Func<HttpContextBase, Exception, Task> exceptionHandler = null,
-            Guid guid = default, 
-            object metadata = null)
+            Guid guid = default,
+            object metadata = null,
+            OpenApiRouteMetadata openApiMetadata = null)
         {
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
             if (handler == null) throw new ArgumentNullException(nameof(handler));
 
             Method = method;
-            
+
             Path = path.ToLower();
             if (!Path.StartsWith("/")) Path = "/" + Path;
             if (!Path.EndsWith("/")) Path = Path + "/";
@@ -91,6 +100,7 @@
             if (guid == default(Guid)) GUID = Guid.NewGuid();
             else GUID = guid;
             if (metadata != null) Metadata = metadata;
+            if (openApiMetadata != null) OpenApiMetadata = openApiMetadata;
         }
 
         #endregion

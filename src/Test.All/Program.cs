@@ -6,10 +6,12 @@ namespace Test.All
     using System.IO;
     using System.Net.Http;
     using System.Text;
+    using System.Text.Json;
     using System.Threading;
     using System.Threading.Tasks;
     using WatsonWebserver;
     using WatsonWebserver.Core;
+    using WatsonWebserver.Core.OpenApi;
     using WatsonWebserver.Lite;
     using CoreHttpMethod = WatsonWebserver.Core.HttpMethod;
 
@@ -110,6 +112,9 @@ namespace Test.All
 
                 // Comprehensive routing tests
                 await TestComprehensiveRouting("http://127.0.0.1:8001", "WatsonWebserver").ConfigureAwait(false);
+
+                // OpenAPI/Swagger tests
+                await TestOpenApi("http://127.0.0.1:8001", "WatsonWebserver").ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -159,6 +164,9 @@ namespace Test.All
 
                 // Comprehensive routing tests
                 await TestComprehensiveRouting("http://127.0.0.1:8002", "WatsonWebserver.Lite").ConfigureAwait(false);
+
+                // OpenAPI/Swagger tests
+                await TestOpenApi("http://127.0.0.1:8002", "WatsonWebserver.Lite").ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -560,21 +568,106 @@ namespace Test.All
                     HttpResponseMessage response = await client.GetAsync($"{baseUrl}/nonexistent/path").ConfigureAwait(false);
                     return response.StatusCode == System.Net.HttpStatusCode.NotFound;
                 }).ConfigureAwait(false);
+            }
+        }
 
-                // Test Preflight (OPTIONS)
-                await ExecuteTest($"{serverType} - Preflight (OPTIONS)", async () =>
+        /// <summary>
+        /// Test OpenAPI/Swagger functionality.
+        /// </summary>
+        /// <param name="baseUrl">Base server URL.</param>
+        /// <param name="serverType">Server type name.</param>
+        /// <returns>Task.</returns>
+        private static async Task TestOpenApi(string baseUrl, string serverType)
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                client.Timeout = TimeSpan.FromSeconds(10);
+
+                // Test OpenAPI JSON endpoint
+                await ExecuteTest($"{serverType} - OpenAPI JSON Endpoint", async () =>
                 {
-                    HttpRequestMessage request = new HttpRequestMessage(System.Net.Http.HttpMethod.Options, $"{baseUrl}/test/options");
-                    HttpResponseMessage response = await client.SendAsync(request).ConfigureAwait(false);
-                    return response.IsSuccessStatusCode;
+                    HttpResponseMessage response = await client.GetAsync($"{baseUrl}/openapi.json").ConfigureAwait(false);
+                    if (!response.IsSuccessStatusCode) return false;
+
+                    string content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                    // Verify it's valid JSON with OpenAPI structure
+                    bool hasOpenApiVersion = content.Contains("\"openapi\"");
+                    bool hasInfo = content.Contains("\"info\"");
+                    bool hasPaths = content.Contains("\"paths\"");
+                    bool hasCorrectContentType = response.Content.Headers.ContentType?.MediaType == "application/json";
+
+                    Console.WriteLine($"      Has openapi field: {hasOpenApiVersion}");
+                    Console.WriteLine($"      Has info field: {hasInfo}");
+                    Console.WriteLine($"      Has paths field: {hasPaths}");
+                    Console.WriteLine($"      Correct Content-Type: {hasCorrectContentType}");
+
+                    return hasOpenApiVersion && hasInfo && hasPaths && hasCorrectContentType;
                 }).ConfigureAwait(false);
 
-                // Test Exception Handling
-                await ExecuteTest($"{serverType} - Exception Handling", async () =>
+                // Test Swagger UI endpoint
+                await ExecuteTest($"{serverType} - Swagger UI Endpoint", async () =>
                 {
-                    Console.WriteLine("      NOTE: Exception is intentional for this test");
-                    HttpResponseMessage response = await client.GetAsync($"{baseUrl}/error/test").ConfigureAwait(false);
-                    return response.StatusCode == System.Net.HttpStatusCode.InternalServerError;
+                    HttpResponseMessage response = await client.GetAsync($"{baseUrl}/swagger").ConfigureAwait(false);
+                    if (!response.IsSuccessStatusCode) return false;
+
+                    string content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                    // Verify it's HTML with Swagger UI elements
+                    bool hasHtmlTag = content.Contains("<html");
+                    bool hasSwaggerUi = content.Contains("swagger-ui");
+                    bool hasCorrectContentType = response.Content.Headers.ContentType?.MediaType == "text/html";
+
+                    Console.WriteLine($"      Has HTML structure: {hasHtmlTag}");
+                    Console.WriteLine($"      Has Swagger UI reference: {hasSwaggerUi}");
+                    Console.WriteLine($"      Correct Content-Type: {hasCorrectContentType}");
+
+                    return hasHtmlTag && hasSwaggerUi && hasCorrectContentType;
+                }).ConfigureAwait(false);
+
+                // Test documented route appears in OpenAPI spec
+                await ExecuteTest($"{serverType} - Documented Route in OpenAPI", async () =>
+                {
+                    HttpResponseMessage response = await client.GetAsync($"{baseUrl}/openapi.json").ConfigureAwait(false);
+                    if (!response.IsSuccessStatusCode) return false;
+
+                    string content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                    // Verify documented routes appear
+                    bool hasApiInfo = content.Contains("/openapi/info");
+                    bool hasApiUsers = content.Contains("/openapi/users");
+
+                    Console.WriteLine($"      Has /openapi/info route: {hasApiInfo}");
+                    Console.WriteLine($"      Has /openapi/users route: {hasApiUsers}");
+
+                    return hasApiInfo && hasApiUsers;
+                }).ConfigureAwait(false);
+
+                // Test OpenAPI endpoint actually works
+                await ExecuteTest($"{serverType} - OpenAPI Documented Endpoint Works", async () =>
+                {
+                    HttpResponseMessage response = await client.GetAsync($"{baseUrl}/openapi/info").ConfigureAwait(false);
+                    if (!response.IsSuccessStatusCode) return false;
+
+                    string content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    bool hasExpectedContent = content.Contains("OpenAPI test endpoint");
+
+                    Console.WriteLine($"      Response contains expected content: {hasExpectedContent}");
+
+                    return hasExpectedContent;
+                }).ConfigureAwait(false);
+
+                // Test POST endpoint with documented request body
+                await ExecuteTest($"{serverType} - OpenAPI POST Endpoint", async () =>
+                {
+                    string jsonBody = "{\"name\":\"Test User\",\"email\":\"test@example.com\"}";
+                    StringContent content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
+
+                    HttpResponseMessage response = await client.PostAsync($"{baseUrl}/openapi/users", content).ConfigureAwait(false);
+
+                    Console.WriteLine($"      POST response status: {response.StatusCode}");
+
+                    return response.IsSuccessStatusCode;
                 }).ConfigureAwait(false);
             }
         }
@@ -687,6 +780,66 @@ namespace Test.All
         /// <param name="server">Server instance.</param>
         private static void SetupRoutes(WebserverBase server)
         {
+            // Configure OpenAPI
+            server.UseOpenApi(openApi =>
+            {
+                openApi.Info.Title = "Test API";
+                openApi.Info.Version = "1.0.0";
+                openApi.Info.Description = "API for testing OpenAPI functionality";
+                openApi.Tags.Add(new OpenApiTag { Name = "Test", Description = "Test endpoints" });
+            });
+
+            // OpenAPI documented routes
+            server.Routes.PreAuthentication.Static.Add(
+                CoreHttpMethod.GET,
+                "/openapi/info",
+                async (ctx) =>
+                {
+                    ctx.Response.ContentType = "application/json";
+                    await ctx.Response.Send("{\"message\": \"OpenAPI test endpoint\"}").ConfigureAwait(false);
+                },
+                openApiMetadata: OpenApiRouteMetadata.Create("Get API Info", "Test")
+                    .WithDescription("Returns information about the API")
+                    .WithResponse(200, OpenApiResponseMetadata.Json("API information", OpenApiSchemaMetadata.String())));
+
+            server.Routes.PreAuthentication.Static.Add(
+                CoreHttpMethod.GET,
+                "/openapi/users",
+                async (ctx) =>
+                {
+                    ctx.Response.ContentType = "application/json";
+                    await ctx.Response.Send("[{\"id\":1,\"name\":\"Test User\"}]").ConfigureAwait(false);
+                },
+                openApiMetadata: OpenApiRouteMetadata.Create("Get Users", "Test")
+                    .WithDescription("Returns a list of users")
+                    .WithResponse(200, OpenApiResponseMetadata.Json("List of users", OpenApiSchemaMetadata.CreateArray(OpenApiSchemaMetadata.String()))));
+
+            server.Routes.PreAuthentication.Static.Add(
+                CoreHttpMethod.POST,
+                "/openapi/users",
+                async (ctx) =>
+                {
+                    string body = ctx.Request.DataAsString;
+                    ctx.Response.StatusCode = 201;
+                    ctx.Response.ContentType = "application/json";
+                    await ctx.Response.Send("{\"id\":2,\"name\":\"Created User\"}").ConfigureAwait(false);
+                },
+                openApiMetadata: OpenApiRouteMetadata.Create("Create User", "Test")
+                    .WithDescription("Creates a new user")
+                    .WithRequestBody(OpenApiRequestBodyMetadata.Json(
+                        new OpenApiSchemaMetadata
+                        {
+                            Type = "object",
+                            Properties = new Dictionary<string, OpenApiSchemaMetadata>
+                            {
+                                ["name"] = OpenApiSchemaMetadata.String(),
+                                ["email"] = OpenApiSchemaMetadata.String("email")
+                            }
+                        },
+                        "User data",
+                        true))
+                    .WithResponse(201, OpenApiResponseMetadata.Created(OpenApiSchemaMetadata.String())));
+
             // Basic HTTP method routes
             server.Routes.PreAuthentication.Static.Add(CoreHttpMethod.GET, "/test/get", async (ctx) =>
             {
