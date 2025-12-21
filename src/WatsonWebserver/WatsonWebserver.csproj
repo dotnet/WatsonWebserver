@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.0;netstandard2.1;net462;net48;net6.0;net8.0</TargetFrameworks>
-		<Version>6.4.0</Version>
+		<TargetFrameworks>netstandard2.0;netstandard2.1;net462;net48;net8.0;net10.0</TargetFrameworks>
+		<Version>6.5.0</Version>
 		<Description>Simple, fast, async C# web server for handling REST requests with SSL support, targeted to .NET Core, .NET Standard, and .NET Framework.</Description>
-		<PackageReleaseNotes>Better support for server-sent events</PackageReleaseNotes>
-		
+		<PackageReleaseNotes>OpenAPI support</PackageReleaseNotes>
+
 		<Authors>Joel Christner</Authors>
 		<Company>Joel Christner</Company>
 		<Copyright>(c)2025 Joel Christner</Copyright>

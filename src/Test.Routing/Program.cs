@@ -25,8 +25,20 @@
             { "foo", "bar" }
         };
 
-        static void Main()
+        static void Main(string[] args)
         {
+            if (args != null && args.Length > 0)
+            {
+                foreach (string arg in args)
+                {
+                    if (arg.Equals("-lite", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _UsingLite = true;
+                        break;
+                    }
+                }
+            }
+
             _Settings = new WebserverSettings
             {
                 Hostname = _Hostname,

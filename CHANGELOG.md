@@ -2,11 +2,15 @@
 
 ## Current Version
 
+v6.5.x
+
+- OpenAPI and Swagger support, refer to `Test.OpenApi` project and `README.md`
+
+## Previous Versions
+
 v6.4.x
 
 - Minor breaking changes to server-sent events
-
-## Previous Versions
 
 v6.3.x
 

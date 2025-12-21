@@ -5,6 +5,7 @@
     using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
+    using WatsonWebserver.Core.OpenApi;
 
     /// <summary>
     /// Static route manager.  Static routes are used for requests using any HTTP method to a specific path.
@@ -41,23 +42,37 @@
         /// </summary>
         /// <param name="method">The HTTP method.</param>
         /// <param name="path">URL path, i.e. /path/to/resource.</param>
-        /// <param name="handler">Method to invoke.</param> 
+        /// <param name="handler">Method to invoke.</param>
         /// <param name="exceptionHandler">The method that should be called to handle exceptions.</param>
         /// <param name="guid">Globally-unique identifier.</param>
         /// <param name="metadata">User-supplied metadata.</param>
+        /// <param name="openApiMetadata">OpenAPI documentation metadata.</param>
         public void Add(
-            HttpMethod method, 
-            string path, 
-            Func<HttpContextBase, Task> handler, 
+            HttpMethod method,
+            string path,
+            Func<HttpContextBase, Task> handler,
             Func<HttpContextBase, Exception, Task> exceptionHandler = null,
-            Guid guid = default(Guid), 
-            object metadata = null)
+            Guid guid = default(Guid),
+            object metadata = null,
+            OpenApiRouteMetadata openApiMetadata = null)
         {
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
             if (handler == null) throw new ArgumentNullException(nameof(handler));
 
-            StaticRoute r = new StaticRoute(method, path, handler, exceptionHandler, guid, metadata);
+            StaticRoute r = new StaticRoute(method, path, handler, exceptionHandler, guid, metadata, openApiMetadata);
             Add(r);
+        }
+
+        /// <summary>
+        /// Retrieve all routes.
+        /// </summary>
+        /// <returns>List of static routes.</returns>
+        public IReadOnlyList<StaticRoute> GetAll()
+        {
+            lock (_Lock)
+            {
+                return _Routes.ToList().AsReadOnly();
+            }
         }
 
         /// <summary>
