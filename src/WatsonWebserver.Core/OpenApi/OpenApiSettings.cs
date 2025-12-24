@@ -1,6 +1,5 @@
 namespace WatsonWebserver.Core.OpenApi
 {
-    using System;
     using System.Collections.Generic;
 
     /// <summary>
@@ -9,6 +8,13 @@ namespace WatsonWebserver.Core.OpenApi
     public class OpenApiSettings
     {
         #region Public-Members
+
+        /// <summary>
+        /// Whether to enable OpenAPI documentation.
+        /// When false, no OpenAPI endpoints will be registered.
+        /// Default is true.
+        /// </summary>
+        public bool EnableOpenApi { get; set; } = true;
 
         /// <summary>
         /// API information.
@@ -100,172 +106,5 @@ namespace WatsonWebserver.Core.OpenApi
         }
 
         #endregion
-    }
-
-    /// <summary>
-    /// OpenAPI Info object containing API metadata.
-    /// </summary>
-    public class OpenApiInfo
-    {
-        /// <summary>
-        /// The title of the API. Required.
-        /// </summary>
-        public string Title { get; set; } = "API Documentation";
-
-        /// <summary>
-        /// The version of the API document. Required.
-        /// </summary>
-        public string Version { get; set; } = "1.0.0";
-
-        /// <summary>
-        /// A description of the API.
-        /// </summary>
-        public string Description { get; set; } = null;
-
-        /// <summary>
-        /// A URL to the Terms of Service for the API.
-        /// </summary>
-        public string TermsOfService { get; set; } = null;
-
-        /// <summary>
-        /// Contact information for the API.
-        /// </summary>
-        public OpenApiContact Contact { get; set; } = null;
-
-        /// <summary>
-        /// License information for the API.
-        /// </summary>
-        public OpenApiLicense License { get; set; } = null;
-    }
-
-    /// <summary>
-    /// Contact information for the API.
-    /// </summary>
-    public class OpenApiContact
-    {
-        /// <summary>
-        /// The name of the contact person/organization.
-        /// </summary>
-        public string Name { get; set; } = null;
-
-        /// <summary>
-        /// The URL for the contact.
-        /// </summary>
-        public string Url { get; set; } = null;
-
-        /// <summary>
-        /// The email address of the contact.
-        /// </summary>
-        public string Email { get; set; } = null;
-    }
-
-    /// <summary>
-    /// License information for the API.
-    /// </summary>
-    public class OpenApiLicense
-    {
-        /// <summary>
-        /// The license name. Required.
-        /// </summary>
-        public string Name { get; set; } = null;
-
-        /// <summary>
-        /// A URL to the license.
-        /// </summary>
-        public string Url { get; set; } = null;
-    }
-
-    /// <summary>
-    /// Server object representing a server URL.
-    /// </summary>
-    public class OpenApiServer
-    {
-        /// <summary>
-        /// A URL to the target host. Required.
-        /// </summary>
-        public string Url { get; set; } = null;
-
-        /// <summary>
-        /// A description of the server.
-        /// </summary>
-        public string Description { get; set; } = null;
-    }
-
-    /// <summary>
-    /// Tag object for grouping operations.
-    /// </summary>
-    public class OpenApiTag
-    {
-        /// <summary>
-        /// The name of the tag. Required.
-        /// </summary>
-        public string Name { get; set; } = null;
-
-        /// <summary>
-        /// A description for the tag.
-        /// </summary>
-        public string Description { get; set; } = null;
-
-        /// <summary>
-        /// External documentation for the tag.
-        /// </summary>
-        public OpenApiExternalDocs ExternalDocs { get; set; } = null;
-    }
-
-    /// <summary>
-    /// External documentation object.
-    /// </summary>
-    public class OpenApiExternalDocs
-    {
-        /// <summary>
-        /// A description of the target documentation.
-        /// </summary>
-        public string Description { get; set; } = null;
-
-        /// <summary>
-        /// The URL for the target documentation. Required.
-        /// </summary>
-        public string Url { get; set; } = null;
-    }
-
-    /// <summary>
-    /// Security scheme definition.
-    /// </summary>
-    public class OpenApiSecurityScheme
-    {
-        /// <summary>
-        /// The type of security scheme.
-        /// Valid values: "apiKey", "http", "oauth2", "openIdConnect".
-        /// </summary>
-        public string Type { get; set; } = "apiKey";
-
-        /// <summary>
-        /// A description for the security scheme.
-        /// </summary>
-        public string Description { get; set; } = null;
-
-        /// <summary>
-        /// The name of the header, query, or cookie parameter.
-        /// Required for apiKey type.
-        /// </summary>
-        public string Name { get; set; } = null;
-
-        /// <summary>
-        /// The location of the API key.
-        /// Valid values: "query", "header", "cookie".
-        /// Required for apiKey type.
-        /// </summary>
-        public string In { get; set; } = "header";
-
-        /// <summary>
-        /// The name of the HTTP authorization scheme.
-        /// Required for http type.
-        /// </summary>
-        public string Scheme { get; set; } = null;
-
-        /// <summary>
-        /// Bearer format hint for documentation.
-        /// </summary>
-        public string BearerFormat { get; set; } = null;
     }
 }

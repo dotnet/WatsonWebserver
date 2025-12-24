@@ -1032,6 +1032,26 @@
             <param name="extension">File extension.</param>
             <returns>String containing MIME type.</returns>
         </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiContact">
+            <summary>
+            Contact information for the API.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiContact.Name">
+            <summary>
+            The name of the contact person/organization.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiContact.Url">
+            <summary>
+            The URL for the contact.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiContact.Email">
+            <summary>
+            The email address of the contact.
+            </summary>
+        </member>
         <member name="T:WatsonWebserver.Core.OpenApi.OpenApiDocumentGenerator">
             <summary>
             Generates OpenAPI 3.0 specification documents from WatsonWebserver routes.
@@ -1054,6 +1074,156 @@
             <param name="routes">The webserver routes.</param>
             <param name="settings">OpenAPI settings.</param>
             <returns>OpenAPI JSON string.</returns>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiExampleMetadata">
+            <summary>
+            OpenAPI example metadata.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiExampleMetadata.Summary">
+            <summary>
+            Short description for the example.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiExampleMetadata.Description">
+            <summary>
+            Long description for the example.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiExampleMetadata.Value">
+            <summary>
+            Embedded literal example value.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiExampleMetadata.ExternalValue">
+            <summary>
+            URL pointing to an external example.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiExternalDocs">
+            <summary>
+            External documentation object.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiExternalDocs.Description">
+            <summary>
+            A description of the target documentation.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiExternalDocs.Url">
+            <summary>
+            The URL for the target documentation. Required.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiExternalDocsMetadata">
+            <summary>
+            OpenAPI external documentation metadata.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiExternalDocsMetadata.Description">
+            <summary>
+            A description of the target documentation.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiExternalDocsMetadata.Url">
+            <summary>
+            The URL for the target documentation.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiHeaderMetadata">
+            <summary>
+            OpenAPI header metadata for response headers.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiHeaderMetadata.Description">
+            <summary>
+            A description of the header.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiHeaderMetadata.Required">
+            <summary>
+            Whether the header is required.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiHeaderMetadata.Deprecated">
+            <summary>
+            Whether the header is deprecated.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiHeaderMetadata.Schema">
+            <summary>
+            The schema defining the header's type.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiInfo">
+            <summary>
+            OpenAPI Info object containing API metadata.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiInfo.Title">
+            <summary>
+            The title of the API. Required.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiInfo.Version">
+            <summary>
+            The version of the API document. Required.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiInfo.Description">
+            <summary>
+            A description of the API.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiInfo.TermsOfService">
+            <summary>
+            A URL to the Terms of Service for the API.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiInfo.Contact">
+            <summary>
+            Contact information for the API.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiInfo.License">
+            <summary>
+            License information for the API.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiLicense">
+            <summary>
+            License information for the API.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiLicense.Name">
+            <summary>
+            The license name. Required.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiLicense.Url">
+            <summary>
+            A URL to the license.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiMediaTypeMetadata">
+            <summary>
+            OpenAPI media type metadata for content negotiation.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiMediaTypeMetadata.Schema">
+            <summary>
+            The schema defining the content type.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiMediaTypeMetadata.Example">
+            <summary>
+            Example of the media type content.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiMediaTypeMetadata.Examples">
+            <summary>
+            Examples of the media type content, keyed by example name.
+            </summary>
         </member>
         <member name="T:WatsonWebserver.Core.OpenApi.OpenApiParameterMetadata">
             <summary>
@@ -1188,51 +1358,6 @@
             <param name="required">Whether the request body is required.</param>
             <returns>OpenApiRequestBodyMetadata.</returns>
         </member>
-        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiMediaTypeMetadata">
-            <summary>
-            OpenAPI media type metadata for content negotiation.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiMediaTypeMetadata.Schema">
-            <summary>
-            The schema defining the content type.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiMediaTypeMetadata.Example">
-            <summary>
-            Example of the media type content.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiMediaTypeMetadata.Examples">
-            <summary>
-            Examples of the media type content, keyed by example name.
-            </summary>
-        </member>
-        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiExampleMetadata">
-            <summary>
-            OpenAPI example metadata.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiExampleMetadata.Summary">
-            <summary>
-            Short description for the example.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiExampleMetadata.Description">
-            <summary>
-            Long description for the example.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiExampleMetadata.Value">
-            <summary>
-            Embedded literal example value.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiExampleMetadata.ExternalValue">
-            <summary>
-            URL pointing to an external example.
-            </summary>
-        </member>
         <member name="T:WatsonWebserver.Core.OpenApi.OpenApiResponseMetadata">
             <summary>
             OpenAPI response metadata for documenting API responses.
@@ -1339,31 +1464,6 @@
             </summary>
             <param name="schema">Optional error schema.</param>
             <returns>OpenApiResponseMetadata.</returns>
-        </member>
-        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiHeaderMetadata">
-            <summary>
-            OpenAPI header metadata for response headers.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiHeaderMetadata.Description">
-            <summary>
-            A description of the header.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiHeaderMetadata.Required">
-            <summary>
-            Whether the header is required.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiHeaderMetadata.Deprecated">
-            <summary>
-            Whether the header is deprecated.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiHeaderMetadata.Schema">
-            <summary>
-            The schema defining the header's type.
-            </summary>
         </member>
         <member name="T:WatsonWebserver.Core.OpenApi.OpenApiRouteHandler">
             <summary>
@@ -1515,61 +1615,6 @@
             </summary>
             <returns>This instance for chaining.</returns>
         </member>
-        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiServerMetadata">
-            <summary>
-            OpenAPI server metadata.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiServerMetadata.Url">
-            <summary>
-            A URL to the target host.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiServerMetadata.Description">
-            <summary>
-            A description of the server.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiServerMetadata.Variables">
-            <summary>
-            A map of server variables for URL template substitution.
-            </summary>
-        </member>
-        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiServerVariableMetadata">
-            <summary>
-            OpenAPI server variable metadata.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiServerVariableMetadata.Default">
-            <summary>
-            The default value to use for substitution.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiServerVariableMetadata.Description">
-            <summary>
-            A description for the server variable.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiServerVariableMetadata.Enum">
-            <summary>
-            An enumeration of allowed values.
-            </summary>
-        </member>
-        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiExternalDocsMetadata">
-            <summary>
-            OpenAPI external documentation metadata.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiExternalDocsMetadata.Description">
-            <summary>
-            A description of the target documentation.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiExternalDocsMetadata.Url">
-            <summary>
-            The URL for the target documentation.
-            </summary>
-        </member>
         <member name="T:WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata">
             <summary>
             OpenAPI schema metadata for describing data types.
@@ -1711,9 +1756,111 @@
             </summary>
             <returns>OpenApiSchemaMetadata.</returns>
         </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiSecurityScheme">
+            <summary>
+            Security scheme definition.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSecurityScheme.Type">
+            <summary>
+            The type of security scheme.
+            Valid values: "apiKey", "http", "oauth2", "openIdConnect".
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSecurityScheme.Description">
+            <summary>
+            A description for the security scheme.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSecurityScheme.Name">
+            <summary>
+            The name of the header, query, or cookie parameter.
+            Required for apiKey type.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSecurityScheme.In">
+            <summary>
+            The location of the API key.
+            Valid values: "query", "header", "cookie".
+            Required for apiKey type.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSecurityScheme.Scheme">
+            <summary>
+            The name of the HTTP authorization scheme.
+            Required for http type.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSecurityScheme.BearerFormat">
+            <summary>
+            Bearer format hint for documentation.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiServer">
+            <summary>
+            Server object representing a server URL.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiServer.Url">
+            <summary>
+            A URL to the target host. Required.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiServer.Description">
+            <summary>
+            A description of the server.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiServerMetadata">
+            <summary>
+            OpenAPI server metadata.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiServerMetadata.Url">
+            <summary>
+            A URL to the target host.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiServerMetadata.Description">
+            <summary>
+            A description of the server.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiServerMetadata.Variables">
+            <summary>
+            A map of server variables for URL template substitution.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiServerVariableMetadata">
+            <summary>
+            OpenAPI server variable metadata.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiServerVariableMetadata.Default">
+            <summary>
+            The default value to use for substitution.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiServerVariableMetadata.Description">
+            <summary>
+            A description for the server variable.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiServerVariableMetadata.Enum">
+            <summary>
+            An enumeration of allowed values.
+            </summary>
+        </member>
         <member name="T:WatsonWebserver.Core.OpenApi.OpenApiSettings">
             <summary>
             Settings for OpenAPI document generation.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSettings.EnableOpenApi">
+            <summary>
+            Whether to enable OpenAPI documentation.
+            When false, no OpenAPI endpoints will be registered.
+            Default is true.
             </summary>
         </member>
         <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSettings.Info">
@@ -1795,91 +1942,6 @@
             <param name="title">API title.</param>
             <param name="version">API version.</param>
         </member>
-        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiInfo">
-            <summary>
-            OpenAPI Info object containing API metadata.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiInfo.Title">
-            <summary>
-            The title of the API. Required.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiInfo.Version">
-            <summary>
-            The version of the API document. Required.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiInfo.Description">
-            <summary>
-            A description of the API.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiInfo.TermsOfService">
-            <summary>
-            A URL to the Terms of Service for the API.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiInfo.Contact">
-            <summary>
-            Contact information for the API.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiInfo.License">
-            <summary>
-            License information for the API.
-            </summary>
-        </member>
-        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiContact">
-            <summary>
-            Contact information for the API.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiContact.Name">
-            <summary>
-            The name of the contact person/organization.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiContact.Url">
-            <summary>
-            The URL for the contact.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiContact.Email">
-            <summary>
-            The email address of the contact.
-            </summary>
-        </member>
-        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiLicense">
-            <summary>
-            License information for the API.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiLicense.Name">
-            <summary>
-            The license name. Required.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiLicense.Url">
-            <summary>
-            A URL to the license.
-            </summary>
-        </member>
-        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiServer">
-            <summary>
-            Server object representing a server URL.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiServer.Url">
-            <summary>
-            A URL to the target host. Required.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiServer.Description">
-            <summary>
-            A description of the server.
-            </summary>
-        </member>
         <member name="T:WatsonWebserver.Core.OpenApi.OpenApiTag">
             <summary>
             Tag object for grouping operations.
@@ -1898,61 +1960,6 @@
         <member name="P:WatsonWebserver.Core.OpenApi.OpenApiTag.ExternalDocs">
             <summary>
             External documentation for the tag.
-            </summary>
-        </member>
-        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiExternalDocs">
-            <summary>
-            External documentation object.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiExternalDocs.Description">
-            <summary>
-            A description of the target documentation.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiExternalDocs.Url">
-            <summary>
-            The URL for the target documentation. Required.
-            </summary>
-        </member>
-        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiSecurityScheme">
-            <summary>
-            Security scheme definition.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSecurityScheme.Type">
-            <summary>
-            The type of security scheme.
-            Valid values: "apiKey", "http", "oauth2", "openIdConnect".
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSecurityScheme.Description">
-            <summary>
-            A description for the security scheme.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSecurityScheme.Name">
-            <summary>
-            The name of the header, query, or cookie parameter.
-            Required for apiKey type.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSecurityScheme.In">
-            <summary>
-            The location of the API key.
-            Valid values: "query", "header", "cookie".
-            Required for apiKey type.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSecurityScheme.Scheme">
-            <summary>
-            The name of the HTTP authorization scheme.
-            Required for http type.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSecurityScheme.BearerFormat">
-            <summary>
-            Bearer format hint for documentation.
             </summary>
         </member>
         <member name="T:WatsonWebserver.Core.OpenApi.ParameterLocation">

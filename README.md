@@ -345,6 +345,41 @@ After starting the server:
 - **OpenAPI JSON:** `http://localhost:8080/openapi.json`
 - **Swagger UI:** `http://localhost:8080/swagger`
 
+### Enabling/Disabling OpenAPI and Swagger
+
+By default, both OpenAPI and Swagger UI are enabled when you call `UseOpenApi()`. You can control this behavior using the `EnableOpenApi` and `EnableSwaggerUi` settings:
+
+```csharp
+// Disable OpenAPI entirely (no endpoints registered)
+server.UseOpenApi(openApi =>
+{
+    openApi.EnableOpenApi = false;
+});
+
+// Enable OpenAPI JSON but disable Swagger UI
+server.UseOpenApi(openApi =>
+{
+    openApi.Info.Title = "My API";
+    openApi.Info.Version = "1.0.0";
+    openApi.EnableOpenApi = true;      // Default: true
+    openApi.EnableSwaggerUi = false;   // Disables /swagger endpoint
+});
+
+// Enable both (default behavior)
+server.UseOpenApi(openApi =>
+{
+    openApi.Info.Title = "My API";
+    openApi.Info.Version = "1.0.0";
+    openApi.EnableOpenApi = true;      // Default: true
+    openApi.EnableSwaggerUi = true;    // Default: true
+});
+```
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `EnableOpenApi` | `true` | When `false`, no OpenAPI endpoints are registered (both `/openapi.json` and `/swagger` are disabled) |
+| `EnableSwaggerUi` | `true` | When `false`, only the Swagger UI (`/swagger`) is disabled; OpenAPI JSON remains available |
+
 ### Documenting Routes
 
 Add OpenAPI documentation to routes using the `openApiMetadata` parameter. The fluent API makes it easy to build complete documentation:
@@ -454,10 +489,13 @@ server.UseOpenApi(openApi =>
         Description = "JWT authorization header"
     };
 
+    // Enable/disable OpenAPI and Swagger
+    openApi.EnableOpenApi = true;             // Default (set to false to disable all OpenAPI endpoints)
+    openApi.EnableSwaggerUi = true;           // Default (set to false to disable only Swagger UI)
+
     // Customize endpoint paths
-    openApi.DocumentPath = "/openapi.json";  // Default
+    openApi.DocumentPath = "/openapi.json";   // Default
     openApi.SwaggerUiPath = "/swagger";       // Default
-    openApi.EnableSwaggerUi = true;           // Default
 
     // Control which routes are documented
     openApi.IncludePreAuthRoutes = true;      // Default

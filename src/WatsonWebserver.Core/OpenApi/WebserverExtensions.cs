@@ -20,19 +20,22 @@ namespace WatsonWebserver.Core.OpenApi
             OpenApiSettings settings = new OpenApiSettings();
             configure?.Invoke(settings);
 
-            // Register OpenAPI JSON endpoint
-            server.Routes.PreAuthentication.Static.Add(
-                HttpMethod.GET,
-                settings.DocumentPath,
-                OpenApiRouteHandler.Create(() => server.Routes, settings));
-
-            // Register Swagger UI endpoint if enabled
-            if (settings.EnableSwaggerUi)
+            if (settings.EnableOpenApi)
             {
+                // Register OpenAPI JSON endpoint
                 server.Routes.PreAuthentication.Static.Add(
                     HttpMethod.GET,
-                    settings.SwaggerUiPath,
-                    SwaggerUiHandler.Create(settings.DocumentPath, settings.Info.Title));
+                    settings.DocumentPath,
+                    OpenApiRouteHandler.Create(() => server.Routes, settings));
+
+                // Register Swagger UI endpoint if enabled
+                if (settings.EnableSwaggerUi)
+                {
+                    server.Routes.PreAuthentication.Static.Add(
+                        HttpMethod.GET,
+                        settings.SwaggerUiPath,
+                        SwaggerUiHandler.Create(settings.DocumentPath, settings.Info.Title));
+                }
             }
 
             return server;
@@ -49,19 +52,22 @@ namespace WatsonWebserver.Core.OpenApi
             if (server == null) throw new ArgumentNullException(nameof(server));
             if (settings == null) throw new ArgumentNullException(nameof(settings));
 
-            // Register OpenAPI JSON endpoint
-            server.Routes.PreAuthentication.Static.Add(
-                HttpMethod.GET,
-                settings.DocumentPath,
-                OpenApiRouteHandler.Create(() => server.Routes, settings));
-
-            // Register Swagger UI endpoint if enabled
-            if (settings.EnableSwaggerUi)
+            if (settings.EnableOpenApi)
             {
+                // Register OpenAPI JSON endpoint
                 server.Routes.PreAuthentication.Static.Add(
                     HttpMethod.GET,
-                    settings.SwaggerUiPath,
-                    SwaggerUiHandler.Create(settings.DocumentPath, settings.Info.Title));
+                    settings.DocumentPath,
+                    OpenApiRouteHandler.Create(() => server.Routes, settings));
+
+                // Register Swagger UI endpoint if enabled
+                if (settings.EnableSwaggerUi)
+                {
+                    server.Routes.PreAuthentication.Static.Add(
+                        HttpMethod.GET,
+                        settings.SwaggerUiPath,
+                        SwaggerUiHandler.Create(settings.DocumentPath, settings.Info.Title));
+                }
             }
 
             return server;

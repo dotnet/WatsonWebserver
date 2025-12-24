@@ -396,26 +396,4 @@ namespace Test.OpenApi
             await ctx.Response.Send(json, ctx.Token).ConfigureAwait(false);
         }
     }
-
-    /// <summary>
-    /// User model.
-    /// </summary>
-    public class User
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public string Email { get; set; }
-        public bool Active { get; set; }
-    }
-
-    /// <summary>
-    /// Product model.
-    /// </summary>
-    public class Product
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public decimal Price { get; set; }
-        public string Category { get; set; }
-    }
 }
