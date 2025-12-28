@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.0;netstandard2.1;net462;net48;net8.0;net10.0</TargetFrameworks>
-		<Version>6.5.1</Version>
+		<Version>6.5.2</Version>
 		<Description>Simple, fast, async C# web server for handling REST requests with SSL support, targeted to .NET Core, .NET Standard, and .NET Framework.  Watson.Lite has no dependency on http.sys.</Description>
 		<PackageReleaseNotes>OpenAPI support</PackageReleaseNotes>
 		

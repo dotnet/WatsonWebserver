@@ -54,6 +54,8 @@
         private CancellationTokenSource _TokenSource = new CancellationTokenSource();
         private CancellationToken _Token;
         private int _RequestCount = 0;
+        private volatile bool _Disposed = false;
+        private readonly int _DisposalWaitMs = 5000;
 
         #endregion
 
@@ -76,6 +78,7 @@
             Routes = new WebserverRoutes(Settings, defaultRoute);
 
             _Header = "[Webserver " + Settings.Prefix + "] ";
+            _Token = _TokenSource.Token;
 
             InitializeServer(settings.Hostname, settings.Port);
         }
@@ -90,22 +93,75 @@
         /// </summary>
         public override void Dispose()
         {
+            if (_Disposed) return;
+            _Disposed = true;
+
             Events.HandleServerDisposing(this, EventArgs.Empty);
+
+            if (_TokenSource != null)
+            {
+                try
+                {
+                    if (!_TokenSource.IsCancellationRequested)
+                    {
+                        _TokenSource.Cancel();
+                    }
+                }
+                catch (ObjectDisposedException)
+                {
+                }
+            }
 
             if (_TcpServer != null)
             {
-                if (_TcpServer.IsListening) Stop();
+                if (_TcpServer.IsListening)
+                {
+                    try
+                    {
+                        _TcpServer.Stop();
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
 
-                _TcpServer.Dispose();
+                DateTime waitStart = DateTime.UtcNow;
+                while (_RequestCount > 0)
+                {
+                    if ((DateTime.UtcNow - waitStart).TotalMilliseconds >= _DisposalWaitMs)
+                    {
+                        Events.Logger?.Invoke(_Header + "disposal timeout reached with " + _RequestCount + " pending requests");
+                        break;
+                    }
+
+                    Thread.Sleep(50);
+                }
+
+                try
+                {
+                    _TcpServer.Dispose();
+                }
+                catch (Exception)
+                {
+                }
+
                 _TcpServer = null;
             }
 
-            if (_TokenSource != null && !_Token.IsCancellationRequested)
+            if (_TokenSource != null)
             {
-                _TokenSource.Cancel();
-                _TokenSource.Dispose();
+                try
+                {
+                    _TokenSource.Dispose();
+                }
+                catch (ObjectDisposedException)
+                {
+                }
+
+                _TokenSource = null;
             }
 
+            Events.HandleServerStopped(this, EventArgs.Empty);
             Settings = null;
         }
 
@@ -148,8 +204,13 @@
         /// </summary>
         public override void Stop()
         {
-            if (_TcpServer == null) throw new ObjectDisposedException("Webserver has been disposed.");
+            if (_Disposed || _TcpServer == null) throw new ObjectDisposedException("Webserver has been disposed.");
             if (!_TcpServer.IsListening) throw new InvalidOperationException("Webserver is already stopped.");
+
+            if (_TokenSource != null && !_TokenSource.IsCancellationRequested)
+            {
+                _TokenSource.Cancel();
+            }
 
             _TcpServer.Stop();
 
@@ -188,11 +249,30 @@
 
         private async void ClientConnected(object sender, ClientConnectedEventArgs args)
         {
+            #region Check-Disposed
+
+            if (_Disposed || _TcpServer == null)
+            {
+                return;
+            }
+
+            #endregion
+
             #region Check-Max-Requests
 
             if (_RequestCount >= Settings.IO.MaxRequests)
             {
-                _TcpServer.DisconnectClient(args.Client.Guid);
+                CavemanTcpServer tcpServer = _TcpServer;
+                if (tcpServer != null)
+                {
+                    try
+                    {
+                        tcpServer.DisconnectClient(args.Client.Guid);
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
                 return;
             }
 
@@ -746,26 +826,43 @@
             }
             finally
             {
-                _TcpServer.DisconnectClient(args.Client.Guid);
+                CavemanTcpServer tcpServer = _TcpServer;
+                if (tcpServer != null)
+                {
+                    try
+                    {
+                        tcpServer.DisconnectClient(args.Client.Guid);
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+
                 Interlocked.Decrement(ref _RequestCount);
 
-                if (ctx != null)
+                if (ctx != null && !_Disposed)
                 {
                     if (!ctx.Response.ResponseSent)
                     {
-                        ctx.Response.StatusCode = 500;
-                        ctx.Response.ContentType = DefaultPages.Pages[500].ContentType;
-                        if (ctx.Response.ChunkedTransfer)
-                            await ctx.Response.SendChunk(Encoding.UTF8.GetBytes(DefaultPages.Pages[500].Content), true, _Token).ConfigureAwait(false);
-                        else
-                            await ctx.Response.Send(DefaultPages.Pages[500].Content).ConfigureAwait(false);
+                        try
+                        {
+                            ctx.Response.StatusCode = 500;
+                            ctx.Response.ContentType = DefaultPages.Pages[500].ContentType;
+                            if (ctx.Response.ChunkedTransfer)
+                                await ctx.Response.SendChunk(Encoding.UTF8.GetBytes(DefaultPages.Pages[500].Content), true, _Token).ConfigureAwait(false);
+                            else
+                                await ctx.Response.Send(DefaultPages.Pages[500].Content).ConfigureAwait(false);
+                        }
+                        catch (Exception)
+                        {
+                        }
                     }
 
                     ctx.Timestamp.End = DateTime.UtcNow;
 
                     Events.HandleResponseSent(this, new ResponseEventArgs(ctx, ctx.Timestamp.TotalMs.Value));
 
-                    if (Settings.Debug.Responses)
+                    if (Settings != null && Settings.Debug.Responses)
                     {
                         Events.Logger?.Invoke(
                             _Header + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
