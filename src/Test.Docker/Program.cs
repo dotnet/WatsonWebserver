@@ -11,7 +11,7 @@
     class Program
     {
         static bool _UsingLite = false;
-        static string _Hostname = "*";
+        static string _Hostname = "0.0.0.0";
         static int _Port = 8080;
         static WebserverSettings _Settings = null;
         static WebserverBase _Server = null;

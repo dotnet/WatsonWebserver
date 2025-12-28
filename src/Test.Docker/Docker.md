@@ -57,7 +57,7 @@ $ docker rmi [IMAGE ID] -f
 The example above shows running the process as ```root``` within the container.  This is not a recommended practice.
 
 1) Your Watson instance should be listening on a specific hostname or IP address.  Incoming HTTP request HOST header values MUST match this.  If you use a specific hostname or IP address, *you do not have to run as root*
-2) If you want to listen for ANY request, set your listener to ```*```, ```+```, or ```0.0.0.0```, but this will demand that you run as root
+2) If you want to listen for ANY request, set your listener to ```0.0.0.0``` (or ```*```/```+``` for Watson only, not Watson.Lite), but this will demand that you run as root
 
 ## Helpful Notes
 

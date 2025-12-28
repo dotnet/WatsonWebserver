@@ -535,21 +535,24 @@ OpenApiResponseMetadata.NotFound()                   // 404 Not Found
 
 ## Hostname Handling for HTTP Responses
 
-To correctly handle the `Host` HTTP header, a new boolean property, `UseMachineHostname`, has been introduced in `WebserverSettings`. This is especially important when using wildcard bindings.
+To correctly handle the `Host` HTTP header, a new boolean property, `UseMachineHostname`, has been introduced in `WebserverSettings`. This is especially important when binding to all network interfaces.
 
--   **Wildcard Binding Behavior**: When `Hostname` is set to `*` or `+`, the server will **mandatorily** use the machine's actual hostname for the `Host` header in HTTP responses. This prevents `UriFormatException` on modern .NET runtimes. In this scenario, `UseMachineHostname` is forced to `true`.
+-   **All-Interface Binding Behavior**: When `Hostname` is set to `0.0.0.0` (or `*`/`+` for Watson only), the server will **mandatorily** use the machine's actual hostname for the `Host` header in HTTP responses. This prevents `UriFormatException` on modern .NET runtimes. In this scenario, `UseMachineHostname` is forced to `true`.
 
--   **Default Behavior**: For any other hostname (e.g., `localhost` or an IP address), this feature is **disabled by default**. The `Host` header will use the value specified in the `Hostname` setting.
+-   **Default Behavior**: For any other hostname (e.g., `localhost` or a specific IP address), this feature is **disabled by default**. The `Host` header will use the value specified in the `Hostname` setting.
 
 -   **Manual Activation**: You can force the use of the machine's hostname for any binding by setting `UseMachineHostname = true` in the settings.
 
+> **Note**: Watson.Lite does not support `*` or `+` as hostname values. Use `0.0.0.0` to listen on all interfaces.
+
 ### Usage
 
-**Example 1: Using a Wildcard (Mandatory Machine Hostname)**
+**Example 1: Binding to All Interfaces**
 
 ```csharp
-// The server detects the wildcard and mandatorily uses the machine's hostname for the Host header.
-var server = new Server("*", 9000, false, DefaultRoute);
+// The server detects 0.0.0.0 and uses the machine's hostname for the Host header.
+// Use 0.0.0.0 for Watson.Lite; Watson also supports "*" or "+".
+var server = new Server("0.0.0.0", 9000, false, DefaultRoute);
 server.Start();
 ```
 
@@ -584,7 +587,7 @@ To configure access from other nodes outside of `localhost`, use the following:
 
 - Specify the exact DNS hostname upon which Watson should listen in the Server constructor
 - The HOST header on HTTP requests MUST match the supplied listener value (operating system limitation)
-- If you want to listen on more than one hostname or IP address, use `*` or `+`.  You MUST run as administrator (operating system limitation)
+- If you want to listen on more than one hostname or IP address, use `*`, `+`, or `0.0.0.0`.  You MUST run as administrator (operating system limitation)
 - If you want to use a port number less than 1024, you MUST run as administrator (operating system limitation)
 - Open a port on your firewall to permit traffic on the TCP port upon which Watson is listening
 - You may have to add URL ACLs, i.e. URL bindings, within the operating system using the `netsh` command:
@@ -602,7 +605,8 @@ When you configure Watson.Lite to listen on `127.0.0.1`, it will only respond to
 To configure access from other nodes outside of the local machine, use the following:
 
 - Specify the IP address of the network interface on which Watson.Lite should listen
-- If you want to listen on more than one network interface, use `*` or `+`.  You MUST run as administrator (operating system limitation)
+- If you want to listen on more than one network interface, use `0.0.0.0`.  You MUST run as administrator (operating system limitation)
+- Note: Watson.Lite does not support `*` or `+` as hostname values; use `0.0.0.0` instead
 - If you want to use a port number less than 1024, you MUST run as administrator (operating system limitation)
 - Open a port on your firewall to permit traffic on the TCP port upon which Watson is listening
 - If you are using SSL, you will need to have one of the following when instantiating:
