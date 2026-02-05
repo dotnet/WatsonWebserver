@@ -739,6 +739,14 @@
             <param name="token">Cancellation token useful for canceling the request.</param>
             <returns>Chunk.</returns>
         </member>
+        <member name="M:WatsonWebserver.Core.HttpRequestBase.ReadBodyAsync(System.Threading.CancellationToken)">
+            <summary>
+            Asynchronously read the entire request body.
+            After calling this method, DataAsBytes and DataAsString return cached data with zero blocking.
+            </summary>
+            <param name="token">Cancellation token.</param>
+            <returns>The request body as a byte array, or null if no body is present.</returns>
+        </member>
         <member name="M:WatsonWebserver.Core.HttpRequestBase.HeaderExists(System.String)">
             <summary>
             Determine if a header exists.

@@ -326,11 +326,19 @@
                         {
                             if (!String.IsNullOrEmpty(PfxCertificatePassword))
                             {
+#if NET9_0_OR_GREATER
+                                _SslCertificate = X509CertificateLoader.LoadPkcs12FromFile(PfxCertificateFile, PfxCertificatePassword);
+#else
                                 _SslCertificate = new X509Certificate2(File.ReadAllBytes(PfxCertificateFile), PfxCertificatePassword);
+#endif
                             }
                             else
                             {
+#if NET9_0_OR_GREATER
+                                _SslCertificate = X509CertificateLoader.LoadPkcs12FromFile(PfxCertificateFile, null);
+#else
                                 _SslCertificate = new X509Certificate2(File.ReadAllBytes(PfxCertificateFile));
+#endif
                             }
                         }
                     }

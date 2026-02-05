@@ -242,6 +242,17 @@
         public abstract Task<Chunk> ReadChunk(CancellationToken token = default);
 
         /// <summary>
+        /// Asynchronously read the entire request body.
+        /// After calling this method, DataAsBytes and DataAsString return cached data with zero blocking.
+        /// </summary>
+        /// <param name="token">Cancellation token.</param>
+        /// <returns>The request body as a byte array, or null if no body is present.</returns>
+        public virtual Task<byte[]> ReadBodyAsync(CancellationToken token = default)
+        {
+            return Task.FromResult(DataAsBytes);
+        }
+
+        /// <summary>
         /// Determine if a header exists.
         /// </summary>
         /// <param name="key">Header key.</param>

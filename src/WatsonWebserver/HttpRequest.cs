@@ -40,7 +40,7 @@
             get
             {
                 if (_DataAsBytes != null) return _DataAsBytes;
-                if (Data != null && ContentLength > 0)
+                if (Data != null && (ContentLength > 0 || ChunkedTransfer))
                 {
                     _DataAsBytes = ReadStreamFully(Data);
                     return _DataAsBytes;
@@ -58,7 +58,7 @@
             get
             {
                 if (_DataAsBytes != null) return Encoding.UTF8.GetString(_DataAsBytes);
-                if (Data != null && ContentLength > 0)
+                if (Data != null && (ContentLength > 0 || ChunkedTransfer))
                 {
                     _DataAsBytes = ReadStreamFully(Data);
                     if (_DataAsBytes != null) return Encoding.UTF8.GetString(_DataAsBytes);
@@ -343,6 +343,22 @@
             return null;
         }
 
+        /// <summary>
+        /// Asynchronously read the entire request body.
+        /// After calling this method, DataAsBytes and DataAsString return cached data with zero blocking.
+        /// </summary>
+        /// <param name="token">Cancellation token.</param>
+        /// <returns>The request body as a byte array, or null if no body is present.</returns>
+        public override async Task<byte[]> ReadBodyAsync(CancellationToken token = default)
+        {
+            if (_DataAsBytes != null) return _DataAsBytes;
+            if (Data == null) return null;
+            if (ContentLength <= 0 && !ChunkedTransfer) return null;
+
+            _DataAsBytes = await ReadStreamFullyAsync(Data, token).ConfigureAwait(false);
+            return _DataAsBytes;
+        }
+
         #endregion
 
         #region Private-Methods
@@ -373,48 +389,6 @@
             return ret;
         }
 
-        private byte[] StreamToBytes(Stream input)
-        {
-            if (input == null) throw new ArgumentNullException(nameof(input));
-            if (!input.CanRead) throw new InvalidOperationException("Input stream is not readable");
-
-            byte[] buffer = new byte[16 * 1024];
-            using (MemoryStream ms = new MemoryStream())
-            {
-                int read;
-
-                while ((read = input.Read(buffer, 0, buffer.Length)) > 0)
-                {
-                    ms.Write(buffer, 0, read);
-                }
-
-                return ms.ToArray();
-            }
-        }
-
-        private void ReadStreamFully()
-        {
-            if (Data == null) return;
-            if (!Data.CanRead) return;
-
-            if (_DataAsBytes == null)
-            {
-                if (!ChunkedTransfer)
-                {
-                    _DataAsBytes = StreamToBytes(Data);
-                }
-                else
-                {
-                    while (true)
-                    {
-                        Chunk chunk = ReadChunk().Result;
-                        if (chunk.Data != null && chunk.Data.Length > 0) _DataAsBytes = AppendBytes(_DataAsBytes, chunk.Data);
-                        if (chunk.IsFinal) break;
-                    }
-                }
-            }
-        }
-
         private byte[] ReadStreamFully(Stream input)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
@@ -432,6 +406,23 @@
 
                 byte[] ret = ms.ToArray();
                 return ret;
+            }
+        }
+
+        private async Task<byte[]> ReadStreamFullyAsync(Stream input, CancellationToken token = default)
+        {
+            if (input == null) throw new ArgumentNullException(nameof(input));
+            if (!input.CanRead) throw new InvalidOperationException("Input stream is not readable");
+
+            byte[] buffer = new byte[_StreamBufferSize];
+            using (MemoryStream ms = new MemoryStream())
+            {
+                int read;
+                while ((read = await input.ReadAsync(buffer, 0, buffer.Length, token).ConfigureAwait(false)) > 0)
+                {
+                    ms.Write(buffer, 0, read);
+                }
+                return ms.ToArray();
             }
         }
 

@@ -212,6 +212,14 @@
             <param name="key">Key.</param>
             <returns>Value.</returns>
         </member>
+        <member name="M:WatsonWebserver.Lite.HttpRequest.ReadBodyAsync(System.Threading.CancellationToken)">
+            <summary>
+            Asynchronously read the entire request body.
+            After calling this method, DataAsBytes and DataAsString return cached data with zero blocking.
+            </summary>
+            <param name="token">Cancellation token.</param>
+            <returns>The request body as a byte array, or null if no body is present.</returns>
+        </member>
         <member name="T:WatsonWebserver.Lite.HttpResponse">
             <summary>
             Response to an HTTP request.

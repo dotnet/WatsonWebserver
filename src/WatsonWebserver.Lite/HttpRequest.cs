@@ -34,22 +34,19 @@
         {
             get
             {
-                if (_DataAsBytes == null)
+                if (_DataAsBytes != null) return _DataAsBytes;
+                if (Data != null && Data.CanRead)
                 {
-                    if (Data != null && Data.CanRead && ContentLength > 0)
+                    if (ContentLength > 0)
                     {
                         _DataAsBytes = ReadStream(Data, ContentLength);
-                        return _DataAsBytes;
                     }
-                    else
+                    else if (ChunkedTransfer)
                     {
-                        return _DataAsBytes;
+                        _DataAsBytes = ReadChunkedBodySync();
                     }
                 }
-                else
-                {
-                    return _DataAsBytes;
-                }
+                return _DataAsBytes;
             }
         }
 
@@ -62,11 +59,18 @@
             get
             {
                 if (_DataAsBytes != null) return Encoding.UTF8.GetString(_DataAsBytes);
-                if (Data != null && ContentLength > 0)
+                if (Data != null && Data.CanRead)
                 {
-                    _DataAsBytes = ReadStream(Data, ContentLength);
-                    if (_DataAsBytes != null) return Encoding.UTF8.GetString(_DataAsBytes);
+                    if (ContentLength > 0)
+                    {
+                        _DataAsBytes = ReadStream(Data, ContentLength);
+                    }
+                    else if (ChunkedTransfer)
+                    {
+                        _DataAsBytes = ReadChunkedBodySync();
+                    }
                 }
+                if (_DataAsBytes != null) return Encoding.UTF8.GetString(_DataAsBytes);
                 return null;
             }
         }
@@ -303,6 +307,25 @@
             return null;
         }
 
+        /// <summary>
+        /// Asynchronously read the entire request body.
+        /// After calling this method, DataAsBytes and DataAsString return cached data with zero blocking.
+        /// </summary>
+        /// <param name="token">Cancellation token.</param>
+        /// <returns>The request body as a byte array, or null if no body is present.</returns>
+        public override async Task<byte[]> ReadBodyAsync(CancellationToken token = default)
+        {
+            if (_DataAsBytes != null) return _DataAsBytes;
+            if (Data == null || !Data.CanRead) return null;
+
+            if (ContentLength > 0)
+                _DataAsBytes = await ReadStreamAsync(Data, ContentLength, token).ConfigureAwait(false);
+            else if (ChunkedTransfer)
+                _DataAsBytes = await ReadChunkedBodyAsync(token).ConfigureAwait(false);
+
+            return _DataAsBytes;
+        }
+
         #endregion
 
         #region Private-Methods
@@ -387,6 +410,15 @@
                         {
                             ContentType = val;
                         }
+                        else if (keyEval.Equals("transfer-encoding"))
+                        {
+                            if (val.ToLower().Contains("chunked"))
+                                ChunkedTransfer = true;
+                            if (val.ToLower().Contains("gzip"))
+                                Gzip = true;
+                            if (val.ToLower().Contains("deflate"))
+                                Deflate = true;
+                        }
                         else if (keyEval.ToLower().Equals("x-amz-content-sha256"))
                         {
                             if (val.ToLower().Contains("streaming"))
@@ -464,6 +496,58 @@
                 byte[] ret = ms.ToArray();
                 return ret;
             }
+        }
+
+        private async Task<byte[]> ReadStreamAsync(Stream input, long contentLength, CancellationToken token)
+        {
+            if (input == null) throw new ArgumentNullException(nameof(input));
+            if (!input.CanRead) throw new InvalidOperationException("Input stream is not readable");
+            if (contentLength < 1) return Array.Empty<byte>();
+
+            byte[] buffer = new byte[_StreamBufferSize];
+            long bytesRemaining = contentLength;
+
+            using (MemoryStream ms = new MemoryStream())
+            {
+                int read;
+
+                while (bytesRemaining > 0)
+                {
+                    int bytesToRead = (int)Math.Min(buffer.Length, bytesRemaining);
+                    read = await input.ReadAsync(buffer, 0, bytesToRead, token).ConfigureAwait(false);
+                    if (read > 0)
+                    {
+                        ms.Write(buffer, 0, read);
+                        bytesRemaining -= read;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                return ms.ToArray();
+            }
+        }
+
+        private async Task<byte[]> ReadChunkedBodyAsync(CancellationToken token)
+        {
+            byte[] body = null;
+
+            while (true)
+            {
+                Chunk chunk = await ReadChunk(token).ConfigureAwait(false);
+                if (chunk.Data != null && chunk.Data.Length > 0)
+                    body = AppendBytes(body, chunk.Data);
+                if (chunk.IsFinal) break;
+            }
+
+            return body;
+        }
+
+        private byte[] ReadChunkedBodySync()
+        {
+            return ReadChunkedBodyAsync(CancellationToken.None).GetAwaiter().GetResult();
         }
 
         #endregion
