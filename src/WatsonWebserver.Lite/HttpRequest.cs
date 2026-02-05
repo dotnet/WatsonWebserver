@@ -45,6 +45,10 @@
                     {
                         _DataAsBytes = ReadChunkedBodySync();
                     }
+                    else
+                    {
+                        _DataAsBytes = Array.Empty<byte>();
+                    }
                 }
                 return _DataAsBytes;
             }
@@ -68,6 +72,10 @@
                     else if (ChunkedTransfer)
                     {
                         _DataAsBytes = ReadChunkedBodySync();
+                    }
+                    else
+                    {
+                        _DataAsBytes = Array.Empty<byte>();
                     }
                 }
                 if (_DataAsBytes != null) return Encoding.UTF8.GetString(_DataAsBytes);
@@ -322,6 +330,8 @@
                 _DataAsBytes = await ReadStreamAsync(Data, ContentLength, token).ConfigureAwait(false);
             else if (ChunkedTransfer)
                 _DataAsBytes = await ReadChunkedBodyAsync(token).ConfigureAwait(false);
+            else
+                _DataAsBytes = Array.Empty<byte>();
 
             return _DataAsBytes;
         }
@@ -548,6 +558,40 @@
         private byte[] ReadChunkedBodySync()
         {
             return ReadChunkedBodyAsync(CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        private byte[] ReadStreamFully(Stream input)
+        {
+            if (input == null) throw new ArgumentNullException(nameof(input));
+            if (!input.CanRead) throw new InvalidOperationException("Input stream is not readable");
+
+            byte[] buffer = new byte[_StreamBufferSize];
+            using (MemoryStream ms = new MemoryStream())
+            {
+                int read;
+                while ((read = input.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    ms.Write(buffer, 0, read);
+                }
+                return ms.ToArray();
+            }
+        }
+
+        private async Task<byte[]> ReadStreamFullyAsync(Stream input, CancellationToken token = default)
+        {
+            if (input == null) throw new ArgumentNullException(nameof(input));
+            if (!input.CanRead) throw new InvalidOperationException("Input stream is not readable");
+
+            byte[] buffer = new byte[_StreamBufferSize];
+            using (MemoryStream ms = new MemoryStream())
+            {
+                int read;
+                while ((read = await input.ReadAsync(buffer, 0, buffer.Length, token).ConfigureAwait(false)) > 0)
+                {
+                    ms.Write(buffer, 0, read);
+                }
+                return ms.ToArray();
+            }
         }
 
         #endregion

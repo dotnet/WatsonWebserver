@@ -40,7 +40,7 @@
             get
             {
                 if (_DataAsBytes != null) return _DataAsBytes;
-                if (Data != null && (ContentLength > 0 || ChunkedTransfer))
+                if (Data != null)
                 {
                     _DataAsBytes = ReadStreamFully(Data);
                     return _DataAsBytes;
@@ -58,7 +58,7 @@
             get
             {
                 if (_DataAsBytes != null) return Encoding.UTF8.GetString(_DataAsBytes);
-                if (Data != null && (ContentLength > 0 || ChunkedTransfer))
+                if (Data != null)
                 {
                     _DataAsBytes = ReadStreamFully(Data);
                     if (_DataAsBytes != null) return Encoding.UTF8.GetString(_DataAsBytes);
@@ -353,7 +353,6 @@
         {
             if (_DataAsBytes != null) return _DataAsBytes;
             if (Data == null) return null;
-            if (ContentLength <= 0 && !ChunkedTransfer) return null;
 
             _DataAsBytes = await ReadStreamFullyAsync(Data, token).ConfigureAwait(false);
             return _DataAsBytes;
