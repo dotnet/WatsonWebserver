@@ -173,6 +173,9 @@ namespace Test.All
 
                 // OpenAPI/Swagger tests
                 await TestOpenApi("http://127.0.0.1:8002", "WatsonWebserver.Lite").ConfigureAwait(false);
+
+                // Header parsing tests (Lite-only, Watson/http.sys rejects non-standard headers)
+                await TestHeaderParsing("http://127.0.0.1:8002", "WatsonWebserver.Lite").ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -189,6 +192,73 @@ namespace Test.All
         }
 
         /// <summary>
+        /// Test header parsing for unusual or non-standard headers.
+        /// Only applicable to Watson.Lite since Watson/http.sys rejects non-standard headers at the kernel level.
+        /// </summary>
+        /// <param name="baseUrl">Base server URL.</param>
+        /// <param name="serverType">Server type name.</param>
+        /// <returns>Task.</returns>
+        private static async Task TestHeaderParsing(string baseUrl, string serverType)
+        {
+            // Test header values containing colons (e.g. Host: localhost:8002)
+            await ExecuteTest($"{serverType} - Header With Colon In Value", async () =>
+            {
+                using (HttpClient client = new HttpClient())
+                {
+                    client.Timeout = TimeSpan.FromSeconds(10);
+                    HttpRequestMessage request = new HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/test/header-echo");
+                    request.Headers.TryAddWithoutValidation("X-Test-Colon", "value1:value2:value3");
+
+                    HttpResponseMessage response = await client.SendAsync(request).ConfigureAwait(false);
+                    if (!response.IsSuccessStatusCode) return false;
+
+                    string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    bool hasFullValue = body.Contains("X-Test-Colon: value1:value2:value3");
+                    Console.WriteLine($"      Header preserved with colons: {hasFullValue}");
+                    return hasFullValue;
+                }
+            }).ConfigureAwait(false);
+
+            // Test malformed Range header: bytes=0--1 (GitHub issue #188)
+            await ExecuteTest($"{serverType} - Malformed Range Header (bytes=0--1)", async () =>
+            {
+                using (HttpClient client = new HttpClient())
+                {
+                    client.Timeout = TimeSpan.FromSeconds(10);
+                    HttpRequestMessage request = new HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/test/header-echo");
+                    request.Headers.TryAddWithoutValidation("Range", "bytes=0--1");
+
+                    HttpResponseMessage response = await client.SendAsync(request).ConfigureAwait(false);
+                    if (!response.IsSuccessStatusCode) return false;
+
+                    string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    bool hasRange = body.Contains("Range: bytes=0--1");
+                    Console.WriteLine($"      Malformed Range header preserved: {hasRange}");
+                    return hasRange;
+                }
+            }).ConfigureAwait(false);
+
+            // Test header value containing a URL (colons in http://)
+            await ExecuteTest($"{serverType} - Header With URL Value", async () =>
+            {
+                using (HttpClient client = new HttpClient())
+                {
+                    client.Timeout = TimeSpan.FromSeconds(10);
+                    HttpRequestMessage request = new HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/test/header-echo");
+                    request.Headers.TryAddWithoutValidation("X-Forwarded-Uri", "http://example.com:9090/path");
+
+                    HttpResponseMessage response = await client.SendAsync(request).ConfigureAwait(false);
+                    if (!response.IsSuccessStatusCode) return false;
+
+                    string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    bool hasFullUrl = body.Contains("X-Forwarded-Uri: http://example.com:9090/path");
+                    Console.WriteLine($"      URL header value preserved: {hasFullUrl}");
+                    return hasFullUrl;
+                }
+            }).ConfigureAwait(false);
+        }
+
+        /// <summary>
         /// Test RFC compliance scenarios.
         /// </summary>
         /// <returns>Task.</returns>
@@ -198,6 +268,7 @@ namespace Test.All
             Console.WriteLine("------------------------");
 
             await TestRfc7230ChunkedCompliance().ConfigureAwait(false);
+            await TestHeaderParsingCompliance().ConfigureAwait(false);
             await TestServerSentEventsRfcCompliance().ConfigureAwait(false);
             await TestChunkDataIntegrity().ConfigureAwait(false);
             await TestServerSentEventsFormatCompliance().ConfigureAwait(false);
@@ -627,6 +698,38 @@ namespace Test.All
                 // which runs against both Watson and Lite servers
                 Console.WriteLine("      Verified via TestChunkedRequestBody test group");
                 return true;
+            }).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Test header parsing compliance for Lite HttpRequest constructor.
+        /// Verifies that headers with colons in values are preserved correctly.
+        /// </summary>
+        /// <returns>Task.</returns>
+        private static async Task TestHeaderParsingCompliance()
+        {
+            await ExecuteTest("Header Parsing - Colon In Value Preserved (Lite)", async () =>
+            {
+                WebserverSettings settings = new WebserverSettings("127.0.0.1", 9999);
+                string header = "GET /test HTTP/1.1\r\nHost: localhost:9999\r\nX-Custom: val1:val2:val3\r\nRange: bytes=0--1\r\n";
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    WatsonWebserver.Lite.HttpRequest req = new WatsonWebserver.Lite.HttpRequest(settings, "127.0.0.1:12345", "127.0.0.1:9999", ms, header);
+
+                    string host = req.Headers.Get("Host");
+                    string custom = req.Headers.Get("X-Custom");
+                    string range = req.Headers.Get("Range");
+
+                    Console.WriteLine($"      Host: {host}");
+                    Console.WriteLine($"      X-Custom: {custom}");
+                    Console.WriteLine($"      Range: {range}");
+
+                    bool hostOk = host == "localhost:9999";
+                    bool customOk = custom == "val1:val2:val3";
+                    bool rangeOk = range == "bytes=0--1";
+
+                    return hostOk && customOk && rangeOk;
+                }
             }).ConfigureAwait(false);
         }
 
@@ -1375,6 +1478,26 @@ namespace Test.All
                 ctx.Response.StatusCode = 200;
                 await ctx.Response.Send("").ConfigureAwait(false);
             };
+
+            // Header echo route (returns all request headers as key:value lines)
+            server.Routes.PreAuthentication.Static.Add(CoreHttpMethod.GET, "/test/header-echo", async (ctx) =>
+            {
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < ctx.Request.Headers.Count; i++)
+                {
+                    string key = ctx.Request.Headers.GetKey(i);
+                    string[] vals = ctx.Request.Headers.GetValues(i);
+                    if (vals != null)
+                    {
+                        foreach (string val in vals)
+                        {
+                            sb.AppendLine(key + ": " + val);
+                        }
+                    }
+                }
+                ctx.Response.ContentType = "text/plain";
+                await ctx.Response.Send(sb.ToString()).ConfigureAwait(false);
+            });
 
             // Exception handling route
             server.Routes.PreAuthentication.Static.Add(CoreHttpMethod.GET, "/error/test", async (ctx) =>

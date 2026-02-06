@@ -395,7 +395,7 @@
                 {
                     #region Subsequent-Line
 
-                    string[] headerLine = headers[i].Split(':');
+                    string[] headerLine = headers[i].Split(new char[] { ':' }, 2);
                     if (headerLine.Length == 2)
                     {
                         string key = headerLine[0].Trim();
