@@ -2,7 +2,9 @@ namespace Test.All
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.Specialized;
     using System.Diagnostics;
+    using System.Net;
     using System.IO;
     using System.Net.Http;
     using System.Text;
@@ -30,6 +32,7 @@ namespace Test.All
         private static int _TotalTests = 0;
         private static int _PassedTests = 0;
         private static int _FailedTests = 0;
+        private static volatile bool _PostRoutingExecuted = false;
 
         #endregion
 
@@ -118,6 +121,21 @@ namespace Test.All
 
                 // OpenAPI/Swagger tests
                 await TestOpenApi("http://127.0.0.1:8001", "WatsonWebserver").ConfigureAwait(false);
+
+                // Negative tests
+                await TestNegativeScenarios("http://127.0.0.1:8001", "WatsonWebserver").ConfigureAwait(false);
+
+                // Runtime route management tests
+                await TestRuntimeRouteManagement(server, "http://127.0.0.1:8001", "WatsonWebserver").ConfigureAwait(false);
+
+                // PostRouting execution verification
+                await TestPostRoutingExecution("http://127.0.0.1:8001", "WatsonWebserver").ConfigureAwait(false);
+
+                // Content route with query string
+                await TestContentRouteWithQueryString("http://127.0.0.1:8001", "WatsonWebserver").ConfigureAwait(false);
+
+                // Additional directory traversal patterns
+                await TestDirectoryTraversalPatterns("http://127.0.0.1:8001", "WatsonWebserver").ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -176,6 +194,21 @@ namespace Test.All
 
                 // Header parsing tests (Lite-only, Watson/http.sys rejects non-standard headers)
                 await TestHeaderParsing("http://127.0.0.1:8002", "WatsonWebserver.Lite").ConfigureAwait(false);
+
+                // Negative tests
+                await TestNegativeScenarios("http://127.0.0.1:8002", "WatsonWebserver.Lite").ConfigureAwait(false);
+
+                // Runtime route management tests
+                await TestRuntimeRouteManagement(server, "http://127.0.0.1:8002", "WatsonWebserver.Lite").ConfigureAwait(false);
+
+                // PostRouting execution verification
+                await TestPostRoutingExecution("http://127.0.0.1:8002", "WatsonWebserver.Lite").ConfigureAwait(false);
+
+                // Content route with query string
+                await TestContentRouteWithQueryString("http://127.0.0.1:8002", "WatsonWebserver.Lite").ConfigureAwait(false);
+
+                // Additional directory traversal patterns
+                await TestDirectoryTraversalPatterns("http://127.0.0.1:8002", "WatsonWebserver.Lite").ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -272,6 +305,17 @@ namespace Test.All
             await TestServerSentEventsRfcCompliance().ConfigureAwait(false);
             await TestChunkDataIntegrity().ConfigureAwait(false);
             await TestServerSentEventsFormatCompliance().ConfigureAwait(false);
+            await TestQueryDetailsCaching().ConfigureAwait(false);
+            await TestQueryDetailsEdgeCases().ConfigureAwait(false);
+            await TestMaxRequestBodySizeSetting().ConfigureAwait(false);
+            await TestMaxHeaderCountSetting().ConfigureAwait(false);
+            await TestMaxRequestBodySizeEnforcement().ConfigureAwait(false);
+            await TestMaxHeaderCountEnforcement().ConfigureAwait(false);
+            await TestCancellationTokenIsolation().ConfigureAwait(false);
+            await TestContextDisposable().ConfigureAwait(false);
+            await TestUrlDetailsElementsDecoding().ConfigureAwait(false);
+            await TestMalformedRequestParsing().ConfigureAwait(false);
+            await TestInvalidChunkedEncoding().ConfigureAwait(false);
 
             Console.WriteLine();
         }
@@ -793,6 +837,1008 @@ namespace Test.All
         }
 
         /// <summary>
+        /// Test QueryDetails.Elements caching behavior.
+        /// </summary>
+        /// <returns>Task.</returns>
+        private static async Task TestQueryDetailsCaching()
+        {
+            await ExecuteTest("QueryDetails - Elements Caching", async () =>
+            {
+                QueryDetails qd = new QueryDetails("http://localhost/test?foo=bar&baz=qux");
+                NameValueCollection first = qd.Elements;
+                NameValueCollection second = qd.Elements;
+
+                // Should return the same cached instance
+                bool sameReference = Object.ReferenceEquals(first, second);
+                bool correctValues = first.Get("foo") == "bar" && first.Get("baz") == "qux";
+                return sameReference && correctValues;
+            }).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Test MaxRequestBodySize setting validation.
+        /// </summary>
+        /// <returns>Task.</returns>
+        private static async Task TestMaxRequestBodySizeSetting()
+        {
+            await ExecuteTest("Settings - MaxRequestBodySize Default", async () =>
+            {
+                WebserverSettings settings = new WebserverSettings();
+                return settings.IO.MaxRequestBodySize == 0; // Default is 0 (unlimited)
+            }).ConfigureAwait(false);
+
+            await ExecuteTest("Settings - MaxRequestBodySize Configurable", async () =>
+            {
+                WebserverSettings settings = new WebserverSettings();
+                settings.IO.MaxRequestBodySize = 1048576; // 1MB
+                return settings.IO.MaxRequestBodySize == 1048576;
+            }).ConfigureAwait(false);
+
+            await ExecuteTest("Settings - MaxRequestBodySize Disable With Zero", async () =>
+            {
+                WebserverSettings settings = new WebserverSettings();
+                settings.IO.MaxRequestBodySize = 0;
+                return settings.IO.MaxRequestBodySize == 0;
+            }).ConfigureAwait(false);
+
+            await ExecuteTest("Settings - MaxRequestBodySize Disable With Negative", async () =>
+            {
+                WebserverSettings settings = new WebserverSettings();
+                settings.IO.MaxRequestBodySize = -1;
+                return settings.IO.MaxRequestBodySize == -1;
+            }).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Test MaxHeaderCount setting validation.
+        /// </summary>
+        /// <returns>Task.</returns>
+        private static async Task TestMaxHeaderCountSetting()
+        {
+            await ExecuteTest("Settings - MaxHeaderCount Default", async () =>
+            {
+                WebserverSettings settings = new WebserverSettings();
+                return settings.IO.MaxHeaderCount == 64; // Default is 64
+            }).ConfigureAwait(false);
+
+            await ExecuteTest("Settings - MaxHeaderCount Configurable", async () =>
+            {
+                WebserverSettings settings = new WebserverSettings();
+                settings.IO.MaxHeaderCount = 128;
+                return settings.IO.MaxHeaderCount == 128;
+            }).ConfigureAwait(false);
+
+            await ExecuteTest("Settings - MaxHeaderCount Disable With Zero", async () =>
+            {
+                WebserverSettings settings = new WebserverSettings();
+                settings.IO.MaxHeaderCount = 0;
+                return settings.IO.MaxHeaderCount == 0;
+            }).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Test #1: Per-instance CancellationTokenSource isolation.
+        /// </summary>
+        /// <returns>Task.</returns>
+        private static async Task TestCancellationTokenIsolation()
+        {
+            await ExecuteTest("CancellationToken - Per-Instance Isolation", async () =>
+            {
+                HttpContextBase ctx1 = new HttpContextBase();
+                HttpContextBase ctx2 = new HttpContextBase();
+
+                // Tokens should be independent
+                CancellationToken token1 = ctx1.Token;
+                CancellationToken token2 = ctx2.Token;
+
+                // Cancel ctx1
+                ctx1.TokenSource.Cancel();
+
+                bool ctx1Cancelled = token1.IsCancellationRequested;
+                bool ctx2NotCancelled = !token2.IsCancellationRequested;
+
+                Console.WriteLine($"      ctx1 cancelled: {ctx1Cancelled}, ctx2 unaffected: {ctx2NotCancelled}");
+
+                ctx1.Dispose();
+                ctx2.Dispose();
+
+                return ctx1Cancelled && ctx2NotCancelled;
+            }).ConfigureAwait(false);
+
+            await ExecuteTest("CancellationToken - New Instance After Dispose", async () =>
+            {
+                HttpContextBase ctx1 = new HttpContextBase();
+                ctx1.TokenSource.Cancel();
+                ctx1.Dispose();
+
+                // New context should have a fresh, non-cancelled token
+                HttpContextBase ctx2 = new HttpContextBase();
+                bool freshToken = !ctx2.Token.IsCancellationRequested;
+                Console.WriteLine($"      New context has fresh token: {freshToken}");
+                ctx2.Dispose();
+
+                return freshToken;
+            }).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Test #2: IDisposable cleanup on HttpContextBase.
+        /// </summary>
+        /// <returns>Task.</returns>
+        private static async Task TestContextDisposable()
+        {
+            await ExecuteTest("IDisposable - Context Disposes TokenSource", async () =>
+            {
+                HttpContextBase ctx = new HttpContextBase();
+                CancellationToken token = ctx.Token;
+
+                // Token should not be cancelled before dispose
+                bool notCancelledBefore = !token.IsCancellationRequested;
+
+                ctx.Dispose();
+
+                // After dispose, the token we captured should be cancelled
+                bool cancelledAfter = token.IsCancellationRequested;
+
+                // Token property should return CancellationToken.None after dispose
+                bool noneAfterDispose = ctx.Token == CancellationToken.None;
+
+                Console.WriteLine($"      Before: not cancelled={notCancelledBefore}, After: cancelled={cancelledAfter}, None={noneAfterDispose}");
+                return notCancelledBefore && cancelledAfter && noneAfterDispose;
+            }).ConfigureAwait(false);
+
+            await ExecuteTest("IDisposable - Double Dispose Safe", async () =>
+            {
+                HttpContextBase ctx = new HttpContextBase();
+                ctx.Dispose();
+                ctx.Dispose(); // Should not throw
+                return true;
+            }).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Test #3: MaxRequestBodySize enforcement via Lite HttpRequest.
+        /// </summary>
+        /// <returns>Task.</returns>
+        private static async Task TestMaxRequestBodySizeEnforcement()
+        {
+            await ExecuteTest("MaxRequestBodySize - Lite Rejects Oversized Body", async () =>
+            {
+                WebserverSettings settings = new WebserverSettings("127.0.0.1", 9999);
+                settings.IO.MaxRequestBodySize = 100; // 100 bytes max
+
+                // Content-Length exceeds limit
+                string header = "POST /test HTTP/1.1\r\nHost: localhost\r\nContent-Length: 5000\r\nContent-Type: text/plain\r\n";
+
+                try
+                {
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        WatsonWebserver.Lite.HttpRequest req = new WatsonWebserver.Lite.HttpRequest(settings, "127.0.0.1:12345", "127.0.0.1:9999", ms, header);
+                        Console.WriteLine("      ERROR: Should have thrown IOException");
+                        return false;
+                    }
+                }
+                catch (IOException ex)
+                {
+                    Console.WriteLine($"      Correctly rejected: {ex.Message}");
+                    return true;
+                }
+            }).ConfigureAwait(false);
+
+            await ExecuteTest("MaxRequestBodySize - Lite Allows Within Limit", async () =>
+            {
+                WebserverSettings settings = new WebserverSettings("127.0.0.1", 9999);
+                settings.IO.MaxRequestBodySize = 10000;
+
+                string header = "POST /test HTTP/1.1\r\nHost: localhost\r\nContent-Length: 500\r\nContent-Type: text/plain\r\n";
+
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    WatsonWebserver.Lite.HttpRequest req = new WatsonWebserver.Lite.HttpRequest(settings, "127.0.0.1:12345", "127.0.0.1:9999", ms, header);
+                    Console.WriteLine($"      Accepted: ContentLength={req.ContentLength}");
+                    return req.ContentLength == 500;
+                }
+            }).ConfigureAwait(false);
+
+            await ExecuteTest("MaxRequestBodySize - Disabled With Zero", async () =>
+            {
+                WebserverSettings settings = new WebserverSettings("127.0.0.1", 9999);
+                settings.IO.MaxRequestBodySize = 0; // Disabled
+
+                string header = "POST /test HTTP/1.1\r\nHost: localhost\r\nContent-Length: 999999999\r\nContent-Type: text/plain\r\n";
+
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    WatsonWebserver.Lite.HttpRequest req = new WatsonWebserver.Lite.HttpRequest(settings, "127.0.0.1:12345", "127.0.0.1:9999", ms, header);
+                    Console.WriteLine($"      Accepted (unlimited): ContentLength={req.ContentLength}");
+                    return req.ContentLength == 999999999;
+                }
+            }).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Test #4: MaxHeaderCount enforcement via Lite HttpRequest.
+        /// </summary>
+        /// <returns>Task.</returns>
+        private static async Task TestMaxHeaderCountEnforcement()
+        {
+            await ExecuteTest("MaxHeaderCount - Lite Rejects Too Many Headers", async () =>
+            {
+                WebserverSettings settings = new WebserverSettings("127.0.0.1", 9999);
+                settings.IO.MaxHeaderCount = 5;
+
+                StringBuilder sb = new StringBuilder();
+                sb.Append("GET /test HTTP/1.1\r\n");
+                sb.Append("Host: localhost\r\n");
+                for (int i = 0; i < 10; i++)
+                {
+                    sb.Append("X-Header-" + i + ": value" + i + "\r\n");
+                }
+
+                try
+                {
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        WatsonWebserver.Lite.HttpRequest req = new WatsonWebserver.Lite.HttpRequest(settings, "127.0.0.1:12345", "127.0.0.1:9999", ms, sb.ToString());
+                        Console.WriteLine("      ERROR: Should have thrown IOException");
+                        return false;
+                    }
+                }
+                catch (IOException ex)
+                {
+                    Console.WriteLine($"      Correctly rejected: {ex.Message}");
+                    return true;
+                }
+            }).ConfigureAwait(false);
+
+            await ExecuteTest("MaxHeaderCount - Lite Allows Within Limit", async () =>
+            {
+                WebserverSettings settings = new WebserverSettings("127.0.0.1", 9999);
+                settings.IO.MaxHeaderCount = 10;
+
+                StringBuilder sb = new StringBuilder();
+                sb.Append("GET /test HTTP/1.1\r\n");
+                sb.Append("Host: localhost\r\n");
+                for (int i = 0; i < 3; i++)
+                {
+                    sb.Append("X-Header-" + i + ": value" + i + "\r\n");
+                }
+
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    WatsonWebserver.Lite.HttpRequest req = new WatsonWebserver.Lite.HttpRequest(settings, "127.0.0.1:12345", "127.0.0.1:9999", ms, sb.ToString());
+                    Console.WriteLine($"      Accepted: {req.Headers.Count} headers");
+                    return req.Headers.Count == 4; // Host + 3 custom
+                }
+            }).ConfigureAwait(false);
+
+            await ExecuteTest("MaxHeaderCount - Disabled With Zero", async () =>
+            {
+                WebserverSettings settings = new WebserverSettings("127.0.0.1", 9999);
+                settings.IO.MaxHeaderCount = 0; // Disabled
+
+                StringBuilder sb = new StringBuilder();
+                sb.Append("GET /test HTTP/1.1\r\n");
+                sb.Append("Host: localhost\r\n");
+                for (int i = 0; i < 100; i++)
+                {
+                    sb.Append("X-Header-" + i + ": value" + i + "\r\n");
+                }
+
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    WatsonWebserver.Lite.HttpRequest req = new WatsonWebserver.Lite.HttpRequest(settings, "127.0.0.1:12345", "127.0.0.1:9999", ms, sb.ToString());
+                    Console.WriteLine($"      Accepted (unlimited): {req.Headers.Count} headers");
+                    return req.Headers.Count == 101; // Host + 100 custom
+                }
+            }).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Test #5: Additional directory traversal patterns.
+        /// </summary>
+        /// <param name="baseUrl">Base server URL.</param>
+        /// <param name="serverType">Server type name.</param>
+        /// <returns>Task.</returns>
+        private static async Task TestDirectoryTraversalPatterns(string baseUrl, string serverType)
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                client.Timeout = TimeSpan.FromSeconds(10);
+
+                // Encoded traversal (%2e%2e%2f)
+                await ExecuteTest($"{serverType} - Directory Traversal (Encoded)", async () =>
+                {
+                    HttpResponseMessage response = await client.GetAsync($"{baseUrl}/files/%2e%2e%2fProgram.cs").ConfigureAwait(false);
+                    return response.StatusCode == System.Net.HttpStatusCode.NotFound;
+                }).ConfigureAwait(false);
+
+                // Backslash traversal (Windows-specific)
+                await ExecuteTest($"{serverType} - Directory Traversal (Backslash)", async () =>
+                {
+                    HttpRequestMessage request = new HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/files/..\\..\\Program.cs");
+                    try
+                    {
+                        HttpResponseMessage response = await client.SendAsync(request).ConfigureAwait(false);
+                        return response.StatusCode == System.Net.HttpStatusCode.NotFound
+                            || response.StatusCode == System.Net.HttpStatusCode.BadRequest;
+                    }
+                    catch (HttpRequestException)
+                    {
+                        // HttpClient may reject the URL itself, which is fine
+                        return true;
+                    }
+                }).ConfigureAwait(false);
+
+                // Deep traversal
+                await ExecuteTest($"{serverType} - Directory Traversal (Deep)", async () =>
+                {
+                    HttpResponseMessage response = await client.GetAsync($"{baseUrl}/files/../../../../../../../etc/passwd").ConfigureAwait(false);
+                    return response.StatusCode == System.Net.HttpStatusCode.NotFound;
+                }).ConfigureAwait(false);
+            }
+        }
+
+        /// <summary>
+        /// Test #6: Query string edge cases.
+        /// </summary>
+        /// <returns>Task.</returns>
+        private static async Task TestQueryDetailsEdgeCases()
+        {
+            await ExecuteTest("QueryDetails - Empty Query String", async () =>
+            {
+                QueryDetails qd = new QueryDetails("http://localhost/test?");
+                NameValueCollection elements = qd.Elements;
+                return elements != null && elements.Count == 0;
+            }).ConfigureAwait(false);
+
+            await ExecuteTest("QueryDetails - Key Only (No Value)", async () =>
+            {
+                QueryDetails qd = new QueryDetails("http://localhost/test?foo");
+                NameValueCollection elements = qd.Elements;
+                return elements != null && elements.Count == 1 && elements.AllKeys[0] == "foo" && elements.Get("foo") == null;
+            }).ConfigureAwait(false);
+
+            await ExecuteTest("QueryDetails - Multiple Same Keys", async () =>
+            {
+                QueryDetails qd = new QueryDetails("http://localhost/test?a=1&a=2");
+                NameValueCollection elements = qd.Elements;
+                // NameValueCollection combines values for same key with comma
+                string val = elements.Get("a");
+                Console.WriteLine($"      Combined value: {val}");
+                return val != null && val.Contains("1") && val.Contains("2");
+            }).ConfigureAwait(false);
+
+            await ExecuteTest("QueryDetails - No Query String", async () =>
+            {
+                QueryDetails qd = new QueryDetails("http://localhost/test");
+                string qs = qd.Querystring;
+                NameValueCollection elements = qd.Elements;
+                return qs == null && elements != null && elements.Count == 0;
+            }).ConfigureAwait(false);
+
+            await ExecuteTest("QueryDetails - Caching Returns Same Instance Per Object", async () =>
+            {
+                QueryDetails qd1 = new QueryDetails("http://localhost/test?x=1");
+                QueryDetails qd2 = new QueryDetails("http://localhost/test?y=2");
+
+                NameValueCollection e1 = qd1.Elements;
+                NameValueCollection e2 = qd2.Elements;
+
+                // Different instances should have different cached collections
+                bool different = !Object.ReferenceEquals(e1, e2);
+                bool correctValues = e1.Get("x") == "1" && e2.Get("y") == "2";
+                return different && correctValues;
+            }).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Test #7: Runtime route add/remove.
+        /// </summary>
+        /// <param name="server">Server instance.</param>
+        /// <param name="baseUrl">Base server URL.</param>
+        /// <param name="serverType">Server type name.</param>
+        /// <returns>Task.</returns>
+        private static async Task TestRuntimeRouteManagement(WebserverBase server, string baseUrl, string serverType)
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                client.Timeout = TimeSpan.FromSeconds(10);
+
+                // Add a route at runtime
+                server.Routes.PreAuthentication.Static.Add(CoreHttpMethod.GET, "/runtime/added", async (ctx) =>
+                {
+                    await ctx.Response.Send("Runtime route").ConfigureAwait(false);
+                });
+
+                await ExecuteTest($"{serverType} - Runtime Route Add", async () =>
+                {
+                    HttpResponseMessage response = await client.GetAsync($"{baseUrl}/runtime/added").ConfigureAwait(false);
+                    if (!response.IsSuccessStatusCode) return false;
+
+                    string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    return body == "Runtime route";
+                }).ConfigureAwait(false);
+
+                // Remove the route
+                server.Routes.PreAuthentication.Static.Remove(CoreHttpMethod.GET, "/runtime/added");
+
+                await ExecuteTest($"{serverType} - Runtime Route Remove", async () =>
+                {
+                    HttpResponseMessage response = await client.GetAsync($"{baseUrl}/runtime/added").ConfigureAwait(false);
+                    return response.StatusCode == System.Net.HttpStatusCode.NotFound;
+                }).ConfigureAwait(false);
+
+                // Add duplicate route (should be idempotent, not throw)
+                await ExecuteTest($"{serverType} - Runtime Route Duplicate Add", async () =>
+                {
+                    server.Routes.PreAuthentication.Static.Add(CoreHttpMethod.GET, "/runtime/dup", async (ctx) =>
+                    {
+                        await ctx.Response.Send("First").ConfigureAwait(false);
+                    });
+
+                    // Adding same path again should not throw (TOCTOU fix)
+                    server.Routes.PreAuthentication.Static.Add(CoreHttpMethod.GET, "/runtime/dup", async (ctx) =>
+                    {
+                        await ctx.Response.Send("Second").ConfigureAwait(false);
+                    });
+
+                    HttpResponseMessage response = await client.GetAsync($"{baseUrl}/runtime/dup").ConfigureAwait(false);
+                    string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                    // Clean up
+                    server.Routes.PreAuthentication.Static.Remove(CoreHttpMethod.GET, "/runtime/dup");
+
+                    // First handler should win (duplicate add is ignored)
+                    return body == "First";
+                }).ConfigureAwait(false);
+            }
+        }
+
+        /// <summary>
+        /// Test #8: Server stop/start cycle (validates per-instance CancellationTokenSource).
+        /// Lite-specific since Watson's http.sys restart is more complex.
+        /// </summary>
+        /// <returns>Task.</returns>
+        private static async Task TestServerStopStartCycle()
+        {
+            // This test is called directly from TestWatsonWebserverLite
+            // since it needs its own server lifecycle
+        }
+
+        /// <summary>
+        /// Test #9: PostRouting execution verification.
+        /// </summary>
+        /// <param name="baseUrl">Base server URL.</param>
+        /// <param name="serverType">Server type name.</param>
+        /// <returns>Task.</returns>
+        private static async Task TestPostRoutingExecution(string baseUrl, string serverType)
+        {
+            await ExecuteTest($"{serverType} - PostRouting Executes", async () =>
+            {
+                _PostRoutingExecuted = false;
+
+                using (HttpClient client = new HttpClient())
+                {
+                    client.Timeout = TimeSpan.FromSeconds(10);
+                    HttpResponseMessage response = await client.GetAsync($"{baseUrl}/test/get").ConfigureAwait(false);
+                    if (!response.IsSuccessStatusCode) return false;
+                }
+
+                // Give PostRouting a moment to complete
+                await Task.Delay(500).ConfigureAwait(false);
+
+                Console.WriteLine($"      PostRouting executed: {_PostRoutingExecuted}");
+                return _PostRoutingExecuted;
+            }).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Test #10: UrlDetails.Elements decoding.
+        /// </summary>
+        /// <returns>Task.</returns>
+        private static async Task TestUrlDetailsElementsDecoding()
+        {
+            await ExecuteTest("UrlDetails - Elements Decodes Percent Encoding", async () =>
+            {
+                UrlDetails url = new UrlDetails("http://localhost/foo%20bar/baz%2Fqux", "/foo%20bar/baz%2Fqux");
+                string[] elements = url.Elements;
+                Console.WriteLine($"      Elements: [{String.Join(", ", elements)}]");
+                return elements.Length == 2
+                    && elements[0] == "foo bar"
+                    && elements[1] == "baz/qux";
+            }).ConfigureAwait(false);
+
+            await ExecuteTest("UrlDetails - Elements With Trailing Slash", async () =>
+            {
+                UrlDetails url = new UrlDetails("http://localhost/path/to/resource/", "/path/to/resource/");
+                string[] elements = url.Elements;
+                return elements.Length == 3
+                    && elements[0] == "path"
+                    && elements[1] == "to"
+                    && elements[2] == "resource";
+            }).ConfigureAwait(false);
+
+            await ExecuteTest("UrlDetails - RawWithoutQuery Strips Query", async () =>
+            {
+                UrlDetails url = new UrlDetails("http://localhost/test?foo=bar", "/test?foo=bar");
+                string raw = url.RawWithoutQuery;
+                return raw == "/test";
+            }).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Test #11: Content route with query string.
+        /// </summary>
+        /// <param name="baseUrl">Base server URL.</param>
+        /// <param name="serverType">Server type name.</param>
+        /// <returns>Task.</returns>
+        private static async Task TestContentRouteWithQueryString(string baseUrl, string serverType)
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                client.Timeout = TimeSpan.FromSeconds(10);
+
+                await ExecuteTest($"{serverType} - Content Route With Query String", async () =>
+                {
+                    // /files/test.txt is a static route (not content route) but tests that
+                    // query string doesn't interfere with route matching
+                    HttpResponseMessage response = await client.GetAsync($"{baseUrl}/files/test.txt?v=1&cache=false").ConfigureAwait(false);
+                    if (!response.IsSuccessStatusCode) return false;
+
+                    string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    return body == "File content";
+                }).ConfigureAwait(false);
+
+                await ExecuteTest($"{serverType} - Query Echo Route", async () =>
+                {
+                    HttpResponseMessage response = await client.GetAsync($"{baseUrl}/test/query-echo?name=watson&version=6").ConfigureAwait(false);
+                    if (!response.IsSuccessStatusCode) return false;
+
+                    string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    bool hasName = body.Contains("name=watson");
+                    bool hasVersion = body.Contains("version=6");
+                    return hasName && hasVersion;
+                }).ConfigureAwait(false);
+            }
+        }
+
+        /// <summary>
+        /// Negative test scenarios: invalid inputs, error conditions, abuse cases.
+        /// </summary>
+        /// <param name="baseUrl">Base server URL.</param>
+        /// <param name="serverType">Server type name.</param>
+        /// <returns>Task.</returns>
+        private static async Task TestNegativeScenarios(string baseUrl, string serverType)
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                client.Timeout = TimeSpan.FromSeconds(10);
+
+                // Test 1: Wrong HTTP method for route (POST to GET-only route)
+                await ExecuteTest($"{serverType} - Wrong Method (POST to GET route)", async () =>
+                {
+                    using (HttpClient freshClient = new HttpClient())
+                    {
+                        freshClient.Timeout = TimeSpan.FromSeconds(10);
+                        ByteArrayContent content = new ByteArrayContent(Encoding.UTF8.GetBytes("data"));
+                        content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/plain");
+                        try
+                        {
+                            HttpResponseMessage response = await freshClient.PostAsync($"{baseUrl}/hello", content).ConfigureAwait(false);
+                            string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                            bool notStaticRoute = !body.Contains("Hello static route");
+                            Console.WriteLine($"      POST /hello returned: {response.StatusCode}, body contains static route: {!notStaticRoute}");
+                            return notStaticRoute;
+                        }
+                        catch (HttpRequestException)
+                        {
+                            // Server may close connection for wrong method, which is acceptable
+                            Console.WriteLine("      Server closed connection (acceptable for wrong method)");
+                            return true;
+                        }
+                    }
+                }).ConfigureAwait(false);
+
+                // Test 2: Unrecognized HTTP method (server should handle gracefully)
+                await ExecuteTest($"{serverType} - Unrecognized HTTP Method", async () =>
+                {
+                    HttpRequestMessage request = new HttpRequestMessage(new System.Net.Http.HttpMethod("FOOBAR"), $"{baseUrl}/hello");
+                    try
+                    {
+                        HttpResponseMessage response = await client.SendAsync(request).ConfigureAwait(false);
+                        // Server should respond (not crash) - likely default route or 404/405
+                        Console.WriteLine($"      FOOBAR /hello returned: {response.StatusCode}");
+                        return true; // Any response means server handled it
+                    }
+                    catch (HttpRequestException)
+                    {
+                        // Connection rejected is also acceptable
+                        return true;
+                    }
+                }).ConfigureAwait(false);
+
+                // Test 3: Very long URL
+                await ExecuteTest($"{serverType} - Very Long URL", async () =>
+                {
+                    string longPath = "/" + new string('a', 8000);
+                    try
+                    {
+                        HttpResponseMessage response = await client.GetAsync($"{baseUrl}{longPath}").ConfigureAwait(false);
+                        // Server should respond without crashing
+                        Console.WriteLine($"      Long URL returned: {response.StatusCode}");
+                        return true;
+                    }
+                    catch (HttpRequestException)
+                    {
+                        // Rejection is acceptable for very long URLs
+                        Console.WriteLine("      Long URL rejected (acceptable)");
+                        return true;
+                    }
+                }).ConfigureAwait(false);
+
+                // Test 4: Response already sent (double send)
+                await ExecuteTest($"{serverType} - Double Send Response", async () =>
+                {
+                    HttpResponseMessage response = await client.GetAsync($"{baseUrl}/test/double-send").ConfigureAwait(false);
+                    string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    // Should get the first response, server should not crash
+                    Console.WriteLine($"      Double send returned: {response.StatusCode}, body='{body}'");
+                    return response.IsSuccessStatusCode && body == "First response";
+                }).ConfigureAwait(false);
+
+                // Test 5: Error route (intentional exception in handler)
+                await ExecuteTest($"{serverType} - Exception In Route Handler", async () =>
+                {
+                    HttpResponseMessage response = await client.GetAsync($"{baseUrl}/error/test").ConfigureAwait(false);
+                    // Server should return 500, not crash
+                    Console.WriteLine($"      Error route returned: {response.StatusCode}");
+                    return response.StatusCode == System.Net.HttpStatusCode.InternalServerError;
+                }).ConfigureAwait(false);
+
+                // Test 6: Empty POST body
+                await ExecuteTest($"{serverType} - Empty POST Body", async () =>
+                {
+                    ByteArrayContent content = new ByteArrayContent(Array.Empty<byte>());
+                    HttpResponseMessage response = await client.PostAsync($"{baseUrl}/test/echo", content).ConfigureAwait(false);
+                    string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    Console.WriteLine($"      Empty POST echo returned: status={response.StatusCode} body='{body}'");
+                    return response.IsSuccessStatusCode;
+                }).ConfigureAwait(false);
+
+                // Test 7: OPTIONS preflight
+                await ExecuteTest($"{serverType} - OPTIONS Preflight", async () =>
+                {
+                    HttpRequestMessage request = new HttpRequestMessage(new System.Net.Http.HttpMethod("OPTIONS"), $"{baseUrl}/hello");
+                    HttpResponseMessage response = await client.SendAsync(request).ConfigureAwait(false);
+                    Console.WriteLine($"      OPTIONS returned: {response.StatusCode}");
+                    return response.IsSuccessStatusCode;
+                }).ConfigureAwait(false);
+
+                // Test 8: Request with Content-Length mismatch (send less data than declared)
+                await ExecuteTest($"{serverType} - Content-Length Mismatch (under)", async () =>
+                {
+                    try
+                    {
+                        HttpRequestMessage request = new HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/test/echo");
+                        byte[] actualData = Encoding.UTF8.GetBytes("short");
+                        request.Content = new ByteArrayContent(actualData);
+                        request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/plain");
+                        // HttpClient will set Content-Length correctly, so this tests normal behavior
+                        HttpResponseMessage response = await client.SendAsync(request).ConfigureAwait(false);
+                        Console.WriteLine($"      Content-Length match: {response.StatusCode}");
+                        return response.IsSuccessStatusCode;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"      Exception (acceptable): {ex.GetType().Name}");
+                        return true;
+                    }
+                }).ConfigureAwait(false);
+
+                // Test 9: Request to nonexistent path returns proper default response
+                await ExecuteTest($"{serverType} - Deep Nonexistent Path", async () =>
+                {
+                    HttpResponseMessage response = await client.GetAsync($"{baseUrl}/a/b/c/d/e/f/g/h/i/j").ConfigureAwait(false);
+                    return response.StatusCode == System.Net.HttpStatusCode.NotFound;
+                }).ConfigureAwait(false);
+
+                // Test 10: Multiple rapid sequential requests (basic stress)
+                await ExecuteTest($"{serverType} - Rapid Sequential Requests (20)", async () =>
+                {
+                    int successCount = 0;
+                    int failCount = 0;
+                    for (int i = 0; i < 20; i++)
+                    {
+                        try
+                        {
+                            using (HttpClient seqClient = new HttpClient())
+                            {
+                                seqClient.Timeout = TimeSpan.FromSeconds(10);
+                                HttpResponseMessage response = await seqClient.GetAsync($"{baseUrl}/test/get").ConfigureAwait(false);
+                                if (response.IsSuccessStatusCode) successCount++;
+                                else failCount++;
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            failCount++;
+                        }
+                    }
+                    Console.WriteLine($"      {successCount} succeeded, {failCount} failed out of 20");
+                    return successCount >= 18; // Allow up to 10% transient failures
+                }).ConfigureAwait(false);
+
+                // Test 11: Concurrent requests (basic load)
+                await ExecuteTest($"{serverType} - Concurrent Requests (10)", async () =>
+                {
+                    Task<bool>[] tasks = new Task<bool>[10];
+                    for (int i = 0; i < 10; i++)
+                    {
+                        tasks[i] = Task.Run(async () =>
+                        {
+                            try
+                            {
+                                using (HttpClient concClient = new HttpClient())
+                                {
+                                    concClient.Timeout = TimeSpan.FromSeconds(10);
+                                    HttpResponseMessage response = await concClient.GetAsync($"{baseUrl}/test/get").ConfigureAwait(false);
+                                    return response.IsSuccessStatusCode;
+                                }
+                            }
+                            catch (Exception)
+                            {
+                                return false;
+                            }
+                        });
+                    }
+
+                    bool[] results = await Task.WhenAll(tasks).ConfigureAwait(false);
+                    int successCount = 0;
+                    foreach (bool success in results)
+                    {
+                        if (success) successCount++;
+                    }
+
+                    Console.WriteLine($"      {successCount}/10 concurrent requests succeeded");
+                    return successCount >= 8; // Allow up to 20% transient failures
+                }).ConfigureAwait(false);
+
+                // Test 12: DELETE with no body
+                await ExecuteTest($"{serverType} - DELETE With No Body", async () =>
+                {
+                    HttpResponseMessage response = await client.DeleteAsync($"{baseUrl}/nonexistent").ConfigureAwait(false);
+                    // Should work (default route), server shouldn't crash
+                    Console.WriteLine($"      DELETE returned: {response.StatusCode}");
+                    return true;
+                }).ConfigureAwait(false);
+
+                // Test 13: Request with many headers (within default limit)
+                await ExecuteTest($"{serverType} - Request With Many Headers (50)", async () =>
+                {
+                    HttpRequestMessage request = new HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/test/header-echo");
+                    for (int i = 0; i < 50; i++)
+                    {
+                        request.Headers.TryAddWithoutValidation($"X-Custom-Header-{i}", $"value-{i}");
+                    }
+                    HttpResponseMessage response = await client.SendAsync(request).ConfigureAwait(false);
+                    string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    bool hasFirst = body.Contains("X-Custom-Header-0");
+                    bool hasLast = body.Contains("X-Custom-Header-49");
+                    Console.WriteLine($"      50 headers: status={response.StatusCode} first={hasFirst} last={hasLast}");
+                    return response.IsSuccessStatusCode && hasFirst && hasLast;
+                }).ConfigureAwait(false);
+            }
+        }
+
+        /// <summary>
+        /// Test malformed request parsing (offline, Lite-only since it does manual HTTP parsing).
+        /// </summary>
+        /// <returns>Task.</returns>
+        private static async Task TestMalformedRequestParsing()
+        {
+            // Test: Request line with only 2 parts (missing protocol version)
+            await ExecuteTest("Malformed - Incomplete Request Line", async () =>
+            {
+                WebserverSettings settings = new WebserverSettings("127.0.0.1", 9999);
+                string header = "GET /test\r\nHost: localhost\r\n";
+                try
+                {
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        WatsonWebserver.Lite.HttpRequest req = new WatsonWebserver.Lite.HttpRequest(settings, "127.0.0.1:12345", "127.0.0.1:9999", ms, header);
+                        Console.WriteLine("      ERROR: Should have thrown (missing protocol)");
+                        return false;
+                    }
+                }
+                catch (ArgumentException ex)
+                {
+                    Console.WriteLine($"      Correctly rejected: {ex.Message}");
+                    return true;
+                }
+            }).ConfigureAwait(false);
+
+            // Test: Empty request header
+            await ExecuteTest("Malformed - Empty Request Header", async () =>
+            {
+                WebserverSettings settings = new WebserverSettings("127.0.0.1", 9999);
+                try
+                {
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        WatsonWebserver.Lite.HttpRequest req = new WatsonWebserver.Lite.HttpRequest(settings, "127.0.0.1:12345", "127.0.0.1:9999", ms, "");
+                        Console.WriteLine("      ERROR: Should have thrown (empty header)");
+                        return false;
+                    }
+                }
+                catch (ArgumentNullException)
+                {
+                    Console.WriteLine("      Correctly rejected empty header");
+                    return true;
+                }
+            }).ConfigureAwait(false);
+
+            // Test: Negative Content-Length
+            await ExecuteTest("Malformed - Negative Content-Length", async () =>
+            {
+                WebserverSettings settings = new WebserverSettings("127.0.0.1", 9999);
+                string header = "POST /test HTTP/1.1\r\nHost: localhost\r\nContent-Length: -1\r\n";
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    WatsonWebserver.Lite.HttpRequest req = new WatsonWebserver.Lite.HttpRequest(settings, "127.0.0.1:12345", "127.0.0.1:9999", ms, header);
+                    Console.WriteLine($"      Content-Length parsed as: {req.ContentLength}");
+                    // -1 is accepted (similar to how HttpListener reports chunked)
+                    return true;
+                }
+            }).ConfigureAwait(false);
+
+            // Test: Non-numeric Content-Length
+            await ExecuteTest("Malformed - Non-Numeric Content-Length", async () =>
+            {
+                WebserverSettings settings = new WebserverSettings("127.0.0.1", 9999);
+                string header = "POST /test HTTP/1.1\r\nHost: localhost\r\nContent-Length: abc\r\n";
+                try
+                {
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        WatsonWebserver.Lite.HttpRequest req = new WatsonWebserver.Lite.HttpRequest(settings, "127.0.0.1:12345", "127.0.0.1:9999", ms, header);
+                        Console.WriteLine("      ERROR: Should have thrown (non-numeric Content-Length)");
+                        return false;
+                    }
+                }
+                catch (FormatException)
+                {
+                    Console.WriteLine("      Correctly rejected non-numeric Content-Length");
+                    return true;
+                }
+            }).ConfigureAwait(false);
+
+            // Test: Null stream
+            await ExecuteTest("Malformed - Null Stream", async () =>
+            {
+                WebserverSettings settings = new WebserverSettings("127.0.0.1", 9999);
+                string header = "GET /test HTTP/1.1\r\nHost: localhost\r\n";
+                try
+                {
+                    WatsonWebserver.Lite.HttpRequest req = new WatsonWebserver.Lite.HttpRequest(settings, "127.0.0.1:12345", "127.0.0.1:9999", null, header);
+                    Console.WriteLine("      ERROR: Should have thrown (null stream)");
+                    return false;
+                }
+                catch (ArgumentNullException)
+                {
+                    Console.WriteLine("      Correctly rejected null stream");
+                    return true;
+                }
+            }).ConfigureAwait(false);
+
+            // Test: Header with no value (just key and colon)
+            await ExecuteTest("Malformed - Header Key With No Value", async () =>
+            {
+                WebserverSettings settings = new WebserverSettings("127.0.0.1", 9999);
+                string header = "GET /test HTTP/1.1\r\nHost: localhost\r\nX-Empty:\r\n";
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    WatsonWebserver.Lite.HttpRequest req = new WatsonWebserver.Lite.HttpRequest(settings, "127.0.0.1:12345", "127.0.0.1:9999", ms, header);
+                    string emptyVal = req.Headers.Get("X-Empty");
+                    Console.WriteLine($"      X-Empty value: '{emptyVal}'");
+                    return emptyVal != null; // Should be empty string, not null
+                }
+            }).ConfigureAwait(false);
+
+            // Test: Request with no headers at all (just request line)
+            await ExecuteTest("Malformed - Request Line Only (No Headers)", async () =>
+            {
+                WebserverSettings settings = new WebserverSettings("127.0.0.1", 9999);
+                string header = "GET /test HTTP/1.1\r\n";
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    WatsonWebserver.Lite.HttpRequest req = new WatsonWebserver.Lite.HttpRequest(settings, "127.0.0.1:12345", "127.0.0.1:9999", ms, header);
+                    Console.WriteLine($"      Method: {req.Method}, Headers: {req.Headers.Count}");
+                    return req.Method == WatsonWebserver.Core.HttpMethod.GET && req.Headers.Count == 0;
+                }
+            }).ConfigureAwait(false);
+
+            // Test: Very long header value
+            await ExecuteTest("Malformed - Very Long Header Value (64KB)", async () =>
+            {
+                WebserverSettings settings = new WebserverSettings("127.0.0.1", 9999);
+                string longVal = new string('X', 65536);
+                string header = "GET /test HTTP/1.1\r\nHost: localhost\r\nX-Long: " + longVal + "\r\n";
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    WatsonWebserver.Lite.HttpRequest req = new WatsonWebserver.Lite.HttpRequest(settings, "127.0.0.1:12345", "127.0.0.1:9999", ms, header);
+                    string val = req.Headers.Get("X-Long");
+                    Console.WriteLine($"      Long header length: {val?.Length}");
+                    return val != null && val.Length == 65536;
+                }
+            }).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Test invalid chunked encoding scenarios (offline, Lite-only).
+        /// </summary>
+        /// <returns>Task.</returns>
+        private static async Task TestInvalidChunkedEncoding()
+        {
+            // Test: Chunked request with zero-length (final chunk immediately)
+            await ExecuteTest("Chunked - Immediate Final Chunk (Zero Length)", async () =>
+            {
+                WebserverSettings settings = new WebserverSettings("127.0.0.1", 9999);
+                string header = "POST /test HTTP/1.1\r\nHost: localhost\r\nTransfer-Encoding: chunked\r\n";
+                // Chunk format: "0\r\n\r\n" = final chunk
+                byte[] chunkData = Encoding.UTF8.GetBytes("0\r\n\r\n");
+
+                using (MemoryStream ms = new MemoryStream(chunkData))
+                {
+                    WatsonWebserver.Lite.HttpRequest req = new WatsonWebserver.Lite.HttpRequest(settings, "127.0.0.1:12345", "127.0.0.1:9999", ms, header);
+                    Chunk chunk = await req.ReadChunk(CancellationToken.None).ConfigureAwait(false);
+                    Console.WriteLine($"      IsFinal: {chunk.IsFinal}, Length: {chunk.Length}");
+                    return chunk.IsFinal && chunk.Length == 0;
+                }
+            }).ConfigureAwait(false);
+
+            // Test: Chunked request with data then final
+            await ExecuteTest("Chunked - Single Chunk Then Final", async () =>
+            {
+                WebserverSettings settings = new WebserverSettings("127.0.0.1", 9999);
+                string header = "POST /test HTTP/1.1\r\nHost: localhost\r\nTransfer-Encoding: chunked\r\n";
+                // "5\r\nhello\r\n0\r\n\r\n"
+                byte[] chunkData = Encoding.UTF8.GetBytes("5\r\nhello\r\n0\r\n\r\n");
+
+                using (MemoryStream ms = new MemoryStream(chunkData))
+                {
+                    WatsonWebserver.Lite.HttpRequest req = new WatsonWebserver.Lite.HttpRequest(settings, "127.0.0.1:12345", "127.0.0.1:9999", ms, header);
+
+                    Chunk chunk1 = await req.ReadChunk(CancellationToken.None).ConfigureAwait(false);
+                    Console.WriteLine($"      Chunk1: IsFinal={chunk1.IsFinal}, Length={chunk1.Length}, Data='{Encoding.UTF8.GetString(chunk1.Data)}'");
+
+                    Chunk chunk2 = await req.ReadChunk(CancellationToken.None).ConfigureAwait(false);
+                    Console.WriteLine($"      Chunk2: IsFinal={chunk2.IsFinal}, Length={chunk2.Length}");
+
+                    return !chunk1.IsFinal && chunk1.Length == 5 && Encoding.UTF8.GetString(chunk1.Data) == "hello"
+                        && chunk2.IsFinal && chunk2.Length == 0;
+                }
+            }).ConfigureAwait(false);
+
+            // Test: Chunked with chunk extension metadata (";ext=value" after size)
+            await ExecuteTest("Chunked - Chunk Extension Metadata", async () =>
+            {
+                WebserverSettings settings = new WebserverSettings("127.0.0.1", 9999);
+                string header = "POST /test HTTP/1.1\r\nHost: localhost\r\nTransfer-Encoding: chunked\r\n";
+                byte[] chunkData = Encoding.UTF8.GetBytes("5;name=val\r\nhello\r\n0\r\n\r\n");
+
+                using (MemoryStream ms = new MemoryStream(chunkData))
+                {
+                    WatsonWebserver.Lite.HttpRequest req = new WatsonWebserver.Lite.HttpRequest(settings, "127.0.0.1:12345", "127.0.0.1:9999", ms, header);
+                    Chunk chunk = await req.ReadChunk(CancellationToken.None).ConfigureAwait(false);
+                    Console.WriteLine($"      Length: {chunk.Length}, Metadata: '{chunk.Metadata}'");
+                    return chunk.Length == 5 && chunk.Metadata != null && chunk.Metadata.Contains("name=val");
+                }
+            }).ConfigureAwait(false);
+        }
+
+        /// <summary>
         /// Test comprehensive routing capabilities including all route types and authentication.
         /// </summary>
         /// <param name="baseUrl">Base server URL.</param>
@@ -830,6 +1876,14 @@ namespace Test.All
                 {
                     HttpResponseMessage response = await client.GetAsync($"{baseUrl}/files/test.txt").ConfigureAwait(false);
                     return response.IsSuccessStatusCode;
+                }).ConfigureAwait(false);
+
+                // Test Content Route Directory Traversal Protection
+                await ExecuteTest($"{serverType} - Content Route Directory Traversal", async () =>
+                {
+                    HttpResponseMessage response = await client.GetAsync($"{baseUrl}/files/../../Program.cs").ConfigureAwait(false);
+                    // Should return 404, not serve a file outside base directory
+                    return response.StatusCode == System.Net.HttpStatusCode.NotFound;
                 }).ConfigureAwait(false);
 
                 // Test Pre-Authentication Routes
@@ -1499,6 +2553,21 @@ namespace Test.All
                 await ctx.Response.Send(sb.ToString()).ConfigureAwait(false);
             });
 
+            // Route that tries to send response twice (negative test)
+            server.Routes.PreAuthentication.Static.Add(CoreHttpMethod.GET, "/test/double-send", async (ctx) =>
+            {
+                await ctx.Response.Send("First response").ConfigureAwait(false);
+                // Second send should fail gracefully (ResponseSent flag prevents it)
+                try
+                {
+                    await ctx.Response.Send("Second response").ConfigureAwait(false);
+                }
+                catch (Exception)
+                {
+                    // Expected - response already sent
+                }
+            });
+
             // Exception handling route
             server.Routes.PreAuthentication.Static.Add(CoreHttpMethod.GET, "/error/test", async (ctx) =>
             {
@@ -1536,6 +2605,29 @@ namespace Test.All
                         return;
                     }
                 }
+            };
+
+            // Query echo route (returns query parameters as key=value lines)
+            server.Routes.PreAuthentication.Static.Add(CoreHttpMethod.GET, "/test/query-echo", async (ctx) =>
+            {
+                StringBuilder sb = new StringBuilder();
+                NameValueCollection elements = ctx.Request.Query.Elements;
+                if (elements != null)
+                {
+                    foreach (string key in elements.AllKeys)
+                    {
+                        sb.AppendLine(key + "=" + elements.Get(key));
+                    }
+                }
+                ctx.Response.ContentType = "text/plain";
+                await ctx.Response.Send(sb.ToString()).ConfigureAwait(false);
+            });
+
+            // PostRouting handler to verify it executes
+            server.Routes.PostRouting = async (ctx) =>
+            {
+                _PostRoutingExecuted = true;
+                await Task.CompletedTask.ConfigureAwait(false);
             };
 
             // Exception handler

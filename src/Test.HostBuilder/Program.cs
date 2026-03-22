@@ -142,6 +142,21 @@
             Console.WriteLine("Starting server on: " + _Settings.Prefix);
             _Server.Start();
 
+            Console.WriteLine("");
+            Console.WriteLine("Available routes:");
+            Console.WriteLine("  Pre-Authentication:");
+            Console.WriteLine("    GET    /preauth/static           - Static route");
+            Console.WriteLine("    GET    /preauth/parameter/{id}   - Parameter route");
+            Console.WriteLine("    GET    /preauth/dynamic/{digits} - Dynamic route");
+            Console.WriteLine("    GET    /preauth/content/         - Content route (directory)");
+            Console.WriteLine("  Post-Authentication:");
+            Console.WriteLine("    GET    /postauth/static           - Static route");
+            Console.WriteLine("    GET    /postauth/parameter/{id}   - Parameter route");
+            Console.WriteLine("    GET    /postauth/dynamic/{digits} - Dynamic route");
+            Console.WriteLine("    GET    /postauth/content/         - Content route (directory)");
+            Console.WriteLine("  Default: Any unmatched request handled by default route");
+            Console.WriteLine("");
+
             List<string> urls = new List<string>
             {
                 _Settings.Prefix + "preauth/static",

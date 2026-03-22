@@ -54,6 +54,12 @@
             Console.WriteLine("Listening on " + _Settings.Prefix);
             _Server.Start();
 
+            Console.WriteLine("");
+            Console.WriteLine("Available routes (all via default handler):");
+            Console.WriteLine("  HEAD  (any path)  - Returns headers with content-length, no body");
+            Console.WriteLine("  GET   (any path)  - Returns response with body");
+            Console.WriteLine("");
+
             for (_Counter = 0; _Counter < _Iterations; _Counter++)
             {
                 await SendHeadRequest();

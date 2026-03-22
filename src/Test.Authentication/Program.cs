@@ -63,6 +63,12 @@
 
             _Server.Start();
 
+            Console.WriteLine("");
+            Console.WriteLine("Available routes:");
+            Console.WriteLine("  (any method/path)  - All requests go to default route");
+            Console.WriteLine("  Authentication alternates: even requests allowed, odd requests denied");
+            Console.WriteLine("");
+
             for (int i = 0; i < _Iterations; i++)
             {
                 using (RestRequest req = new RestRequest(_Settings.Prefix))

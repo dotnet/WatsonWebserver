@@ -18,7 +18,7 @@
     /// <summary>
     /// HTTP response.
     /// </summary>
-    public abstract class HttpResponseBase
+    public abstract class HttpResponseBase : IDisposable
     {
         #region Public-Members
 
@@ -80,7 +80,8 @@
         public long ContentLength = 0;
 
         /// <summary>
-        /// Indicates whether or not chunked transfer encoding should be indicated in the response. 
+        /// Indicates whether or not chunked transfer encoding should be indicated in the response.
+        /// This property is specific to HTTP/1.1.  HTTP/2 and HTTP/3 use their own framing mechanisms.
         /// </summary>
         public bool ChunkedTransfer { get; set; } = false;
 
@@ -117,6 +118,7 @@
         #region Private-Members
 
         private NameValueCollection _Headers = new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
+        private bool _Disposed = false;
 
         #endregion
 
@@ -125,6 +127,27 @@
         #endregion
 
         #region Public-Methods
+
+        /// <summary>
+        /// Dispose of resources.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Dispose of resources.
+        /// </summary>
+        /// <param name="disposing">Disposing.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_Disposed)
+            {
+                _Disposed = true;
+            }
+        }
 
         /// <summary>
         /// Send headers and no data to the requestor and terminate the connection.
@@ -169,6 +192,7 @@
         /// <summary>
         /// Send headers (if not already sent) and a chunk of data using chunked transfer-encoding.
         /// The connection will be kept in-tact unless isFinal is set to true.
+        /// This method is specific to HTTP/1.1 chunked transfer encoding.
         /// </summary>
         /// <param name="chunk">Chunk of data.</param>
         /// <param name="isFinal">Boolean indicating if this is the final chunk.</param>

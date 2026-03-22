@@ -50,6 +50,12 @@
             _Server.Settings.IO.MaxRequests = _MaxConcurrentRequests;
             _Server.Start();
 
+            Console.WriteLine("");
+            Console.WriteLine("Available routes (all via default handler):");
+            Console.WriteLine("  (any method/path)  - Accepts request, waits 5 seconds, responds");
+            Console.WriteLine("  Max concurrent requests: 5");
+            Console.WriteLine("");
+
             for (int i = 0; i < 25; i++)
             {
                 // Task.Run(() => ClientTask());

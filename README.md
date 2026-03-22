@@ -16,9 +16,14 @@ Special thanks to @DamienDennehy for allowing us the use of the ```Watson.Core``
 
 This project is part of the [.NET Foundation](http://www.dotnetfoundation.org/projects) along with other projects like [the .NET Runtime](https://github.com/dotnet/runtime/).
 
-## New in v6.5.x
+## New in v6.6.0
 
-- OpenAPI and Swagger support, refer to `Test.OpenApi` project and `README.md`
+- Security: directory traversal protection in content routes, `MaxRequestBodySize` and `MaxHeaderCount` settings
+- Bug fixes: authentication bypass in post-auth content routes, `PostRouting` now properly awaited, per-instance `CancellationTokenSource`
+- Resource management: `IDisposable` on context/request/response base classes, fixed `MemoryStream` leaks
+- Performance: `MemoryStream`/`StringBuilder` in Lite body reading, cached query elements, `ReaderWriterLockSlim` in route managers
+- Architecture: deduplicated routing pipeline, HTTP/1.1 annotations for HTTP/2 prep
+- Refer to CHANGELOG.md for full details
 
 ## Special Thanks
 

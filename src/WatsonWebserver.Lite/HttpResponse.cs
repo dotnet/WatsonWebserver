@@ -150,10 +150,12 @@
                 return await SendInternalAsync(0, null, true, token).ConfigureAwait(false);
 
             byte[] bytes = Encoding.UTF8.GetBytes(data);
-            MemoryStream ms = new MemoryStream();
-            await ms.WriteAsync(bytes, 0, bytes.Length, token).ConfigureAwait(false);
-            ms.Seek(0, SeekOrigin.Begin);
-            return await SendInternalAsync(bytes.Length, ms, true, token).ConfigureAwait(false);
+            using (MemoryStream ms = new MemoryStream())
+            {
+                await ms.WriteAsync(bytes, 0, bytes.Length, token).ConfigureAwait(false);
+                ms.Seek(0, SeekOrigin.Begin);
+                return await SendInternalAsync(bytes.Length, ms, true, token).ConfigureAwait(false);
+            }
         }
 
         /// <inheritdoc />
@@ -163,10 +165,12 @@
             if (data == null || data.Length < 1)
                 return await SendInternalAsync(0, null, true, token).ConfigureAwait(false);
 
-            MemoryStream ms = new MemoryStream();
-            await ms.WriteAsync(data, 0, data.Length, token).ConfigureAwait(false);
-            ms.Seek(0, SeekOrigin.Begin);
-            return await SendInternalAsync(data.Length, ms, true, token).ConfigureAwait(false);
+            using (MemoryStream ms = new MemoryStream())
+            {
+                await ms.WriteAsync(data, 0, data.Length, token).ConfigureAwait(false);
+                ms.Seek(0, SeekOrigin.Begin);
+                return await SendInternalAsync(data.Length, ms, true, token).ConfigureAwait(false);
+            }
         }
 
         /// <inheritdoc />
@@ -201,12 +205,19 @@
 
                 using (MemoryStream ms = new MemoryStream())
                 {
-                    byte[] message = AppendBytes(Encoding.UTF8.GetBytes(chunk.Length.ToString("X") + "\r\n"), chunk);
-                    message = AppendBytes(message, Encoding.UTF8.GetBytes("\r\n"));
-                    if (isFinal) message = AppendBytes(message, Encoding.UTF8.GetBytes("0\r\n\r\n"));
-                    await ms.WriteAsync(message, 0, message.Length, token).ConfigureAwait(false);
+                    byte[] header = Encoding.UTF8.GetBytes(chunk.Length.ToString("X") + "\r\n");
+                    await ms.WriteAsync(header, 0, header.Length, token).ConfigureAwait(false);
+                    if (chunk.Length > 0)
+                        await ms.WriteAsync(chunk, 0, chunk.Length, token).ConfigureAwait(false);
+                    byte[] crlf = Encoding.UTF8.GetBytes("\r\n");
+                    await ms.WriteAsync(crlf, 0, crlf.Length, token).ConfigureAwait(false);
+                    if (isFinal)
+                    {
+                        byte[] finalChunk = Encoding.UTF8.GetBytes("0\r\n\r\n");
+                        await ms.WriteAsync(finalChunk, 0, finalChunk.Length, token).ConfigureAwait(false);
+                    }
                     ms.Seek(0, SeekOrigin.Begin);
-                    bool result = await SendInternalAsync(message.Length, ms, isFinal, token).ConfigureAwait(false);
+                    bool result = await SendInternalAsync(ms.Length, ms, isFinal, token).ConfigureAwait(false);
                     return result;
                 }
             }
@@ -259,34 +270,32 @@
 
         private byte[] GetHeaderBytes()
         {
-            byte[] ret = Array.Empty<byte>();
+            StringBuilder sb = new StringBuilder();
 
-            ret = AppendBytes(ret, Encoding.UTF8.GetBytes(ProtocolVersion + " " + StatusCode + " " + GetStatusDescription(StatusCode) + "\r\n"));
+            sb.Append(ProtocolVersion + " " + StatusCode + " " + GetStatusDescription(StatusCode) + "\r\n");
 
             bool contentTypeSet = false;
             if (!String.IsNullOrEmpty(ContentType))
             {
-                ret = AppendBytes(ret, Encoding.UTF8.GetBytes(WebserverConstants.HeaderContentType + ": " + ContentType + "\r\n"));
+                sb.Append(WebserverConstants.HeaderContentType + ": " + ContentType + "\r\n");
                 contentTypeSet = true;
             }
 
             bool contentLengthSet = false;
             if (!ChunkedTransfer && !ServerSentEvents && ContentLength >= 0)
             {
-                ret = AppendBytes(ret, Encoding.UTF8.GetBytes(WebserverConstants.HeaderContentLength + ": " + ContentLength + "\r\n"));
+                sb.Append(WebserverConstants.HeaderContentLength + ": " + ContentLength + "\r\n");
                 contentLengthSet = true;
             }
 
             bool transferEncodingSet = false;
             if (ChunkedTransfer)
             {
-                ret = AppendBytes(ret, Encoding.UTF8.GetBytes(WebserverConstants.HeaderTransferEncoding + ": chunked\r\n"));
+                sb.Append(WebserverConstants.HeaderTransferEncoding + ": chunked\r\n");
                 transferEncodingSet = true;
             }
 
-            ret = AppendBytes(
-                ret,
-                Encoding.UTF8.GetBytes(WebserverConstants.HeaderDate + ": " + DateTime.UtcNow.ToString(WebserverConstants.HeaderDateValueFormat) + "\r\n"));
+            sb.Append(WebserverConstants.HeaderDate + ": " + DateTime.UtcNow.ToString(WebserverConstants.HeaderDateValueFormat) + "\r\n");
 
             for (int i = 0; i < Headers.Count; i++)
             {
@@ -302,13 +311,13 @@
                 {
                     foreach (string val in vals)
                     {
-                        ret = AppendBytes(ret, Encoding.UTF8.GetBytes(header + ": " + val + "\r\n"));
+                        sb.Append(header + ": " + val + "\r\n");
                     }
                 }
             }
 
-            ret = AppendBytes(ret, Encoding.UTF8.GetBytes("\r\n"));
-            return ret;
+            sb.Append("\r\n");
+            return Encoding.UTF8.GetBytes(sb.ToString());
         }
 
         private string GetStatusDescription(int statusCode)

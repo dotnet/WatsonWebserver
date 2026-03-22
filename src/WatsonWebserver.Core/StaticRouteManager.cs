@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Text;
+    using System.Threading;
     using System.Threading.Tasks;
     using WatsonWebserver.Core.OpenApi;
 
@@ -19,7 +20,7 @@
         #region Private-Members
 
         private List<StaticRoute> _Routes = new List<StaticRoute>();
-        private readonly object _Lock = new object();
+        private readonly ReaderWriterLockSlim _Lock = new ReaderWriterLockSlim();
 
         #endregion
 
@@ -69,9 +70,14 @@
         /// <returns>List of static routes.</returns>
         public IReadOnlyList<StaticRoute> GetAll()
         {
-            lock (_Lock)
+            _Lock.EnterReadLock();
+            try
             {
                 return _Routes.ToList().AsReadOnly();
+            }
+            finally
+            {
+                _Lock.ExitReadLock();
             }
         }
 
@@ -81,21 +87,26 @@
         /// <param name="method">The HTTP method.</param>
         /// <param name="path">URL path.</param>
         public void Remove(HttpMethod method, string path)
-        { 
+        {
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
 
             StaticRoute r = Get(method, path);
             if (r == null || r == default(StaticRoute))
-            { 
+            {
                 return;
             }
             else
             {
-                lock (_Lock)
+                _Lock.EnterWriteLock();
+                try
                 {
                     _Routes.Remove(r);
                 }
-                 
+                finally
+                {
+                    _Lock.ExitWriteLock();
+                }
+
                 return;
             }
         }
@@ -109,12 +120,11 @@
         public StaticRoute Get(HttpMethod method, string path)
         {
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
-            
-            path = path.ToLower();
-            if (!path.StartsWith("/")) path = "/" + path;
-            if (!path.EndsWith("/")) path = path + "/";
 
-            lock (_Lock)
+            path = NormalizePath(path);
+
+            _Lock.EnterReadLock();
+            try
             {
                 StaticRoute curr = _Routes.FirstOrDefault(i => i.Method == method && i.Path == path);
                 if (curr == null || curr == default(StaticRoute))
@@ -125,6 +135,10 @@
                 {
                     return curr;
                 }
+            }
+            finally
+            {
+                _Lock.ExitReadLock();
             }
         }
 
@@ -137,20 +151,23 @@
         public bool Exists(HttpMethod method, string path)
         {
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
-             
-            path = path.ToLower();
-            if (!path.StartsWith("/")) path = "/" + path;
-            if (!path.EndsWith("/")) path = path + "/";
 
-            lock (_Lock)
+            path = NormalizePath(path);
+
+            _Lock.EnterReadLock();
+            try
             {
                 StaticRoute curr = _Routes.FirstOrDefault(i => i.Method == method && i.Path == path);
                 if (curr == null || curr == default(StaticRoute))
-                { 
+                {
                     return false;
                 }
             }
-             
+            finally
+            {
+                _Lock.ExitReadLock();
+            }
+
             return true;
         }
 
@@ -166,11 +183,10 @@
             route = null;
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
 
-            path = path.ToLower();
-            if (!path.StartsWith("/")) path = "/" + path;
-            if (!path.EndsWith("/")) path = path + "/";
+            path = NormalizePath(path);
 
-            lock (_Lock)
+            _Lock.EnterReadLock();
+            try
             {
                 StaticRoute curr = _Routes.FirstOrDefault(i => i.Method == method && i.Path == path);
                 if (curr == null || curr == default(StaticRoute))
@@ -183,28 +199,44 @@
                     return curr.Handler;
                 }
             }
+            finally
+            {
+                _Lock.ExitReadLock();
+            }
         }
 
         #endregion
 
         #region Private-Methods
 
+        private string NormalizePath(string path)
+        {
+            path = path.ToLower();
+            if (!path.StartsWith("/")) path = "/" + path;
+            if (!path.EndsWith("/")) path = path + "/";
+            return path;
+        }
+
         private void Add(StaticRoute route)
         {
             if (route == null) throw new ArgumentNullException(nameof(route));
-            
-            route.Path = route.Path.ToLower();
-            if (!route.Path.StartsWith("/")) route.Path = "/" + route.Path;
-            if (!route.Path.EndsWith("/")) route.Path = route.Path + "/";
 
-            if (Exists(route.Method, route.Path))
-            { 
-                return;
-            }
+            route.Path = NormalizePath(route.Path);
 
-            lock (_Lock)
+            _Lock.EnterWriteLock();
+            try
             {
-                _Routes.Add(route); 
+                StaticRoute existing = _Routes.FirstOrDefault(i => i.Method == route.Method && i.Path == route.Path);
+                if (existing != null && existing != default(StaticRoute))
+                {
+                    return;
+                }
+
+                _Routes.Add(route);
+            }
+            finally
+            {
+                _Lock.ExitWriteLock();
             }
         }
 
@@ -212,11 +244,16 @@
         {
             if (route == null) throw new ArgumentNullException(nameof(route));
 
-            lock (_Lock)
+            _Lock.EnterWriteLock();
+            try
             {
                 _Routes.Remove(route);
             }
-             
+            finally
+            {
+                _Lock.ExitWriteLock();
+            }
+
             return;
         }
 

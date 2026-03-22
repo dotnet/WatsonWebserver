@@ -415,6 +415,10 @@
                         else if (keyEval.Equals("content-length"))
                         {
                             ContentLength = Convert.ToInt32(val);
+                            if (_Settings.IO.MaxRequestBodySize > 0 && ContentLength > _Settings.IO.MaxRequestBodySize)
+                            {
+                                throw new IOException("Request body size " + ContentLength + " exceeds maximum allowed size " + _Settings.IO.MaxRequestBodySize + ".");
+                            }
                         }
                         else if (keyEval.Equals("content-type"))
                         {
@@ -438,6 +442,10 @@
                         }
 
                         Headers.Add(key, val);
+                        if (_Settings.IO.MaxHeaderCount > 0 && Headers.Count > _Settings.IO.MaxHeaderCount)
+                        {
+                            throw new IOException("Header count " + Headers.Count + " exceeds maximum allowed count " + _Settings.IO.MaxHeaderCount + ".");
+                        }
                     }
 
                     #endregion
@@ -542,17 +550,18 @@
 
         private async Task<byte[]> ReadChunkedBodyAsync(CancellationToken token)
         {
-            byte[] body = null;
-
-            while (true)
+            using (MemoryStream ms = new MemoryStream())
             {
-                Chunk chunk = await ReadChunk(token).ConfigureAwait(false);
-                if (chunk.Data != null && chunk.Data.Length > 0)
-                    body = AppendBytes(body, chunk.Data);
-                if (chunk.IsFinal) break;
-            }
+                while (true)
+                {
+                    Chunk chunk = await ReadChunk(token).ConfigureAwait(false);
+                    if (chunk.Data != null && chunk.Data.Length > 0)
+                        await ms.WriteAsync(chunk.Data, 0, chunk.Data.Length, token).ConfigureAwait(false);
+                    if (chunk.IsFinal) break;
+                }
 
-            return body;
+                return ms.ToArray();
+            }
         }
 
         private byte[] ReadChunkedBodySync()

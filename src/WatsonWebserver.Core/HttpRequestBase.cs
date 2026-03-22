@@ -20,7 +20,7 @@
     /// <summary>
     /// HTTP request.
     /// </summary>
-    public abstract class HttpRequestBase
+    public abstract class HttpRequestBase : IDisposable
     {
         #region Public-Members
 
@@ -167,6 +167,7 @@
 
         /// <summary>
         /// Indicates whether or not chunked transfer encoding was detected.
+        /// This property is specific to HTTP/1.1.  HTTP/2 and HTTP/3 use their own framing mechanisms.
         /// </summary>
         public bool ChunkedTransfer { get; set; } = false;
 
@@ -224,6 +225,7 @@
         private UrlDetails _Url = new UrlDetails();
         private QueryDetails _Query = new QueryDetails();
         private NameValueCollection _Headers = new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
+        private bool _Disposed = false;
 
         #endregion
 
@@ -234,8 +236,39 @@
         #region Public-Methods
 
         /// <summary>
+        /// Dispose of resources.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Dispose of resources.
+        /// </summary>
+        /// <param name="disposing">Disposing.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_Disposed)
+            {
+                if (disposing)
+                {
+                    if (Data != null)
+                    {
+                        try { Data.Dispose(); } catch { }
+                        Data = null;
+                    }
+                }
+
+                _Disposed = true;
+            }
+        }
+
+        /// <summary>
         /// For chunked transfer-encoded requests, read the next chunk.
         /// It is strongly recommended that you use the ChunkedTransfer parameter before invoking this method.
+        /// This method is specific to HTTP/1.1 chunked transfer encoding.
         /// </summary>
         /// <param name="token">Cancellation token useful for canceling the request.</param>
         /// <returns>Chunk.</returns>

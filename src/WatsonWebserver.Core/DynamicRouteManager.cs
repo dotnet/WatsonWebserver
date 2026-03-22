@@ -5,6 +5,7 @@
     using System.Linq;
     using System.Text;
     using System.Text.RegularExpressions;
+    using System.Threading;
     using System.Threading.Tasks;
     using RegexMatcher;
     using WatsonWebserver.Core.OpenApi;
@@ -33,7 +34,7 @@
         #region Private-Members
 
         private Matcher _Matcher = new Matcher();
-        private readonly object _Lock = new object();
+        private readonly ReaderWriterLockSlim _Lock = new ReaderWriterLockSlim();
         private Dictionary<DynamicRoute, Func<HttpContextBase, Task>> _Routes = new Dictionary<DynamicRoute, Func<HttpContextBase, Task>>();
 
         #endregion
@@ -74,7 +75,8 @@
             if (path == null) throw new ArgumentNullException(nameof(path));
             if (handler == null) throw new ArgumentNullException(nameof(handler));
 
-            lock (_Lock)
+            _Lock.EnterWriteLock();
+            try
             {
                 DynamicRoute dr = new DynamicRoute(method, path, handler, exceptionHandler, guid, metadata, openApiMetadata);
 
@@ -84,6 +86,10 @@
 
                 _Routes.Add(new DynamicRoute(method, path, handler, exceptionHandler, guid, metadata, openApiMetadata), handler);
             }
+            finally
+            {
+                _Lock.ExitWriteLock();
+            }
         }
 
         /// <summary>
@@ -92,9 +98,14 @@
         /// <returns>List of dynamic routes.</returns>
         public IReadOnlyList<DynamicRoute> GetAll()
         {
-            lock (_Lock)
+            _Lock.EnterReadLock();
+            try
             {
                 return _Routes.Keys.ToList().AsReadOnly();
+            }
+            finally
+            {
+                _Lock.ExitReadLock();
             }
         }
 
@@ -107,7 +118,8 @@
         { 
             if (path == null) throw new ArgumentNullException(nameof(path));
 
-            lock (_Lock)
+            _Lock.EnterWriteLock();
+            try
             {
                 _Matcher.Remove(
                     new Regex(BuildConsolidatedRegex(method, path)));
@@ -124,6 +136,10 @@
                     }
                 }
             }
+            finally
+            {
+                _Lock.ExitWriteLock();
+            }
         }
 
         /// <summary>
@@ -136,9 +152,14 @@
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
 
-            lock (_Lock)
+            _Lock.EnterReadLock();
+            try
             {
                 return _Routes.Any(r => r.Key.Method == method && r.Key.Path.Equals(path));
+            }
+            finally
+            {
+                _Lock.ExitReadLock();
             }
         }
 
@@ -166,10 +187,15 @@
                 }
                 else
                 {
-                    lock (_Lock)
+                    _Lock.EnterReadLock();
+                    try
                     {
                         dr = (DynamicRoute)val;
                         return dr.Handler;
+                    }
+                    finally
+                    {
+                        _Lock.ExitReadLock();
                     }
                 }
             }

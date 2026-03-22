@@ -150,10 +150,12 @@
                 return await SendInternalAsync(0, null, token).ConfigureAwait(false);
 
             byte[] bytes = Encoding.UTF8.GetBytes(data);
-            MemoryStream ms = new MemoryStream();
-            await ms.WriteAsync(bytes, 0, bytes.Length, token).ConfigureAwait(false);
-            ms.Seek(0, SeekOrigin.Begin);
-            return await SendInternalAsync(bytes.Length, ms, token).ConfigureAwait(false);
+            using (MemoryStream ms = new MemoryStream())
+            {
+                await ms.WriteAsync(bytes, 0, bytes.Length, token).ConfigureAwait(false);
+                ms.Seek(0, SeekOrigin.Begin);
+                return await SendInternalAsync(bytes.Length, ms, token).ConfigureAwait(false);
+            }
         }
 
         /// <inheritdoc />
@@ -163,10 +165,12 @@
             if (data == null || data.Length < 1)
                     return await SendInternalAsync(0, null, token).ConfigureAwait(false);
 
-            MemoryStream ms = new MemoryStream();
-            await ms.WriteAsync(data, 0, data.Length, token).ConfigureAwait(false);
-            ms.Seek(0, SeekOrigin.Begin);
-            return await SendInternalAsync(data.Length, ms, token).ConfigureAwait(false);
+            using (MemoryStream ms = new MemoryStream())
+            {
+                await ms.WriteAsync(data, 0, data.Length, token).ConfigureAwait(false);
+                ms.Seek(0, SeekOrigin.Begin);
+                return await SendInternalAsync(data.Length, ms, token).ConfigureAwait(false);
+            }
         }
 
         /// <inheritdoc />
@@ -248,6 +252,24 @@
             {
                 if (isFinal) ResponseSent = true;
             }
+        }
+
+        /// <summary>
+        /// Dispose of resources.
+        /// </summary>
+        /// <param name="disposing">Disposing.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (_Data != null)
+                {
+                    try { _Data.Dispose(); } catch { }
+                    _Data = null;
+                }
+            }
+
+            base.Dispose(disposing);
         }
 
         #endregion
@@ -525,6 +547,12 @@
             }
             catch (Exception)
             {
+                if (_Data != null)
+                {
+                    try { _Data.Dispose(); } catch { }
+                    _Data = null;
+                }
+
                 return false;
             }
         }

@@ -288,10 +288,48 @@
             /// </summary>
             public bool EnableKeepAlive { get; set; } = false;
 
+            /// <summary>
+            /// Maximum request body size in bytes.
+            /// A value of zero or less disables this check.
+            /// Default is 0 (unlimited).
+            /// This limit applies to Content-Length validation before reading the body.
+            /// </summary>
+            public long MaxRequestBodySize
+            {
+                get
+                {
+                    return _MaxRequestBodySize;
+                }
+                set
+                {
+                    _MaxRequestBodySize = value;
+                }
+            }
+
+            /// <summary>
+            /// Maximum number of headers allowed in a request.
+            /// A value of zero or less disables this check.
+            /// Default is 64.
+            /// This property is only used by WatsonWebserver.Lite.
+            /// </summary>
+            public int MaxHeaderCount
+            {
+                get
+                {
+                    return _MaxHeaderCount;
+                }
+                set
+                {
+                    _MaxHeaderCount = value;
+                }
+            }
+
             private int _StreamBufferSize = 65536;
             private int _MaxRequests = 1024;
             private int _ReadTimeoutMs = 10000;
             private int _MaxIncomingHeadersSize = 65536;
+            private long _MaxRequestBodySize = 0;
+            private int _MaxHeaderCount = 64;
 
             /// <summary>
             /// Input-output settings.

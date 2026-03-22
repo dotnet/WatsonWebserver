@@ -36,6 +36,11 @@
                         _UsingLite = true;
                         break;
                     }
+                    else if (arg.Equals("-nolite", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _UsingLite = false;
+                        break;
+                    }
                 }
             }
 
@@ -97,6 +102,29 @@
             Console.WriteLine("Starting server on: " + _Settings.Prefix);
 
             _Server.Start();
+
+            Console.WriteLine("");
+            Console.WriteLine("Available routes:");
+            Console.WriteLine("  Static Routes:");
+            Console.WriteLine("    GET    /hello          - Returns 'Hello static route'");
+            Console.WriteLine("    GET    /hola           - Returns 'Hola static route'");
+            Console.WriteLine("    GET    /mirror         - Returns JSON of request details");
+            Console.WriteLine("    GET    /login          - Returns 'Login static route'");
+            Console.WriteLine("    GET    /redirect       - 302 redirect to GitHub");
+            Console.WriteLine("  Parameter Routes:");
+            Console.WriteLine("    GET    /user/{id}                - Returns user by ID");
+            Console.WriteLine("    GET    /{version}/param1/{id}    - Parameter route 1");
+            Console.WriteLine("    GET    /{version}/param2/{id}    - Parameter route 2 (with metadata)");
+            Console.WriteLine("  Dynamic Routes:");
+            Console.WriteLine("    GET    /bar            - Regex match ^/bar$");
+            Console.WriteLine("    PUT    /foo            - Regex match ^/foo$");
+            Console.WriteLine("    GET    /foo/{digits}   - Regex match ^/foo/\\d+$");
+            Console.WriteLine("  Content Routes:");
+            Console.WriteLine("    GET    /html/          - Directory listing");
+            Console.WriteLine("    GET    /large/         - Directory listing");
+            Console.WriteLine("    GET    /img/watson.jpg - Image file");
+            Console.WriteLine("  Default: Any unmatched request returns 200 with 'Default route'");
+            Console.WriteLine("");
 
             bool runForever = true;
             while (runForever)

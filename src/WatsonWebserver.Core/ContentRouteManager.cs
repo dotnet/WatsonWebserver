@@ -5,6 +5,7 @@
     using System.IO;
     using System.Linq;
     using System.Text;
+    using System.Threading;
     using System.Threading.Tasks;
     using WatsonWebserver.Core.OpenApi;
 
@@ -87,7 +88,7 @@
         #region Private-Members
 
         private List<ContentRoute> _Routes = new List<ContentRoute>();
-        private readonly object _Lock = new object();
+        private readonly ReaderWriterLockSlim _Lock = new ReaderWriterLockSlim();
         private string _BaseDirectory = AppDomain.CurrentDomain.BaseDirectory;
         private Func<HttpContextBase, Task> _Handler = null;
         private List<string> _DefaultFiles = new List<string>
@@ -149,9 +150,14 @@
         /// <returns>List of content routes.</returns>
         public IReadOnlyList<ContentRoute> GetAll()
         {
-            lock (_Lock)
+            _Lock.EnterReadLock();
+            try
             {
                 return _Routes.ToList().AsReadOnly();
+            }
+            finally
+            {
+                _Lock.ExitReadLock();
             }
         }
 
@@ -160,17 +166,22 @@
         /// </summary>
         /// <param name="path">URL path.</param>
         public void Remove(string path)
-        { 
+        {
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
 
             ContentRoute r = Get(path);
             if (r == null) return;
 
-            lock (_Lock)
+            _Lock.EnterWriteLock();
+            try
             {
                 _Routes.Remove(r);
             }
-                 
+            finally
+            {
+                _Lock.ExitWriteLock();
+            }
+
             return;
         }
 
@@ -182,12 +193,13 @@
         public ContentRoute Get(string path)
         {
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
-            
+
             path = path.ToLower();
             if (!path.StartsWith("/")) path = "/" + path;
             if (!path.EndsWith("/")) path = path + "/";
 
-            lock (_Lock)
+            _Lock.EnterReadLock();
+            try
             {
                 foreach (ContentRoute curr in _Routes)
                 {
@@ -203,6 +215,10 @@
 
                 return null;
             }
+            finally
+            {
+                _Lock.ExitReadLock();
+            }
         }
 
         /// <summary>
@@ -213,11 +229,12 @@
         public bool Exists(string path)
         {
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
-             
-            path = path.ToLower();
-            if (!path.StartsWith("/")) path = "/" + path; 
 
-            lock (_Lock)
+            path = path.ToLower();
+            if (!path.StartsWith("/")) path = "/" + path;
+
+            _Lock.EnterReadLock();
+            try
             {
                 foreach (ContentRoute curr in _Routes)
                 {
@@ -231,7 +248,11 @@
                     }
                 }
             }
-             
+            finally
+            {
+                _Lock.ExitReadLock();
+            }
+
             return false;
         }
 
@@ -250,7 +271,8 @@
             string dirPath = path;
             if (!dirPath.EndsWith("/")) dirPath = dirPath + "/";
 
-            lock (_Lock)
+            _Lock.EnterReadLock();
+            try
             {
                 foreach (ContentRoute curr in _Routes)
                 {
@@ -274,6 +296,10 @@
 
                 return false;
             }
+            finally
+            {
+                _Lock.ExitReadLock();
+            }
         }
 
         #endregion
@@ -283,19 +309,38 @@
         private void Add(ContentRoute route)
         {
             if (route == null) throw new ArgumentNullException(nameof(route));
-            
+
             route.Path = route.Path.ToLower();
             if (!route.Path.StartsWith("/")) route.Path = "/" + route.Path;
             if (route.IsDirectory && !route.Path.EndsWith("/")) route.Path = route.Path + "/";
 
-            if (Exists(route.Path))
-            { 
-                return;
-            }
-
-            lock (_Lock)
+            _Lock.EnterWriteLock();
+            try
             {
-                _Routes.Add(route); 
+                bool exists = false;
+                string checkPath = route.Path;
+                if (!checkPath.StartsWith("/")) checkPath = "/" + checkPath;
+
+                foreach (ContentRoute curr in _Routes)
+                {
+                    if (curr.IsDirectory)
+                    {
+                        if (checkPath.StartsWith(curr.Path.ToLower())) { exists = true; break; }
+                    }
+                    else
+                    {
+                        if (checkPath.Equals(curr.Path.ToLower())) { exists = true; break; }
+                    }
+                }
+
+                if (!exists)
+                {
+                    _Routes.Add(route);
+                }
+            }
+            finally
+            {
+                _Lock.ExitWriteLock();
             }
         }
 
@@ -333,6 +378,16 @@
             filePath = baseDirectory + filePath;
             filePath = filePath.Replace("+", " ").Replace("%20", " ");
 
+            string fullResolvedPath = Path.GetFullPath(filePath);
+            string fullBasePath = Path.GetFullPath(baseDirectory);
+            if (!fullResolvedPath.StartsWith(fullBasePath, StringComparison.OrdinalIgnoreCase))
+            {
+                Set404Response(ctx);
+                await ctx.Response.Send(ctx.Token).ConfigureAwait(false);
+                return;
+            }
+            filePath = fullResolvedPath;
+
             if (isDirectory && _DefaultFiles.Count > 0)
             {
                 foreach (string defaultFile in _DefaultFiles)
@@ -360,10 +415,18 @@
             if (ctx.Request.Method == HttpMethod.GET)
             {
                 FileStream fs = new FileStream(filePath, ContentFileMode, ContentFileAccess, ContentFileShare);
-                ctx.Response.StatusCode = 200;
-                ctx.Response.ContentLength = contentLength;
-                ctx.Response.ContentType = GetContentType(filePath);
-                await ctx.Response.Send(contentLength, fs, ctx.Token).ConfigureAwait(false);
+                try
+                {
+                    ctx.Response.StatusCode = 200;
+                    ctx.Response.ContentLength = contentLength;
+                    ctx.Response.ContentType = GetContentType(filePath);
+                    await ctx.Response.Send(contentLength, fs, ctx.Token).ConfigureAwait(false);
+                }
+                catch
+                {
+                    fs.Dispose();
+                    throw;
+                }
                 return;
             }
             else if (ctx.Request.Method == HttpMethod.HEAD)

@@ -50,6 +50,8 @@
         {
             get
             {
+                if (_Elements != null) return _Elements;
+
                 NameValueCollection ret = new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
                 string qs = Querystring;
                 if (!String.IsNullOrEmpty(qs))
@@ -72,7 +74,8 @@
                     }
                 }
 
-                return ret;
+                _Elements = ret;
+                return _Elements;
             }
         }
 
@@ -81,6 +84,7 @@
         #region Private-Members
 
         private string _FullUrl = null;
+        private NameValueCollection _Elements = null;
 
         #endregion
 

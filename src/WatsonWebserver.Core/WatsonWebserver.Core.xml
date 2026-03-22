@@ -561,6 +561,17 @@
             User-supplied metadata.
             </summary>
         </member>
+        <member name="M:WatsonWebserver.Core.HttpContextBase.Dispose">
+            <summary>
+            Dispose of resources.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.HttpContextBase.Dispose(System.Boolean)">
+            <summary>
+            Dispose of resources.
+            </summary>
+            <param name="disposing">Disposing.</param>
+        </member>
         <member name="T:WatsonWebserver.Core.HttpMethod">
             <summary>
             HTTP methods, i.e. GET, PUT, POST, DELETE, etc.
@@ -689,6 +700,7 @@
         <member name="P:WatsonWebserver.Core.HttpRequestBase.ChunkedTransfer">
             <summary>
             Indicates whether or not chunked transfer encoding was detected.
+            This property is specific to HTTP/1.1.  HTTP/2 and HTTP/3 use their own framing mechanisms.
             </summary>
         </member>
         <member name="P:WatsonWebserver.Core.HttpRequestBase.Gzip">
@@ -731,10 +743,22 @@
             Retrieve the request body as a string.  This will fully read the stream.
             </summary>
         </member>
+        <member name="M:WatsonWebserver.Core.HttpRequestBase.Dispose">
+            <summary>
+            Dispose of resources.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.HttpRequestBase.Dispose(System.Boolean)">
+            <summary>
+            Dispose of resources.
+            </summary>
+            <param name="disposing">Disposing.</param>
+        </member>
         <member name="M:WatsonWebserver.Core.HttpRequestBase.ReadChunk(System.Threading.CancellationToken)">
             <summary>
             For chunked transfer-encoded requests, read the next chunk.
             It is strongly recommended that you use the ChunkedTransfer parameter before invoking this method.
+            This method is specific to HTTP/1.1 chunked transfer encoding.
             </summary>
             <param name="token">Cancellation token useful for canceling the request.</param>
             <returns>Chunk.</returns>
@@ -817,7 +841,8 @@
         </member>
         <member name="P:WatsonWebserver.Core.HttpResponseBase.ChunkedTransfer">
             <summary>
-            Indicates whether or not chunked transfer encoding should be indicated in the response. 
+            Indicates whether or not chunked transfer encoding should be indicated in the response.
+            This property is specific to HTTP/1.1.  HTTP/2 and HTTP/3 use their own framing mechanisms.
             </summary>
         </member>
         <member name="P:WatsonWebserver.Core.HttpResponseBase.ServerSentEvents">
@@ -844,6 +869,17 @@
             <summary>
             Boolean indicating if the response has been sent.
             </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.HttpResponseBase.Dispose">
+            <summary>
+            Dispose of resources.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.HttpResponseBase.Dispose(System.Boolean)">
+            <summary>
+            Dispose of resources.
+            </summary>
+            <param name="disposing">Disposing.</param>
         </member>
         <member name="M:WatsonWebserver.Core.HttpResponseBase.Send(System.Threading.CancellationToken)">
             <summary>
@@ -889,6 +925,7 @@
             <summary>
             Send headers (if not already sent) and a chunk of data using chunked transfer-encoding.
             The connection will be kept in-tact unless isFinal is set to true.
+            This method is specific to HTTP/1.1 chunked transfer encoding.
             </summary>
             <param name="chunk">Chunk of data.</param>
             <param name="isFinal">Boolean indicating if this is the final chunk.</param>
@@ -3208,6 +3245,22 @@
         <member name="P:WatsonWebserver.Core.WebserverSettings.IOSettings.EnableKeepAlive">
             <summary>
             Flag indicating whether or not the server requests a persistent connection.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebserverSettings.IOSettings.MaxRequestBodySize">
+            <summary>
+            Maximum request body size in bytes.
+            A value of zero or less disables this check.
+            Default is 0 (unlimited).
+            This limit applies to Content-Length validation before reading the body.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebserverSettings.IOSettings.MaxHeaderCount">
+            <summary>
+            Maximum number of headers allowed in a request.
+            A value of zero or less disables this check.
+            Default is 64.
+            This property is only used by WatsonWebserver.Lite.
             </summary>
         </member>
         <member name="M:WatsonWebserver.Core.WebserverSettings.IOSettings.#ctor">

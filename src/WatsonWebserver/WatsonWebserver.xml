@@ -277,6 +277,12 @@
         <member name="M:WatsonWebserver.HttpResponse.SendEvent(WatsonWebserver.Core.ServerSentEvent,System.Boolean,System.Threading.CancellationToken)">
             <inheritdoc />
         </member>
+        <member name="M:WatsonWebserver.HttpResponse.Dispose(System.Boolean)">
+            <summary>
+            Dispose of resources.
+            </summary>
+            <param name="disposing">Disposing.</param>
+        </member>
         <member name="T:WatsonWebserver.Webserver">
             <summary>
             Watson webserver.

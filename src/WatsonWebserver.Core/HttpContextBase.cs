@@ -11,7 +11,7 @@
     /// <summary>
     /// HTTP context including both request and response.
     /// </summary>
-    public class HttpContextBase
+    public class HttpContextBase : IDisposable
     {
         #region Public-Members
 
@@ -68,7 +68,13 @@
         /// </summary>
         [JsonPropertyOrder(6)]
         [JsonIgnore]
-        public CancellationToken Token { get; set; } = _TokenSource.Token;
+        public CancellationToken Token
+        {
+            get
+            {
+                return _TokenSource != null ? _TokenSource.Token : CancellationToken.None;
+            }
+        }
 
         /// <summary>
         /// The HTTP response that will be sent.  This object is preconstructed on your behalf and can be modified directly.
@@ -86,7 +92,8 @@
 
         #region Private-Members
 
-        private static CancellationTokenSource _TokenSource = new CancellationTokenSource();
+        private CancellationTokenSource _TokenSource = new CancellationTokenSource();
+        private bool _Disposed = false;
 
         #endregion
 
@@ -95,6 +102,37 @@
         #endregion
 
         #region Public-Methods
+
+        /// <summary>
+        /// Dispose of resources.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Dispose of resources.
+        /// </summary>
+        /// <param name="disposing">Disposing.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_Disposed)
+            {
+                if (disposing)
+                {
+                    if (_TokenSource != null)
+                    {
+                        _TokenSource.Cancel();
+                        _TokenSource.Dispose();
+                        _TokenSource = null;
+                    }
+                }
+
+                _Disposed = true;
+            }
+        }
 
         #endregion
 

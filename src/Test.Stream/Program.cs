@@ -52,6 +52,12 @@
             _Server.Events.Logger = Console.WriteLine;
             _Server.Start();
 
+            Console.WriteLine("");
+            Console.WriteLine("Available routes (all via default handler):");
+            Console.WriteLine("  GET   /watson.jpg  - Streams watson.jpg as response");
+            Console.WriteLine("  POST  (any path)   - Receives file upload, saves to ./uploads/");
+            Console.WriteLine("");
+
             if (!Directory.Exists(_Directory)) Directory.CreateDirectory(_Directory);
 
             Console.WriteLine("Use GET /watson.jpg");

@@ -62,6 +62,12 @@
             Console.WriteLine("Listening on " + _Settings.Prefix);
             _Server.Start();
 
+            Console.WriteLine("");
+            Console.WriteLine("Available routes (all via default handler):");
+            Console.WriteLine("  GET/POST/PUT  (any path)  - Reads request body in configured mode");
+            Console.WriteLine("  Toggle mode via menu: 'text', 'bytes', or 'json'");
+            Console.WriteLine("");
+
             bool runForever = true;
             while (runForever)
             {

@@ -56,6 +56,14 @@
             Console.WriteLine("Use /img/watson.jpg or /txt/test.txt");
             _Server.Start();
 
+            Console.WriteLine("");
+            Console.WriteLine("Available routes (all via default handler):");
+            Console.WriteLine("  POST/PUT  (any path)       - Reads chunked request body and echoes it");
+            Console.WriteLine("  GET       /img/watson.jpg  - Returns image via chunked transfer encoding");
+            Console.WriteLine("  GET       /txt/test.txt    - Returns text via chunked transfer encoding");
+            Console.WriteLine("  GET       (any other)      - Returns default response");
+            Console.WriteLine("");
+
             Console.WriteLine("Press ENTER to exit");
             Console.ReadLine();
         }

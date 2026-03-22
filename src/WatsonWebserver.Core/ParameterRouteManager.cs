@@ -6,6 +6,7 @@
     using System.Linq;
     using System.Text;
     using System.Text.RegularExpressions;
+    using System.Threading;
     using System.Threading.Tasks;
     using UrlMatcher;
     using WatsonWebserver.Core.OpenApi;
@@ -23,7 +24,7 @@
 
         #region Private-Members
 
-        private readonly object _Lock = new object();
+        private readonly ReaderWriterLockSlim _Lock = new ReaderWriterLockSlim();
         private Dictionary<ParameterRoute, Func<HttpContextBase, Task>> _Routes = new Dictionary<ParameterRoute, Func<HttpContextBase, Task>>();
 
         #endregion
@@ -64,10 +65,15 @@
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
             if (handler == null) throw new ArgumentNullException(nameof(handler));
 
-            lock (_Lock)
+            _Lock.EnterWriteLock();
+            try
             {
                 ParameterRoute pr = new ParameterRoute(method, path, handler, exceptionHandler, guid, metadata, openApiMetadata);
                 _Routes.Add(pr, handler);
+            }
+            finally
+            {
+                _Lock.ExitWriteLock();
             }
         }
 
@@ -77,9 +83,14 @@
         /// <returns>List of parameter routes.</returns>
         public IReadOnlyList<ParameterRoute> GetAll()
         {
-            lock (_Lock)
+            _Lock.EnterReadLock();
+            try
             {
                 return _Routes.Keys.ToList().AsReadOnly();
+            }
+            finally
+            {
+                _Lock.ExitReadLock();
             }
         }
 
@@ -92,7 +103,8 @@
         {
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
 
-            lock (_Lock)
+            _Lock.EnterWriteLock();
+            try
             {
                 if (_Routes.Any(r => r.Key.Method == method && r.Key.Path.Equals(path)))
                 {
@@ -106,6 +118,10 @@
                     }
                 }
             }
+            finally
+            {
+                _Lock.ExitWriteLock();
+            }
         }
 
         /// <summary>
@@ -118,12 +134,17 @@
         {
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
 
-            lock (_Lock)
+            _Lock.EnterReadLock();
+            try
             {
                 if (_Routes.Any(r => r.Key.Method == method && r.Key.Path.Equals(path)))
                 {
                     return _Routes.First(r => r.Key.Method == method && r.Key.Path.Equals(path)).Key;
                 }
+            }
+            finally
+            {
+                _Lock.ExitReadLock();
             }
 
             return null;
@@ -139,9 +160,14 @@
         {
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
 
-            lock (_Lock)
+            _Lock.EnterReadLock();
+            try
             {
                 return _Routes.Any(r => r.Key.Method == method && r.Key.Path.Equals(path));
+            }
+            finally
+            {
+                _Lock.ExitReadLock();
             }
         }
 
@@ -161,19 +187,24 @@
 
             string consolidatedPath = BuildConsolidatedPath(method, path);
 
-            lock (_Lock)
+            _Lock.EnterReadLock();
+            try
             {
                 foreach (KeyValuePair<ParameterRoute, Func<HttpContextBase, Task>> route in _Routes)
                 {
                     if (Matcher.Match(
                         consolidatedPath,
-                        BuildConsolidatedPath(route.Key.Method, route.Key.Path), 
+                        BuildConsolidatedPath(route.Key.Method, route.Key.Path),
                         out vals))
                     {
                         pr = route.Key;
                         return route.Value;
                     }
                 }
+            }
+            finally
+            {
+                _Lock.ExitReadLock();
             }
 
             return null;

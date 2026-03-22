@@ -382,8 +382,6 @@
                         ctx.Request.Method.ToString() + " " + ctx.Request.Url.Full);
                 }
 
-                Func<HttpContext, Task> handler = null;
-
                 #endregion
 
                 #region Check-Access-Control
@@ -452,147 +450,8 @@
 
                 if (Routes.PreAuthentication != null)
                 {
-                    #region Static-Routes
-
-                    if (Routes.PreAuthentication.Static != null)
-                    {
-                        handler = Routes.PreAuthentication.Static.Match(ctx.Request.Method, ctx.Request.Url.RawWithoutQuery, out StaticRoute sr);
-                        if (handler != null)
-                        {
-                            if (Settings.Debug.Routing)
-                            {
-                                Events.Logger?.Invoke(
-                                    _Header + "pre-auth static route for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
-                                    ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
-                            }
-
-                            ctx.RouteType = RouteTypeEnum.Static;
-                            ctx.Route = sr;
-
-                            try
-                            {
-                                await handler(ctx).ConfigureAwait(false);
-                            }
-                            catch (Exception e)
-                            {
-                                if (sr.ExceptionHandler != null) await sr.ExceptionHandler(ctx, e);
-                                else throw;
-                            }
-
-                            if (!ctx.Response.ResponseSent)
-                                throw new InvalidOperationException("Pre-authentication static route for " + ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery + " did not send a response to the HTTP request.");
-                            return;
-                        }
-                    }
-
-                    #endregion
-
-                    #region Content-Routes
-
-                    if (Routes.PreAuthentication.Content != null &&
-                        (ctx.Request.Method == HttpMethod.GET || ctx.Request.Method == HttpMethod.HEAD))
-                    {
-                        if (Routes.PreAuthentication.Content.Match(ctx.Request.Url.RawWithoutQuery, out ContentRoute cr))
-                        {
-                            if (Settings.Debug.Routing)
-                            {
-                                Events.Logger?.Invoke(
-                                    _Header + "pre-auth content route for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
-                                    ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
-                            }
-
-                            ctx.RouteType = RouteTypeEnum.Content;
-                            ctx.Route = cr;
-
-                            try
-                            {
-                                await Routes.PreAuthentication.Content.Handler(ctx).ConfigureAwait(false);
-                            }
-                            catch (Exception e)
-                            {
-                                if (cr.ExceptionHandler != null) await cr.ExceptionHandler(ctx, e);
-                                else throw;
-                            }
-
-                            if (!ctx.Response.ResponseSent)
-                                throw new InvalidOperationException("Pre-authentication content route for " + ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery + " did not send a response to the HTTP request.");
-                            return;
-                        }
-                    }
-
-                    #endregion
-
-                    #region Parameter-Routes
-
-                    if (Routes.PreAuthentication.Parameter != null)
-                    {
-                        handler = Routes.PreAuthentication.Parameter.Match(ctx.Request.Method, ctx.Request.Url.RawWithoutQuery, out NameValueCollection parameters, out ParameterRoute pr);
-                        if (handler != null)
-                        {
-                            ctx.Request.Url.Parameters = parameters;
-
-                            if (Settings.Debug.Routing)
-                            {
-                                Events.Logger?.Invoke(
-                                    _Header + "pre-auth parameter route for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
-                                    ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
-                            }
-
-                            ctx.RouteType = RouteTypeEnum.Parameter;
-                            ctx.Route = pr;
-
-                            try
-                            {
-                                await handler(ctx).ConfigureAwait(false);
-                            }
-                            catch (Exception e)
-                            {
-                                if (pr.ExceptionHandler != null) await pr.ExceptionHandler(ctx, e);
-                                else throw;
-                            }
-
-                            if (!ctx.Response.ResponseSent)
-                                throw new InvalidOperationException("Pre-authentication parameter route for " + ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery + " did not send a response to the HTTP request.");
-                            return;
-                        }
-                    }
-
-                    #endregion
-
-                    #region Dynamic-Routes
-
-                    if (Routes.PreAuthentication.Dynamic != null)
-                    {
-                        handler = Routes.PreAuthentication.Dynamic.Match(ctx.Request.Method, ctx.Request.Url.RawWithoutQuery, out DynamicRoute dr);
-                        if (handler != null)
-                        {
-                            if (Settings.Debug.Routing)
-                            {
-                                Events.Logger?.Invoke(
-                                    _Header + "pre-auth dynamic route for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
-                                    ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
-                            }
-
-                            ctx.RouteType = RouteTypeEnum.Dynamic;
-                            ctx.Route = dr;
-
-                            try
-                            {
-                                await handler(ctx).ConfigureAwait(false);
-                            }
-                            catch (Exception e)
-                            {
-                                if (dr.ExceptionHandler != null) await dr.ExceptionHandler(ctx, e);
-                                else throw;
-                            }
-
-                            if (!ctx.Response.ResponseSent)
-                                throw new InvalidOperationException("Pre-authentication dynamic route for " + ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery + " did not send a response to the HTTP request.");
-                            return;
-                        }
-                    }
-
-                    #endregion
+                    if (await ProcessRoutingGroup(ctx, Routes.PreAuthentication, "pre-auth").ConfigureAwait(false))
+                        return;
                 }
 
                 #endregion
@@ -624,147 +483,8 @@
 
                 if (Routes.PostAuthentication != null)
                 {
-                    #region Static-Routes
-
-                    if (Routes.PostAuthentication.Static != null)
-                    {
-                        handler = Routes.PostAuthentication.Static.Match(ctx.Request.Method, ctx.Request.Url.RawWithoutQuery, out StaticRoute sr);
-                        if (handler != null)
-                        {
-                            if (Settings.Debug.Routing)
-                            {
-                                Events.Logger?.Invoke(
-                                    _Header + "post-auth static route for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
-                                    ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
-                            }
-
-                            ctx.RouteType = RouteTypeEnum.Static;
-                            ctx.Route = sr;
-
-                            try
-                            {
-                                await handler(ctx).ConfigureAwait(false);
-                            }
-                            catch (Exception e)
-                            {
-                                if (sr.ExceptionHandler != null) await sr.ExceptionHandler(ctx, e);
-                                else throw;
-                            }
-
-                            if (!ctx.Response.ResponseSent)
-                                throw new InvalidOperationException("Post-authentication static route for " + ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery + " did not send a response to the HTTP request.");
-                            return;
-                        }
-                    }
-
-                    #endregion
-
-                    #region Content-Routes
-
-                    if (Routes.PostAuthentication.Content != null &&
-                        (ctx.Request.Method == HttpMethod.GET || ctx.Request.Method == HttpMethod.HEAD))
-                    {
-                        if (Routes.PostAuthentication.Content.Match(ctx.Request.Url.RawWithoutQuery, out ContentRoute cr))
-                        {
-                            if (Settings.Debug.Routing)
-                            {
-                                Events.Logger?.Invoke(
-                                    _Header + "post-auth content route for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
-                                    ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
-                            }
-
-                            ctx.RouteType = RouteTypeEnum.Content;
-                            ctx.Route = cr;
-
-                            try
-                            {
-                                await Routes.PreAuthentication.Content.Handler(ctx).ConfigureAwait(false);
-                            }
-                            catch (Exception e)
-                            {
-                                if (cr.ExceptionHandler != null) await cr.ExceptionHandler(ctx, e);
-                                else throw;
-                            }
-
-                            if (!ctx.Response.ResponseSent)
-                                throw new InvalidOperationException("Post-authentication content route for " + ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery + " did not send a response to the HTTP request.");
-                            return;
-                        }
-                    }
-
-                    #endregion
-
-                    #region Parameter-Routes
-
-                    if (Routes.PostAuthentication.Parameter != null)
-                    {
-                        handler = Routes.PostAuthentication.Parameter.Match(ctx.Request.Method, ctx.Request.Url.RawWithoutQuery, out NameValueCollection parameters, out ParameterRoute pr);
-                        if (handler != null)
-                        {
-                            ctx.Request.Url.Parameters = parameters;
-
-                            if (Settings.Debug.Routing)
-                            {
-                                Events.Logger?.Invoke(
-                                    _Header + "post-auth parameter route for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
-                                    ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
-                            }
-
-                            ctx.RouteType = RouteTypeEnum.Parameter;
-                            ctx.Route = pr;
-
-                            try
-                            {
-                                await handler(ctx).ConfigureAwait(false);
-                            }
-                            catch (Exception e)
-                            {
-                                if (pr.ExceptionHandler != null) await pr.ExceptionHandler(ctx, e);
-                                else throw;
-                            }
-
-                            if (!ctx.Response.ResponseSent)
-                                throw new InvalidOperationException("Post-authentication parameter route for " + ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery + " did not send a response to the HTTP request.");
-                            return;
-                        }
-                    }
-
-                    #endregion
-
-                    #region Dynamic-Routes
-
-                    if (Routes.PostAuthentication.Dynamic != null)
-                    {
-                        handler = Routes.PostAuthentication.Dynamic.Match(ctx.Request.Method, ctx.Request.Url.RawWithoutQuery, out DynamicRoute dr);
-                        if (handler != null)
-                        {
-                            if (Settings.Debug.Routing)
-                            {
-                                Events.Logger?.Invoke(
-                                    _Header + "post-auth dynamic route for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
-                                    ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
-                            }
-
-                            ctx.RouteType = RouteTypeEnum.Dynamic;
-                            ctx.Route = dr;
-
-                            try
-                            {
-                                await handler(ctx).ConfigureAwait(false);
-                            }
-                            catch (Exception e)
-                            {
-                                if (dr.ExceptionHandler != null) await dr.ExceptionHandler(ctx, e);
-                                else throw;
-                            }
-
-                            if (!ctx.Response.ResponseSent)
-                                throw new InvalidOperationException("Post-authentication dynamic route for " + ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery + " did not send a response to the HTTP request.");
-                            return;
-                        }
-                    }
-
-                    #endregion
+                    if (await ProcessRoutingGroup(ctx, Routes.PostAuthentication, "post-auth").ConfigureAwait(false))
+                        return;
                 }
 
                 #endregion
@@ -871,11 +591,175 @@
                     }
 
                     if (ctx.Response.ContentLength > 0) Statistics.IncrementSentPayloadBytes(Convert.ToInt64(ctx.Response.ContentLength));
-                    Routes.PostRouting?.Invoke(ctx).ConfigureAwait(false);
+                    if (Routes.PostRouting != null)
+                    {
+                        try
+                        {
+                            await Routes.PostRouting.Invoke(ctx).ConfigureAwait(false);
+                        }
+                        catch (Exception)
+                        {
+                            // PostRouting exceptions should not mask the original response
+                        }
+                    }
+
+                    ctx.Dispose();
                 }
             }
 
             #endregion
+        }
+
+        private async Task<bool> ProcessRoutingGroup(
+            HttpContextBase ctx,
+            RoutingGroup group,
+            string authPhase)
+        {
+            Func<HttpContextBase, Task> handler = null;
+
+            #region Static-Routes
+
+            if (group.Static != null)
+            {
+                handler = group.Static.Match(ctx.Request.Method, ctx.Request.Url.RawWithoutQuery, out StaticRoute sr);
+                if (handler != null)
+                {
+                    if (Settings.Debug.Routing)
+                    {
+                        Events.Logger?.Invoke(
+                            _Header + authPhase + " static route for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
+                            ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
+                    }
+
+                    ctx.RouteType = RouteTypeEnum.Static;
+                    ctx.Route = sr;
+
+                    try
+                    {
+                        await handler(ctx).ConfigureAwait(false);
+                    }
+                    catch (Exception e)
+                    {
+                        if (sr.ExceptionHandler != null) await sr.ExceptionHandler(ctx, e);
+                        else throw;
+                    }
+
+                    if (!ctx.Response.ResponseSent)
+                        throw new InvalidOperationException(authPhase + " static route for " + ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery + " did not send a response to the HTTP request.");
+                    return true;
+                }
+            }
+
+            #endregion
+
+            #region Content-Routes
+
+            if (group.Content != null &&
+                (ctx.Request.Method == HttpMethod.GET || ctx.Request.Method == HttpMethod.HEAD))
+            {
+                if (group.Content.Match(ctx.Request.Url.RawWithoutQuery, out ContentRoute cr))
+                {
+                    if (Settings.Debug.Routing)
+                    {
+                        Events.Logger?.Invoke(
+                            _Header + authPhase + " content route for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
+                            ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
+                    }
+
+                    ctx.RouteType = RouteTypeEnum.Content;
+                    ctx.Route = cr;
+
+                    try
+                    {
+                        await group.Content.Handler(ctx).ConfigureAwait(false);
+                    }
+                    catch (Exception e)
+                    {
+                        if (cr.ExceptionHandler != null) await cr.ExceptionHandler(ctx, e);
+                        else throw;
+                    }
+
+                    if (!ctx.Response.ResponseSent)
+                        throw new InvalidOperationException(authPhase + " content route for " + ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery + " did not send a response to the HTTP request.");
+                    return true;
+                }
+            }
+
+            #endregion
+
+            #region Parameter-Routes
+
+            if (group.Parameter != null)
+            {
+                handler = group.Parameter.Match(ctx.Request.Method, ctx.Request.Url.RawWithoutQuery, out NameValueCollection parameters, out ParameterRoute pr);
+                if (handler != null)
+                {
+                    ctx.Request.Url.Parameters = parameters;
+
+                    if (Settings.Debug.Routing)
+                    {
+                        Events.Logger?.Invoke(
+                            _Header + authPhase + " parameter route for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
+                            ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
+                    }
+
+                    ctx.RouteType = RouteTypeEnum.Parameter;
+                    ctx.Route = pr;
+
+                    try
+                    {
+                        await handler(ctx).ConfigureAwait(false);
+                    }
+                    catch (Exception e)
+                    {
+                        if (pr.ExceptionHandler != null) await pr.ExceptionHandler(ctx, e);
+                        else throw;
+                    }
+
+                    if (!ctx.Response.ResponseSent)
+                        throw new InvalidOperationException(authPhase + " parameter route for " + ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery + " did not send a response to the HTTP request.");
+                    return true;
+                }
+            }
+
+            #endregion
+
+            #region Dynamic-Routes
+
+            if (group.Dynamic != null)
+            {
+                handler = group.Dynamic.Match(ctx.Request.Method, ctx.Request.Url.RawWithoutQuery, out DynamicRoute dr);
+                if (handler != null)
+                {
+                    if (Settings.Debug.Routing)
+                    {
+                        Events.Logger?.Invoke(
+                            _Header + authPhase + " dynamic route for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
+                            ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
+                    }
+
+                    ctx.RouteType = RouteTypeEnum.Dynamic;
+                    ctx.Route = dr;
+
+                    try
+                    {
+                        await handler(ctx).ConfigureAwait(false);
+                    }
+                    catch (Exception e)
+                    {
+                        if (dr.ExceptionHandler != null) await dr.ExceptionHandler(ctx, e);
+                        else throw;
+                    }
+
+                    if (!ctx.Response.ResponseSent)
+                        throw new InvalidOperationException(authPhase + " dynamic route for " + ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery + " did not send a response to the HTTP request.");
+                    return true;
+                }
+            }
+
+            #endregion
+
+            return false;
         }
 
         private void ClientDisconnected(object sender, ClientDisconnectedEventArgs args)

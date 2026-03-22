@@ -2,11 +2,46 @@
 
 ## Current Version
 
+v6.6.0
+
+### Bug Fixes
+- Fixed post-authentication content routes calling pre-authentication handler (authentication bypass)
+- Fixed `PostRouting` handler not being awaited (fire-and-forget, exceptions lost)
+- Fixed static `CancellationTokenSource` in `HttpContextBase` shared across all contexts (now per-instance)
+
+### Security
+- Added directory traversal protection in content route file serving (`Path.GetFullPath` validation)
+- Added `MaxRequestBodySize` setting (default 0 = unlimited, set > 0 to enforce)
+- Added `MaxHeaderCount` setting for Lite (default 64, set 0 to disable)
+
+### Resource Management
+- Added `IDisposable` to `HttpContextBase`, `HttpRequestBase`, and `HttpResponseBase` with proper cleanup
+- Fixed `MemoryStream` leak in `Send(string)` and `Send(byte[])` on error paths (both Watson and Lite)
+- Fixed `HttpListenerContext` not being closed on early failure paths in Watson
+
+### Performance
+- Replaced `AppendBytes()` O(n^2) pattern in Lite with `MemoryStream`/`StringBuilder` for body reading and header building
+- Cached `QueryDetails.Elements` (parsed once, reused on subsequent access)
+- Consolidated path normalization in route managers (eliminated redundant `ToLower`/prefix/suffix operations)
+- Replaced polling loop (`Task.Delay(100)`) with `SemaphoreSlim` for MaxRequests backpressure in Watson
+
+### Concurrency
+- Replaced exclusive `lock` with `ReaderWriterLockSlim` in all route managers (Static, Parameter, Dynamic, Content)
+- Fixed TOCTOU race condition in route addition (Exists + Add combined into single atomic write lock)
+
+### Architecture
+- Extracted duplicated routing pipeline (~300 lines x2) into `ProcessRoutingGroup` method in both Watson and Lite
+- Added HTTP/1.1-specific annotations to `ChunkedTransfer`, `ReadChunk()`, and `SendChunk()` (prep for HTTP/2)
+
+### Breaking Changes
+- `HttpContextBase.Token` / `TokenSource` is now per-instance instead of static (may affect code that compared tokens across contexts)
+- `QueryDetails.Elements` now returns a cached instance (code that modified the returned collection will affect subsequent reads)
+
+## Previous Versions
+
 v6.5.x
 
 - OpenAPI and Swagger support, refer to `Test.OpenApi` project and `README.md`
-
-## Previous Versions
 
 v6.4.x
 

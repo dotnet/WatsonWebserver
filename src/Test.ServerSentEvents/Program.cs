@@ -52,6 +52,12 @@
             Console.WriteLine("Use /txt/test.txt");
             _Server.Start();
 
+            Console.WriteLine("");
+            Console.WriteLine("Available routes (all via default handler):");
+            Console.WriteLine("  GET  /txt/test.txt   - Streams content via Server-Sent Events");
+            Console.WriteLine("  GET  (any other)     - Returns instructions");
+            Console.WriteLine("");
+
             Console.WriteLine("Press ENTER to exit");
             Console.ReadLine();
         }
