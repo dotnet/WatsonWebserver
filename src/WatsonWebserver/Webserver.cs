@@ -1,15 +1,29 @@
 ﻿namespace WatsonWebserver
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Collections.Specialized;
+    using System.IO;
     using System.Linq;
     using System.Net;
+    using System.Net.Security;
+    using System.Net.Quic;
+    using System.Net.Sockets;
     using System.Reflection;
+    using System.Security.Authentication;
+    using System.Security.Cryptography.X509Certificates;
     using System.Threading;
     using System.Threading.Tasks;
     using System.Text.Json.Serialization;
+    using System.Runtime.Versioning;
+    using WatsonWebserver.Http1;
+    using WatsonWebserver.Http2;
+    using WatsonWebserver.Http3;
     using WatsonWebserver.Core;
+    using WatsonWebserver.Core.Http1;
+    using WatsonWebserver.Core.Http2;
+    using WatsonWebserver.Core.Http3;
     using System.Runtime.InteropServices;
     using System.Text;
 
@@ -27,7 +41,7 @@
         {
             get
             {
-                return (_HttpListener != null) ? _HttpListener.IsListening : false;
+                return (_TcpListener != null) ? _IsListening : false;
             }
         }
 
@@ -42,18 +56,46 @@
             }
         }
 
+        /// <summary>
+        /// Indicates whether the current transport supports HTTP/2.
+        /// </summary>
+        protected override bool SupportsHttp2
+        {
+            get
+            {
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Indicates whether the current transport supports HTTP/3.
+        /// </summary>
+        protected override bool SupportsHttp3
+        {
+            get
+            {
+                return Http3RuntimeDetector.Detect().IsAvailable;
+            }
+        }
+
         #endregion
 
         #region Private-Members
 
         private readonly string _Header = "[Webserver] ";
-        private HttpListener _HttpListener = new HttpListener();
+        private TcpListener _TcpListener = null;
+        private QuicListener _QuicListener = null;
         private int _RequestCount = 0;
         private SemaphoreSlim _RequestSemaphore = null;
+        private bool _IsListening = false;
 
         private CancellationTokenSource _TokenSource = new CancellationTokenSource();
         private CancellationToken _Token;
         private Task _AcceptConnections = null;
+        private Task _AcceptQuicConnections = null;
+        private readonly ConcurrentBag<HttpContext> _HttpContextPool = new ConcurrentBag<HttpContext>();
+        private readonly ConcurrentBag<HttpRequest> _HttpRequestPool = new ConcurrentBag<HttpRequest>();
+        private readonly ConcurrentBag<HttpResponse> _HttpResponsePool = new ConcurrentBag<HttpResponse>();
 
         #endregion
 
@@ -99,7 +141,10 @@
         /// <param name="token">Cancellation token useful for canceling the server.</param>
         public override void Start(CancellationToken token = default)
         {
-            if (_HttpListener != null && _HttpListener.IsListening) throw new InvalidOperationException("WatsonWebserver is already listening.");
+            if (_TcpListener != null && _IsListening) throw new InvalidOperationException("WatsonWebserver is already listening.");
+            NormalizeProtocolSettingsForCurrentRuntime();
+            ValidateSettings();
+            if (Settings.Ssl.Enable && Settings.Ssl.SslCertificate == null) throw new WebserverConfigurationException("SSL is enabled but no certificate is configured. Set Settings.Ssl.SslCertificate or PfxCertificateFile.");
 
             Statistics = new WebserverStatistics();
 
@@ -107,9 +152,16 @@
             _Token = token;
             _RequestSemaphore = new SemaphoreSlim(Settings.IO.MaxRequests, Settings.IO.MaxRequests);
 
-            _HttpListener = new HttpListener();
-            _HttpListener.Prefixes.Add(Settings.Prefix);
-            _HttpListener.Start();
+            _TcpListener = new TcpListener(ResolveBindIpAddress(Settings.Hostname), Settings.Port);
+            _TcpListener.Start();
+
+            if (Settings.Protocols.EnableHttp3 && (OperatingSystem.IsWindows() || OperatingSystem.IsLinux() || OperatingSystem.IsMacOS()))
+            {
+                _QuicListener = BuildQuicListenerAsync(_Token).GetAwaiter().GetResult();
+                _AcceptQuicConnections = StartQuicAcceptLoop();
+            }
+
+            _IsListening = true;
 
             _AcceptConnections = Task.Run(() => AcceptConnections(_Token), _Token);
 
@@ -123,7 +175,10 @@
         /// <returns>Task.</returns>
         public override Task StartAsync(CancellationToken token = default)
         {
-            if (_HttpListener != null && _HttpListener.IsListening) throw new InvalidOperationException("WatsonWebserver is already listening.");
+            if (_TcpListener != null && _IsListening) throw new InvalidOperationException("WatsonWebserver is already listening.");
+            NormalizeProtocolSettingsForCurrentRuntime();
+            ValidateSettings();
+            if (Settings.Ssl.Enable && Settings.Ssl.SslCertificate == null) throw new WebserverConfigurationException("SSL is enabled but no certificate is configured. Set Settings.Ssl.SslCertificate or PfxCertificateFile.");
 
             Statistics = new WebserverStatistics();
 
@@ -131,15 +186,11 @@
             _Token = token;
             _RequestSemaphore = new SemaphoreSlim(Settings.IO.MaxRequests, Settings.IO.MaxRequests);
 
-            _HttpListener = new HttpListener();
-            _HttpListener.Prefixes.Add(Settings.Prefix);
-            _HttpListener.Start();
+            _TcpListener = new TcpListener(ResolveBindIpAddress(Settings.Hostname), Settings.Port);
+            _TcpListener.Start();
+            _IsListening = true;
 
-            _AcceptConnections = Task.Run(() => AcceptConnections(_Token), _Token);
-
-            Events.HandleServerStarted(this, EventArgs.Empty);
-
-            return _AcceptConnections;
+            return StartTransportLoopsAsync();
         }
 
         /// <summary>
@@ -147,11 +198,18 @@
         /// </summary>
         public override void Stop()
         {
-            if (!_HttpListener.IsListening) throw new InvalidOperationException("WatsonWebserver is already stopped.");
+            if (!_IsListening) throw new InvalidOperationException("WatsonWebserver is already stopped.");
 
-            if (_HttpListener != null && _HttpListener.IsListening)
+            if (_TcpListener != null && _IsListening)
             {
-                _HttpListener.Stop();
+                _TcpListener.Stop();
+                _IsListening = false;
+            }
+
+            if (_QuicListener != null && (OperatingSystem.IsWindows() || OperatingSystem.IsLinux() || OperatingSystem.IsMacOS()))
+            {
+                _QuicListener.DisposeAsync().AsTask().GetAwaiter().GetResult();
+                _QuicListener = null;
             }
 
             if (_TokenSource != null && !_TokenSource.IsCancellationRequested)
@@ -164,6 +222,12 @@
 
         #region Private-Methods
 
+        private void NormalizeProtocolSettingsForCurrentRuntime()
+        {
+            Http3RuntimeAvailability availability = Http3RuntimeDetector.Detect();
+            WebserverSettingsValidator.NormalizeForRuntime(Settings, availability, Events.Logger);
+        }
+
         /// <summary>
         /// Tear down the server and dispose of background workers.
         /// Do not use this object after disposal.
@@ -172,11 +236,9 @@
         {
             if (disposing)
             {
-                if (_HttpListener != null && _HttpListener.IsListening)
+                if (_TcpListener != null && _IsListening)
                 {
                     Stop();
-
-                    _HttpListener.Close();
                 }
 
                 Events.HandleServerDisposing(this, EventArgs.Empty);
@@ -187,11 +249,26 @@
                     _RequestSemaphore = null;
                 }
 
-                _HttpListener = null;
+                _TcpListener = null;
+                _QuicListener = null;
                 Settings = null;
                 _TokenSource = null;
                 _AcceptConnections = null;
+                _AcceptQuicConnections = null;
             }
+        }
+
+        private async Task StartTransportLoopsAsync()
+        {
+            if (Settings.Protocols.EnableHttp3 && (OperatingSystem.IsWindows() || OperatingSystem.IsLinux() || OperatingSystem.IsMacOS()))
+            {
+                _QuicListener = await BuildQuicListenerAsync(_Token).ConfigureAwait(false);
+                _AcceptQuicConnections = StartQuicAcceptLoop();
+            }
+
+            _AcceptConnections = Task.Run(() => AcceptConnections(_Token), _Token);
+            Events.HandleServerStarted(this, EventArgs.Empty);
+            await _AcceptConnections.ConfigureAwait(false);
         }
 
         private async Task AcceptConnections(CancellationToken token)
@@ -200,256 +277,10 @@
             {
                 #region Process-Requests
 
-                while (_HttpListener.IsListening)
+                while (_IsListening)
                 {
-                    await _RequestSemaphore.WaitAsync(token).ConfigureAwait(false);
-
-                    HttpListenerContext listenerCtx = await _HttpListener.GetContextAsync().ConfigureAwait(false);
-                    listenerCtx.Response.KeepAlive = Settings.IO.EnableKeepAlive;
-
-                    Interlocked.Increment(ref _RequestCount);
-                    HttpContext ctx = null;
-
-                    Task unawaited = Task.Run(async () =>
-                    {
-                        try
-                        {
-                            #region Build-Context
-
-                            Events.HandleConnectionReceived(this, new ConnectionEventArgs(
-                                listenerCtx.Request.RemoteEndPoint.Address.ToString(),
-                                listenerCtx.Request.RemoteEndPoint.Port));
-
-                            ctx = new HttpContext(listenerCtx, Settings, Events, Serializer);
-
-                            Events.HandleRequestReceived(this, new RequestEventArgs(ctx));
-
-                            if (Settings.Debug.Requests)
-                            {
-                                Events.Logger?.Invoke(
-                                    _Header + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
-                                    ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
-                            }
-
-                            Statistics.IncrementRequestCounter(ctx.Request.Method);
-                            Statistics.IncrementReceivedPayloadBytes(ctx.Request.ContentLength);
-
-                            #endregion
-
-                            #region Check-Access-Control
-
-                            if (!Settings.AccessControl.Permit(ctx.Request.Source.IpAddress))
-                            {
-                                Events.HandleRequestDenied(this, new RequestEventArgs(ctx));
-
-                                if (Settings.Debug.AccessControl)
-                                {
-                                    Events.Logger?.Invoke(_Header + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " denied due to access control");
-                                }
-
-                                listenerCtx.Response.StatusCode = 403;
-                                listenerCtx.Response.Close();
-                                return;
-                            }
-
-                            #endregion
-
-                            #region Preflight-Handler
-
-                            if (ctx.Request.Method == HttpMethod.OPTIONS)
-                            {
-                                if (Routes.Preflight != null)
-                                {
-                                    if (Settings.Debug.Routing)
-                                    {
-                                        Events.Logger?.Invoke(
-                                            _Header + "preflight route for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
-                                            ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
-                                    }
-
-                                    await Routes.Preflight(ctx).ConfigureAwait(false);
-                                    if (!ctx.Response.ResponseSent)
-                                        throw new InvalidOperationException("Preflight route for " + ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery + " did not send a response to the HTTP request.");
-                                    return;
-                                }
-                            }
-
-                            #endregion
-
-                            #region Pre-Routing-Handler
-
-                            if (Routes.PreRouting != null)
-                            {
-                                await Routes.PreRouting(ctx).ConfigureAwait(false);
-                                if (ctx.Response.ResponseSent)
-                                {
-                                    if (Settings.Debug.Routing)
-                                    {
-                                        Events.Logger?.Invoke(
-                                            _Header + "prerouting terminated connection for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
-                                            ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
-                                    }
-
-                                    return;
-                                }
-                                else
-                                {
-                                    // allow the connection to continue
-                                }
-                            }
-
-                            #endregion
-
-                            #region Pre-Authentication
-
-                            if (Routes.PreAuthentication != null)
-                            {
-                                if (await ProcessRoutingGroup(ctx, Routes.PreAuthentication, "pre-auth").ConfigureAwait(false))
-                                    return;
-                            }
-
-                            #endregion
-
-                            #region Authentication
-
-                            if (Routes.AuthenticateRequest != null)
-                            {
-                                await Routes.AuthenticateRequest(ctx);
-                                if (ctx.Response.ResponseSent)
-                                {
-                                    if (Settings.Debug.Routing)
-                                    {
-                                        Events.Logger?.Invoke(_Header + "response sent during authentication for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
-                                            ctx.Request.Method.ToString() + " " + ctx.Request.Url.Full);
-                                    }
-
-                                    return;
-                                }
-                                else
-                                {
-                                    // allow the connection to continue
-                                }
-                            }
-
-                            #endregion
-
-                            #region Post-Authentication
-
-                            if (Routes.PostAuthentication != null)
-                            {
-                                if (await ProcessRoutingGroup(ctx, Routes.PostAuthentication, "post-auth").ConfigureAwait(false))
-                                    return;
-                            }
-
-                            #endregion
-
-                            #region Default-Route
-
-                            if (Settings.Debug.Routing)
-                            {
-                                Events.Logger?.Invoke(
-                                    _Header + "default route for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
-                                    ctx.Request.Method.ToString() + " " + ctx.Request.Url.Full);
-                            }
-
-                            if (Routes.Default != null)
-                            {
-                                ctx.RouteType = RouteTypeEnum.Default;
-                                await Routes.Default(ctx).ConfigureAwait(false);
-                                if (!ctx.Response.ResponseSent)
-                                    throw new InvalidOperationException("Default route for " + ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery + " did not send a response to the HTTP request.");
-                                return;
-                            }
-                            else
-                            {
-                                ctx.Response.StatusCode = 404;
-                                ctx.Response.ContentType = DefaultPages.Pages[404].ContentType;
-                                if (ctx.Response.ChunkedTransfer)
-                                    await ctx.Response.SendChunk(Encoding.UTF8.GetBytes(DefaultPages.Pages[404].Content), true).ConfigureAwait(false);
-                                else
-                                    await ctx.Response.Send(DefaultPages.Pages[404].Content).ConfigureAwait(false);
-                                return;
-                            }
-
-                            #endregion
-                        }
-                        catch (Exception eInner)
-                        {
-                            if (Routes.Exception != null)
-                            {
-                                await Routes.Exception(ctx, eInner);
-                            }
-                            else
-                            {
-                                ctx.Response.StatusCode = 500;
-                                ctx.Response.ContentType = DefaultPages.Pages[500].ContentType;
-                                if (ctx.Response.ChunkedTransfer)
-                                    await ctx.Response.SendChunk(Encoding.UTF8.GetBytes(DefaultPages.Pages[500].Content), true).ConfigureAwait(false);
-                                else
-                                    await ctx.Response.Send(DefaultPages.Pages[500].Content).ConfigureAwait(false);
-                            }
-
-                            Events.HandleExceptionEncountered(this, new ExceptionEventArgs(ctx, eInner));
-                        }
-                        finally
-                        {
-                            Interlocked.Decrement(ref _RequestCount);
-                            try { _RequestSemaphore.Release(); } catch (ObjectDisposedException) { }
-
-                            if (ctx == null)
-                            {
-                                try
-                                {
-                                    listenerCtx.Response.Close();
-                                }
-                                catch (Exception)
-                                {
-                                }
-                            }
-
-                            if (ctx != null)
-                            {
-                                if (!ctx.Response.ResponseSent)
-                                {
-                                    ctx.Response.StatusCode = 500;
-                                    ctx.Response.ContentType = DefaultPages.Pages[500].ContentType;
-                                    if (ctx.Response.ChunkedTransfer)
-                                        await ctx.Response.SendChunk(Encoding.UTF8.GetBytes(DefaultPages.Pages[500].Content), true).ConfigureAwait(false);
-                                    else
-                                        await ctx.Response.Send(DefaultPages.Pages[500].Content).ConfigureAwait(false);
-                                }
-
-                                ctx.Timestamp.End = DateTime.UtcNow;
-
-                                Events.HandleResponseSent(this, new ResponseEventArgs(ctx, ctx.Timestamp.TotalMs.Value));
-
-                                if (Settings.Debug.Responses)
-                                {
-                                    Events.Logger?.Invoke(
-                                        _Header + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
-                                        ctx.Request.Method.ToString() + " " + ctx.Request.Url.Full + ": " +
-                                        ctx.Response.StatusCode + " [" + ctx.Timestamp.TotalMs.Value + "ms]");
-                                }
-
-                                if (ctx.Response.ContentLength > 0) Statistics.IncrementSentPayloadBytes(Convert.ToInt64(ctx.Response.ContentLength));
-
-                                if (Routes.PostRouting != null)
-                                {
-                                    try
-                                    {
-                                        await Routes.PostRouting.Invoke(ctx).ConfigureAwait(false);
-                                    }
-                                    catch (Exception)
-                                    {
-                                        // PostRouting exceptions should not mask the original response
-                                    }
-                                }
-
-                                ctx.Dispose();
-                            }
-                        }
-
-                    }, token);
+                    TcpClient tcpClient = await _TcpListener.AcceptTcpClientAsync(token).ConfigureAwait(false);
+                    ThreadPool.UnsafeQueueUserWorkItem(new ClientConnectionWorkItem(this, tcpClient, token), preferLocal: false);
                 }
 
                 #endregion
@@ -460,160 +291,502 @@
             }
             finally
             {
+                _IsListening = false;
                 Events.HandleServerStopped(this, EventArgs.Empty);
             }
         }
 
-        private async Task<bool> ProcessRoutingGroup(
-            HttpContextBase ctx,
-            RoutingGroup group,
-            string authPhase)
+        [SupportedOSPlatform("windows")]
+        [SupportedOSPlatform("linux")]
+        [SupportedOSPlatform("macos")]
+        private async Task<QuicListener> BuildQuicListenerAsync(CancellationToken token)
         {
-            Func<HttpContextBase, Task> handler = null;
+            IPAddress bindAddress = ResolveBindIpAddress(Settings.Hostname);
+            QuicListenerOptions listenerOptions = new QuicListenerOptions();
+            listenerOptions.ListenEndPoint = new IPEndPoint(bindAddress, Settings.Port);
+            listenerOptions.ApplicationProtocols = new List<SslApplicationProtocol> { SslApplicationProtocol.Http3 };
+            listenerOptions.ListenBacklog = Math.Max(16, Settings.IO.MaxRequests);
+            listenerOptions.ConnectionOptionsCallback = BuildQuicConnectionOptionsAsync;
+            return await QuicListener.ListenAsync(listenerOptions, token).ConfigureAwait(false);
+        }
 
-            #region Static-Routes
+        [SupportedOSPlatform("windows")]
+        [SupportedOSPlatform("linux")]
+        [SupportedOSPlatform("macos")]
+        private ValueTask<QuicServerConnectionOptions> BuildQuicConnectionOptionsAsync(QuicConnection connection, SslClientHelloInfo clientHelloInfo, CancellationToken token)
+        {
+            SslServerAuthenticationOptions authenticationOptions = new SslServerAuthenticationOptions();
+            authenticationOptions.ServerCertificate = Settings.Ssl.SslCertificate;
+            authenticationOptions.ClientCertificateRequired = Settings.Ssl.MutuallyAuthenticate;
+            authenticationOptions.EnabledSslProtocols = SslProtocols.Tls13;
+            authenticationOptions.CertificateRevocationCheckMode = X509RevocationMode.NoCheck;
+            authenticationOptions.ApplicationProtocols = new List<SslApplicationProtocol> { SslApplicationProtocol.Http3 };
 
-            if (group.Static != null)
+            QuicServerConnectionOptions connectionOptions = new QuicServerConnectionOptions();
+            connectionOptions.ServerAuthenticationOptions = authenticationOptions;
+            connectionOptions.MaxInboundBidirectionalStreams = Math.Max(1, Settings.Protocols.MaxConcurrentStreams);
+            connectionOptions.MaxInboundUnidirectionalStreams = Math.Max(3, Settings.Protocols.MaxConcurrentStreams + 2);
+            connectionOptions.IdleTimeout = TimeSpan.FromMilliseconds(Settings.Protocols.IdleTimeoutMs);
+            connectionOptions.DefaultCloseErrorCode = 0;
+            connectionOptions.DefaultStreamErrorCode = 0;
+            return ValueTask.FromResult(connectionOptions);
+        }
+
+        [SupportedOSPlatform("windows")]
+        [SupportedOSPlatform("linux")]
+        [SupportedOSPlatform("macos")]
+        private Task StartQuicAcceptLoop()
+        {
+            return Task.Run(() => AcceptQuicConnectionsAsync(_Token), _Token);
+        }
+
+        [SupportedOSPlatform("windows")]
+        [SupportedOSPlatform("linux")]
+        [SupportedOSPlatform("macos")]
+        private async Task AcceptQuicConnectionsAsync(CancellationToken token)
+        {
+            try
             {
-                handler = group.Static.Match(ctx.Request.Method, ctx.Request.Url.RawWithoutQuery, out StaticRoute sr);
-                if (handler != null)
+                while (_IsListening && _QuicListener != null)
                 {
-                    if (Settings.Debug.Routing)
+                    QuicConnection quicConnection = await _QuicListener.AcceptConnectionAsync(token).ConfigureAwait(false);
+                    ThreadPool.UnsafeQueueUserWorkItem(new QuicConnectionWorkItem(this, quicConnection, token), preferLocal: false);
+                }
+            }
+            catch (Exception e)
+            {
+                if (_IsListening)
+                {
+                    Events.HandleExceptionEncountered(this, new ExceptionEventArgs(null, e));
+                }
+            }
+        }
+
+        [SupportedOSPlatform("windows")]
+        [SupportedOSPlatform("linux")]
+        [SupportedOSPlatform("macos")]
+        private async Task HandleQuicConnectionAsync(QuicConnection quicConnection, CancellationToken token)
+        {
+            if (quicConnection == null) throw new ArgumentNullException(nameof(quicConnection));
+            bool connectionSlotAcquired = false;
+
+            try
+            {
+                await _RequestSemaphore.WaitAsync(token).ConfigureAwait(false);
+                connectionSlotAcquired = true;
+
+                Events.HandleConnectionReceived(this, new ConnectionEventArgs(HttpProtocol.Http3, Guid.NewGuid(), quicConnection.RemoteEndPoint.Address.ToString(), quicConnection.RemoteEndPoint.Port));
+
+                Http3ConnectionSession session = new Http3ConnectionSession(
+                    Settings,
+                    Events,
+                    quicConnection,
+                    async (httpContext, cancellationToken) => await ProcessHttpContextAsync(httpContext, _Header, cancellationToken).ConfigureAwait(false));
+                await session.RunAsync(token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception e)
+            {
+                Events.HandleExceptionEncountered(this, new ExceptionEventArgs(null, e));
+            }
+            finally
+            {
+                if (connectionSlotAcquired)
+                {
+                    try { _RequestSemaphore.Release(); } catch (ObjectDisposedException) { }
+                }
+
+                try
+                {
+                    await quicConnection.CloseAsync(0, CancellationToken.None).ConfigureAwait(false);
+                }
+                catch (Exception)
+                {
+                }
+
+                await quicConnection.DisposeAsync().ConfigureAwait(false);
+            }
+        }
+
+        private async Task<ClientStreamContext> BuildClientStreamAsync(TcpClient tcpClient, CancellationToken token)
+        {
+            if (tcpClient == null) throw new ArgumentNullException(nameof(tcpClient));
+
+            Stream stream = tcpClient.GetStream();
+            ClientStreamContext context = new ClientStreamContext();
+
+            if (!Settings.Ssl.Enable)
+            {
+                context.Protocol = HttpProtocol.Http1;
+                context.Stream = stream;
+                return context;
+            }
+
+            SslStream sslStream = new SslStream(stream, false);
+            SslServerAuthenticationOptions authenticationOptions = new SslServerAuthenticationOptions();
+            authenticationOptions.ServerCertificate = Settings.Ssl.SslCertificate;
+            authenticationOptions.ClientCertificateRequired = Settings.Ssl.MutuallyAuthenticate;
+            authenticationOptions.EnabledSslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13;
+            authenticationOptions.CertificateRevocationCheckMode = X509RevocationMode.NoCheck;
+
+            if (Settings.Protocols.EnableHttp2)
+            {
+                authenticationOptions.ApplicationProtocols = new List<SslApplicationProtocol>();
+                authenticationOptions.ApplicationProtocols.Add(SslApplicationProtocol.Http2);
+                if (Settings.Protocols.EnableHttp1) authenticationOptions.ApplicationProtocols.Add(SslApplicationProtocol.Http11);
+            }
+
+            await sslStream.AuthenticateAsServerAsync(authenticationOptions, token).ConfigureAwait(false);
+
+            context.Protocol = sslStream.NegotiatedApplicationProtocol == SslApplicationProtocol.Http2 ? HttpProtocol.Http2 : HttpProtocol.Http1;
+            context.Stream = sslStream;
+            return context;
+        }
+
+        private async Task SendBadRequestAsync(Stream stream, CancellationToken token)
+        {
+            if (stream == null || !stream.CanWrite) return;
+
+            string response =
+                "HTTP/1.1 400 Bad Request\r\n" +
+                "Content-Length: 0\r\n" +
+                "Connection: close\r\n" +
+                "Date: " + DateTime.UtcNow.ToString(WebserverConstants.HeaderDateValueFormat) + "\r\n" +
+                "\r\n";
+
+            byte[] responseBytes = Encoding.UTF8.GetBytes(response);
+            await stream.WriteAsync(responseBytes, 0, responseBytes.Length, token).ConfigureAwait(false);
+            await stream.FlushAsync(token).ConfigureAwait(false);
+        }
+
+        private async Task SendHttpVersionNotSupportedAsync(Stream stream, CancellationToken token)
+        {
+            if (stream == null || !stream.CanWrite) return;
+
+            string response =
+                "HTTP/1.1 505 HTTP Version Not Supported\r\n" +
+                "Content-Length: 0\r\n" +
+                "Connection: close\r\n" +
+                "Date: " + DateTime.UtcNow.ToString(WebserverConstants.HeaderDateValueFormat) + "\r\n" +
+                "\r\n";
+
+            byte[] responseBytes = Encoding.UTF8.GetBytes(response);
+            await stream.WriteAsync(responseBytes, 0, responseBytes.Length, token).ConfigureAwait(false);
+            await stream.FlushAsync(token).ConfigureAwait(false);
+        }
+
+        private async Task HandleClientConnectionAsync(TcpClient tcpClient, CancellationToken token)
+        {
+            if (tcpClient == null) throw new ArgumentNullException(nameof(tcpClient));
+
+            HttpContext ctx = null;
+            Stream clientStream = null;
+            ClientStreamContext streamContext = null;
+            bool connectionSlotAcquired = false;
+
+            try
+            {
+                await _RequestSemaphore.WaitAsync(token).ConfigureAwait(false);
+                connectionSlotAcquired = true;
+
+                tcpClient.NoDelay = true;
+                streamContext = await BuildClientStreamAsync(tcpClient, token).ConfigureAwait(false);
+                clientStream = streamContext.Stream;
+
+                IPEndPoint sourceEndpoint = (IPEndPoint)tcpClient.Client.RemoteEndPoint;
+                IPEndPoint destinationEndpoint = (IPEndPoint)tcpClient.Client.LocalEndPoint;
+                string sourceIp = sourceEndpoint.Address.ToString();
+                int sourcePort = sourceEndpoint.Port;
+                string destinationIp = destinationEndpoint.Address.ToString();
+                int destinationPort = destinationEndpoint.Port;
+
+                if (!Settings.Ssl.Enable && Settings.Protocols.EnableHttp2 && Settings.Protocols.EnableHttp2Cleartext)
+                {
+                    streamContext = await DetectCleartextProtocolAsync(streamContext, token).ConfigureAwait(false);
+                    clientStream = streamContext.Stream;
+                }
+
+                Events.HandleConnectionReceived(this, new ConnectionEventArgs(streamContext.Protocol, Guid.NewGuid(), sourceIp, sourcePort));
+
+                if (streamContext.Protocol == HttpProtocol.Http2)
+                {
+                    if (!Settings.Protocols.EnableHttp2)
                     {
-                        Events.Logger?.Invoke(
-                            _Header + authPhase + " static route for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
-                            ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
+                        await SendHttpVersionNotSupportedAsync(clientStream, token).ConfigureAwait(false);
+                        return;
                     }
 
-                    ctx.RouteType = RouteTypeEnum.Static;
-                    ctx.Route = sr;
+                        Http2ConnectionSession session = new Http2ConnectionSession(
+                        Settings,
+                        Events,
+                        clientStream,
+                        async (httpContext, cancellationToken) => await ProcessHttpContextAsync(httpContext, _Header, cancellationToken).ConfigureAwait(false),
+                        sourceEndpoint,
+                        destinationEndpoint,
+                        Settings.Ssl.Enable);
+                    await session.RunAsync(token).ConfigureAwait(false);
+                    return;
+                }
 
-                    try
-                    {
-                        await handler(ctx).ConfigureAwait(false);
-                    }
-                    catch (Exception e)
-                    {
-                        if (sr.ExceptionHandler != null) await sr.ExceptionHandler(ctx, e);
-                        else throw;
-                    }
+                if (!Settings.Protocols.EnableHttp1)
+                {
+                    await SendHttpVersionNotSupportedAsync(clientStream, token).ConfigureAwait(false);
+                    return;
+                }
 
-                    if (!ctx.Response.ResponseSent)
-                        throw new InvalidOperationException(authPhase + " static route for " + ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery + " did not send a response to the HTTP request.");
-                    return true;
+                bool keepAlive = true;
+                bool firstRequest = true;
+                using (CancellationTokenSource connectionReadTimeout = new CancellationTokenSource())
+                {
+                    using (CancellationTokenRegistration readTimeoutRegistration = token.Register(static state => ((CancellationTokenSource)state).Cancel(), connectionReadTimeout))
+                    {
+                        while (_IsListening && keepAlive && !token.IsCancellationRequested)
+                        {
+                            Interlocked.Increment(ref _RequestCount);
+
+                            try
+                            {
+                                if (clientStream == null || !clientStream.CanRead) break;
+
+                                connectionReadTimeout.CancelAfter(firstRequest ? Settings.IO.ReadTimeoutMs : Settings.Protocols.IdleTimeoutMs);
+                                Http1HeaderReadResult headerReadResult = await Http1HeaderReader.ReadAsync(clientStream, Settings.IO.MaxIncomingHeadersSize, connectionReadTimeout.Token).ConfigureAwait(false);
+                                connectionReadTimeout.CancelAfter(Timeout.InfiniteTimeSpan);
+                                if (headerReadResult == null || headerReadResult.HeaderBytes == null || headerReadResult.HeaderBytes.Length < 1) break;
+                                if (headerReadResult.PrefixBytes != null && headerReadResult.PrefixBytes.Length > 0)
+                                {
+                                    if (clientStream is PrefixBufferedStream prefixBufferedStream && prefixBufferedStream.PrefixConsumed)
+                                    {
+                                        clientStream = prefixBufferedStream.InnerStream;
+                                    }
+
+                                    clientStream = new PrefixBufferedStream(clientStream, headerReadResult.PrefixBytes);
+                                }
+
+                                Http1RequestMetadata requestMetadata = Http1RequestParser.Parse(
+                                    Settings,
+                                    sourceIp,
+                                    sourcePort,
+                                    destinationIp,
+                                    destinationPort,
+                                    headerReadResult.HeaderBytes);
+                                ctx = RentHttpContext(clientStream, requestMetadata);
+
+                                await ProcessHttpContextAsync(ctx, _Header, token).ConfigureAwait(false);
+                                keepAlive = ShouldKeepConnectionOpen(ctx);
+                                firstRequest = false;
+                            }
+                            catch (MalformedHttpRequestException e)
+                            {
+                                await SendBadRequestAsync(clientStream, token).ConfigureAwait(false);
+                                Events.HandleExceptionEncountered(this, new ExceptionEventArgs(ctx, e));
+                                break;
+                            }
+                            catch (IOException)
+                            {
+                                break;
+                            }
+                            finally
+                            {
+                                Interlocked.Decrement(ref _RequestCount);
+
+                                if (ctx != null)
+                                {
+                                    ReturnHttpContext(ctx);
+                                    ctx = null;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception e)
+            {
+                Events.HandleExceptionEncountered(this, new ExceptionEventArgs(ctx, e));
+            }
+            finally
+            {
+                if (connectionSlotAcquired)
+                {
+                    try { _RequestSemaphore.Release(); } catch (ObjectDisposedException) { }
+                }
+
+                try
+                {
+                    clientStream?.Dispose();
+                    tcpClient.Dispose();
+                }
+                catch (Exception)
+                {
+                }
+            }
+        }
+
+        private bool ShouldKeepConnectionOpen(HttpContext ctx)
+        {
+            if (ctx == null) return false;
+            if (!Settings.IO.EnableKeepAlive) return false;
+            if (ctx.Response == null || !ctx.Response.ResponseSent) return false;
+            if (!ctx.Request.Keepalive) return false;
+            if (ctx.Response.ServerSentEvents) return false;
+
+            HttpRequest request = ctx.Request as HttpRequest;
+            if (request == null) return false;
+
+            return request.IsRequestBodyComplete;
+        }
+
+        private HttpContext RentHttpContext(Stream stream, Http1RequestMetadata requestMetadata)
+        {
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            if (requestMetadata == null) throw new ArgumentNullException(nameof(requestMetadata));
+
+            if (!_HttpRequestPool.TryTake(out HttpRequest request))
+            {
+                request = new HttpRequest();
+            }
+
+            if (!_HttpResponsePool.TryTake(out HttpResponse response))
+            {
+                response = new HttpResponse();
+            }
+
+            if (!_HttpContextPool.TryTake(out HttpContext context))
+            {
+                context = new HttpContext();
+            }
+
+            request.Initialize(Settings, stream, requestMetadata);
+            response.Initialize(request, Settings, Events, stream, Settings.IO.StreamBufferSize);
+            context.Initialize(
+                new ConnectionMetadata
+                {
+                    Protocol = HttpProtocol.Http1,
+                    IsEncrypted = Settings.Ssl.Enable,
+                    Source = new SourceDetails(requestMetadata.Source.IpAddress, requestMetadata.Source.Port),
+                    Destination = new DestinationDetails(requestMetadata.Destination.IpAddress, requestMetadata.Destination.Port, Settings.Hostname)
+                },
+                request,
+                response);
+
+            return context;
+        }
+
+        private void ReturnHttpContext(HttpContext context)
+        {
+            if (context == null) return;
+
+            HttpRequest request = context.Request as HttpRequest;
+            HttpResponse response = context.Response as HttpResponse;
+
+            response?.ReturnToPool();
+            request?.ReturnToPool();
+            context.ReturnToPool();
+
+            if (response != null) _HttpResponsePool.Add(response);
+            if (request != null) _HttpRequestPool.Add(request);
+            _HttpContextPool.Add(context);
+        }
+
+        private async Task<ClientStreamContext> DetectCleartextProtocolAsync(ClientStreamContext context, CancellationToken token)
+        {
+            if (context == null) throw new ArgumentNullException(nameof(context));
+            if (context.Stream == null) throw new ArgumentNullException(nameof(context.Stream));
+
+            byte[] probeBytes = await ReadProtocolProbeAsync(context.Stream, token).ConfigureAwait(false);
+            PrefixBufferedStream bufferedStream = new PrefixBufferedStream(context.Stream, probeBytes);
+
+            ClientStreamContext detectedContext = new ClientStreamContext();
+            detectedContext.Stream = bufferedStream;
+            detectedContext.Protocol = Http2ConnectionPreface.IsClientPreface(probeBytes) ? HttpProtocol.Http2 : HttpProtocol.Http1;
+            return detectedContext;
+        }
+
+        private async Task<byte[]> ReadProtocolProbeAsync(Stream stream, CancellationToken token)
+        {
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+
+            byte[] buffer = new byte[Http2Constants.ClientConnectionPrefaceBytes.Length];
+            int bytesReadTotal = 0;
+
+            using (CancellationTokenSource readTimeout = CancellationTokenSource.CreateLinkedTokenSource(token))
+            {
+                readTimeout.CancelAfter(Settings.IO.ReadTimeoutMs);
+
+                while (bytesReadTotal < buffer.Length)
+                {
+                    int bytesRead = await stream.ReadAsync(buffer, bytesReadTotal, buffer.Length - bytesReadTotal, readTimeout.Token).ConfigureAwait(false);
+                    if (bytesRead < 1) break;
+                    bytesReadTotal += bytesRead;
                 }
             }
 
-            #endregion
+            byte[] probeBytes = new byte[bytesReadTotal];
+            if (bytesReadTotal > 0) Buffer.BlockCopy(buffer, 0, probeBytes, 0, bytesReadTotal);
+            return probeBytes;
+        }
 
-            #region Content-Routes
+        private IPAddress ResolveBindIpAddress(string hostname)
+        {
+            if (String.IsNullOrEmpty(hostname)) return IPAddress.Loopback;
+            if (hostname.Equals("localhost", StringComparison.InvariantCultureIgnoreCase)) return IPAddress.Loopback;
+            if (hostname.Equals("*")) return IPAddress.Any;
+            if (hostname.Equals("+")) return IPAddress.Any;
 
-            if (group.Content != null &&
-                (ctx.Request.Method == HttpMethod.GET || ctx.Request.Method == HttpMethod.HEAD))
+            if (IPAddress.TryParse(hostname, out IPAddress ipAddress))
             {
-                if (group.Content.Match(ctx.Request.Url.RawWithoutQuery, out ContentRoute cr))
-                {
-                    if (Settings.Debug.Routing)
-                    {
-                        Events.Logger?.Invoke(
-                            _Header + authPhase + " content route for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
-                            ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
-                    }
-
-                    ctx.RouteType = RouteTypeEnum.Content;
-                    ctx.Route = cr;
-
-                    try
-                    {
-                        await group.Content.Handler(ctx).ConfigureAwait(false);
-                    }
-                    catch (Exception e)
-                    {
-                        if (cr.ExceptionHandler != null) await cr.ExceptionHandler(ctx, e);
-                        else throw;
-                    }
-
-                    if (!ctx.Response.ResponseSent)
-                        throw new InvalidOperationException(authPhase + " content route for " + ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery + " did not send a response to the HTTP request.");
-                    return true;
-                }
+                return ipAddress;
             }
 
-            #endregion
+            IPAddress[] addresses = Dns.GetHostAddresses(hostname);
+            IPAddress address = addresses.FirstOrDefault(a => a.AddressFamily == AddressFamily.InterNetwork);
+            if (address != null) return address;
+            return addresses.First();
+        }
 
-            #region Parameter-Routes
+        private readonly struct ClientConnectionWorkItem : IThreadPoolWorkItem
+        {
+            private readonly Webserver _Server;
+            private readonly TcpClient _TcpClient;
+            private readonly CancellationToken _Token;
 
-            if (group.Parameter != null)
+            internal ClientConnectionWorkItem(Webserver server, TcpClient tcpClient, CancellationToken token)
             {
-                handler = group.Parameter.Match(ctx.Request.Method, ctx.Request.Url.RawWithoutQuery, out NameValueCollection parameters, out ParameterRoute pr);
-                if (handler != null)
-                {
-                    ctx.Request.Url.Parameters = parameters;
-
-                    if (Settings.Debug.Routing)
-                    {
-                        Events.Logger?.Invoke(
-                            _Header + authPhase + " parameter route for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
-                            ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
-                    }
-
-                    ctx.RouteType = RouteTypeEnum.Parameter;
-                    ctx.Route = pr;
-
-                    try
-                    {
-                        await handler(ctx).ConfigureAwait(false);
-                    }
-                    catch (Exception e)
-                    {
-                        if (pr.ExceptionHandler != null) await pr.ExceptionHandler(ctx, e);
-                        else throw;
-                    }
-
-                    if (!ctx.Response.ResponseSent)
-                        throw new InvalidOperationException(authPhase + " parameter route for " + ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery + " did not send a response to the HTTP request.");
-                    return true;
-                }
+                _Server = server;
+                _TcpClient = tcpClient;
+                _Token = token;
             }
 
-            #endregion
-
-            #region Dynamic-Routes
-
-            if (group.Dynamic != null)
+            public void Execute()
             {
-                handler = group.Dynamic.Match(ctx.Request.Method, ctx.Request.Url.RawWithoutQuery, out DynamicRoute dr);
-                if (handler != null)
-                {
-                    if (Settings.Debug.Routing)
-                    {
-                        Events.Logger?.Invoke(
-                            _Header + authPhase + " dynamic route for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
-                            ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery);
-                    }
+                _ = _Server.HandleClientConnectionAsync(_TcpClient, _Token);
+            }
+        }
 
-                    ctx.RouteType = RouteTypeEnum.Dynamic;
-                    ctx.Route = dr;
+        [SupportedOSPlatform("windows")]
+        [SupportedOSPlatform("linux")]
+        [SupportedOSPlatform("macos")]
+        private readonly struct QuicConnectionWorkItem : IThreadPoolWorkItem
+        {
+            private readonly Webserver _Server;
+            private readonly QuicConnection _QuicConnection;
+            private readonly CancellationToken _Token;
 
-                    try
-                    {
-                        await handler(ctx).ConfigureAwait(false);
-                    }
-                    catch (Exception e)
-                    {
-                        if (dr.ExceptionHandler != null) await dr.ExceptionHandler(ctx, e);
-                        else throw;
-                    }
-
-                    if (!ctx.Response.ResponseSent)
-                        throw new InvalidOperationException(authPhase + " dynamic route for " + ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery + " did not send a response to the HTTP request.");
-                    return true;
-                }
+            internal QuicConnectionWorkItem(Webserver server, QuicConnection quicConnection, CancellationToken token)
+            {
+                _Server = server;
+                _QuicConnection = quicConnection;
+                _Token = token;
             }
 
-            #endregion
-
-            return false;
+            public void Execute()
+            {
+                _ = _Server.HandleQuicConnectionAsync(_QuicConnection, _Token);
+            }
         }
 
         #endregion

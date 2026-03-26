@@ -104,6 +104,11 @@
         public static string HeaderAcceptLanguage { get; set; } = "Accept-Language";
 
         /// <summary>
+        /// Header for Alt-Svc.
+        /// </summary>
+        public static string HeaderAltSvc { get; set; } = "Alt-Svc";
+
+        /// <summary>
         /// Header for accept-charset.
         /// </summary>
         public static string HeaderAcceptCharset { get; set; } = "Accept-Charset";

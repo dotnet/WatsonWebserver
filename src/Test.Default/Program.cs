@@ -1,4 +1,4 @@
-﻿namespace Test
+namespace Test
 {
     using System;
     using System.Collections.Generic;
@@ -9,13 +9,10 @@
     using GetSomeInput;
     using WatsonWebserver;
     using WatsonWebserver.Core;
-    using WatsonWebserver.Lite;
-
+    
     static class Program
     {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-
-        static bool _UsingLite = true;
         static string _Hostname = "127.0.0.1";
         static int _Port = 8080;
         static WebserverSettings _Settings = null;
@@ -27,39 +24,14 @@
 
         static void Main(string[] args)
         {
-            if (args != null && args.Length > 0)
-            {
-                foreach (string arg in args)
-                {
-                    if (arg.Equals("-lite", StringComparison.OrdinalIgnoreCase))
-                    {
-                        _UsingLite = true;
-                        break;
-                    }
-                    else if (arg.Equals("-nolite", StringComparison.OrdinalIgnoreCase))
-                    {
-                        _UsingLite = false;
-                        break;
-                    }
-                }
-            }
 
             _Settings = new WebserverSettings
             {
                 Hostname = _Hostname,
                 Port = _Port
             };
-
-            if (_UsingLite)
-            {
-                Console.WriteLine("Initializing webserver lite");
-                _Server = new WatsonWebserver.Lite.WebserverLite(_Settings, DefaultRoute);
-            }
-            else
-            {
-                Console.WriteLine("Initializing webserver");
-                _Server = new WatsonWebserver.Webserver(_Settings, DefaultRoute);
-            }
+            Console.WriteLine("Initializing webserver");
+            _Server = new WatsonWebserver.Webserver(_Settings, DefaultRoute);
 
             _Server.Settings.AccessControl.Mode = AccessControlMode.DefaultPermit;
             _Server.Settings.AccessControl.DenyList.Add("1.1.1.1", "255.255.255.255");
@@ -321,3 +293,5 @@
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
     }
 }
+
+

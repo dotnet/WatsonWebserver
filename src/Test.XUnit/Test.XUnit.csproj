@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <EnablePreviewFeatures>true</EnablePreviewFeatures>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Test.Automated\Test.Automated.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>SharedAutomatedResultsPath</_Parameter1>
+      <_Parameter2>$(MSBuildProjectDirectory)\bin\$(Configuration)\$(TargetFramework)\shared-automated-results.json</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <Target
+    Name="GenerateSharedAutomatedCoverageResults"
+    Inputs="$(MSBuildProjectDirectory)\..\Test.Automated\bin\$(Configuration)\$(TargetFramework)\Test.Automated.exe"
+    Outputs="$(TargetDir)shared-automated-results.json">
+    <Exec
+      Command="powershell -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\RunSharedAutomatedResults.ps1&quot; -AutomatedExecutablePath &quot;$(MSBuildProjectDirectory)\..\Test.Automated\bin\$(Configuration)\$(TargetFramework)\Test.Automated.exe&quot; -WorkingDirectory &quot;$(MSBuildProjectDirectory)\..\Test.Automated\bin\$(Configuration)\$(TargetFramework)\.&quot; -ResultsPath &quot;$(TargetDir)shared-automated-results.json&quot;"
+      WorkingDirectory="$(TargetDir)"
+      ConsoleToMSBuild="false" />
+  </Target>
+
+</Project>

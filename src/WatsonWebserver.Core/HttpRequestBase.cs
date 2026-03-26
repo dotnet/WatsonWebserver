@@ -28,18 +28,48 @@
         /// UTC timestamp from when the request object was received.
         /// </summary>
         [JsonPropertyOrder(-11)]
-        public Timestamp Timestamp { get; set; } = new Timestamp();
+        public Timestamp Timestamp
+        {
+            get
+            {
+                if (_Timestamp == null) _Timestamp = new Timestamp();
+                return _Timestamp;
+            }
+            set
+            {
+                if (value == null) throw new ArgumentNullException(nameof(Timestamp));
+                _Timestamp = value;
+            }
+        }
 
         /// <summary>
         /// Globally-unique identifier for the request.
         /// </summary>
-        public Guid Guid { get; set; } = Guid.NewGuid();
+        public Guid Guid
+        {
+            get
+            {
+                if (_Guid == Guid.Empty) _Guid = Guid.NewGuid();
+                return _Guid;
+            }
+            set
+            {
+                if (value == Guid.Empty) throw new ArgumentException("Guid cannot be empty.", nameof(Guid));
+                _Guid = value;
+            }
+        }
+
+        /// <summary>
+        /// The HTTP protocol in use for the current request.
+        /// </summary>
+        [JsonPropertyOrder(-10)]
+        public HttpProtocol Protocol { get; set; } = HttpProtocol.Http1;
 
         /// <summary>
         /// Thread ID on which the request exists.
         /// </summary>
         [JsonPropertyOrder(-9)]
-        public int ThreadId { get; set; } = Thread.CurrentThread.ManagedThreadId;
+        public int ThreadId { get; set; } = 0;
 
         /// <summary>
         /// The protocol and version.
@@ -55,6 +85,7 @@
         {
             get
             {
+                if (_Source == null) _Source = new SourceDetails();
                 return _Source;
             }
             set
@@ -72,6 +103,7 @@
         {
             get
             {
+                if (_Destination == null) _Destination = new DestinationDetails();
                 return _Destination;
             }
             set
@@ -101,12 +133,26 @@
         {
             get
             {
+                if (_Url == null)
+                {
+                    if (_UrlFactory != null)
+                    {
+                        _Url = _UrlFactory();
+                        _UrlFactory = null;
+                    }
+                    else
+                    {
+                        _Url = new UrlDetails();
+                    }
+                }
+
                 return _Url;
             }
             set
             {
                 if (value == null) value = new UrlDetails();
                 _Url = value;
+                _UrlFactory = null;
             }
         }
 
@@ -118,12 +164,25 @@
         {
             get
             {
+                if (_Query == null)
+                {
+                    if (_QueryFactory != null)
+                    {
+                        _Query = _QueryFactory();
+                        _QueryFactory = null;
+                    }
+                    else
+                    {
+                        _Query = new QueryDetails();
+                    }
+                }
+
                 return _Query;
             }
             set
             {
-                if (value == null) value = new QueryDetails();
                 _Query = value;
+                _QueryFactory = null;
             }
         }
 
@@ -135,12 +194,26 @@
         {
             get
             {
+                if (_Headers == null)
+                {
+                    if (_HeadersFactory != null)
+                    {
+                        _Headers = _HeadersFactory();
+                        _HeadersFactory = null;
+                    }
+                    else
+                    {
+                        _Headers = new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
+                    }
+                }
+
                 return _Headers;
             }
             set
             {
                 if (value == null) _Headers = new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
                 else _Headers = value;
+                _HeadersFactory = null;
             }
         }
 
@@ -151,12 +224,30 @@
         {
             get
             {
-                if (_Headers != null && _Headers.AllKeys.Contains("Authorization"))
+                NameValueCollection headers = Headers;
+                if (headers != null && headers.AllKeys.Contains("Authorization"))
                 {
-                    return new AuthorizationDetails(_Headers.Get("Authorization"));
+                    return new AuthorizationDetails(headers.Get("Authorization"));
                 }
 
                 return new AuthorizationDetails();
+            }
+        }
+
+        /// <summary>
+        /// Request trailers supplied by the client when the protocol permits them.
+        /// </summary>
+        public NameValueCollection Trailers
+        {
+            get
+            {
+                if (_Trailers == null) _Trailers = new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
+                return _Trailers;
+            }
+            set
+            {
+                if (value == null) _Trailers = new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
+                else _Trailers = value;
             }
         }
 
@@ -216,15 +307,26 @@
         [JsonIgnore]
         public abstract string DataAsString { get; }
 
+        /// <summary>
+        /// Indicates whether the request owns the underlying data stream lifetime.
+        /// </summary>
+        protected internal bool OwnsDataStream { get; set; } = true;
+
         #endregion
 
         #region Private-Members
 
-        private SourceDetails _Source = new SourceDetails();
-        private DestinationDetails _Destination = new DestinationDetails();
-        private UrlDetails _Url = new UrlDetails();
-        private QueryDetails _Query = new QueryDetails();
-        private NameValueCollection _Headers = new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
+        private Timestamp _Timestamp = null;
+        private Guid _Guid = Guid.Empty;
+        private SourceDetails _Source = null;
+        private DestinationDetails _Destination = null;
+        private UrlDetails _Url = null;
+        private QueryDetails _Query = null;
+        private NameValueCollection _Headers = null;
+        private NameValueCollection _Trailers = null;
+        private Func<UrlDetails> _UrlFactory = null;
+        private Func<QueryDetails> _QueryFactory = null;
+        private Func<NameValueCollection> _HeadersFactory = null;
         private bool _Disposed = false;
 
         #endregion
@@ -254,7 +356,7 @@
             {
                 if (disposing)
                 {
-                    if (Data != null)
+                    if (OwnsDataStream && Data != null)
                     {
                         try { Data.Dispose(); } catch { }
                         Data = null;
@@ -263,6 +365,44 @@
 
                 _Disposed = true;
             }
+        }
+
+        /// <summary>
+        /// Reset the request so it can be safely reused by an object pool.
+        /// </summary>
+        protected internal virtual void ResetForReuse()
+        {
+            if (OwnsDataStream && Data != null)
+            {
+                try { Data.Dispose(); } catch { }
+            }
+
+            Data = null;
+            OwnsDataStream = true;
+            _Timestamp = null;
+            _Guid = Guid.Empty;
+            Protocol = HttpProtocol.Http1;
+            ThreadId = 0;
+            ProtocolVersion = "HTTP/1.1";
+            _Source = null;
+            _Destination = null;
+            Method = HttpMethod.GET;
+            MethodRaw = null;
+            _Url = null;
+            _Query = null;
+            _Headers = null;
+            _Trailers = null;
+            _UrlFactory = null;
+            _QueryFactory = null;
+            _HeadersFactory = null;
+            Keepalive = false;
+            ChunkedTransfer = false;
+            Gzip = false;
+            Deflate = false;
+            Useragent = null;
+            ContentType = null;
+            ContentLength = 0;
+            _Disposed = false;
         }
 
         /// <summary>
@@ -316,6 +456,39 @@
         #endregion
 
         #region Private-Methods
+
+        /// <summary>
+        /// Set a deferred URL factory.
+        /// </summary>
+        /// <param name="factory">Factory.</param>
+        protected internal void SetUrlFactory(Func<UrlDetails> factory)
+        {
+            if (factory == null) throw new ArgumentNullException(nameof(factory));
+            _UrlFactory = factory;
+            _Url = null;
+        }
+
+        /// <summary>
+        /// Set a deferred query factory.
+        /// </summary>
+        /// <param name="factory">Factory.</param>
+        protected internal void SetQueryFactory(Func<QueryDetails> factory)
+        {
+            if (factory == null) throw new ArgumentNullException(nameof(factory));
+            _QueryFactory = factory;
+            _Query = null;
+        }
+
+        /// <summary>
+        /// Set a deferred header collection factory.
+        /// </summary>
+        /// <param name="factory">Factory.</param>
+        protected internal void SetHeadersFactory(Func<NameValueCollection> factory)
+        {
+            if (factory == null) throw new ArgumentNullException(nameof(factory));
+            _HeadersFactory = factory;
+            _Headers = null;
+        }
 
         #endregion
     }

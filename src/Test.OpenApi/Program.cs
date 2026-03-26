@@ -1,4 +1,4 @@
-namespace Test.OpenApi
+﻿namespace Test.OpenApi
 {
     using System;
     using System.Collections.Generic;
@@ -8,14 +8,12 @@ namespace Test.OpenApi
     using WatsonWebserver;
     using WatsonWebserver.Core;
     using WatsonWebserver.Core.OpenApi;
-    using WatsonWebserver.Lite;
-
+    
     /// <summary>
     /// Test application demonstrating OpenAPI/Swagger support in WatsonWebserver.
     /// </summary>
     public static class Program
     {
-        private static bool _UsingLite = false;
         private static string _Hostname = "localhost";
         private static int _Port = 8080;
         private static WebserverBase _Server = null;
@@ -45,18 +43,6 @@ namespace Test.OpenApi
 
         public static void Main(string[] args)
         {
-            if (args != null && args.Length > 0)
-            {
-                foreach (string arg in args)
-                {
-                    if (arg.Equals("-lite", StringComparison.OrdinalIgnoreCase))
-                    {
-                        _UsingLite = true;
-                        break;
-                    }
-                }
-            }
-
             Console.WriteLine("WatsonWebserver OpenAPI Test Application");
             Console.WriteLine("=========================================");
             Console.WriteLine();
@@ -65,16 +51,8 @@ namespace Test.OpenApi
             WebserverSettings settings = new WebserverSettings(_Hostname, _Port, false);
 
             // Create webserver with default route
-            if (_UsingLite)
-            {
-                Console.WriteLine("Using WatsonWebserver.Lite");
-                _Server = new WebserverLite(settings, DefaultRoute);
-            }
-            else
-            {
-                Console.WriteLine("Using WatsonWebserver");
-                _Server = new Webserver(settings, DefaultRoute);
-            }
+            Console.WriteLine("Using WatsonWebserver");
+            _Server = new Webserver(settings, DefaultRoute);
 
             Console.WriteLine();
 

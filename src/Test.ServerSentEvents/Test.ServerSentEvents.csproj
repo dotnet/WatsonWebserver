@@ -8,9 +8,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\WatsonWebserver.Core\WatsonWebserver.Core.csproj" />
-		<ProjectReference Include="..\WatsonWebserver.Lite\WatsonWebserver.Lite.csproj" />
-		<ProjectReference Include="..\WatsonWebserver\WatsonWebserver.csproj" />
+		<ProjectReference Include="..\WatsonWebserver.Core\WatsonWebserver.Core.csproj" />		<ProjectReference Include="..\WatsonWebserver\WatsonWebserver.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

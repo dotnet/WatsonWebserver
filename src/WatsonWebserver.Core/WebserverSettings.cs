@@ -61,6 +61,38 @@
         }
 
         /// <summary>
+        /// Protocol enablement and limits.
+        /// </summary>
+        public ProtocolSettings Protocols
+        {
+            get
+            {
+                return _Protocols;
+            }
+            set
+            {
+                if (value == null) throw new ArgumentNullException(nameof(Protocols));
+                _Protocols = value;
+            }
+        }
+
+        /// <summary>
+        /// Alt-Svc advertising settings.
+        /// </summary>
+        public AltSvcSettings AltSvc
+        {
+            get
+            {
+                return _AltSvc;
+            }
+            set
+            {
+                if (value == null) throw new ArgumentNullException(nameof(AltSvc));
+                _AltSvc = value;
+            }
+        }
+
+        /// <summary>
         /// Input-output settings.
         /// </summary>
         public IOSettings IO
@@ -163,6 +195,8 @@
 
         private string _Hostname = "localhost";
         private int _Port = 8000;
+        private ProtocolSettings _Protocols = new ProtocolSettings();
+        private AltSvcSettings _AltSvc = new AltSvcSettings();
         private IOSettings _IO = new IOSettings();
         private SslSettings _Ssl = new SslSettings();
         private AccessControlManager _AccessControl = new AccessControlManager(AccessControlMode.DefaultPermit);
@@ -250,8 +284,7 @@
             }
 
             /// <summary>
-            /// Read timeout, in milliseconds.
-            /// This property is only used by WatsonWebserver.Lite.
+            /// Read timeout, in milliseconds, for inbound socket reads.
             /// </summary>
             public int ReadTimeoutMs
             {
@@ -268,7 +301,6 @@
 
             /// <summary>
             /// Maximum incoming header size, in bytes.
-            /// This property is only used by WatsonWebserver.Lite.
             /// </summary>
             public int MaxIncomingHeadersSize
             {
@@ -310,7 +342,6 @@
             /// Maximum number of headers allowed in a request.
             /// A value of zero or less disables this check.
             /// Default is 64.
-            /// This property is only used by WatsonWebserver.Lite.
             /// </summary>
             public int MaxHeaderCount
             {
@@ -351,8 +382,8 @@
             public bool Enable { get; set; } = false;
 
             /// <summary>
-            /// Certifcate for SSL.
-            /// For WatsonWebserver, install the certificate in your operating system.  This property is not used by WatsonWebserver, only WatsonWebserver.Lite.
+            /// Certificate for SSL.
+            /// If not set directly, the certificate can be loaded from the configured PFX file.
             /// </summary>
             public X509Certificate2 SslCertificate
             {
@@ -391,25 +422,21 @@
 
             /// <summary>
             /// PFX certificate filename.
-            /// For WatsonWebserver, install the certificate in your operating system.  This property is not used by WatsonWebserver, only WatsonWebserver.Lite.
             /// </summary>
             public string PfxCertificateFile { get; set; } = null;
 
             /// <summary>
             /// PFX certificate password.
-            /// For WatsonWebserver, install the certificate in your operating system.  This property is not used by WatsonWebserver, only WatsonWebserver.Lite.
             /// </summary>
             public string PfxCertificatePassword { get; set; } = null;
 
             /// <summary>
             /// Require mutual authentication.
-            /// This property is not used by WatsonWebserver, only WatsonWebserver.Lite.
             /// </summary>
             public bool MutuallyAuthenticate { get; set; } = false;
 
             /// <summary>
             /// Accept invalid certificates including self-signed and those that are unable to be verified.
-            /// This property is not used by WatsonWebserver, only WatsonWebserver.Lite.
             /// </summary>
             public bool AcceptInvalidAcertificates { get; set; } = true;
 

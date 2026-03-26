@@ -2,12 +2,10 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFrameworks>net462;net48;net8.0;net10.0</TargetFrameworks>
+		<TargetFrameworks>net8.0;net10.0</TargetFrameworks>
 	</PropertyGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\WatsonWebserver.Lite\WatsonWebserver.Lite.csproj" />
-		<ProjectReference Include="..\WatsonWebserver\WatsonWebserver.csproj" />
+	<ItemGroup>		<ProjectReference Include="..\WatsonWebserver\WatsonWebserver.csproj" />
 	</ItemGroup>
 
 </Project>

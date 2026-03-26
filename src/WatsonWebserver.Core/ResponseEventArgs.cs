@@ -13,6 +13,21 @@
         #region Public-Members
 
         /// <summary>
+        /// Request protocol.
+        /// </summary>
+        public HttpProtocol Protocol { get; set; } = HttpProtocol.Http1;
+
+        /// <summary>
+        /// Connection identifier.
+        /// </summary>
+        public Guid ConnectionId { get; set; } = Guid.Empty;
+
+        /// <summary>
+        /// Stream identifier.
+        /// </summary>
+        public Guid StreamId { get; set; } = Guid.Empty;
+
+        /// <summary>
         /// IP address.
         /// </summary>
         public string Ip { get; set; } = null;
@@ -63,6 +78,16 @@
         public long? ResponseContentLength { get; set; } = 0;
 
         /// <summary>
+        /// Indicates whether the response started.
+        /// </summary>
+        public bool ResponseStarted { get; set; } = false;
+
+        /// <summary>
+        /// Indicates whether the response completed.
+        /// </summary>
+        public bool ResponseCompleted { get; set; } = false;
+
+        /// <summary>
         /// Total time in processing the request and sending the response, in milliseconds.
         /// </summary>
         public double TotalMs { get; set; } = 0;
@@ -82,6 +107,9 @@
         /// <param name="totalMs">Total milliseconds.</param>
         public ResponseEventArgs(HttpContextBase ctx, double totalMs)
         {
+            Protocol = ctx.Protocol;
+            ConnectionId = ctx.Connection.Guid;
+            StreamId = ctx.Stream.Guid;
             Ip = ctx.Request.Source.IpAddress;
             Port = ctx.Request.Source.Port;
             Method = ctx.Request.Method;
@@ -91,6 +119,8 @@
             RequestContentLength = ctx.Request.ContentLength;
             StatusCode = ctx.Response.StatusCode;
             ResponseContentLength = ctx.Response.ContentLength;
+            ResponseStarted = ctx.Response.ResponseStarted;
+            ResponseCompleted = ctx.Response.ResponseCompleted;
             TotalMs = totalMs;
         }
 

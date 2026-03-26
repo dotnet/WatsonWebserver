@@ -13,6 +13,21 @@
         #region Public-Members
 
         /// <summary>
+        /// Request protocol.
+        /// </summary>
+        public HttpProtocol Protocol { get; set; } = HttpProtocol.Http1;
+
+        /// <summary>
+        /// Connection identifier.
+        /// </summary>
+        public Guid ConnectionId { get; set; } = Guid.Empty;
+
+        /// <summary>
+        /// Stream identifier.
+        /// </summary>
+        public Guid StreamId { get; set; } = Guid.Empty;
+
+        /// <summary>
         /// IP address.
         /// </summary>
         public string Ip { get; set; } = null;
@@ -84,6 +99,9 @@
         {
             if (ctx != null)
             {
+                Protocol = ctx.Protocol;
+                ConnectionId = ctx.Connection.Guid;
+                StreamId = ctx.Stream.Guid;
                 Ip = ctx.Request.Source.IpAddress;
                 Port = ctx.Request.Source.Port;
                 Method = ctx.Request.Method;

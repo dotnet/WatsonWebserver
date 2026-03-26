@@ -130,6 +130,235 @@
             </summary>
             <returns>Server.</returns>
         </member>
+        <member name="T:WatsonWebserver.Http1.ClientStreamContext">
+            <summary>
+            Transport stream and negotiated protocol details for a client connection.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Http1.ClientStreamContext.Protocol">
+            <summary>
+            Negotiated application protocol.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Http1.ClientStreamContext.Stream">
+            <summary>
+            Client stream.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Http1.PrefixBufferedStream">
+            <summary>
+            Stream wrapper that replays prefetched bytes before delegating to the inner stream.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Http1.PrefixBufferedStream.#ctor(System.IO.Stream,System.Byte[])">
+            <summary>
+            Instantiate the stream wrapper.
+            </summary>
+            <param name="innerStream">Inner stream.</param>
+            <param name="prefixBytes">Prefetched bytes to replay first.</param>
+        </member>
+        <member name="P:WatsonWebserver.Http1.PrefixBufferedStream.InnerStream">
+            <summary>
+            Inner wrapped stream.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Http1.PrefixBufferedStream.PrefixConsumed">
+            <summary>
+            Indicates whether all prefix bytes have been consumed.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Http2.Http2ConnectionSession">
+            <summary>
+            Minimal HTTP/2 server connection session.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Http2.Http2ConnectionSession.#ctor(WatsonWebserver.Core.WebserverSettings,WatsonWebserver.Core.WebserverEvents,System.IO.Stream,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.CancellationToken,System.Threading.Tasks.Task},System.Net.IPEndPoint,System.Net.IPEndPoint,System.Boolean)">
+            <summary>
+            Instantiate the session.
+            </summary>
+            <param name="settings">Server settings.</param>
+            <param name="events">Server events.</param>
+            <param name="stream">Transport stream.</param>
+            <param name="processContext">Shared request processor.</param>
+            <param name="source">Source endpoint.</param>
+            <param name="destination">Destination endpoint.</param>
+            <param name="encrypted">True if the connection is encrypted.</param>
+        </member>
+        <member name="M:WatsonWebserver.Http2.Http2ConnectionSession.RunAsync(System.Threading.CancellationToken)">
+            <summary>
+            Run the HTTP/2 connection session.
+            </summary>
+            <param name="token">Cancellation token.</param>
+            <returns>Task.</returns>
+        </member>
+        <member name="T:WatsonWebserver.Http2.Http2Context">
+            <summary>
+            HTTP/2 request context.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Http2.Http2Context.#ctor(WatsonWebserver.Core.WebserverSettings,WatsonWebserver.Http2.Http2Request,WatsonWebserver.Http2.Http2Response,System.Func{WatsonWebserver.Core.ConnectionMetadata},System.Func{WatsonWebserver.Core.StreamMetadata})">
+            <summary>
+            Instantiate the context.
+            </summary>
+            <param name="settings">Server settings.</param>
+            <param name="request">HTTP/2 request.</param>
+            <param name="response">HTTP/2 response.</param>
+            <param name="connectionMetadataFactory">Connection metadata factory.</param>
+            <param name="streamMetadataFactory">Stream metadata factory.</param>
+        </member>
+        <member name="T:WatsonWebserver.Http2.Http2PendingRequest">
+            <summary>
+            Pending HTTP/2 request state awaiting END_STREAM.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Http2.Http2Request">
+            <summary>
+            HTTP/2 request.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Http2.Http2Response">
+            <summary>
+            HTTP/2 response.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Http2.Http2Response.DataAsString">
+            <summary>
+            Response body as string.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Http2.Http2Response.DataAsBytes">
+            <summary>
+            Response body as bytes.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Http2.Http2Response.Data">
+            <summary>
+            Response body stream.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Http2.Http2Response.#ctor(WatsonWebserver.Core.HttpRequestBase,WatsonWebserver.Core.WebserverSettings,WatsonWebserver.Core.Http2.Http2ConnectionWriter,WatsonWebserver.Core.Http2.Http2StreamStateMachine,System.Func{System.Int32,System.Int32,System.Threading.CancellationToken,System.Threading.Tasks.Task{System.Int32}},System.Int32,System.Int32)">
+            <summary>
+            Instantiate the response.
+            </summary>
+            <param name="request">Associated request.</param>
+            <param name="settings">Server settings.</param>
+            <param name="writer">HTTP/2 connection writer.</param>
+            <param name="stateMachine">Stream state machine.</param>
+            <param name="reserveSendWindowAsync">Flow-control reservation callback.</param>
+            <param name="streamIdentifier">HTTP/2 stream identifier.</param>
+            <param name="peerMaxFrameSize">Peer-advertised maximum frame size.</param>
+        </member>
+        <member name="M:WatsonWebserver.Http2.Http2Response.Send(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:WatsonWebserver.Http2.Http2Response.Send(System.Int64,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:WatsonWebserver.Http2.Http2Response.Send(System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:WatsonWebserver.Http2.Http2Response.Send(System.Byte[],System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:WatsonWebserver.Http2.Http2Response.Send(System.Int64,System.IO.Stream,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:WatsonWebserver.Http2.Http2Response.SendChunk(System.Byte[],System.Boolean,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:WatsonWebserver.Http2.Http2Response.SendEvent(WatsonWebserver.Core.ServerSentEvent,System.Boolean,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:WatsonWebserver.Http3.Http3ConnectionSession">
+            <summary>
+            Minimal HTTP/3 server connection session.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Http3.Http3ConnectionSession.#ctor(WatsonWebserver.Core.WebserverSettings,WatsonWebserver.Core.WebserverEvents,System.Net.Quic.QuicConnection,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.CancellationToken,System.Threading.Tasks.Task})">
+            <summary>
+            Instantiate the session.
+            </summary>
+            <param name="settings">Server settings.</param>
+            <param name="events">Server events.</param>
+            <param name="connection">QUIC connection.</param>
+            <param name="processContext">Shared request processor.</param>
+        </member>
+        <member name="M:WatsonWebserver.Http3.Http3ConnectionSession.RunAsync(System.Threading.CancellationToken)">
+            <summary>
+            Run the session.
+            </summary>
+            <param name="token">Cancellation token.</param>
+            <returns>Task.</returns>
+        </member>
+        <member name="T:WatsonWebserver.Http3.Http3Context">
+            <summary>
+            HTTP/3 request context.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Http3.Http3Context.#ctor(WatsonWebserver.Core.WebserverSettings,WatsonWebserver.Http3.Http3Request,WatsonWebserver.Http3.Http3Response,System.Func{WatsonWebserver.Core.ConnectionMetadata},System.Func{WatsonWebserver.Core.StreamMetadata})">
+            <summary>
+            Instantiate the context.
+            </summary>
+            <param name="settings">Server settings.</param>
+            <param name="request">HTTP/3 request.</param>
+            <param name="response">HTTP/3 response.</param>
+            <param name="connectionMetadataFactory">Connection metadata factory.</param>
+            <param name="streamMetadataFactory">Stream metadata factory.</param>
+        </member>
+        <member name="T:WatsonWebserver.Http3.Http3Request">
+            <summary>
+            HTTP/3 request.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Http3.Http3Response">
+            <summary>
+            HTTP/3 response.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Http3.Http3Response.DataAsString">
+            <summary>
+            Response body as string.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Http3.Http3Response.DataAsBytes">
+            <summary>
+            Response body as bytes.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Http3.Http3Response.Data">
+            <summary>
+            Response body stream.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Http3.Http3Response.#ctor(WatsonWebserver.Core.HttpRequestBase,WatsonWebserver.Core.WebserverSettings,System.Net.Quic.QuicStream)">
+            <summary>
+            Instantiate the response.
+            </summary>
+            <param name="request">Associated request.</param>
+            <param name="settings">Server settings.</param>
+            <param name="stream">HTTP/3 request stream.</param>
+        </member>
+        <member name="M:WatsonWebserver.Http3.Http3Response.Send(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:WatsonWebserver.Http3.Http3Response.Send(System.Int64,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:WatsonWebserver.Http3.Http3Response.Send(System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:WatsonWebserver.Http3.Http3Response.Send(System.Byte[],System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:WatsonWebserver.Http3.Http3Response.Send(System.Int64,System.IO.Stream,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:WatsonWebserver.Http3.Http3Response.SendChunk(System.Byte[],System.Boolean,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:WatsonWebserver.Http3.Http3Response.SendEvent(WatsonWebserver.Core.ServerSentEvent,System.Boolean,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
         <member name="T:WatsonWebserver.HttpContext">
             <summary>
             HTTP context including both request and response.
@@ -148,6 +377,11 @@
             <param name="settings">Settings.</param>
             <param name="events">Events.</param>
             <param name="serializer">Serializer.</param>
+        </member>
+        <member name="M:WatsonWebserver.HttpContext.ResetForReuse">
+            <summary>
+            Reset the HTTP/1.1 context before returning it to the pool.
+            </summary>
         </member>
         <member name="T:WatsonWebserver.HttpRequest">
             <summary>
@@ -186,6 +420,14 @@
             </summary>
             <param name="ctx">HttpListenerContext.</param>
             <param name="serializer">Serialization helper.</param>
+        </member>
+        <member name="M:WatsonWebserver.HttpRequest.#ctor(WatsonWebserver.Core.WebserverSettings,System.IO.Stream,WatsonWebserver.Core.Http1.Http1RequestMetadata)">
+            <summary>
+            HTTP request from a raw HTTP/1.1 stream.
+            </summary>
+            <param name="settings">Webserver settings.</param>
+            <param name="stream">Readable request stream.</param>
+            <param name="metadata">Parsed request metadata.</param>
         </member>
         <member name="M:WatsonWebserver.HttpRequest.ReadChunk(System.Threading.CancellationToken)">
             <summary>
@@ -230,6 +472,11 @@
             </summary>
             <param name="token">Cancellation token.</param>
             <returns>The request body as a byte array, or null if no body is present.</returns>
+        </member>
+        <member name="M:WatsonWebserver.HttpRequest.ResetForReuse">
+            <summary>
+            Reset the HTTP/1.1 request before returning it to the pool.
+            </summary>
         </member>
         <member name="T:WatsonWebserver.HttpResponse">
             <summary>
@@ -283,6 +530,11 @@
             </summary>
             <param name="disposing">Disposing.</param>
         </member>
+        <member name="M:WatsonWebserver.HttpResponse.ResetForReuse">
+            <summary>
+            Reset the HTTP/1.1 response before returning it to the pool.
+            </summary>
+        </member>
         <member name="T:WatsonWebserver.Webserver">
             <summary>
             Watson webserver.
@@ -296,6 +548,16 @@
         <member name="P:WatsonWebserver.Webserver.RequestCount">
             <summary>
             Number of requests being serviced currently.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Webserver.SupportsHttp2">
+            <summary>
+            Indicates whether the current transport supports HTTP/2.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Webserver.SupportsHttp3">
+            <summary>
+            Indicates whether the current transport supports HTTP/3.
             </summary>
         </member>
         <member name="M:WatsonWebserver.Webserver.#ctor(WatsonWebserver.Core.WebserverSettings,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task})">

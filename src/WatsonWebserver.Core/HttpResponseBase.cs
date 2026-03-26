@@ -23,6 +23,12 @@
         #region Public-Members
 
         /// <summary>
+        /// The HTTP protocol in use for the current response.
+        /// </summary>
+        [JsonPropertyOrder(-6)]
+        public HttpProtocol Protocol { get; set; } = HttpProtocol.Http1;
+
+        /// <summary>
         /// UTC timestamp from when the response object was created.
         /// </summary>
         [JsonPropertyOrder(-5)]
@@ -70,6 +76,22 @@
         }
 
         /// <summary>
+        /// Response trailers to include when the protocol permits them.
+        /// </summary>
+        public NameValueCollection Trailers
+        {
+            get
+            {
+                return _Trailers;
+            }
+            set
+            {
+                if (value == null) _Trailers = new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
+                else _Trailers = value;
+            }
+        }
+
+        /// <summary>
         /// User-supplied content-type to include in the response.
         /// </summary>
         public string ContentType { get; set; } = String.Empty;
@@ -109,16 +131,43 @@
         public abstract MemoryStream Data { get; }
 
         /// <summary>
+        /// Indicates whether the response has started.
+        /// </summary>
+        public bool ResponseStarted { get; private set; } = false;
+
+        /// <summary>
+        /// Indicates whether the response has completed.
+        /// </summary>
+        public bool ResponseCompleted { get; private set; } = false;
+
+        /// <summary>
         /// Boolean indicating if the response has been sent.
         /// </summary>
-        public bool ResponseSent { get; set; } = false;
+        public bool ResponseSent
+        {
+            get
+            {
+                return _ResponseSent;
+            }
+            set
+            {
+                _ResponseSent = value;
+                if (value)
+                {
+                    ResponseStarted = true;
+                    ResponseCompleted = true;
+                }
+            }
+        }
 
         #endregion
 
         #region Private-Members
 
         private NameValueCollection _Headers = new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
+        private NameValueCollection _Trailers = new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
         private bool _Disposed = false;
+        private bool _ResponseSent = false;
 
         #endregion
 
@@ -147,6 +196,27 @@
             {
                 _Disposed = true;
             }
+        }
+
+        /// <summary>
+        /// Reset the response so it can be safely reused by an object pool.
+        /// </summary>
+        protected internal virtual void ResetForReuse()
+        {
+            Protocol = HttpProtocol.Http1;
+            Timestamp = new Timestamp();
+            ProtocolVersion = "HTTP/1.1";
+            StatusCode = 200;
+            _Headers = new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
+            _Trailers = new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
+            ContentType = String.Empty;
+            ContentLength = 0;
+            ChunkedTransfer = false;
+            ServerSentEvents = false;
+            ResponseStarted = false;
+            ResponseCompleted = false;
+            _ResponseSent = false;
+            _Disposed = false;
         }
 
         /// <summary>
@@ -210,6 +280,27 @@
         /// <param name="token">Cancellation token useful for canceling the request.</param>
         /// <returns>True if successful.</returns>
         public abstract Task<bool> SendEvent(ServerSentEvent sse, bool isFinal, CancellationToken token = default);
+
+        #endregion
+
+        #region Protected-Methods
+
+        /// <summary>
+        /// Mark the response as started.
+        /// </summary>
+        protected void MarkResponseStarted()
+        {
+            ResponseStarted = true;
+        }
+
+        /// <summary>
+        /// Mark the response as completed.
+        /// </summary>
+        protected void MarkResponseCompleted()
+        {
+            ResponseStarted = true;
+            ResponseCompleted = true;
+        }
 
         #endregion
 

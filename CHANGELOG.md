@@ -2,259 +2,218 @@
 
 ## Current Version
 
-v6.6.0
+`v7.0.0`
 
-### Bug Fixes
-- Fixed post-authentication content routes calling pre-authentication handler (authentication bypass)
-- Fixed `PostRouting` handler not being awaited (fire-and-forget, exceptions lost)
-- Fixed static `CancellationTokenSource` in `HttpContextBase` shared across all contexts (now per-instance)
+## v7.0.0
 
-### Security
-- Added directory traversal protection in content route file serving (`Path.GetFullPath` validation)
-- Added `MaxRequestBodySize` setting (default 0 = unlimited, set > 0 to enforce)
-- Added `MaxHeaderCount` setting for Lite (default 64, set 0 to disable)
+Watson 7.0 is a major release that expands the server from an HTTP/1.1-focused model into a unified multi-protocol platform with shared consumer semantics across HTTP/1.1, HTTP/2, and HTTP/3.
 
-### Resource Management
-- Added `IDisposable` to `HttpContextBase`, `HttpRequestBase`, and `HttpResponseBase` with proper cleanup
-- Fixed `MemoryStream` leak in `Send(string)` and `Send(byte[])` on error paths (both Watson and Lite)
-- Fixed `HttpListenerContext` not being closed on early failure paths in Watson
+### Protocols And Transport
+
+- Added protocol-level configuration through `WebserverSettings.Protocols`
+- Added support in `Watson` for:
+  - HTTP/1.1
+  - HTTP/2 over TLS
+  - HTTP/2 cleartext prior knowledge when explicitly enabled
+  - HTTP/3 over TLS/QUIC
+- Added runtime HTTP/3 availability detection and startup normalization
+- Added Alt-Svc emission support through `WebserverSettings.AltSvc`
+- Added HTTP/2 and HTTP/3 connection, request, response, and protocol-processing paths
+
+### Consumer Configuration Surface
+
+- Added `ProtocolSettings`
+  - `EnableHttp1`
+  - `EnableHttp2`
+  - `EnableHttp3`
+  - `EnableHttp2Cleartext`
+  - `IdleTimeoutMs`
+  - `MaxConcurrentStreams`
+  - `Http2`
+  - `Http3`
+- Added `AltSvcSettings`
+  - `Enabled`
+  - `Authority`
+  - `Port`
+  - `Http3Alpn`
+  - `MaxAgeSeconds`
+- Added HTTP/3 tuning through `Http3Settings`
+  - `MaxFieldSectionSize`
+  - `QpackMaxTableCapacity`
+  - `QpackBlockedStreams`
+  - `EnableDatagram`
+- Retained and extended `WebserverSettings.IO`, `Ssl`, `Headers`, `AccessControl`, `Debug`, and `UseMachineHostname`
+
+### Validation And Runtime Safety
+
+- Added `WebserverSettingsValidator` protocol validation
+- Startup now fails fast when:
+  - all protocols are disabled
+  - HTTP/2 is enabled on a transport that does not support it
+  - HTTP/3 is enabled on a transport that does not support it
+  - HTTP/2 is enabled without TLS and without explicit cleartext prior-knowledge mode
+  - HTTP/3 is enabled without TLS
+  - Alt-Svc is enabled while HTTP/3 is disabled
+- When HTTP/3 is configured but QUIC is unavailable at runtime, Watson now disables HTTP/3 and Alt-Svc for that process start rather than advertise unsupported behavior
+
+### Request And Response Semantics
+
+- Unified request and response consumption model across protocols through `HttpContextBase`, `HttpRequestBase`, and `HttpResponseBase`
+- Added protocol metadata to request and context objects
+  - negotiated protocol
+  - connection metadata
+  - stream metadata
+- Clarified chunked-transfer semantics:
+  - HTTP/1.1 request `ReadChunk()` remains available for actual chunked transfer-encoding
+  - HTTP/2 and HTTP/3 requests now explicitly reject `ReadChunk()` because those protocols do not expose HTTP/1.1 chunk semantics
+  - `SendChunk()` and `SendEvent()` remain available across protocols, with HTTP/2 and HTTP/3 using transport-native framing semantics
+- Added request trailer support when the protocol permits it
+- Added response trailer support when the protocol permits it
+- Added `ReadBodyAsync()` to make full-body reads explicit and cache-aware
+
+### Routing, Lifecycle, And Extensibility
+
+- Preserved the existing Watson routing pipeline while aligning it with the 7.0 shared protocol architecture
+- Continued support for:
+  - preflight routes
+  - pre-routing hooks
+  - pre-authentication routes
+  - authentication hooks
+  - post-authentication routes
+  - default routes
+  - post-routing hooks
+- Retained `HostBuilder` fluent configuration support
+- Added or expanded lifecycle metadata and cancellation handling through `HttpContextBase`
+- Retained `Metadata` on `HttpContextBase` for application-defined request state
+
+### OpenAPI / Swagger
+
+- Added built-in OpenAPI 3.0 document generation
+- Added built-in Swagger UI hosting
+- Added `UseOpenApi()` extension methods on `WebserverBase`
+- Added route-level OpenAPI metadata support for documented endpoints
+- Added `Test.OpenApi` coverage and examples
 
 ### Performance
-- Replaced `AppendBytes()` O(n^2) pattern in Lite with `MemoryStream`/`StringBuilder` for body reading and header building
-- Cached `QueryDetails.Elements` (parsed once, reused on subsequent access)
-- Consolidated path normalization in route managers (eliminated redundant `ToLower`/prefix/suffix operations)
-- Replaced polling loop (`Task.Delay(100)`) with `SemaphoreSlim` for MaxRequests backpressure in Watson
 
-### Concurrency
-- Replaced exclusive `lock` with `ReaderWriterLockSlim` in all route managers (Static, Parameter, Dynamic, Content)
-- Fixed TOCTOU race condition in route addition (Exists + Add combined into single atomic write lock)
+The 7.0 optimization program benchmarked each candidate independently and retained only the items that improved throughput without introducing correctness regressions.
 
-### Architecture
-- Extracted duplicated routing pipeline (~300 lines x2) into `ProcessRoutingGroup` method in both Watson and Lite
-- Added HTTP/1.1-specific annotations to `ChunkedTransfer`, `ReadChunk()`, and `SendChunk()` (prep for HTTP/2)
+Kept optimizations in the 7.0 line:
 
-### Breaking Changes
-- `HttpContextBase.Token` / `TokenSource` is now per-instance instead of static (may affect code that compared tokens across contexts)
-- `QueryDetails.Elements` now returns a cached instance (code that modified the returned collection will affect subsequent reads)
+- Item 3: static-route reads now use frozen snapshots and the normalized path is reused
+- Item 4: cached `JsonSerializerOptions` in `DefaultSerializationHelper`
+- Item 5: cached serialized header prefixes on the simple-response path
+- Item 7: pooled HTTP/1.1 request/response/context objects for keep-alive reuse
+- Item 12: lazy header materialization for HTTP/2 and HTTP/3 requests
+- Item 17: internal `ConfigureAwait(false)` consistency fix on the response path
+
+Optimization candidates that regressed performance or behavior were benchmarked, documented, and reverted before release.
+
+### Testing And Tooling
+
+- Replaced `Test.All` with `Test.Automated`
+- Added `Test.XUnit` as a mirror of the same automated coverage surface
+- Refactored automated tests to emit:
+  - per-test pass/fail result lines
+  - per-test runtime
+  - final aggregate pass/fail summary
+  - final failed-test enumeration
+- Expanded automated coverage for the higher-risk 7.0 areas, including:
+  - route snapshot coherency
+  - serializer behavior
+  - cached response header paths
+  - pooled HTTP/1.1 object reset behavior
+  - HTTP/2 and HTTP/3 lazy header materialization behavior
+- Added stable execution scripts and testing documentation for repository contributors
+
+### Breaking Changes And Behavioral Changes
+
+- Watson 7.0 should be treated as a major release for consumers
+- Protocol enablement is now explicit and validated
+- HTTP/2 cleartext use requires explicit prior-knowledge opt-in
+- HTTP/3 requires TLS and depends on runtime QUIC availability
+- `ReadChunk()` is now explicitly an HTTP/1.1-only API surface
+- Multi-protocol deployments should prefer protocol-agnostic body reads through `ReadBodyAsync()`, `Data`, `DataAsBytes`, or `DataAsString`
+- `UseMachineHostname` behavior remains part of the host-handling model and is forced when wildcard hostnames such as `*` or `+` are used
 
 ## Previous Versions
 
-v6.5.x
+### v6.6.0
 
-- OpenAPI and Swagger support, refer to `Test.OpenApi` project and `README.md`
+- Fixed post-authentication content routes calling the pre-authentication handler
+- Fixed `PostRouting` not being awaited
+- Fixed static `CancellationTokenSource` sharing across contexts
+- Added directory traversal protection in content-route file serving
+- Added `MaxRequestBodySize`
+- Added `MaxHeaderCount`
+- Added `IDisposable` support to context, request, and response base classes
+- Fixed `MemoryStream` leaks on response paths
+- Improved route-manager and body-read performance
+- Replaced route-manager `lock` usage with `ReaderWriterLockSlim`
+- Added preparatory HTTP/1.1 annotations ahead of protocol work
 
-v6.4.x
+### v6.5.x
+
+- Added OpenAPI and Swagger support
+
+### v6.4.x
 
 - Minor breaking changes to server-sent events
 
-v6.3.x
+### v6.3.x
 
-- Minor change to chunked transfer, i.e. `SendChunk` now accepts `isFinal` as a `Boolean` property
-- Added support for server-sent events, included `Test.ServerSentEvents` project
+- Changed `SendChunk` to accept `isFinal`
+- Added server-sent events
 - Minor internal refactor
 
-v6.2.x
+### v6.2.x
 
-- Support for specifying exception handler for static, content, parameter, and dynamic routes (thank you @nomadeon)
+- Added exception-handler support for static, content, parameter, and dynamic routes
 
-v6.1.x
+### v6.1.x
 
-- Breaking change to move ```ContentRouteHandler``` into ```ContentRouteManager```
+- Moved `ContentRouteHandler` into `ContentRouteManager`
 
-v6.0.x
+### v6.0.x
 
-- Major refactor with breaking changes to consolidate WatsonWebserver and HttpServerLite
-- Consolidated core classes, enums, into WatsonWebserver.Core
-- Modified all test apps to support either webserver implementation
-- Consolidated and unified constructors across both projects
-- Reduced to a single listener prefix 
-- Removed attribute routes (crossing assembly boundaries and precluding use of AOT)
-- Modified Test projects to use base class (to enable testing with Lite version)
-- Modified Test projects to allow argument to be passed to indicate if the lite version should be used
-- Modified SSL configuration to use only X509Certificate2; derive if filename is supplied
-- HttpResponse.StatusDescription now based on StatusCode
-- Created a new routing architecture including routing groups, pre-auth routes, and post-auth routes
-- Amended HostBuilder extension to allow for balance of route types
-- Amended HostBuilder extension to allow for both pre-authentication and post-authentication routes
-- Added Test.Routing project and validated with both implementations
-- Added Test.HostBuilder project and validated with both implementations
-- Added CancellationToken and CancellationTokenSource to HttpContextBase
+- Major refactor consolidating WatsonWebserver and HttpServerLite concepts
+- Consolidated shared types into `WatsonWebserver.Core`
+- Removed attribute routes
+- Unified constructors
+- Simplified SSL configuration around `X509Certificate2`
+- Introduced current routing architecture and host-builder changes
 
-v5.1.x
+### v5.1.x
 
-- ```HostBuilder``` feature to quickly build servers, thank you @sapurtcomputer30!
+- Added `HostBuilder`
 
-v5.0.x
+### v5.0.x
 
-- Migrate from dictionaries to ```NameValueCollection```
-- Reintroduce ```HttpRequest``` methods for checking existence of and retrieving query or header values
+- Moved to `NameValueCollection`
+- Reintroduced header and query helper methods on `HttpRequest`
 
-v4.3.x
+### v4.x
 
-- Bugfix (parameterless constructor for settings)
-- Case-insensitive dictionaries in ```HttpRequest```, eventually depcreating certain methods
-- Targeting .NET Framework 4.8
-- Less restrictive chunk reading
-- Support for ```UNKNOWN``` HTTP methods; ```MethodRaw``` property in ```HttpRequest```
+- Added parameter routes
+- Added response/request data helper changes
+- Added route details within `HttpContext`
+- Added improved constructor and hostname behavior
+- Added support for unknown HTTP methods
 
-v4.2.x
+### v3.x
 
-- Bugfix in content route manager match function
-- Breaking changes
-- ```DataAsString```, ```DataAsBytes``` now are properties instead of methods
-- ```DataAsString```, ```DataAsBytes```, ```DataAsJson``` now available on ```HttpResponse```
-- Response data now retained within the ```HttpResponse``` object for later use
+- Added and expanded chunked-transfer support
+- Moved route callbacks to async `Task` signatures
+- Added stream and callback improvements
+- Added statistics and multi-listener support
 
-v4.1.3
+### v2.x
 
-- Inclusion of route details within ```HttpContext```
-- Add GUID and metadata to route definitions, which propagate to ```HttpContext```
+- Added pre-routing callback
+- Added automatic decoding of chunked inbound requests
+- Added request and response stream support
+- Simplified constructors and response model
 
-v4.1.1
+### v1.x
 
-- Parameter routes
-
-v4.1.0
-
-- Breaking changes
-- Removed constructors that use ```Uri``` objects
-- Directly adding prefixes to ```HttpListener``` instead of ```Uri``` due to issues with listening on all IP addresses and hostnames
-- Removed certain ```.ToJson()``` methods in favor of having a ```.ToJson()``` extension method for all classes
-- Added ```Json``` property to ```ExceptionEventArgs```
-- Updated dependencies to fix an issue with IP address matching
-
-v4.0.0
-
-- Breaking changes to improve simplicity and reliability
-- Consolidated settings into the ```Settings``` property
-- Consolidated routing into the ```Routing``` property
-- Use of ```EventHandler``` for events instead of ```Action```
-- Use of ```ConfigureAwait``` for reliability within your application
-- Simplified constructors
-- ```Pages``` property to set how 404 and 500 responses should be sent, if not handled within your application
-- Consolidated test applications
-- Attribute-based routes now loaded automatically, removed ```LoadRoutes``` method
-- Restructured ```HttpContext```, ```HttpRequest```, and ```HttpResponse``` for better usability
-
-v3.3.0
-
-- Breaking change to route attributes
-- Route attributes now support both static routes and dynamic routes
-
-v3.2.0
-
-- Breaking change, ```Start()``` must be called to start listening for connections
-- ```Stop()``` API introduced
-- Exceptions now are sent via events when the listener is impacted
-
-v3.1.0
-
-- Default header values for pre-flight requests (minor breaking change)
-
-v3.0.13
-
-- Static routes defined by method attributes (thank you @Job79 for the awesome PR)
-
-v3.0.12
-
-- Fix for Querystring
-
-v3.0.11
-
-- Expose BaseDirectory via ContentRoutes (thank you @joreg)
-
-v3.0.10
-
-- Added methods to retrieve data as bytes, string, or object (using JSON or XML deserialization) - thanks @notesjor and the TFRES project for the contribution!
-
-v3.0.9
-
-- Added Statistics object.
-
-v3.0.8
-
-- New constructor allowing multiple URIs to be supplied on which to listen.  Refer to the Test.MultiUri project.  Thank you @winkmichael!
-
-v3.0.7
-
-- Breaking changes to event callbacks (now using Action instead of Func to allow return type of void)
-- RequestorDisconnected event callback
-- Consistent exception handling across all response .Send methods
-- Removed exception catching from ContentRouteProcessor to allow main request handler to handle
-- Thank you @zaksnet for suggestions, help, and troubleshooting!
-
-v3.0.6.1
-
-- Fix for content routes causing 500 (thank you @zaksnet)
-
-v3.0.6
-
-- Async/await change in main request look to fix InvalidOperationException (thank you @zaksnet)
-
-v3.0.5
-
-- Removed ThreadPool.QueueUserWorkItem in favor of unawaited Tasks
-- Removed .RunSynchronously in favor of .Wait for the default route, thereby eliminating an InvalidOperationException (thank you @at1993)
-- Properly firing ResponseSent events when the event callback is defined (thank you @at1993)
-- Fixed an issue where the file path for content routes was not properly constructed (thank you @zaksnet)
-- Added better documentation on event callbacks
-
-v3.0.4
-
-- Exposed certain HttpRequest factories to support 3rd-party apps built using Watson.
-
-v3.0.3
-
-- Removed welcome message
-
-v3.0.2
-
-- XML documentation
-
-v3.0.1
-
-- BREAKING CHANGE from previous versions, major refactor!
-- Improved support for both sending and receiving data/payloads using ```Transfer-Encoding: chunked```
-- Routes and callbacks now use ```Task MyRouteHandler(HttpContext ctx)```
-- All request data is now either accessible through ```HttpRequest.Data``` (stream) or ```HttpRequest.ReadChunk``` (for chunked transfers only)
-- Huge thanks to @winkmichael and @xmike402 for their help, guidance, and contribution to the project!
- 
-v2.1.x 
-
-- Pre-routing handler, i.e. a callback used for all requests prior to routing
-- Automatic decoding of incoming requests that have ```Transfer-Encoding: chunked``` in the headers
-- Does not validate chunk signatures or decompress using gzip/deflate yet
-- Better support for HEAD requests where content-length header is required (separate constructor for HttpResponse)
-- Added stream support to content route processor for better large object support
-- Bugfixes (content type not being set)
-
-v2.0.x
-
-- Support for Stream in ```HttpRequest``` and ```HttpResponse```.  To use, set ```Server.ReadInputStream``` to ```false```.  Refer to the ```TestStreamServer``` project for a full example
-- Simplified constructors, removed pre-defined JSON packaging for responses
-- ```HttpResponse``` now only accepts byte arrays for ```Data``` for simplicity
-
-v1.x
-
-- Fix URL encoding (using System.Net.WebUtility.UrlDecode instead of Uri.EscapeString)
-- Refactored content routes, static routes, and dynamic routes (breaking change)
-- Added default permit/deny operation along with whitelist and blacklist
-- Added a new constructor allowing Watson to support multiple listener hostnames
-- Retarget to support both .NET Core 2.0 and .NET Framework 4.6.2.
-- Fix for attaching request body data to the HttpRequest object (thanks @user4000!)
-- Retarget to .NET Framework 4.6.2
-- Enum for HTTP method instead of string (breaking change)
-- Bugfix for content routes that have spaces or ```+``` (thanks @Linqx)
-- Support for passing an object as Data to HttpResponse (will be JSON serialized)
-- Support for implementing your own OPTIONS handler (for CORS and other use cases)
-- Bugfix for dispose (thank you @AChmieletzki)
-- Static methods for building HttpRequest from various sources and conversion
-- Static input methods
-- Better initialization of object members
-- More HTTP status codes (see https://en.wikipedia.org/wiki/List_of_HTTP_status_codes)
-- Fix for content routes (thank you @KKoustas!)
-- Fix for Xamarin IOS and Android (thank you @Tutch!)
-- Added content routes for serving static files.
-- Dynamic route support using C#/.NET regular expressions (see RegexMatcher library https://github.com/jchristn/RegexMatcher).
-- IsListening property
-- Added support for static routes.  The default handler can be used for cases where a matching route isn't available, for instance, to build a custom 404 response.
+- Added static routes, dynamic routes, content routes, whitelist/blacklist behavior, multiple-host support, and early framework portability work

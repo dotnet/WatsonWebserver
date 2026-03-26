@@ -1,5 +1,6 @@
-namespace WatsonWebserver.Core.OpenApi
+﻿namespace WatsonWebserver.Core.OpenApi
 {
+    using WatsonWebserver.Core.Routing;
     using System;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;

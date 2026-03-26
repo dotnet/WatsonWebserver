@@ -1,5 +1,6 @@
 ﻿namespace WatsonWebserver.Core
 {
+    using WatsonWebserver.Core.Routing;
     using System;
     using System.IO;
     using System.Net;
@@ -19,41 +20,134 @@
         /// UTC timestamp from when the context object was created.
         /// </summary>
         [JsonPropertyOrder(0)]
-        public Timestamp Timestamp { get; set; } = new Timestamp();
+        public Timestamp Timestamp
+        {
+            get
+            {
+                if (_Timestamp == null) _Timestamp = new Timestamp();
+                return _Timestamp;
+            }
+            set
+            {
+                if (value == null) throw new ArgumentNullException(nameof(Timestamp));
+                _Timestamp = value;
+            }
+        }
+
+        /// <summary>
+        /// The negotiated HTTP protocol.
+        /// </summary>
+        [JsonPropertyOrder(1)]
+        public HttpProtocol Protocol { get; set; } = HttpProtocol.Http1;
+
+        /// <summary>
+        /// Connection metadata for the current request lifecycle.
+        /// </summary>
+        [JsonPropertyOrder(2)]
+        public ConnectionMetadata Connection
+        {
+            get
+            {
+                if (_Connection == null)
+                {
+                    if (_ConnectionFactory != null)
+                    {
+                        _Connection = _ConnectionFactory();
+                        _ConnectionFactory = null;
+                    }
+                    else
+                    {
+                        _Connection = new ConnectionMetadata();
+                    }
+                }
+
+                return _Connection;
+            }
+            set
+            {
+                if (value == null) throw new ArgumentNullException(nameof(Connection));
+                _Connection = value;
+                _ConnectionFactory = null;
+            }
+        }
+
+        /// <summary>
+        /// Stream metadata for the current request lifecycle.
+        /// </summary>
+        [JsonPropertyOrder(3)]
+        public StreamMetadata Stream
+        {
+            get
+            {
+                if (_Stream == null)
+                {
+                    if (_StreamFactory != null)
+                    {
+                        _Stream = _StreamFactory();
+                        _StreamFactory = null;
+                    }
+                    else
+                    {
+                        _Stream = new StreamMetadata();
+                    }
+                }
+
+                return _Stream;
+            }
+            set
+            {
+                if (value == null) throw new ArgumentNullException(nameof(Stream));
+                _Stream = value;
+                _StreamFactory = null;
+            }
+        }
 
         /// <summary>
         /// The HTTP request that was received.
         /// </summary>
-        [JsonPropertyOrder(1)]
+        [JsonPropertyOrder(4)]
         public HttpRequestBase Request { get; set; } = null;
 
         /// <summary>
         /// Type of route.
         /// </summary>
-        [JsonPropertyOrder(2)]
+        [JsonPropertyOrder(5)]
         public RouteTypeEnum RouteType { get; set; } = RouteTypeEnum.Default;
 
         /// <summary>
         /// Matched route.
         /// </summary>
-        [JsonPropertyOrder(3)]
+        [JsonPropertyOrder(6)]
         public object Route { get; set; } = null;
 
         /// <summary>
         /// Globally-unique identifier for the context.
         /// </summary>
-        [JsonPropertyOrder(4)]
-        public Guid Guid { get; set; } = Guid.NewGuid();
+        [JsonPropertyOrder(7)]
+        public Guid Guid
+        {
+            get
+            {
+                if (_Guid == Guid.Empty) _Guid = Guid.NewGuid();
+                return _Guid;
+            }
+            set
+            {
+                if (value == Guid.Empty) throw new ArgumentException("Guid cannot be empty.", nameof(Guid));
+                _Guid = value;
+            }
+        }
 
         /// <summary>
         /// Cancellation token source.
         /// </summary>
-        [JsonPropertyOrder(5)]
+        [JsonPropertyOrder(8)]
         [JsonIgnore]
         public CancellationTokenSource TokenSource
         {
             get
             {
+                if (_TokenSource == null) _TokenSource = new CancellationTokenSource();
                 return _TokenSource;
             }
             set
@@ -66,7 +160,7 @@
         /// <summary>
         /// Cancellation token.
         /// </summary>
-        [JsonPropertyOrder(6)]
+        [JsonPropertyOrder(9)]
         [JsonIgnore]
         public CancellationToken Token
         {
@@ -75,6 +169,12 @@
                 return _TokenSource != null ? _TokenSource.Token : CancellationToken.None;
             }
         }
+
+        /// <summary>
+        /// Indicates whether request processing was aborted before completion.
+        /// </summary>
+        [JsonPropertyOrder(10)]
+        public bool RequestAborted { get; set; } = false;
 
         /// <summary>
         /// The HTTP response that will be sent.  This object is preconstructed on your behalf and can be modified directly.
@@ -92,7 +192,13 @@
 
         #region Private-Members
 
-        private CancellationTokenSource _TokenSource = new CancellationTokenSource();
+        private Timestamp _Timestamp = null;
+        private CancellationTokenSource _TokenSource = null;
+        private ConnectionMetadata _Connection = null;
+        private StreamMetadata _Stream = null;
+        private Func<ConnectionMetadata> _ConnectionFactory = null;
+        private Func<StreamMetadata> _StreamFactory = null;
+        private Guid _Guid = Guid.Empty;
         private bool _Disposed = false;
 
         #endregion
@@ -134,9 +240,59 @@
             }
         }
 
+        /// <summary>
+        /// Reset the context so it can be safely reused by an object pool.
+        /// </summary>
+        protected internal virtual void ResetForReuse()
+        {
+            if (_TokenSource != null)
+            {
+                _TokenSource.Cancel();
+                _TokenSource.Dispose();
+                _TokenSource = null;
+            }
+
+            _Timestamp = null;
+            Protocol = HttpProtocol.Http1;
+            _Connection = null;
+            _Stream = null;
+            _ConnectionFactory = null;
+            _StreamFactory = null;
+            Request = null;
+            RouteType = RouteTypeEnum.Default;
+            Route = null;
+            _Guid = Guid.Empty;
+            RequestAborted = false;
+            Response = null;
+            Metadata = null;
+            _Disposed = false;
+        }
+
         #endregion
 
         #region Private-Methods
+
+        /// <summary>
+        /// Set a deferred connection metadata factory.
+        /// </summary>
+        /// <param name="factory">Factory.</param>
+        protected internal void SetConnectionFactory(Func<ConnectionMetadata> factory)
+        {
+            if (factory == null) throw new ArgumentNullException(nameof(factory));
+            _ConnectionFactory = factory;
+            _Connection = null;
+        }
+
+        /// <summary>
+        /// Set a deferred stream metadata factory.
+        /// </summary>
+        /// <param name="factory">Factory.</param>
+        protected internal void SetStreamFactory(Func<StreamMetadata> factory)
+        {
+            if (factory == null) throw new ArgumentNullException(nameof(factory));
+            _StreamFactory = factory;
+            _Stream = null;
+        }
 
         #endregion
     }

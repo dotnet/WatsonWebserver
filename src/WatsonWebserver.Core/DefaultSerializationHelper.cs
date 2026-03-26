@@ -20,6 +20,9 @@
 
         #region Private-Members
 
+        private static readonly JsonSerializerOptions _PrettyJsonSerializerOptions = CreateSerializerOptions(true);
+        private static readonly JsonSerializerOptions _CompactJsonSerializerOptions = CreateSerializerOptions(false);
+
         #endregion
 
         #region Constructors-and-Factories
@@ -49,8 +52,20 @@
         {
             if (obj == null) return null;
 
+            return JsonSerializer.Serialize(
+                obj,
+                pretty ? _PrettyJsonSerializerOptions : _CompactJsonSerializerOptions);
+        }
+
+        #endregion
+
+        #region Private-Methods
+
+        private static JsonSerializerOptions CreateSerializerOptions(bool pretty)
+        {
             JsonSerializerOptions options = new JsonSerializerOptions();
             options.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+            options.WriteIndented = pretty;
 
             // see https://github.com/dotnet/runtime/issues/43026
             options.Converters.Add(new ExceptionConverter<Exception>());
@@ -59,16 +74,8 @@
             options.Converters.Add(new DateTimeConverter());
             options.Converters.Add(new IntPtrConverter());
             options.Converters.Add(new IPAddressConverter());
-
-            if (!pretty) options.WriteIndented = false;
-            else options.WriteIndented = true;
-
-            return JsonSerializer.Serialize(obj, options);
+            return options;
         }
-
-        #endregion
-
-        #region Private-Methods
 
         #endregion
 

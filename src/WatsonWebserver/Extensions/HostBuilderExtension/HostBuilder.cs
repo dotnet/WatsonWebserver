@@ -1,5 +1,6 @@
 ﻿namespace WatsonWebserver.Extensions.HostBuilderExtension
 {
+    using WatsonWebserver.Core.Routing;
     using System;
     using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;

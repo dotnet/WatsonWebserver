@@ -1,11 +1,13 @@
 ﻿namespace WatsonWebserver.Core
 {
+    using WatsonWebserver.Core.Routing;
     using System;
     using System.Collections.Generic;
     using System.Collections.Specialized;
     using System.Linq;
     using System.Net;
     using System.Reflection;
+    using System.Text;
     using System.Text.Json.Serialization;
     using System.Text.RegularExpressions;
     using System.Threading;
@@ -198,7 +200,413 @@
 
         #endregion
 
+        #region Protected-Methods
+
+        /// <summary>
+        /// Indicates whether the current transport supports HTTP/2.
+        /// </summary>
+        protected virtual bool SupportsHttp2
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Indicates whether the current transport supports HTTP/3.
+        /// </summary>
+        protected virtual bool SupportsHttp3
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Validate the current settings against the transport capability matrix.
+        /// </summary>
+        protected void ValidateSettings()
+        {
+            WebserverSettingsValidator.Validate(Settings, SupportsHttp2, SupportsHttp3);
+        }
+
+        /// <summary>
+        /// Execute the shared request pipeline.
+        /// </summary>
+        /// <param name="ctx">HTTP context.</param>
+        /// <param name="header">Log prefix.</param>
+        /// <param name="token">Cancellation token.</param>
+        /// <returns>Task.</returns>
+        protected async Task ProcessHttpContextAsync(HttpContextBase ctx, string header, CancellationToken token = default)
+        {
+            if (ctx == null) throw new ArgumentNullException(nameof(ctx));
+            if (String.IsNullOrEmpty(header)) throw new ArgumentNullException(nameof(header));
+
+            string requestPath = ctx.Request.Url.RawWithoutQuery;
+            string normalizedRequestPath = ctx.Request.Url.NormalizedRawWithoutQuery;
+
+            if (Events.HasRequestReceivedHandlers)
+            {
+                Events.HandleRequestReceived(this, new RequestEventArgs(ctx));
+            }
+
+            if (Settings.Debug.Requests)
+            {
+                    Events.Logger?.Invoke(
+                        header + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
+                        ctx.Request.Method.ToString() + " " + requestPath);
+                }
+
+            Statistics.IncrementActiveConnectionCount(ctx.Protocol);
+            Statistics.IncrementRequestCounter(ctx.Request.Method);
+            Statistics.IncrementReceivedPayloadBytes(ctx.Request.ContentLength);
+
+            try
+            {
+                if (!Settings.AccessControl.Permit(ctx.Request.Source.IpAddress))
+                {
+                    if (Events.HasRequestDeniedHandlers)
+                    {
+                        Events.HandleRequestDenied(this, new RequestEventArgs(ctx));
+                    }
+
+                    if (Settings.Debug.AccessControl)
+                    {
+                        Events.Logger?.Invoke(header + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " denied due to access control");
+                    }
+
+                    ctx.Response.StatusCode = 403;
+                    await SendDefaultResponseAsync(ctx, token).ConfigureAwait(false);
+                    return;
+                }
+
+                if (ctx.Request.Method == HttpMethod.OPTIONS && Routes.Preflight != null)
+                {
+                    if (Settings.Debug.Routing)
+                    {
+                        Events.Logger?.Invoke(
+                            header + "preflight route for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
+                            ctx.Request.Method.ToString() + " " + requestPath);
+                    }
+
+                    await Routes.Preflight(ctx).ConfigureAwait(false);
+                    if (!ctx.Response.ResponseSent)
+                        throw new InvalidOperationException("Preflight route for " + ctx.Request.Method.ToString() + " " + requestPath + " did not send a response to the HTTP request.");
+                    return;
+                }
+
+                if (Routes.PreRouting != null)
+                {
+                    await Routes.PreRouting(ctx).ConfigureAwait(false);
+                    if (ctx.Response.ResponseSent)
+                    {
+                        if (Settings.Debug.Routing)
+                        {
+                            Events.Logger?.Invoke(
+                                header + "prerouting terminated connection for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
+                                ctx.Request.Method.ToString() + " " + requestPath);
+                        }
+
+                        return;
+                    }
+                }
+
+                if (Routes.PreAuthentication != null)
+                {
+                    if (await ProcessRoutingGroupAsync(ctx, Routes.PreAuthentication, "pre-auth", header).ConfigureAwait(false))
+                        return;
+                }
+
+                if (Routes.AuthenticateRequest != null)
+                {
+                    await Routes.AuthenticateRequest(ctx).ConfigureAwait(false);
+                    if (ctx.Response.ResponseSent)
+                    {
+                        if (Settings.Debug.Routing)
+                        {
+                            Events.Logger?.Invoke(
+                                header + "response sent during authentication for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
+                                ctx.Request.Method.ToString() + " " + ctx.Request.Url.Full);
+                        }
+
+                        return;
+                    }
+                }
+
+                if (Routes.PostAuthentication != null)
+                {
+                    if (await ProcessRoutingGroupAsync(ctx, Routes.PostAuthentication, "post-auth", header).ConfigureAwait(false))
+                        return;
+                }
+
+                if (Settings.Debug.Routing)
+                {
+                    Events.Logger?.Invoke(
+                        header + "default route for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
+                        ctx.Request.Method.ToString() + " " + ctx.Request.Url.Full);
+                }
+
+                if (Routes.Default != null)
+                {
+                    ctx.RouteType = RouteTypeEnum.Default;
+                    await Routes.Default(ctx).ConfigureAwait(false);
+                    if (!ctx.Response.ResponseSent)
+                        throw new InvalidOperationException("Default route for " + ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery + " did not send a response to the HTTP request.");
+                    return;
+                }
+
+                ctx.Response.StatusCode = 404;
+                ctx.Response.ContentType = DefaultPages.Pages[404].ContentType;
+                await SendDefaultResponseAsync(ctx, token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                ctx.RequestAborted = true;
+                if (Events.HasRequestAbortedHandlers)
+                {
+                    Events.HandleRequestAborted(this, new RequestEventArgs(ctx));
+                }
+                throw;
+            }
+            catch (MalformedHttpRequestException e)
+            {
+                ctx.Response.StatusCode = 400;
+                ctx.Response.ContentType = DefaultPages.Pages[400].ContentType;
+                await SendDefaultResponseAsync(ctx, token).ConfigureAwait(false);
+
+                if (Events.HasExceptionEncounteredHandlers)
+                {
+                    Events.HandleExceptionEncountered(this, new ExceptionEventArgs(ctx, e));
+                }
+            }
+            catch (Exception e)
+            {
+                if (Routes.Exception != null)
+                {
+                    await Routes.Exception(ctx, e).ConfigureAwait(false);
+                }
+                else
+                {
+                    ctx.Response.StatusCode = 500;
+                    ctx.Response.ContentType = DefaultPages.Pages[500].ContentType;
+                    await SendDefaultResponseAsync(ctx, token).ConfigureAwait(false);
+                }
+
+                if (Events.HasExceptionEncounteredHandlers)
+                {
+                    Events.HandleExceptionEncountered(this, new ExceptionEventArgs(ctx, e));
+                }
+            }
+            finally
+            {
+                try
+                {
+                    if (!ctx.Response.ResponseSent)
+                    {
+                        ctx.Response.StatusCode = 500;
+                        ctx.Response.ContentType = DefaultPages.Pages[500].ContentType;
+                        await SendDefaultResponseAsync(ctx, token).ConfigureAwait(false);
+                    }
+                }
+                catch (Exception)
+                {
+                }
+
+                ctx.Timestamp.End = DateTime.UtcNow;
+
+                bool emitResponseStarting = ctx.Response.ResponseStarted && Events.HasResponseStartingHandlers;
+                bool emitResponseSent = Events.HasResponseSentHandlers;
+                bool emitResponseCompleted = ctx.Response.ResponseCompleted && Events.HasResponseCompletedHandlers;
+
+                if (emitResponseStarting || emitResponseSent || emitResponseCompleted)
+                {
+                    ResponseEventArgs responseArgs = new ResponseEventArgs(ctx, ctx.Timestamp.TotalMs.Value);
+                    if (emitResponseStarting) Events.HandleResponseStarting(this, responseArgs);
+                    if (emitResponseSent) Events.HandleResponseSent(this, responseArgs);
+                    if (emitResponseCompleted) Events.HandleResponseCompleted(this, responseArgs);
+                }
+
+                if (Settings.Debug.Responses)
+                {
+                    Events.Logger?.Invoke(
+                        header + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
+                        ctx.Request.Method.ToString() + " " + ctx.Request.Url.Full + ": " +
+                        ctx.Response.StatusCode + " [" + ctx.Timestamp.TotalMs.Value + "ms]");
+                }
+
+                if (ctx.Response.ContentLength > 0) Statistics.IncrementSentPayloadBytes(Convert.ToInt64(ctx.Response.ContentLength));
+
+                if (Routes.PostRouting != null)
+                {
+                    try
+                    {
+                        await Routes.PostRouting(ctx).ConfigureAwait(false);
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+
+                Statistics.DecrementActiveConnectionCount(ctx.Protocol);
+            }
+        }
+
+        #endregion
+
         #region Private-Members
+
+        private async Task SendDefaultResponseAsync(HttpContextBase ctx, CancellationToken token)
+        {
+            if (ctx == null) throw new ArgumentNullException(nameof(ctx));
+
+            string content = DefaultPages.Pages[ctx.Response.StatusCode].Content;
+
+            if (ctx.Response.ChunkedTransfer)
+            {
+                await ctx.Response.SendChunk(Encoding.UTF8.GetBytes(content), true, token).ConfigureAwait(false);
+            }
+            else
+            {
+                await ctx.Response.Send(content, token).ConfigureAwait(false);
+            }
+        }
+
+        private async Task<bool> ProcessRoutingGroupAsync(HttpContextBase ctx, RoutingGroup group, string authPhase, string header)
+        {
+            Func<HttpContextBase, Task> handler = null;
+            string requestPath = ctx.Request.Url.RawWithoutQuery;
+            string normalizedRequestPath = ctx.Request.Url.NormalizedRawWithoutQuery;
+
+            if (group.Static != null)
+            {
+                handler = group.Static.MatchNormalized(ctx.Request.Method, normalizedRequestPath, out StaticRoute staticRoute);
+                if (handler != null)
+                {
+                    if (Settings.Debug.Routing)
+                    {
+                        Events.Logger?.Invoke(
+                            header + authPhase + " static route for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
+                            ctx.Request.Method.ToString() + " " + requestPath);
+                    }
+
+                    ctx.RouteType = RouteTypeEnum.Static;
+                    ctx.Route = staticRoute;
+
+                    try
+                    {
+                        await handler(ctx).ConfigureAwait(false);
+                    }
+                    catch (Exception e)
+                    {
+                        if (staticRoute.ExceptionHandler != null) await staticRoute.ExceptionHandler(ctx, e).ConfigureAwait(false);
+                        else throw;
+                    }
+
+                    if (!ctx.Response.ResponseSent)
+                        throw new InvalidOperationException(authPhase + " static route for " + ctx.Request.Method.ToString() + " " + requestPath + " did not send a response to the HTTP request.");
+                    return true;
+                }
+            }
+
+            if (group.Content != null && (ctx.Request.Method == HttpMethod.GET || ctx.Request.Method == HttpMethod.HEAD))
+            {
+                if (group.Content.Match(requestPath, out ContentRoute contentRoute))
+                {
+                    if (Settings.Debug.Routing)
+                    {
+                        Events.Logger?.Invoke(
+                            header + authPhase + " content route for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
+                            ctx.Request.Method.ToString() + " " + requestPath);
+                    }
+
+                    ctx.RouteType = RouteTypeEnum.Content;
+                    ctx.Route = contentRoute;
+
+                    try
+                    {
+                        await group.Content.Handler(ctx).ConfigureAwait(false);
+                    }
+                    catch (Exception e)
+                    {
+                        if (contentRoute.ExceptionHandler != null) await contentRoute.ExceptionHandler(ctx, e).ConfigureAwait(false);
+                        else throw;
+                    }
+
+                    if (!ctx.Response.ResponseSent)
+                        throw new InvalidOperationException(authPhase + " content route for " + ctx.Request.Method.ToString() + " " + requestPath + " did not send a response to the HTTP request.");
+                    return true;
+                }
+            }
+
+            if (group.Parameter != null)
+            {
+                handler = group.Parameter.Match(ctx.Request.Method, requestPath, out NameValueCollection parameters, out ParameterRoute parameterRoute);
+                if (handler != null)
+                {
+                    ctx.Request.Url.Parameters = parameters;
+
+                    if (Settings.Debug.Routing)
+                    {
+                        Events.Logger?.Invoke(
+                            header + authPhase + " parameter route for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
+                            ctx.Request.Method.ToString() + " " + requestPath);
+                    }
+
+                    ctx.RouteType = RouteTypeEnum.Parameter;
+                    ctx.Route = parameterRoute;
+
+                    try
+                    {
+                        await handler(ctx).ConfigureAwait(false);
+                    }
+                    catch (Exception e)
+                    {
+                        if (parameterRoute.ExceptionHandler != null) await parameterRoute.ExceptionHandler(ctx, e).ConfigureAwait(false);
+                        else throw;
+                    }
+
+                    if (!ctx.Response.ResponseSent)
+                        throw new InvalidOperationException(authPhase + " parameter route for " + ctx.Request.Method.ToString() + " " + requestPath + " did not send a response to the HTTP request.");
+                    return true;
+                }
+            }
+
+            if (group.Dynamic != null)
+            {
+                handler = group.Dynamic.Match(ctx.Request.Method, requestPath, out DynamicRoute dynamicRoute);
+                if (handler != null)
+                {
+                    if (Settings.Debug.Routing)
+                    {
+                        Events.Logger?.Invoke(
+                            header + authPhase + " dynamic route for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
+                            ctx.Request.Method.ToString() + " " + requestPath);
+                    }
+
+                    ctx.RouteType = RouteTypeEnum.Dynamic;
+                    ctx.Route = dynamicRoute;
+
+                    try
+                    {
+                        await handler(ctx).ConfigureAwait(false);
+                    }
+                    catch (Exception e)
+                    {
+                        if (dynamicRoute.ExceptionHandler != null) await dynamicRoute.ExceptionHandler(ctx, e).ConfigureAwait(false);
+                        else throw;
+                    }
+
+                    if (!ctx.Response.ResponseSent)
+                        throw new InvalidOperationException(authPhase + " dynamic route for " + ctx.Request.Method.ToString() + " " + requestPath + " did not send a response to the HTTP request.");
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         /// <summary>
         /// Robustly retrieves and sanitizes a valid hostname for the local machine
         /// by trying several strategies in order of preference.

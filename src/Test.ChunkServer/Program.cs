@@ -1,4 +1,4 @@
-﻿namespace Test
+namespace Test
 {
     using System;
     using System.Collections.Generic;
@@ -9,13 +9,10 @@
     using System.Threading.Tasks;
     using WatsonWebserver;
     using WatsonWebserver.Core;
-    using WatsonWebserver.Lite;
-
+    
     public static class Program
     {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-
-        static bool _UsingLite = false;
         static string _Hostname = "localhost";
         static int _Port = 8080;
         static WebserverSettings _Settings = null;
@@ -23,34 +20,14 @@
 
         static async Task Main(string[] args)
         {
-            if (args != null && args.Length > 0)
-            {
-                foreach (string arg in args)
-                {
-                    if (arg.Equals("-lite", StringComparison.OrdinalIgnoreCase))
-                    {
-                        _UsingLite = true;
-                        break;
-                    }
-                }
-            }
 
             _Settings = new WebserverSettings
             {
                 Hostname = _Hostname,
                 Port = _Port
             };
-
-            if (_UsingLite)
-            {
-                Console.WriteLine("Initializing webserver lite");
-                _Server = new WatsonWebserver.Lite.WebserverLite(_Settings, DefaultRoute);
-            }
-            else
-            {
-                Console.WriteLine("Initializing webserver");
-                _Server = new Webserver(_Settings, DefaultRoute);
-            }
+            Console.WriteLine("Initializing webserver");
+            _Server = new WatsonWebserver.Webserver(_Settings, DefaultRoute);
 
             Console.WriteLine("Listening on " + _Settings.Prefix);
             Console.WriteLine("Use /img/watson.jpg or /txt/test.txt");
@@ -250,3 +227,5 @@
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
     }
 }
+
+
