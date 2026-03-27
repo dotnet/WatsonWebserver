@@ -96,6 +96,9 @@
         private readonly ConcurrentBag<HttpContext> _HttpContextPool = new ConcurrentBag<HttpContext>();
         private readonly ConcurrentBag<HttpRequest> _HttpRequestPool = new ConcurrentBag<HttpRequest>();
         private readonly ConcurrentBag<HttpResponse> _HttpResponsePool = new ConcurrentBag<HttpResponse>();
+        private int _RetainedHttpContextCount = 0;
+        private int _RetainedHttpRequestCount = 0;
+        private int _RetainedHttpResponseCount = 0;
 
         #endregion
 
@@ -675,15 +678,27 @@
             {
                 request = new HttpRequest();
             }
+            else
+            {
+                Interlocked.Decrement(ref _RetainedHttpRequestCount);
+            }
 
             if (!_HttpResponsePool.TryTake(out HttpResponse response))
             {
                 response = new HttpResponse();
             }
+            else
+            {
+                Interlocked.Decrement(ref _RetainedHttpResponseCount);
+            }
 
             if (!_HttpContextPool.TryTake(out HttpContext context))
             {
                 context = new HttpContext();
+            }
+            else
+            {
+                Interlocked.Decrement(ref _RetainedHttpContextCount);
             }
 
             request.Initialize(Settings, stream, requestMetadata);
@@ -713,9 +728,43 @@
             request?.ReturnToPool();
             context.ReturnToPool();
 
-            if (response != null) _HttpResponsePool.Add(response);
-            if (request != null) _HttpRequestPool.Add(request);
-            _HttpContextPool.Add(context);
+            if (response != null && TryRetainHttp1PooledObject(ref _RetainedHttpResponseCount))
+            {
+                _HttpResponsePool.Add(response);
+            }
+
+            if (request != null && TryRetainHttp1PooledObject(ref _RetainedHttpRequestCount))
+            {
+                _HttpRequestPool.Add(request);
+            }
+
+            if (TryRetainHttp1PooledObject(ref _RetainedHttpContextCount))
+            {
+                _HttpContextPool.Add(context);
+            }
+        }
+
+        private bool TryRetainHttp1PooledObject(ref int retainedCount)
+        {
+            int limit = GetHttp1PoolMaxRetainedPerType();
+            if (limit < 1) return false;
+
+            while (true)
+            {
+                int current = retainedCount;
+                if (current >= limit) return false;
+
+                if (Interlocked.CompareExchange(ref retainedCount, current + 1, current) == current)
+                {
+                    return true;
+                }
+            }
+        }
+
+        private int GetHttp1PoolMaxRetainedPerType()
+        {
+            if (Settings?.IO?.Http1 == null) return 256;
+            return Settings.IO.Http1.PoolMaxRetainedPerType;
         }
 
         private async Task<ClientStreamContext> DetectCleartextProtocolAsync(ClientStreamContext context, CancellationToken token)

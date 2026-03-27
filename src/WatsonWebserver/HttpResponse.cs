@@ -126,8 +126,6 @@
         private static long _CachedDateHeaderSecond = -1;
         private static string _CachedDateHeaderValue = null;
         private static byte[] _CachedDateHeaderBytes = null;
-        private const int SimpleHeaderTemplateCacheLimit = 256;
-        private const int StatusLineCacheLimit = 64;
         private const int SmallResponseFirstWriteLimit = 16 * 1024;
 
         #endregion
@@ -771,50 +769,80 @@
             int statusCode = StatusCode;
             string contentType = ContentType ?? String.Empty;
             string cacheKey = protocolVersion + "|" + statusCode.ToString() + "|" + contentType;
+            int cacheLimit = GetResponseHeaderTemplateCacheLimit();
+            if (cacheLimit < 1)
+            {
+                return BuildSimpleHeaderTemplatePrefix(protocolVersion, statusCode, contentType);
+            }
+
             if (_SimpleHeaderTemplateCache.TryGetValue(cacheKey, out byte[] cachedTemplatePrefix))
             {
                 return cachedTemplatePrefix;
             }
 
-            TrimBoundedCache(_SimpleHeaderTemplateCache, _SimpleHeaderTemplateCacheSync, SimpleHeaderTemplateCacheLimit);
+            TrimBoundedCache(_SimpleHeaderTemplateCache, _SimpleHeaderTemplateCacheSync, cacheLimit);
             return _SimpleHeaderTemplateCache.GetOrAdd(cacheKey, key =>
             {
-                ArrayBufferWriter<byte> writer = new ArrayBufferWriter<byte>(128);
-                WriteBytes(writer, GetStatusLineBytes(protocolVersion, statusCode));
-
-                if (!String.IsNullOrEmpty(contentType))
-                {
-                    WriteHeader(writer, WebserverConstants.HeaderContentType, contentType);
-                }
-
-                return writer.WrittenMemory.ToArray();
+                return BuildSimpleHeaderTemplatePrefix(protocolVersion, statusCode, contentType);
             });
         }
 
         private byte[] GetStatusLineBytes(string protocolVersion, int statusCode)
         {
             string cacheKey = (protocolVersion ?? String.Empty) + "|" + statusCode.ToString();
+            int cacheLimit = GetStatusLineCacheLimit();
+            if (cacheLimit < 1)
+            {
+                return BuildStatusLineBytes(protocolVersion, statusCode);
+            }
+
             if (_StatusLineCache.TryGetValue(cacheKey, out byte[] cachedStatusLine))
             {
                 return cachedStatusLine;
             }
 
-            TrimBoundedCache(_StatusLineCache, _StatusLineCacheSync, StatusLineCacheLimit);
+            TrimBoundedCache(_StatusLineCache, _StatusLineCacheSync, cacheLimit);
             return _StatusLineCache.GetOrAdd(cacheKey, key =>
             {
-                string[] parts = key.Split('|');
-                string protocol = parts[0];
-                int code = Int32.Parse(parts[1]);
-
-                ArrayBufferWriter<byte> writer = new ArrayBufferWriter<byte>(64);
-                WriteAscii(writer, protocol);
-                WriteByte(writer, (byte)' ');
-                WriteInt64(writer, code);
-                WriteByte(writer, (byte)' ');
-                WriteAscii(writer, GetStatusDescriptionStatic(code));
-                WriteCrlf(writer);
-                return writer.WrittenMemory.ToArray();
+                return BuildStatusLineBytes(protocolVersion, statusCode);
             });
+        }
+
+        private byte[] BuildSimpleHeaderTemplatePrefix(string protocolVersion, int statusCode, string contentType)
+        {
+            ArrayBufferWriter<byte> writer = new ArrayBufferWriter<byte>(128);
+            WriteBytes(writer, GetStatusLineBytes(protocolVersion, statusCode));
+
+            if (!String.IsNullOrEmpty(contentType))
+            {
+                WriteHeader(writer, WebserverConstants.HeaderContentType, contentType);
+            }
+
+            return writer.WrittenMemory.ToArray();
+        }
+
+        private byte[] BuildStatusLineBytes(string protocolVersion, int statusCode)
+        {
+            ArrayBufferWriter<byte> writer = new ArrayBufferWriter<byte>(64);
+            WriteAscii(writer, protocolVersion);
+            WriteByte(writer, (byte)' ');
+            WriteInt64(writer, statusCode);
+            WriteByte(writer, (byte)' ');
+            WriteAscii(writer, GetStatusDescriptionStatic(statusCode));
+            WriteCrlf(writer);
+            return writer.WrittenMemory.ToArray();
+        }
+
+        private int GetResponseHeaderTemplateCacheLimit()
+        {
+            if (_Settings?.IO?.Http1 == null) return 256;
+            return _Settings.IO.Http1.ResponseHeaderTemplateCacheSize;
+        }
+
+        private int GetStatusLineCacheLimit()
+        {
+            if (_Settings?.IO?.Http1 == null) return 64;
+            return _Settings.IO.Http1.StatusLineCacheSize;
         }
 
         private static void TrimBoundedCache(ConcurrentDictionary<string, byte[]> cache, object sync, int limit)

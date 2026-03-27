@@ -5688,9 +5688,42 @@
             Headers that will be added to every response unless previously set.
             </summary>
         </member>
+        <member name="T:WatsonWebserver.Core.Settings.Http1IOSettings">
+            <summary>
+            HTTP/1.1-specific input-output settings.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.Http1IOSettings.PoolMaxRetainedPerType">
+            <summary>
+            Maximum number of retained pooled objects per HTTP/1.1 pooled type.
+            A value of zero disables retention.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.Http1IOSettings.ResponseHeaderTemplateCacheSize">
+            <summary>
+            Maximum number of cached HTTP/1.1 response-header template entries.
+            A value of zero disables the cache.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.Http1IOSettings.StatusLineCacheSize">
+            <summary>
+            Maximum number of cached HTTP/1.1 status-line entries.
+            A value of zero disables the cache.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.Settings.Http1IOSettings.#ctor">
+            <summary>
+            Instantiate the HTTP/1.1 input-output settings.
+            </summary>
+        </member>
         <member name="T:WatsonWebserver.Core.Settings.IOSettings">
             <summary>
             Input-output settings.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.IOSettings.Http1">
+            <summary>
+            HTTP/1.1-specific settings.
             </summary>
         </member>
         <member name="P:WatsonWebserver.Core.Settings.IOSettings.StreamBufferSize">

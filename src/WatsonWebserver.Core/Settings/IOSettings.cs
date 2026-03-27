@@ -8,6 +8,22 @@ namespace WatsonWebserver.Core.Settings
     public class IOSettings
     {
         /// <summary>
+        /// HTTP/1.1-specific settings.
+        /// </summary>
+        public Http1IOSettings Http1
+        {
+            get
+            {
+                return _Http1;
+            }
+            set
+            {
+                if (value == null) throw new ArgumentNullException(nameof(Http1));
+                _Http1 = value;
+            }
+        }
+
+        /// <summary>
         /// Buffer size to use when interacting with streams.
         /// </summary>
         public int StreamBufferSize
@@ -117,6 +133,7 @@ namespace WatsonWebserver.Core.Settings
         private int _MaxIncomingHeadersSize = 65536;
         private long _MaxRequestBodySize = 0;
         private int _MaxHeaderCount = 64;
+        private Http1IOSettings _Http1 = new Http1IOSettings();
 
         /// <summary>
         /// Input-output settings.
