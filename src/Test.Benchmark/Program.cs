@@ -29,6 +29,7 @@
             Console.WriteLine("Warmup: " + options.WarmupSeconds.ToString() + "s  Duration: " + options.DurationSeconds.ToString() + "s  Concurrency: " + options.Concurrency.ToString() + "  Repetitions: " + options.Repetitions.ToString());
             Console.WriteLine("PayloadBytes: " + options.PayloadBytes.ToString() + "  SseEvents: " + options.ServerSentEventCount.ToString());
             Console.WriteLine();
+            WriteLiveHeader();
 
             using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
             {
@@ -41,28 +42,26 @@
                 for (int i = 0; i < combinations.Count; i++)
                 {
                     BenchmarkCombination combination = combinations[i];
-                    Console.WriteLine("Running " + combination.Target.ToString() + " / " + combination.Protocol.ToString() + " / " + combination.Scenario.ToString());
 
                     try
                     {
                         BenchmarkResult result = await RunCombinationAsync(runner, combination, options, cancellationTokenSource.Token).ConfigureAwait(false);
                         results.Add(result);
-                        WriteResult(result);
+                        WriteLiveResult(result, "PASS", null);
                     }
                     catch (OperationCanceledException)
                     {
-                        Console.WriteLine("Canceled.");
+                        WriteLiveResult(CreateFailedResult(combination), "CANCEL", "Canceled");
                         break;
                     }
                     catch (Exception exception)
                     {
-                        Console.WriteLine("Failed: " + exception.Message);
+                        WriteLiveResult(CreateFailedResult(combination), "FAIL", exception.Message);
                     }
-
-                    Console.WriteLine();
                 }
             }
 
+            Console.WriteLine();
             WriteSummary(results);
             WriteComparisonTables(results);
             return 0;
@@ -121,18 +120,8 @@
                 {
                     for (int i = 0; i < options.Repetitions; i++)
                     {
-                        if (options.Repetitions > 1)
-                        {
-                            Console.WriteLine("  Sample " + (i + 1).ToString() + "/" + options.Repetitions.ToString());
-                        }
-
                         BenchmarkResult sample = await runner.RunAsync(host, combination, token).ConfigureAwait(false);
                         samples.Add(sample);
-
-                        if (options.Repetitions > 1)
-                        {
-                            WriteResult(sample, "    ");
-                        }
                     }
                 }
                 finally
@@ -144,35 +133,83 @@
             return BenchmarkResultAggregator.AggregateMedian(samples);
         }
 
-        private static void WriteResult(BenchmarkResult result, string indent = "")
+        private static void WriteLiveHeader()
         {
-            string prefix = indent ?? String.Empty;
-            string labelPrefix = prefix + "  ";
+            string header =
+                PadRight("Target", 14)
+                + PadRight("Protocol", 10)
+                + PadRight("Scenario", 18)
+                + PadRight("Status", 8)
+                + PadLeft("Req/s", 12)
+                + PadLeft("P50", 10)
+                + PadLeft("P99", 10)
+                + PadLeft("Total/s", 14)
+                + PadLeft("Success", 10)
+                + PadLeft("Failure", 10)
+                + PadLeft("Alloc", 12)
+                + "  Notes";
 
-            if (result.RepetitionCount > 1)
+            Console.WriteLine(header);
+            Console.WriteLine(new string('-', header.Length));
+        }
+
+        private static void WriteLiveResult(BenchmarkResult result, string status, string notes)
+        {
+            BenchmarkResult currentResult = result ?? throw new ArgumentNullException(nameof(result));
+            string currentStatus = status ?? String.Empty;
+            string statusCell = PadRight(currentStatus, 8);
+            string notesText = notes ?? String.Empty;
+
+            Console.Write(
+                PadRight(GetTargetText(currentResult), 14)
+                + PadRight(GetProtocolText(currentResult), 10)
+                + PadRight(GetScenarioText(currentResult), 18));
+
+            WriteStatus(statusCell, currentStatus);
+
+            Console.WriteLine(
+                PadLeft(GetRequestsPerSecondText(currentResult), 12)
+                + PadLeft(GetP50Text(currentResult), 10)
+                + PadLeft(GetP99Text(currentResult), 10)
+                + PadLeft(GetTotalThroughputText(currentResult), 14)
+                + PadLeft(GetSuccessText(currentResult), 10)
+                + PadLeft(GetFailureText(currentResult), 10)
+                + PadLeft(FormatBytes(currentResult.ManagedBytesAllocated), 12)
+                + "  " + notesText);
+        }
+
+        private static void WriteStatus(string statusCell, string status)
+        {
+            if (Console.IsOutputRedirected)
             {
-                Console.WriteLine(prefix + "Median of " + result.RepetitionCount.ToString() + " samples");
+                Console.Write(statusCell);
+                return;
             }
 
-            Console.WriteLine(prefix + "Latency");
-            Console.WriteLine(
-                labelPrefix + "Handshake: " + FormatMilliseconds(result.HandshakeMs)
-                + "  Mean: " + FormatMilliseconds(result.MeanLatencyMs)
-                + "  P50: " + FormatMilliseconds(result.P50LatencyMs)
-                + "  P95: " + FormatMilliseconds(result.P95LatencyMs)
-                + "  P99: " + FormatMilliseconds(result.P99LatencyMs));
-            Console.WriteLine(prefix + "Throughput");
-            Console.WriteLine(
-                labelPrefix + "Requests/sec: " + result.RequestsPerSecond.ToString("N2")
-                + "  Response: " + FormatBytesPerSecond(result.ResponseBytesPerSecond)
-                + "  Total: " + FormatBytesPerSecond(result.TotalBytesPerSecond));
-            Console.WriteLine(prefix + "Totals");
-            Console.WriteLine(
-                labelPrefix + "Success: " + result.SuccessCount.ToString("N0")
-                + "  Failure: " + result.FailureCount.ToString("N0")
-                + "  Request bytes: " + FormatBytes(result.RequestBytes)
-                + "  Response bytes: " + FormatBytes(result.ResponseBytes)
-                + "  Managed alloc: " + FormatBytes(result.ManagedBytesAllocated));
+            ConsoleColor originalColor = Console.ForegroundColor;
+
+            if (StringComparer.OrdinalIgnoreCase.Equals(status, "PASS"))
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+            }
+            else if (StringComparer.OrdinalIgnoreCase.Equals(status, "FAIL"))
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+            }
+            else if (StringComparer.OrdinalIgnoreCase.Equals(status, "CANCEL"))
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+            }
+
+            Console.Write(statusCell);
+            Console.ForegroundColor = originalColor;
+        }
+
+        private static BenchmarkResult CreateFailedResult(BenchmarkCombination combination)
+        {
+            BenchmarkResult result = new BenchmarkResult();
+            result.Combination = combination;
+            return result;
         }
 
         private static void WriteSummary(List<BenchmarkResult> results)
