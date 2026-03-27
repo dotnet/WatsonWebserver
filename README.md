@@ -19,7 +19,8 @@ This project is part of the [.NET Foundation](http://www.dotnetfoundation.org/pr
 
 Watson 7 is a major consumer-facing release:
 
-- Substantial performance improvements through hot-path optimization
+- **FastAPI-like REST experience** -- [SwiftStack](https://github.com/jchristn/swiftstack) functionality has been integrated directly into the server, giving Watson a native, first-class API route experience with automatic JSON serialization, typed parameter access, middleware, structured authentication, request timeouts, and health checks. No separate library required.
+- Substantial performance improvements through hot-path optimization and removal of dependency on `http.sys`
 - Native protocol selection through `WebserverSettings.Protocols`; HTTP/1.1, HTTP/2, and HTTP/3 support
 - Runtime validation for unsupported protocol combinations
 - HTTP/3 runtime normalization when QUIC is unavailable
@@ -93,6 +94,246 @@ public class Program
 ```
 
 Then browse to `http://127.0.0.1:9000/`.
+
+## API Routes (FastAPI-Like Experience)
+
+Watson 7 integrates [SwiftStack](https://github.com/jchristn/swiftstack) functionality directly into the server, providing a FastAPI-like developer experience for building REST APIs. Route handlers receive an `ApiRequest` with typed parameter access and return objects that are automatically serialized to JSON.
+
+### Basic API Routes
+
+```csharp
+using WatsonWebserver;
+using WatsonWebserver.Core;
+
+WebserverSettings settings = new WebserverSettings("127.0.0.1", 8080);
+Webserver server = new Webserver(settings, DefaultRoute);
+
+// GET route -- return value is auto-serialized to JSON
+server.Get("/", async (req) => new { Message = "Hello, World!" });
+
+// GET with typed URL parameters
+server.Get("/users/{id}", async (req) =>
+{
+    Guid id = req.Parameters.GetGuid("id");
+    int detail = req.Query.GetInt("detail", 0);
+    return new { Id = id, Detail = detail };
+});
+
+// POST with automatic JSON body deserialization
+server.Post<CreateUserRequest>("/users", async (req) =>
+{
+    CreateUserRequest body = req.GetData<CreateUserRequest>();
+    req.Http.Response.StatusCode = 201;
+    return new { Id = Guid.NewGuid(), body.Name, body.Email };
+});
+
+// POST without auto-deserialization (manual body access)
+server.Post("/upload", async (req) =>
+{
+    byte[] rawBytes = req.Http.Request.Data;
+    string rawText = req.Http.Request.DataAsString;
+    return new { Size = rawBytes?.Length ?? 0 };
+});
+
+// PUT and DELETE work the same way
+server.Put<UpdateUserRequest>("/users/{id}", async (req) =>
+{
+    UpdateUserRequest body = req.GetData<UpdateUserRequest>();
+    Guid id = req.Parameters.GetGuid("id");
+    return new { Updated = true, Id = id, body.Name };
+});
+
+server.Delete("/users/{id}", async (req) =>
+{
+    Guid id = req.Parameters.GetGuid("id");
+    return new { Deleted = true, Id = id };
+});
+
+server.Start();
+
+static async Task DefaultRoute(HttpContextBase ctx)
+{
+    ctx.Response.StatusCode = 404;
+    await ctx.Response.Send("Not found");
+}
+```
+
+### Return Value Handling
+
+API route handlers return `Task<object>`. Watson automatically processes the return value:
+
+| Return Value | HTTP Behavior |
+|---|---|
+| `null` | Empty 200 response |
+| `string` | `text/plain` response |
+| Object or anonymous type | `application/json` serialized response |
+| `(object, int)` tuple | JSON body with custom HTTP status code |
+
+```csharp
+// Custom status code via tuple
+server.Post<User>("/users", async (req) =>
+{
+    User body = req.GetData<User>();
+    return (new { Id = Guid.NewGuid(), body.Name }, 201);
+});
+```
+
+### Error Handling
+
+Throw `WebserverException` from any API route handler to return a structured JSON error response:
+
+```csharp
+server.Get("/items/{id}", async (req) =>
+{
+    Guid id = req.Parameters.GetGuid("id");
+    Item item = FindItem(id);
+    if (item == null)
+        throw new WebserverException(ApiResultEnum.NotFound, "Item not found");
+    return item;
+});
+```
+
+Response:
+```json
+{"Error":"NotFound","StatusCode":404,"Description":"The requested resource was not found.","Message":"Item not found"}
+```
+
+### Typed Parameter Access
+
+`ApiRequest` provides `RequestParameters` wrappers for URL parameters, query strings, and headers with type-safe accessors:
+
+```csharp
+server.Get("/search", async (req) =>
+{
+    string query    = req.Query["q"];
+    int page        = req.Query.GetInt("page", 1);
+    int size        = req.Query.GetInt("size", 10);
+    bool active     = req.Query.GetBool("active", true);
+    Guid tenantId   = req.Headers.GetGuid("X-Tenant-Id");
+
+    return new { query, page, size, active, tenantId };
+});
+```
+
+Available methods: `GetInt`, `GetLong`, `GetDouble`, `GetDecimal`, `GetBool`, `GetGuid`, `GetDateTime`, `GetTimeSpan`, `GetEnum<T>`, `GetArray`, `TryGetValue<T>`, `Contains`, `GetKeys`.
+
+### Middleware
+
+Register middleware to run around every API route handler. Middleware executes in registration order. Call `next()` to continue the pipeline, or skip it to short-circuit.
+
+```csharp
+// Logging middleware
+server.Middleware.Add(async (ctx, next, token) =>
+{
+    DateTime start = DateTime.UtcNow;
+    await next();
+    double ms = (DateTime.UtcNow - start).TotalMilliseconds;
+    Console.WriteLine($"{ctx.Request.Method} {ctx.Request.Url.RawWithoutQuery} -> {ctx.Response.StatusCode} ({ms:F1}ms)");
+});
+
+// Short-circuit middleware
+server.Middleware.Add(async (ctx, next, token) =>
+{
+    if (ctx.Request.RetrieveHeaderValue("X-Block") == "true")
+    {
+        ctx.Response.StatusCode = 403;
+        await ctx.Response.Send("Blocked");
+        return; // Don't call next()
+    }
+    await next();
+});
+```
+
+### Structured Authentication
+
+Use `AuthenticateApiRequest` for structured authentication that returns an `AuthResult`. On failure, Watson automatically returns a 401 JSON response. On success, `AuthResult.Metadata` is propagated to `req.Metadata` in route handlers.
+
+```csharp
+server.Routes.AuthenticateApiRequest = async (ctx) =>
+{
+    string token = ctx.Request.RetrieveHeaderValue("Authorization");
+    if (token == "Bearer my-secret-token")
+    {
+        return new AuthResult
+        {
+            AuthenticationResult = AuthenticationResultEnum.Success,
+            AuthorizationResult = AuthorizationResultEnum.Permitted,
+            Metadata = new { UserId = 42, Role = "Admin" }
+        };
+    }
+
+    return new AuthResult
+    {
+        AuthenticationResult = AuthenticationResultEnum.NotFound,
+        AuthorizationResult = AuthorizationResultEnum.DeniedImplicit
+    };
+};
+
+// Public route (pre-authentication, the default)
+server.Get("/public", async (req) => new { Public = true });
+
+// Protected route (post-authentication)
+server.Get("/admin", async (req) =>
+{
+    return new { Secure = true, User = req.Metadata };
+}, auth: true);
+```
+
+### Request Timeouts
+
+Enable request timeouts so that slow handlers receive a 408 response:
+
+```csharp
+server.Settings.Timeout.DefaultTimeout = TimeSpan.FromSeconds(30);
+
+server.Get("/slow", async (req) =>
+{
+    // Pass req.CancellationToken to async operations for cooperative cancellation
+    await Task.Delay(60000, req.CancellationToken);
+    return new { Result = "Done" };
+});
+// Client receives: 408 {"Error":"RequestTimeout","Message":"The request timed out."}
+```
+
+### Health Checks
+
+Add a health check endpoint with an optional custom check delegate:
+
+```csharp
+using WatsonWebserver.Core.Health;
+
+server.UseHealthCheck(health =>
+{
+    health.Path = "/health";
+    health.CustomCheck = async (token) =>
+    {
+        bool dbOk = await CheckDatabase(token);
+        return new HealthCheckResult
+        {
+            Status = dbOk ? HealthStatusEnum.Healthy : HealthStatusEnum.Unhealthy,
+            Description = dbOk ? "All systems operational" : "Database unavailable"
+        };
+    };
+});
+```
+
+Returns HTTP 200 for `Healthy`/`Degraded`, HTTP 503 for `Unhealthy`.
+
+### Low-Level Routes
+
+The traditional `Func<HttpContextBase, Task>` route signature is still fully supported and can be mixed freely with API routes:
+
+```csharp
+// API route
+server.Get("/api/users", async (req) => new { Users = new[] { "Alice", "Bob" } });
+
+// Low-level route on the same server
+server.Routes.PreAuthentication.Static.Add(HttpMethod.GET, "/legacy", async (ctx) =>
+{
+    ctx.Response.StatusCode = 200;
+    await ctx.Response.Send("Low-level route");
+});
+```
 
 ## Protocol Support
 
@@ -641,10 +882,11 @@ Refer to `src/Test.Docker` and its companion documentation.
 
 ## Testing
 
-Automated validation is covered by two test projects:
+Automated validation is covered by:
 
-- `src/Test.Automated`: primary console-based automated suite
-- `src/Test.XUnit`: xUnit mirror of the same coverage surface
+- `src/Test.Automated`: integration tests with real HTTP requests against a running server
+- `src/Test.XUnit`: unit tests for core types (RequestParameters, MiddlewarePipeline, AuthResult, etc.)
+- `src/Test.RestApi`: interactive server demonstrating all API route features (run and test manually with curl/Postman)
 
 Recommended commands:
 

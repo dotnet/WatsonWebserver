@@ -1,6 +1,6 @@
 param(
     [string]$Configuration = "Debug",
-    [string]$Framework = "net10.0"
+    [string]$Framework = "net8.0"
 )
 
 $ErrorActionPreference = "Stop"

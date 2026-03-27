@@ -16,6 +16,9 @@ namespace WatsonWebserver.Http3
     /// </summary>
     public class Http3Request : HttpRequestBase
     {
+        /// <summary>
+        /// The request body as a stream.
+        /// </summary>
         [JsonIgnore]
         public override Stream Data
         {
@@ -30,6 +33,9 @@ namespace WatsonWebserver.Http3
             }
         }
 
+        /// <summary>
+        /// The request body as a byte array. Reads and caches the full body from the stream on first access.
+        /// </summary>
         [JsonIgnore]
         public override byte[] DataAsBytes
         {
@@ -47,6 +53,9 @@ namespace WatsonWebserver.Http3
             }
         }
 
+        /// <summary>
+        /// The request body as a UTF-8 string. Reads and caches the full body from the stream on first access.
+        /// </summary>
         [JsonIgnore]
         public override string DataAsString
         {
@@ -62,6 +71,9 @@ namespace WatsonWebserver.Http3
         private byte[] _DataAsBytes = null;
         private HttpHeaderField[] _HeaderFields = Array.Empty<HttpHeaderField>();
 
+        /// <summary>
+        /// Instantiate.
+        /// </summary>
         public Http3Request()
         {
         }
@@ -140,17 +152,33 @@ namespace WatsonWebserver.Http3
             }
         }
 
+        /// <summary>
+        /// Read a chunk from the request body. Not supported for HTTP/3 requests.
+        /// </summary>
+        /// <param name="token">Cancellation token.</param>
+        /// <returns>Never returns; always throws.</returns>
+        /// <exception cref="InvalidOperationException">Always thrown. HTTP/3 does not expose HTTP/1.1 chunked transfer-encoding semantics.</exception>
         public override Task<Chunk> ReadChunk(CancellationToken token = default)
         {
             throw new InvalidOperationException("HTTP/3 requests do not expose HTTP/1.1 chunked transfer-encoding semantics.");
         }
 
+        /// <summary>
+        /// Check if a header exists in the request.
+        /// </summary>
+        /// <param name="key">Header name.</param>
+        /// <returns>True if the header exists.</returns>
         public override bool HeaderExists(string key)
         {
             if (String.IsNullOrEmpty(key)) throw new ArgumentNullException(nameof(key));
             return HttpHeaderField.Exists(_HeaderFields, key);
         }
 
+        /// <summary>
+        /// Check if a querystring parameter exists in the request URL.
+        /// </summary>
+        /// <param name="key">Querystring key.</param>
+        /// <returns>True if the querystring parameter exists.</returns>
         public override bool QuerystringExists(string key)
         {
             if (String.IsNullOrEmpty(key)) throw new ArgumentNullException(nameof(key));
@@ -158,12 +186,22 @@ namespace WatsonWebserver.Http3
             return Query.Elements.AllKeys != null && Query.Elements.Get(key) != null;
         }
 
+        /// <summary>
+        /// Retrieve the value of a request header.
+        /// </summary>
+        /// <param name="key">Header name.</param>
+        /// <returns>The header value, or null if not found.</returns>
         public override string RetrieveHeaderValue(string key)
         {
             if (String.IsNullOrEmpty(key)) throw new ArgumentNullException(nameof(key));
             return HttpHeaderField.GetValue(_HeaderFields, key);
         }
 
+        /// <summary>
+        /// Retrieve the value of a querystring parameter, URL-decoded.
+        /// </summary>
+        /// <param name="key">Querystring key.</param>
+        /// <returns>The URL-decoded value, or null if not found.</returns>
         public override string RetrieveQueryValue(string key)
         {
             if (String.IsNullOrEmpty(key)) throw new ArgumentNullException(nameof(key));

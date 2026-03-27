@@ -5105,7 +5105,12 @@ namespace Test.Automated
             }
 
             X509Certificate2 certificate = CreateSelfSignedServerCertificate("localhost");
-            WebserverSettings settings = new WebserverSettings("127.0.0.1", 8016, true);
+            int primaryPort = GetAvailableLoopbackPort();
+            int idleTimeoutPort = GetAvailableLoopbackPort();
+            int gracefulDrainPort = GetAvailableLoopbackPort();
+            int gracefulRejectPort = GetAvailableLoopbackPort();
+
+            WebserverSettings settings = new WebserverSettings("127.0.0.1", primaryPort, true);
             settings.Protocols.EnableHttp1 = false;
             settings.Protocols.EnableHttp2 = false;
             settings.Protocols.EnableHttp3 = true;
@@ -5124,7 +5129,7 @@ namespace Test.Automated
                 }
                 catch (SocketException ex) when (ex.SocketErrorCode == SocketError.AddressAlreadyInUse)
                 {
-                    Console.WriteLine("  Alt-Svc test port 8018 is already in use, skipping live Alt-Svc tests.");
+                    Console.WriteLine("  HTTP/3 transport port " + primaryPort.ToString() + " is already in use, skipping live HTTP/3 tests.");
                     Console.WriteLine();
                     return;
                 }
@@ -5132,12 +5137,12 @@ namespace Test.Automated
 
                 await ExecuteTest("HTTP/3 QUIC Transport - Control Stream And Routed GET", async () =>
                 {
-                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(8016).ConfigureAwait(false))
+                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(primaryPort).ConfigureAwait(false))
                     {
                         Http3Settings peerSettings = await PerformHttp3ClientHandshakeAsync(connection).ConfigureAwait(false);
                         if (peerSettings == null) return false;
 
-                        Http3MessageBody response = await SendHttp3RequestAsync(connection, "GET", "localhost:8016", "/test/get", null, null, null).ConfigureAwait(false);
+                        Http3MessageBody response = await SendHttp3RequestAsync(connection, "GET", "localhost:" + primaryPort.ToString(), "/test/get", null, null, null).ConfigureAwait(false);
                         NameValueCollection headers = DecodeHttp3Headers(response.Headers.HeaderBlock);
                         string body = Encoding.UTF8.GetString(response.Body.ToArray());
 
@@ -5148,7 +5153,7 @@ namespace Test.Automated
 
                 await ExecuteTest("HTTP/3 QUIC Transport - POST Body Echo", async () =>
                 {
-                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(8016).ConfigureAwait(false))
+                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(primaryPort).ConfigureAwait(false))
                     {
                         await PerformHttp3ClientHandshakeAsync(connection).ConfigureAwait(false);
 
@@ -5157,7 +5162,7 @@ namespace Test.Automated
                         requestHeaders.Add(new Http3HeaderField { Name = "content-length", Value = requestBody.Length.ToString() });
                         requestHeaders.Add(new Http3HeaderField { Name = "content-type", Value = "text/plain" });
 
-                        Http3MessageBody response = await SendHttp3RequestAsync(connection, "POST", "localhost:8016", "/test/chunked-echo", requestBody, requestHeaders, null).ConfigureAwait(false);
+                        Http3MessageBody response = await SendHttp3RequestAsync(connection, "POST", "localhost:" + primaryPort.ToString(), "/test/chunked-echo", requestBody, requestHeaders, null).ConfigureAwait(false);
                         NameValueCollection headers = DecodeHttp3Headers(response.Headers.HeaderBlock);
                         string body = Encoding.UTF8.GetString(response.Body.ToArray());
 
@@ -5168,11 +5173,11 @@ namespace Test.Automated
 
                 await ExecuteTest("HTTP/3 QUIC Transport - Chunked API Response", async () =>
                 {
-                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(8016).ConfigureAwait(false))
+                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(primaryPort).ConfigureAwait(false))
                     {
                         await PerformHttp3ClientHandshakeAsync(connection).ConfigureAwait(false);
 
-                        Http3MessageBody response = await SendHttp3RequestAsync(connection, "GET", "localhost:8016", "/test/chunked-wire", null, null, null).ConfigureAwait(false);
+                        Http3MessageBody response = await SendHttp3RequestAsync(connection, "GET", "localhost:" + primaryPort.ToString(), "/test/chunked-wire", null, null, null).ConfigureAwait(false);
                         NameValueCollection headers = DecodeHttp3Headers(response.Headers.HeaderBlock);
                         string body = Encoding.UTF8.GetString(response.Body.ToArray());
 
@@ -5183,15 +5188,15 @@ namespace Test.Automated
 
                 await ExecuteTest("HTTP/3 QUIC Transport - SSE And Trailers", async () =>
                 {
-                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(8016).ConfigureAwait(false))
+                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(primaryPort).ConfigureAwait(false))
                     {
                         await PerformHttp3ClientHandshakeAsync(connection).ConfigureAwait(false);
 
-                        Http3MessageBody sseResponse = await SendHttp3RequestAsync(connection, "GET", "localhost:8016", "/test/sse-wire", null, null, null).ConfigureAwait(false);
+                        Http3MessageBody sseResponse = await SendHttp3RequestAsync(connection, "GET", "localhost:" + primaryPort.ToString(), "/test/sse-wire", null, null, null).ConfigureAwait(false);
                         NameValueCollection sseHeaders = DecodeHttp3Headers(sseResponse.Headers.HeaderBlock);
                         string sseBody = Encoding.UTF8.GetString(sseResponse.Body.ToArray());
 
-                        Http3MessageBody trailerResponse = await SendHttp3RequestAsync(connection, "GET", "localhost:8016", "/test/http2-trailers", null, null, null).ConfigureAwait(false);
+                        Http3MessageBody trailerResponse = await SendHttp3RequestAsync(connection, "GET", "localhost:" + primaryPort.ToString(), "/test/http2-trailers", null, null, null).ConfigureAwait(false);
                         NameValueCollection trailerHeaders = DecodeHttp3Headers(trailerResponse.Headers.HeaderBlock);
                         NameValueCollection trailers = DecodeHttp3Headers(trailerResponse.Trailers.HeaderBlock);
 
@@ -5211,7 +5216,7 @@ namespace Test.Automated
 
                 await ExecuteTest("HTTP/3 QUIC Transport - Request Trailers Routed", async () =>
                 {
-                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(8016).ConfigureAwait(false))
+                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(primaryPort).ConfigureAwait(false))
                     {
                         await PerformHttp3ClientHandshakeAsync(connection).ConfigureAwait(false);
 
@@ -5224,7 +5229,7 @@ namespace Test.Automated
                         trailerHeaders.Add(new Http3HeaderField { Name = "x-trailer", Value = "done" });
                         trailerHeaders.Add(new Http3HeaderField { Name = "x-trailer-flag", Value = "true" });
 
-                        Http3MessageBody response = await SendHttp3RequestAsync(connection, "POST", "localhost:8016", "/test/http2-request-trailers", requestBody, requestHeaders, trailerHeaders).ConfigureAwait(false);
+                        Http3MessageBody response = await SendHttp3RequestAsync(connection, "POST", "localhost:" + primaryPort.ToString(), "/test/http2-request-trailers", requestBody, requestHeaders, trailerHeaders).ConfigureAwait(false);
                         NameValueCollection headers = DecodeHttp3Headers(response.Headers.HeaderBlock);
                         string body = Encoding.UTF8.GetString(response.Body.ToArray());
 
@@ -5235,7 +5240,7 @@ namespace Test.Automated
 
                 await ExecuteTest("HTTP/3 QUIC Transport - Concurrent Streams Complete Independently", async () =>
                 {
-                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(8016).ConfigureAwait(false))
+                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(primaryPort).ConfigureAwait(false))
                     {
                         await PerformHttp3ClientHandshakeAsync(connection).ConfigureAwait(false);
 
@@ -5244,8 +5249,8 @@ namespace Test.Automated
 
                         try
                         {
-                            Task slowSendTask = WriteHttp3RequestAsync(slowStream, "GET", "localhost:8016", "/test/http2-delay/150", null, null, null);
-                            Task fastSendTask = WriteHttp3RequestAsync(fastStream, "GET", "localhost:8016", "/test/http2-delay/10", null, null, null);
+                            Task slowSendTask = WriteHttp3RequestAsync(slowStream, "GET", "localhost:" + primaryPort.ToString(), "/test/http2-delay/150", null, null, null);
+                            Task fastSendTask = WriteHttp3RequestAsync(fastStream, "GET", "localhost:" + primaryPort.ToString(), "/test/http2-delay/10", null, null, null);
 
                             Task<Http3MessageBody> slowReadTask = Http3MessageSerializer.ReadMessageAsync(slowStream, CancellationToken.None);
                             Task<Http3MessageBody> fastReadTask = Http3MessageSerializer.ReadMessageAsync(fastStream, CancellationToken.None);
@@ -5273,7 +5278,7 @@ namespace Test.Automated
 
                 await ExecuteTest("HTTP/3 QUIC Transport - Duplicate QPACK Encoder Stream Closes Connection", async () =>
                 {
-                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(8016).ConfigureAwait(false))
+                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(primaryPort).ConfigureAwait(false))
                     {
                         await PerformHttp3ClientHandshakeAsync(connection).ConfigureAwait(false);
                         await WriteHttp3BootstrapStreamAsync(connection, Http3StreamType.QpackEncoder, Array.Empty<byte>()).ConfigureAwait(false);
@@ -5283,7 +5288,7 @@ namespace Test.Automated
                             QuicStream followupStream = await connection.OpenOutboundStreamAsync(QuicStreamType.Bidirectional, CancellationToken.None).ConfigureAwait(false);
                             try
                             {
-                                await WriteHttp3RequestAsync(followupStream, "GET", "localhost:8016", "/test/get", null, null, null).ConfigureAwait(false);
+                                await WriteHttp3RequestAsync(followupStream, "GET", "localhost:" + primaryPort.ToString(), "/test/get", null, null, null).ConfigureAwait(false);
                                 await Http3MessageSerializer.ReadMessageAsync(followupStream, CancellationToken.None).ConfigureAwait(false);
                                 return false;
                             }
@@ -5305,7 +5310,7 @@ namespace Test.Automated
 
                 await ExecuteTest("HTTP/3 QUIC Transport - Duplicate Control Stream Closes Connection", async () =>
                 {
-                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(8016).ConfigureAwait(false))
+                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(primaryPort).ConfigureAwait(false))
                     {
                         await PerformHttp3ClientHandshakeAsync(connection).ConfigureAwait(false);
                         await WriteHttp3ControlBootstrapStreamAsync(connection, new Http3Settings()).ConfigureAwait(false);
@@ -5315,7 +5320,7 @@ namespace Test.Automated
                             QuicStream followupStream = await connection.OpenOutboundStreamAsync(QuicStreamType.Bidirectional, CancellationToken.None).ConfigureAwait(false);
                             try
                             {
-                                await WriteHttp3RequestAsync(followupStream, "GET", "localhost:8016", "/test/get", null, null, null).ConfigureAwait(false);
+                                await WriteHttp3RequestAsync(followupStream, "GET", "localhost:" + primaryPort.ToString(), "/test/get", null, null, null).ConfigureAwait(false);
                                 await Http3MessageSerializer.ReadMessageAsync(followupStream, CancellationToken.None).ConfigureAwait(false);
                                 return false;
                             }
@@ -5337,7 +5342,7 @@ namespace Test.Automated
 
                 await ExecuteTest("HTTP/3 QUIC Transport - Duplicate QPACK Decoder Stream Closes Connection", async () =>
                 {
-                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(8016).ConfigureAwait(false))
+                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(primaryPort).ConfigureAwait(false))
                     {
                         await PerformHttp3ClientHandshakeAsync(connection).ConfigureAwait(false);
                         await WriteHttp3BootstrapStreamAsync(connection, Http3StreamType.QpackDecoder, Array.Empty<byte>()).ConfigureAwait(false);
@@ -5347,7 +5352,7 @@ namespace Test.Automated
                             QuicStream followupStream = await connection.OpenOutboundStreamAsync(QuicStreamType.Bidirectional, CancellationToken.None).ConfigureAwait(false);
                             try
                             {
-                                await WriteHttp3RequestAsync(followupStream, "GET", "localhost:8016", "/test/get", null, null, null).ConfigureAwait(false);
+                                await WriteHttp3RequestAsync(followupStream, "GET", "localhost:" + primaryPort.ToString(), "/test/get", null, null, null).ConfigureAwait(false);
                                 await Http3MessageSerializer.ReadMessageAsync(followupStream, CancellationToken.None).ConfigureAwait(false);
                                 return false;
                             }
@@ -5369,7 +5374,7 @@ namespace Test.Automated
 
                 await ExecuteTest("HTTP/3 QUIC Transport - Idle Timeout Sends GoAway", async () =>
                 {
-                    WebserverSettings timeoutSettings = new WebserverSettings("127.0.0.1", 8017, true);
+                    WebserverSettings timeoutSettings = new WebserverSettings("127.0.0.1", idleTimeoutPort, true);
                     timeoutSettings.Protocols.EnableHttp1 = false;
                     timeoutSettings.Protocols.EnableHttp2 = false;
                     timeoutSettings.Protocols.EnableHttp3 = true;
@@ -5386,7 +5391,7 @@ namespace Test.Automated
                         timeoutServer.Start();
                         await Task.Delay(500).ConfigureAwait(false);
 
-                        await using (QuicConnection connection = await ConnectHttp3ClientAsync(8017).ConfigureAwait(false))
+                        await using (QuicConnection connection = await ConnectHttp3ClientAsync(idleTimeoutPort).ConfigureAwait(false))
                         {
                             QuicStream controlStream = await PerformHttp3ClientHandshakeAndRetainControlStreamAsync(connection).ConfigureAwait(false);
                             try
@@ -5413,7 +5418,7 @@ namespace Test.Automated
 
                 await ExecuteTest("HTTP/3 QUIC Transport - Graceful Stop Drains InFlight Stream", async () =>
                 {
-                    WebserverSettings drainSettings = new WebserverSettings("127.0.0.1", 8019, true);
+                    WebserverSettings drainSettings = new WebserverSettings("127.0.0.1", gracefulDrainPort, true);
                     drainSettings.Protocols.EnableHttp1 = false;
                     drainSettings.Protocols.EnableHttp2 = false;
                     drainSettings.Protocols.EnableHttp3 = true;
@@ -5430,14 +5435,14 @@ namespace Test.Automated
                         drainServer.Start();
                         await Task.Delay(500).ConfigureAwait(false);
 
-                        await using (QuicConnection connection = await ConnectHttp3ClientAsync(8019).ConfigureAwait(false))
+                        await using (QuicConnection connection = await ConnectHttp3ClientAsync(gracefulDrainPort).ConfigureAwait(false))
                         {
                             await PerformHttp3ClientHandshakeAsync(connection).ConfigureAwait(false);
 
                             QuicStream requestStream = await connection.OpenOutboundStreamAsync(QuicStreamType.Bidirectional, CancellationToken.None).ConfigureAwait(false);
                             try
                             {
-                                await WriteHttp3RequestAsync(requestStream, "GET", "localhost:8019", "/test/http2-delay/250", null, null, null).ConfigureAwait(false);
+                                await WriteHttp3RequestAsync(requestStream, "GET", "localhost:" + gracefulDrainPort.ToString(), "/test/http2-delay/250", null, null, null).ConfigureAwait(false);
                                 Task<Http3MessageBody> responseTask = Http3MessageSerializer.ReadMessageAsync(requestStream, CancellationToken.None);
 
                                 await Task.Delay(50).ConfigureAwait(false);
@@ -5474,7 +5479,7 @@ namespace Test.Automated
 
                 await ExecuteTest("HTTP/3 QUIC Transport - Graceful Stop Rejects New Stream After GoAway", async () =>
                 {
-                    WebserverSettings drainSettings = new WebserverSettings("127.0.0.1", 8020, true);
+                    WebserverSettings drainSettings = new WebserverSettings("127.0.0.1", gracefulRejectPort, true);
                     drainSettings.Protocols.EnableHttp1 = false;
                     drainSettings.Protocols.EnableHttp2 = false;
                     drainSettings.Protocols.EnableHttp3 = true;
@@ -5491,7 +5496,7 @@ namespace Test.Automated
                         drainServer.Start();
                         await Task.Delay(500).ConfigureAwait(false);
 
-                        await using (QuicConnection connection = await ConnectHttp3ClientAsync(8020).ConfigureAwait(false))
+                        await using (QuicConnection connection = await ConnectHttp3ClientAsync(gracefulRejectPort).ConfigureAwait(false))
                         {
                             QuicStream controlStream = await PerformHttp3ClientHandshakeAndRetainControlStreamAsync(connection).ConfigureAwait(false);
                             QuicStream drainingStream = null;
@@ -5499,7 +5504,7 @@ namespace Test.Automated
                             try
                             {
                                 drainingStream = await connection.OpenOutboundStreamAsync(QuicStreamType.Bidirectional, CancellationToken.None).ConfigureAwait(false);
-                                await WriteHttp3RequestAsync(drainingStream, "GET", "localhost:8020", "/test/http2-delay/250", null, null, null).ConfigureAwait(false);
+                                await WriteHttp3RequestAsync(drainingStream, "GET", "localhost:" + gracefulRejectPort.ToString(), "/test/http2-delay/250", null, null, null).ConfigureAwait(false);
                                 Task<Http3MessageBody> drainingResponseTask = Http3MessageSerializer.ReadMessageAsync(drainingStream, CancellationToken.None);
 
                                 await Task.Delay(50).ConfigureAwait(false);
@@ -5517,7 +5522,7 @@ namespace Test.Automated
                                     QuicStream newStream = await connection.OpenOutboundStreamAsync(QuicStreamType.Bidirectional, CancellationToken.None).ConfigureAwait(false);
                                     try
                                     {
-                                        await WriteHttp3RequestAsync(newStream, "GET", "localhost:8020", "/test/get", null, null, null).ConfigureAwait(false);
+                                        await WriteHttp3RequestAsync(newStream, "GET", "localhost:" + gracefulRejectPort.ToString(), "/test/get", null, null, null).ConfigureAwait(false);
                                         await Http3MessageSerializer.ReadMessageAsync(newStream, CancellationToken.None).ConfigureAwait(false);
                                         return false;
                                     }
@@ -5564,7 +5569,7 @@ namespace Test.Automated
 
                 await ExecuteTest("HTTP/3 QUIC Transport - Invalid Trailer PseudoHeader Closes Connection", async () =>
                 {
-                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(8016).ConfigureAwait(false))
+                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(primaryPort).ConfigureAwait(false))
                     {
                         await PerformHttp3ClientHandshakeAsync(connection).ConfigureAwait(false);
 
@@ -5579,7 +5584,7 @@ namespace Test.Automated
                         QuicStream requestStream = await connection.OpenOutboundStreamAsync(QuicStreamType.Bidirectional, CancellationToken.None).ConfigureAwait(false);
                         try
                         {
-                            await WriteHttp3RequestAsync(requestStream, "POST", "localhost:8016", "/test/http2-request-trailers", requestBody, requestHeaders, invalidTrailerHeaders).ConfigureAwait(false);
+                            await WriteHttp3RequestAsync(requestStream, "POST", "localhost:" + primaryPort.ToString(), "/test/http2-request-trailers", requestBody, requestHeaders, invalidTrailerHeaders).ConfigureAwait(false);
 
                             try
                             {
@@ -5594,7 +5599,7 @@ namespace Test.Automated
                                 QuicStream followupStream = await connection.OpenOutboundStreamAsync(QuicStreamType.Bidirectional, CancellationToken.None).ConfigureAwait(false);
                                 try
                                 {
-                                    await WriteHttp3RequestAsync(followupStream, "GET", "localhost:8016", "/test/get", null, null, null).ConfigureAwait(false);
+                                    await WriteHttp3RequestAsync(followupStream, "GET", "localhost:" + primaryPort.ToString(), "/test/get", null, null, null).ConfigureAwait(false);
                                     await Http3MessageSerializer.ReadMessageAsync(followupStream, CancellationToken.None).ConfigureAwait(false);
                                     return false;
                                 }
@@ -5621,7 +5626,7 @@ namespace Test.Automated
 
                 await ExecuteTest("HTTP/3 QUIC Transport - Uppercase Trailer Name Closes Connection", async () =>
                 {
-                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(8016).ConfigureAwait(false))
+                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(primaryPort).ConfigureAwait(false))
                     {
                         await PerformHttp3ClientHandshakeAsync(connection).ConfigureAwait(false);
 
@@ -5636,7 +5641,7 @@ namespace Test.Automated
                         QuicStream requestStream = await connection.OpenOutboundStreamAsync(QuicStreamType.Bidirectional, CancellationToken.None).ConfigureAwait(false);
                         try
                         {
-                            await WriteHttp3RequestAsync(requestStream, "POST", "localhost:8016", "/test/http2-request-trailers", requestBody, requestHeaders, invalidTrailerHeaders).ConfigureAwait(false);
+                            await WriteHttp3RequestAsync(requestStream, "POST", "localhost:" + primaryPort.ToString(), "/test/http2-request-trailers", requestBody, requestHeaders, invalidTrailerHeaders).ConfigureAwait(false);
 
                             try
                             {
@@ -5651,7 +5656,7 @@ namespace Test.Automated
                                 QuicStream followupStream = await connection.OpenOutboundStreamAsync(QuicStreamType.Bidirectional, CancellationToken.None).ConfigureAwait(false);
                                 try
                                 {
-                                    await WriteHttp3RequestAsync(followupStream, "GET", "localhost:8016", "/test/get", null, null, null).ConfigureAwait(false);
+                                    await WriteHttp3RequestAsync(followupStream, "GET", "localhost:" + primaryPort.ToString(), "/test/get", null, null, null).ConfigureAwait(false);
                                     await Http3MessageSerializer.ReadMessageAsync(followupStream, CancellationToken.None).ConfigureAwait(false);
                                     return false;
                                 }
@@ -5678,14 +5683,14 @@ namespace Test.Automated
 
                 await ExecuteTest("HTTP/3 QUIC Transport - Empty Trailer Name Closes Connection", async () =>
                 {
-                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(8016).ConfigureAwait(false))
+                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(primaryPort).ConfigureAwait(false))
                     {
                         await PerformHttp3ClientHandshakeAsync(connection).ConfigureAwait(false);
 
                         List<Http3HeaderField> requestHeaders = new List<Http3HeaderField>();
                         requestHeaders.Add(new Http3HeaderField { Name = ":method", Value = "POST" });
                         requestHeaders.Add(new Http3HeaderField { Name = ":scheme", Value = "https" });
-                        requestHeaders.Add(new Http3HeaderField { Name = ":authority", Value = "localhost:8016" });
+                        requestHeaders.Add(new Http3HeaderField { Name = ":authority", Value = "localhost:" + primaryPort.ToString() });
                         requestHeaders.Add(new Http3HeaderField { Name = ":path", Value = "/test/http2-request-trailers" });
                         requestHeaders.Add(new Http3HeaderField { Name = "content-length", Value = "7" });
                         requestHeaders.Add(new Http3HeaderField { Name = "content-type", Value = "text/plain" });
@@ -5718,14 +5723,14 @@ namespace Test.Automated
 
                 await ExecuteTest("HTTP/3 QUIC Transport - Uppercase Header Name Closes Connection", async () =>
                 {
-                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(8016).ConfigureAwait(false))
+                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(primaryPort).ConfigureAwait(false))
                     {
                         await PerformHttp3ClientHandshakeAsync(connection).ConfigureAwait(false);
 
                         List<Http3HeaderField> invalidHeaders = new List<Http3HeaderField>();
                         invalidHeaders.Add(new Http3HeaderField { Name = ":method", Value = "GET" });
                         invalidHeaders.Add(new Http3HeaderField { Name = ":scheme", Value = "https" });
-                        invalidHeaders.Add(new Http3HeaderField { Name = ":authority", Value = "localhost:8016" });
+                        invalidHeaders.Add(new Http3HeaderField { Name = ":authority", Value = "localhost:" + primaryPort.ToString() });
                         invalidHeaders.Add(new Http3HeaderField { Name = ":path", Value = "/test/get" });
                         invalidHeaders.Add(new Http3HeaderField { Name = "X-Bad", Value = "true" });
 
@@ -5762,14 +5767,14 @@ namespace Test.Automated
 
                 await ExecuteTest("HTTP/3 QUIC Transport - Connection Header Closes Connection", async () =>
                 {
-                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(8016).ConfigureAwait(false))
+                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(primaryPort).ConfigureAwait(false))
                     {
                         await PerformHttp3ClientHandshakeAsync(connection).ConfigureAwait(false);
 
                         List<Http3HeaderField> invalidHeaders = new List<Http3HeaderField>();
                         invalidHeaders.Add(new Http3HeaderField { Name = ":method", Value = "GET" });
                         invalidHeaders.Add(new Http3HeaderField { Name = ":scheme", Value = "https" });
-                        invalidHeaders.Add(new Http3HeaderField { Name = ":authority", Value = "localhost:8016" });
+                        invalidHeaders.Add(new Http3HeaderField { Name = ":authority", Value = "localhost:" + primaryPort.ToString() });
                         invalidHeaders.Add(new Http3HeaderField { Name = ":path", Value = "/test/get" });
                         invalidHeaders.Add(new Http3HeaderField { Name = "connection", Value = "keep-alive" });
 
@@ -5806,14 +5811,14 @@ namespace Test.Automated
 
                 await ExecuteTest("HTTP/3 QUIC Transport - Invalid TE Header Closes Connection", async () =>
                 {
-                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(8016).ConfigureAwait(false))
+                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(primaryPort).ConfigureAwait(false))
                     {
                         await PerformHttp3ClientHandshakeAsync(connection).ConfigureAwait(false);
 
                         List<Http3HeaderField> invalidHeaders = new List<Http3HeaderField>();
                         invalidHeaders.Add(new Http3HeaderField { Name = ":method", Value = "GET" });
                         invalidHeaders.Add(new Http3HeaderField { Name = ":scheme", Value = "https" });
-                        invalidHeaders.Add(new Http3HeaderField { Name = ":authority", Value = "localhost:8016" });
+                        invalidHeaders.Add(new Http3HeaderField { Name = ":authority", Value = "localhost:" + primaryPort.ToString() });
                         invalidHeaders.Add(new Http3HeaderField { Name = ":path", Value = "/test/get" });
                         invalidHeaders.Add(new Http3HeaderField { Name = "te", Value = "gzip" });
 
@@ -5850,7 +5855,7 @@ namespace Test.Automated
 
                 await ExecuteTest("HTTP/3 QUIC Transport - PseudoHeader After Regular Header Closes Connection", async () =>
                 {
-                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(8016).ConfigureAwait(false))
+                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(primaryPort).ConfigureAwait(false))
                     {
                         await PerformHttp3ClientHandshakeAsync(connection).ConfigureAwait(false);
 
@@ -5858,7 +5863,7 @@ namespace Test.Automated
                         invalidHeaders.Add(new Http3HeaderField { Name = ":method", Value = "GET" });
                         invalidHeaders.Add(new Http3HeaderField { Name = "accept", Value = "*/*" });
                         invalidHeaders.Add(new Http3HeaderField { Name = ":scheme", Value = "https" });
-                        invalidHeaders.Add(new Http3HeaderField { Name = ":authority", Value = "localhost:8016" });
+                        invalidHeaders.Add(new Http3HeaderField { Name = ":authority", Value = "localhost:" + primaryPort.ToString() });
                         invalidHeaders.Add(new Http3HeaderField { Name = ":path", Value = "/test/get" });
 
                         QuicStream requestStream = await connection.OpenOutboundStreamAsync(QuicStreamType.Bidirectional, CancellationToken.None).ConfigureAwait(false);
@@ -5894,7 +5899,7 @@ namespace Test.Automated
 
                 await ExecuteTest("HTTP/3 QUIC Transport - Duplicate Method PseudoHeader Closes Connection", async () =>
                 {
-                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(8016).ConfigureAwait(false))
+                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(primaryPort).ConfigureAwait(false))
                     {
                         await PerformHttp3ClientHandshakeAsync(connection).ConfigureAwait(false);
 
@@ -5902,7 +5907,7 @@ namespace Test.Automated
                         invalidHeaders.Add(new Http3HeaderField { Name = ":method", Value = "GET" });
                         invalidHeaders.Add(new Http3HeaderField { Name = ":method", Value = "POST" });
                         invalidHeaders.Add(new Http3HeaderField { Name = ":scheme", Value = "https" });
-                        invalidHeaders.Add(new Http3HeaderField { Name = ":authority", Value = "localhost:8016" });
+                        invalidHeaders.Add(new Http3HeaderField { Name = ":authority", Value = "localhost:" + primaryPort.ToString() });
                         invalidHeaders.Add(new Http3HeaderField { Name = ":path", Value = "/test/get" });
 
                         QuicStream requestStream = await connection.OpenOutboundStreamAsync(QuicStreamType.Bidirectional, CancellationToken.None).ConfigureAwait(false);
@@ -5938,7 +5943,7 @@ namespace Test.Automated
 
                 await ExecuteTest("HTTP/3 QUIC Transport - Duplicate Scheme PseudoHeader Closes Connection", async () =>
                 {
-                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(8016).ConfigureAwait(false))
+                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(primaryPort).ConfigureAwait(false))
                     {
                         await PerformHttp3ClientHandshakeAsync(connection).ConfigureAwait(false);
 
@@ -5946,7 +5951,7 @@ namespace Test.Automated
                         invalidHeaders.Add(new Http3HeaderField { Name = ":method", Value = "GET" });
                         invalidHeaders.Add(new Http3HeaderField { Name = ":scheme", Value = "https" });
                         invalidHeaders.Add(new Http3HeaderField { Name = ":scheme", Value = "https" });
-                        invalidHeaders.Add(new Http3HeaderField { Name = ":authority", Value = "localhost:8016" });
+                        invalidHeaders.Add(new Http3HeaderField { Name = ":authority", Value = "localhost:" + primaryPort.ToString() });
                         invalidHeaders.Add(new Http3HeaderField { Name = ":path", Value = "/test/get" });
 
                         QuicStream requestStream = await connection.OpenOutboundStreamAsync(QuicStreamType.Bidirectional, CancellationToken.None).ConfigureAwait(false);
@@ -5982,15 +5987,15 @@ namespace Test.Automated
 
                 await ExecuteTest("HTTP/3 QUIC Transport - Duplicate Authority PseudoHeader Closes Connection", async () =>
                 {
-                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(8016).ConfigureAwait(false))
+                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(primaryPort).ConfigureAwait(false))
                     {
                         await PerformHttp3ClientHandshakeAsync(connection).ConfigureAwait(false);
 
                         List<Http3HeaderField> invalidHeaders = new List<Http3HeaderField>();
                         invalidHeaders.Add(new Http3HeaderField { Name = ":method", Value = "GET" });
                         invalidHeaders.Add(new Http3HeaderField { Name = ":scheme", Value = "https" });
-                        invalidHeaders.Add(new Http3HeaderField { Name = ":authority", Value = "localhost:8016" });
-                        invalidHeaders.Add(new Http3HeaderField { Name = ":authority", Value = "localhost:8016" });
+                        invalidHeaders.Add(new Http3HeaderField { Name = ":authority", Value = "localhost:" + primaryPort.ToString() });
+                        invalidHeaders.Add(new Http3HeaderField { Name = ":authority", Value = "localhost:" + primaryPort.ToString() });
                         invalidHeaders.Add(new Http3HeaderField { Name = ":path", Value = "/test/get" });
 
                         QuicStream requestStream = await connection.OpenOutboundStreamAsync(QuicStreamType.Bidirectional, CancellationToken.None).ConfigureAwait(false);
@@ -6026,13 +6031,13 @@ namespace Test.Automated
 
                 await ExecuteTest("HTTP/3 QUIC Transport - Missing Scheme PseudoHeader Closes Connection", async () =>
                 {
-                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(8016).ConfigureAwait(false))
+                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(primaryPort).ConfigureAwait(false))
                     {
                         await PerformHttp3ClientHandshakeAsync(connection).ConfigureAwait(false);
 
                         List<Http3HeaderField> invalidHeaders = new List<Http3HeaderField>();
                         invalidHeaders.Add(new Http3HeaderField { Name = ":method", Value = "GET" });
-                        invalidHeaders.Add(new Http3HeaderField { Name = ":authority", Value = "localhost:8016" });
+                        invalidHeaders.Add(new Http3HeaderField { Name = ":authority", Value = "localhost:" + primaryPort.ToString() });
                         invalidHeaders.Add(new Http3HeaderField { Name = ":path", Value = "/test/get" });
 
                         QuicStream requestStream = await connection.OpenOutboundStreamAsync(QuicStreamType.Bidirectional, CancellationToken.None).ConfigureAwait(false);
@@ -6068,14 +6073,14 @@ namespace Test.Automated
 
                 await ExecuteTest("HTTP/3 QUIC Transport - Relative Path Closes Connection", async () =>
                 {
-                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(8016).ConfigureAwait(false))
+                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(primaryPort).ConfigureAwait(false))
                     {
                         await PerformHttp3ClientHandshakeAsync(connection).ConfigureAwait(false);
 
                         List<Http3HeaderField> invalidHeaders = new List<Http3HeaderField>();
                         invalidHeaders.Add(new Http3HeaderField { Name = ":method", Value = "GET" });
                         invalidHeaders.Add(new Http3HeaderField { Name = ":scheme", Value = "https" });
-                        invalidHeaders.Add(new Http3HeaderField { Name = ":authority", Value = "localhost:8016" });
+                        invalidHeaders.Add(new Http3HeaderField { Name = ":authority", Value = "localhost:" + primaryPort.ToString() });
                         invalidHeaders.Add(new Http3HeaderField { Name = ":path", Value = "relative/path" });
 
                         QuicStream requestStream = await connection.OpenOutboundStreamAsync(QuicStreamType.Bidirectional, CancellationToken.None).ConfigureAwait(false);
@@ -6111,14 +6116,14 @@ namespace Test.Automated
 
                 await ExecuteTest("HTTP/3 QUIC Transport - Unsupported PseudoHeader Closes Connection", async () =>
                 {
-                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(8016).ConfigureAwait(false))
+                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(primaryPort).ConfigureAwait(false))
                     {
                         await PerformHttp3ClientHandshakeAsync(connection).ConfigureAwait(false);
 
                         List<Http3HeaderField> invalidHeaders = new List<Http3HeaderField>();
                         invalidHeaders.Add(new Http3HeaderField { Name = ":method", Value = "GET" });
                         invalidHeaders.Add(new Http3HeaderField { Name = ":scheme", Value = "https" });
-                        invalidHeaders.Add(new Http3HeaderField { Name = ":authority", Value = "localhost:8016" });
+                        invalidHeaders.Add(new Http3HeaderField { Name = ":authority", Value = "localhost:" + primaryPort.ToString() });
                         invalidHeaders.Add(new Http3HeaderField { Name = ":path", Value = "/test/get" });
                         invalidHeaders.Add(new Http3HeaderField { Name = ":protocol", Value = "websocket" });
 
@@ -6155,14 +6160,14 @@ namespace Test.Automated
 
                 await ExecuteTest("HTTP/3 QUIC Transport - Duplicate Path PseudoHeader Closes Connection", async () =>
                 {
-                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(8016).ConfigureAwait(false))
+                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(primaryPort).ConfigureAwait(false))
                     {
                         await PerformHttp3ClientHandshakeAsync(connection).ConfigureAwait(false);
 
                         List<Http3HeaderField> invalidHeaders = new List<Http3HeaderField>();
                         invalidHeaders.Add(new Http3HeaderField { Name = ":method", Value = "GET" });
                         invalidHeaders.Add(new Http3HeaderField { Name = ":scheme", Value = "https" });
-                        invalidHeaders.Add(new Http3HeaderField { Name = ":authority", Value = "localhost:8016" });
+                        invalidHeaders.Add(new Http3HeaderField { Name = ":authority", Value = "localhost:" + primaryPort.ToString() });
                         invalidHeaders.Add(new Http3HeaderField { Name = ":path", Value = "/test/get" });
                         invalidHeaders.Add(new Http3HeaderField { Name = ":path", Value = "/test/other" });
 
@@ -6199,13 +6204,13 @@ namespace Test.Automated
 
                 await ExecuteTest("HTTP/3 QUIC Transport - Missing Method PseudoHeader Closes Connection", async () =>
                 {
-                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(8016).ConfigureAwait(false))
+                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(primaryPort).ConfigureAwait(false))
                     {
                         await PerformHttp3ClientHandshakeAsync(connection).ConfigureAwait(false);
 
                         List<Http3HeaderField> invalidHeaders = new List<Http3HeaderField>();
                         invalidHeaders.Add(new Http3HeaderField { Name = ":scheme", Value = "https" });
-                        invalidHeaders.Add(new Http3HeaderField { Name = ":authority", Value = "localhost:8016" });
+                        invalidHeaders.Add(new Http3HeaderField { Name = ":authority", Value = "localhost:" + primaryPort.ToString() });
                         invalidHeaders.Add(new Http3HeaderField { Name = ":path", Value = "/test/get" });
 
                         QuicStream requestStream = await connection.OpenOutboundStreamAsync(QuicStreamType.Bidirectional, CancellationToken.None).ConfigureAwait(false);
@@ -6241,14 +6246,14 @@ namespace Test.Automated
 
                 await ExecuteTest("HTTP/3 QUIC Transport - Missing Path PseudoHeader Closes Connection", async () =>
                 {
-                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(8016).ConfigureAwait(false))
+                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(primaryPort).ConfigureAwait(false))
                     {
                         await PerformHttp3ClientHandshakeAsync(connection).ConfigureAwait(false);
 
                         List<Http3HeaderField> invalidHeaders = new List<Http3HeaderField>();
                         invalidHeaders.Add(new Http3HeaderField { Name = ":method", Value = "GET" });
                         invalidHeaders.Add(new Http3HeaderField { Name = ":scheme", Value = "https" });
-                        invalidHeaders.Add(new Http3HeaderField { Name = ":authority", Value = "localhost:8016" });
+                        invalidHeaders.Add(new Http3HeaderField { Name = ":authority", Value = "localhost:" + primaryPort.ToString() });
 
                         QuicStream requestStream = await connection.OpenOutboundStreamAsync(QuicStreamType.Bidirectional, CancellationToken.None).ConfigureAwait(false);
                         try
@@ -6438,7 +6443,7 @@ namespace Test.Automated
 
                 await ExecuteTest("HTTP/3 QUIC Transport - Trailer ContentLength Closes Connection", async () =>
                 {
-                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(8016).ConfigureAwait(false))
+                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(primaryPort).ConfigureAwait(false))
                     {
                         await PerformHttp3ClientHandshakeAsync(connection).ConfigureAwait(false);
 
@@ -6453,7 +6458,7 @@ namespace Test.Automated
                         QuicStream requestStream = await connection.OpenOutboundStreamAsync(QuicStreamType.Bidirectional, CancellationToken.None).ConfigureAwait(false);
                         try
                         {
-                            await WriteHttp3RequestAsync(requestStream, "POST", "localhost:8016", "/test/http2-request-trailers", requestBody, requestHeaders, invalidTrailerHeaders).ConfigureAwait(false);
+                            await WriteHttp3RequestAsync(requestStream, "POST", "localhost:" + primaryPort.ToString(), "/test/http2-request-trailers", requestBody, requestHeaders, invalidTrailerHeaders).ConfigureAwait(false);
 
                             try
                             {
@@ -6483,7 +6488,7 @@ namespace Test.Automated
 
                 await ExecuteTest("HTTP/3 QUIC Transport - Dynamic Qpack Header Block Closes Connection", async () =>
                 {
-                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(8016).ConfigureAwait(false))
+                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(primaryPort).ConfigureAwait(false))
                     {
                         await PerformHttp3ClientHandshakeAsync(connection).ConfigureAwait(false);
 
@@ -6515,7 +6520,7 @@ namespace Test.Automated
 
                 await ExecuteTest("HTTP/3 QUIC Transport - QPACK Prefix Header Block Routes Request", async () =>
                 {
-                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(8016).ConfigureAwait(false))
+                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(primaryPort).ConfigureAwait(false))
                     {
                         await PerformHttp3ClientHandshakeAsync(connection).ConfigureAwait(false);
 
@@ -6544,7 +6549,7 @@ namespace Test.Automated
 
                 await ExecuteTest("HTTP/3 QUIC Transport - NeverIndexed Qpack Header Block Closes Connection", async () =>
                 {
-                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(8016).ConfigureAwait(false))
+                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(primaryPort).ConfigureAwait(false))
                     {
                         await PerformHttp3ClientHandshakeAsync(connection).ConfigureAwait(false);
 
@@ -6582,7 +6587,7 @@ namespace Test.Automated
 
                 await ExecuteTest("HTTP/3 QUIC Transport - Dynamic NameReference Qpack Header Block Closes Connection", async () =>
                 {
-                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(8016).ConfigureAwait(false))
+                    await using (QuicConnection connection = await ConnectHttp3ClientAsync(primaryPort).ConfigureAwait(false))
                     {
                         await PerformHttp3ClientHandshakeAsync(connection).ConfigureAwait(false);
 
@@ -8392,8 +8397,10 @@ namespace Test.Automated
                 {
                     if (streamType == (long)Http3StreamType.QpackEncoder || streamType == (long)Http3StreamType.QpackDecoder)
                     {
-                        byte[] remainingBytes = await ReadToEndAsync(peerStream).ConfigureAwait(false);
-                        if (remainingBytes.Length > 0) throw new IOException("Expected empty bootstrap QPACK stream payload.");
+                        // QPACK encoder and decoder streams are long-lived bootstrap streams.
+                        // The server writes only the stream type marker initially and keeps the
+                        // stream open for the duration of the connection, so reading to EOF here
+                        // would block until the connection idle timeout expires.
                     }
                     else
                     {
@@ -8711,6 +8718,19 @@ namespace Test.Automated
 #pragma warning restore SYSLIB0057
 #endif
                 }
+            }
+        }
+
+        /// <summary>
+        /// Allocate an available loopback TCP port for a short-lived test server.
+        /// </summary>
+        /// <returns>Available port number.</returns>
+        private static int GetAvailableLoopbackPort()
+        {
+            using (TcpListener listener = new TcpListener(IPAddress.Loopback, 0))
+            {
+                listener.Start();
+                return ((IPEndPoint)listener.LocalEndpoint).Port;
             }
         }
 

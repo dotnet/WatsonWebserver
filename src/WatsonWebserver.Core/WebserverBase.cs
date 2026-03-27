@@ -1,5 +1,7 @@
 ﻿namespace WatsonWebserver.Core
 {
+    using WatsonWebserver.Core.Middleware;
+    using WatsonWebserver.Core.OpenApi;
     using WatsonWebserver.Core.Routing;
     using System;
     using System.Collections.Generic;
@@ -126,6 +128,24 @@
             }
         }
 
+        /// <summary>
+        /// Middleware pipeline for the request processing pipeline.
+        /// Register middleware using Middleware.Add() before starting the server.
+        /// Middleware executes in registration order around the matched route handler.
+        /// </summary>
+        [JsonIgnore]
+        public MiddlewarePipeline Middleware
+        {
+            get
+            {
+                return _Middleware;
+            }
+            set
+            {
+                _Middleware = value ?? throw new ArgumentNullException(nameof(Middleware));
+            }
+        }
+
         #endregion
 
         #region Private-Members
@@ -136,6 +156,7 @@
         private WebserverStatistics _Statistics = new WebserverStatistics();
         private WebserverRoutes _Routes = new WebserverRoutes();
         private ISerializationHelper _Serializer = new DefaultSerializationHelper();
+        private MiddlewarePipeline _Middleware = new MiddlewarePipeline();
 
         #endregion
 
@@ -197,6 +218,192 @@
         /// Stop accepting new connections.
         /// </summary>
         public abstract void Stop();
+
+        #endregion
+
+        #region Api-Route-Methods
+
+        /// <summary>
+        /// Add a GET API route. Defaults to pre-authentication.
+        /// </summary>
+        /// <param name="path">URL path, e.g. /users/{id}.</param>
+        /// <param name="handler">Async handler that receives an ApiRequest and returns an object to serialize.</param>
+        /// <param name="auth">When true, the route is registered as a post-authentication route.</param>
+        public void Get(string path, Func<ApiRequest, Task<object>> handler, bool auth = false)
+        {
+            RoutingGroup group = auth ? Routes.PostAuthentication : Routes.PreAuthentication;
+            group.Get(path, handler, Serializer, Middleware, Settings);
+        }
+
+        /// <summary>
+        /// Add a GET API route with OpenAPI metadata.
+        /// </summary>
+        /// <param name="path">URL path.</param>
+        /// <param name="handler">Async handler.</param>
+        /// <param name="openApi">Action to configure OpenAPI metadata for this route.</param>
+        /// <param name="auth">When true, register as post-authentication route.</param>
+        public void Get(string path, Func<ApiRequest, Task<object>> handler, Action<OpenApi.OpenApiRouteMetadata> openApi, bool auth = false)
+        {
+            OpenApi.OpenApiRouteMetadata metadata = new OpenApi.OpenApiRouteMetadata();
+            openApi?.Invoke(metadata);
+            RoutingGroup group = auth ? Routes.PostAuthentication : Routes.PreAuthentication;
+            group.Get(path, handler, Serializer, Middleware, Settings, openApiMetadata: metadata);
+        }
+
+        /// <summary>
+        /// Add a POST API route without automatic body deserialization.
+        /// </summary>
+        /// <param name="path">URL path.</param>
+        /// <param name="handler">Async handler.</param>
+        /// <param name="auth">When true, register as post-authentication route.</param>
+        public void Post(string path, Func<ApiRequest, Task<object>> handler, bool auth = false)
+        {
+            RoutingGroup group = auth ? Routes.PostAuthentication : Routes.PreAuthentication;
+            group.Post(path, handler, Serializer, Middleware, Settings);
+        }
+
+        /// <summary>
+        /// Add a POST API route without automatic body deserialization, with OpenAPI metadata.
+        /// </summary>
+        /// <param name="path">URL path.</param>
+        /// <param name="handler">Async handler.</param>
+        /// <param name="openApi">Action to configure OpenAPI metadata.</param>
+        /// <param name="auth">When true, register as post-authentication route.</param>
+        public void Post(string path, Func<ApiRequest, Task<object>> handler, Action<OpenApi.OpenApiRouteMetadata> openApi, bool auth = false)
+        {
+            OpenApi.OpenApiRouteMetadata metadata = new OpenApi.OpenApiRouteMetadata();
+            openApi?.Invoke(metadata);
+            RoutingGroup group = auth ? Routes.PostAuthentication : Routes.PreAuthentication;
+            group.Post(path, handler, Serializer, Middleware, Settings, openApiMetadata: metadata);
+        }
+
+        /// <summary>
+        /// Add a POST API route with automatic body deserialization.
+        /// </summary>
+        /// <typeparam name="T">Request body type.</typeparam>
+        /// <param name="path">URL path.</param>
+        /// <param name="handler">Async handler.</param>
+        /// <param name="auth">When true, register as post-authentication route.</param>
+        public void Post<T>(string path, Func<ApiRequest, Task<object>> handler, bool auth = false) where T : class
+        {
+            RoutingGroup group = auth ? Routes.PostAuthentication : Routes.PreAuthentication;
+            group.Post<T>(path, handler, Serializer, Middleware, Settings);
+        }
+
+        /// <summary>
+        /// Add a POST API route with automatic body deserialization and OpenAPI metadata.
+        /// </summary>
+        /// <typeparam name="T">Request body type.</typeparam>
+        /// <param name="path">URL path.</param>
+        /// <param name="handler">Async handler.</param>
+        /// <param name="openApi">Action to configure OpenAPI metadata.</param>
+        /// <param name="auth">When true, register as post-authentication route.</param>
+        public void Post<T>(string path, Func<ApiRequest, Task<object>> handler, Action<OpenApi.OpenApiRouteMetadata> openApi, bool auth = false) where T : class
+        {
+            OpenApi.OpenApiRouteMetadata metadata = new OpenApi.OpenApiRouteMetadata();
+            openApi?.Invoke(metadata);
+            RoutingGroup group = auth ? Routes.PostAuthentication : Routes.PreAuthentication;
+            group.Post<T>(path, handler, Serializer, Middleware, Settings, openApiMetadata: metadata);
+        }
+
+        /// <summary>
+        /// Add a PUT API route without automatic body deserialization.
+        /// </summary>
+        /// <param name="path">URL path.</param>
+        /// <param name="handler">Async handler.</param>
+        /// <param name="auth">When true, register as post-authentication route.</param>
+        public void Put(string path, Func<ApiRequest, Task<object>> handler, bool auth = false)
+        {
+            RoutingGroup group = auth ? Routes.PostAuthentication : Routes.PreAuthentication;
+            group.Put(path, handler, Serializer, Middleware, Settings);
+        }
+
+        /// <summary>
+        /// Add a PUT API route with automatic body deserialization.
+        /// </summary>
+        /// <typeparam name="T">Request body type.</typeparam>
+        /// <param name="path">URL path.</param>
+        /// <param name="handler">Async handler.</param>
+        /// <param name="auth">When true, register as post-authentication route.</param>
+        public void Put<T>(string path, Func<ApiRequest, Task<object>> handler, bool auth = false) where T : class
+        {
+            RoutingGroup group = auth ? Routes.PostAuthentication : Routes.PreAuthentication;
+            group.Put<T>(path, handler, Serializer, Middleware, Settings);
+        }
+
+        /// <summary>
+        /// Add a PATCH API route without automatic body deserialization.
+        /// </summary>
+        /// <param name="path">URL path.</param>
+        /// <param name="handler">Async handler.</param>
+        /// <param name="auth">When true, register as post-authentication route.</param>
+        public void Patch(string path, Func<ApiRequest, Task<object>> handler, bool auth = false)
+        {
+            RoutingGroup group = auth ? Routes.PostAuthentication : Routes.PreAuthentication;
+            group.Patch(path, handler, Serializer, Middleware, Settings);
+        }
+
+        /// <summary>
+        /// Add a PATCH API route with automatic body deserialization.
+        /// </summary>
+        /// <typeparam name="T">Request body type.</typeparam>
+        /// <param name="path">URL path.</param>
+        /// <param name="handler">Async handler.</param>
+        /// <param name="auth">When true, register as post-authentication route.</param>
+        public void Patch<T>(string path, Func<ApiRequest, Task<object>> handler, bool auth = false) where T : class
+        {
+            RoutingGroup group = auth ? Routes.PostAuthentication : Routes.PreAuthentication;
+            group.Patch<T>(path, handler, Serializer, Middleware, Settings);
+        }
+
+        /// <summary>
+        /// Add a DELETE API route without automatic body deserialization.
+        /// </summary>
+        /// <param name="path">URL path.</param>
+        /// <param name="handler">Async handler.</param>
+        /// <param name="auth">When true, register as post-authentication route.</param>
+        public void Delete(string path, Func<ApiRequest, Task<object>> handler, bool auth = false)
+        {
+            RoutingGroup group = auth ? Routes.PostAuthentication : Routes.PreAuthentication;
+            group.Delete(path, handler, Serializer, Middleware, Settings);
+        }
+
+        /// <summary>
+        /// Add a DELETE API route with automatic body deserialization.
+        /// </summary>
+        /// <typeparam name="T">Request body type.</typeparam>
+        /// <param name="path">URL path.</param>
+        /// <param name="handler">Async handler.</param>
+        /// <param name="auth">When true, register as post-authentication route.</param>
+        public void Delete<T>(string path, Func<ApiRequest, Task<object>> handler, bool auth = false) where T : class
+        {
+            RoutingGroup group = auth ? Routes.PostAuthentication : Routes.PreAuthentication;
+            group.Delete<T>(path, handler, Serializer, Middleware, Settings);
+        }
+
+        /// <summary>
+        /// Add a HEAD API route.
+        /// </summary>
+        /// <param name="path">URL path.</param>
+        /// <param name="handler">Async handler.</param>
+        /// <param name="auth">When true, register as post-authentication route.</param>
+        public void Head(string path, Func<ApiRequest, Task<object>> handler, bool auth = false)
+        {
+            RoutingGroup group = auth ? Routes.PostAuthentication : Routes.PreAuthentication;
+            group.Head(path, handler, Serializer, Middleware, Settings);
+        }
+
+        /// <summary>
+        /// Add an OPTIONS API route.
+        /// </summary>
+        /// <param name="path">URL path.</param>
+        /// <param name="handler">Async handler.</param>
+        /// <param name="auth">When true, register as post-authentication route.</param>
+        public void Options(string path, Func<ApiRequest, Task<object>> handler, bool auth = false)
+        {
+            RoutingGroup group = auth ? Routes.PostAuthentication : Routes.PreAuthentication;
+            group.Options(path, handler, Serializer, Middleware, Settings);
+        }
 
         #endregion
 
@@ -319,7 +526,34 @@
                         return;
                 }
 
-                if (Routes.AuthenticateRequest != null)
+                if (Routes.AuthenticateApiRequest != null)
+                {
+                    AuthResult authResult = await Routes.AuthenticateApiRequest(ctx).ConfigureAwait(false);
+                    if (authResult == null || !authResult.IsPermitted())
+                    {
+                        ctx.Response.StatusCode = 401;
+                        ctx.Response.ContentType = "application/json";
+                        await ctx.Response.Send(Serializer.SerializeJson(new ApiErrorResponse
+                        {
+                            Error = ApiResultEnum.NotAuthorized
+                        }, false)).ConfigureAwait(false);
+
+                        if (Settings.Debug.Routing)
+                        {
+                            Events.Logger?.Invoke(
+                                header + "authentication denied for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
+                                ctx.Request.Method.ToString() + " " + ctx.Request.Url.Full);
+                        }
+
+                        return;
+                    }
+
+                    if (authResult.Metadata != null)
+                    {
+                        ctx.Metadata = authResult.Metadata;
+                    }
+                }
+                else if (Routes.AuthenticateRequest != null)
                 {
                     await Routes.AuthenticateRequest(ctx).ConfigureAwait(false);
                     if (ctx.Response.ResponseSent)

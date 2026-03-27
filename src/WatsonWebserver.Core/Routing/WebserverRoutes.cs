@@ -44,6 +44,15 @@
         public Func<HttpContextBase, Task> AuthenticateRequest { get; set; } = null;
 
         /// <summary>
+        /// Structured API authentication handler.
+        /// Returns an AuthResult indicating whether the request should proceed.
+        /// When set, this takes precedence over AuthenticateRequest for authentication evaluation.
+        /// On success, AuthResult.Metadata is propagated to HttpContextBase.Metadata.
+        /// On failure, a 401 response with a structured ApiErrorResponse is sent automatically.
+        /// </summary>
+        public Func<HttpContextBase, Task<AuthResult>> AuthenticateApiRequest { get; set; } = null;
+
+        /// <summary>
         /// Post-authentication routes.
         /// </summary>
         public RoutingGroup PostAuthentication

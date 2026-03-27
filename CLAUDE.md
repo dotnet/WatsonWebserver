@@ -220,7 +220,82 @@ Test projects typically target .NET 8.0, 6.0, 4.8, and 4.6.2.
 
 ## Example Usage Patterns
 
-Most routes follow this pattern:
+### API Routes (FastAPI-like, recommended for REST APIs)
+
+Watson 7.0 provides a FastAPI-like experience with automatic serialization:
+
+```csharp
+var settings = new WebserverSettings("127.0.0.1", 8080, false);
+using var server = new Webserver(settings, DefaultRoute);
+
+// GET - return value auto-serialized to JSON
+server.Get("/users/{id}", async (req) =>
+{
+    Guid id = req.Parameters.GetGuid("id");
+    return new { Id = id, Name = "John" };
+});
+
+// POST with auto-deserialized request body
+server.Post<CreateUserRequest>("/users", async (req) =>
+{
+    CreateUserRequest body = req.GetData<CreateUserRequest>();
+    req.Http.Response.StatusCode = 201;
+    return new { Id = Guid.NewGuid(), body.Email };
+});
+
+// POST without auto-deserialization (manual body access)
+server.Post("/upload", async (req) =>
+{
+    byte[] data = req.Http.Request.Data;
+    return new { Size = data.Length };
+});
+
+// Tuple return for custom status codes
+server.Get("/created", async (req) => (new { Id = 1 }, 201));
+
+// Throw WebserverException for structured error responses
+server.Get("/error", async (req) =>
+{
+    throw new WebserverException(ApiResultEnum.NotFound, "Item not found");
+});
+
+// Protected route (requires authentication)
+server.Get("/admin", async (req) => new { Secure = true }, auth: true);
+
+// Middleware
+server.Middleware.Add(async (ctx, next, token) =>
+{
+    Console.WriteLine($"{ctx.Request.Method} {ctx.Request.Url.RawWithoutQuery}");
+    await next();
+});
+
+// Structured authentication
+server.Routes.AuthenticateApiRequest = async (ctx) =>
+{
+    return new AuthResult
+    {
+        AuthenticationResult = AuthenticationResultEnum.Success,
+        AuthorizationResult = AuthorizationResultEnum.Permitted,
+        Metadata = new { UserId = 1 }
+    };
+};
+
+// Health check
+server.UseHealthCheck();
+
+// Timeouts
+server.Settings.Timeout.DefaultTimeout = TimeSpan.FromSeconds(30);
+
+// OpenAPI / Swagger
+server.UseOpenApi(api => { api.Info.Title = "My API"; api.Info.Version = "1.0.0"; });
+
+server.Start();
+```
+
+### Low-Level Routes (full control)
+
+The traditional route pattern is still fully supported:
+
 ```csharp
 static async Task MyRoute(HttpContextBase ctx)
 {
@@ -240,16 +315,27 @@ string id = ctx.Request.Url.Parameters["id"];
 Understanding where functionality lives helps you make changes efficiently:
 
 ### Core Library (WatsonWebserver.Core)
-- **`WebserverBase.cs`** - Abstract base class defining server interface and lifecycle
+- **`WebserverBase.cs`** - Abstract base class defining server interface, lifecycle, and API route convenience methods (Get, Post<T>, Put<T>, etc.)
 - **`HttpContextBase.cs`** - Request/response container passed through routing pipeline
 - **`HttpRequestBase.cs`** - Abstract request interface (headers, body, URL parsing)
 - **`HttpResponseBase.cs`** - Abstract response interface (Send methods, headers)
-- **`WebserverRoutes.cs`** - Route collection root (Preflight, PreRouting, etc.)
+- **`ApiRequest.cs`** - API route handler parameter with typed access to Parameters, Query, Headers, and deserialized Data
+- **`RequestParameters.cs`** - Typed parameter accessors (GetInt, GetGuid, GetBool, GetEnum<T>, TryGetValue<T>, etc.)
+- **`ApiErrorResponse.cs`** - Structured JSON error response with ApiResultEnum
+- **`WebserverException.cs`** - Exception type for API handlers that maps to HTTP status codes
+- **`AuthResult.cs`** - Structured authentication/authorization result
+- **`TimeoutSettings.cs`** - Request timeout configuration
+- **`Middleware/MiddlewarePipeline.cs`** - Per-request middleware pipeline with short-circuit support
+- **`Routing/ApiRouteHandler.cs`** - Internal wrapper converting API handlers to Watson route handlers
+- **`Routing/ApiResponseProcessor.cs`** - Return value processing (null, string, object, tuple)
+- **`Routing/RoutingGroupApiExtensions.cs`** - Extension methods for API route registration on RoutingGroup
+- **`Health/WebserverHealthExtensions.cs`** - UseHealthCheck() extension method
+- **`WebserverRoutes.cs`** - Route collection root (Preflight, PreRouting, AuthenticateApiRequest, etc.)
 - **`RoutingGroup.cs`** - Holds Pre/PostAuthentication route groups
 - **`StaticRoute.cs`, `ParameterRoute.cs`, `DynamicRoute.cs`, `ContentRoute.cs`** - Route type implementations
 - **`ServerSentEvent.cs`** - SSE data model with `ToEventString()` formatting
 - **`Chunk.cs`** - Chunked transfer encoding data model
-- **`WebserverSettings.cs`** - Configuration (IO, SSL, AccessControl, Headers, Debug)
+- **`WebserverSettings.cs`** - Configuration (IO, SSL, AccessControl, Headers, Debug, Timeout)
 - **`WebserverStatistics.cs`** - Request counters and bandwidth tracking
 
 ### Watson Implementation (WatsonWebserver)

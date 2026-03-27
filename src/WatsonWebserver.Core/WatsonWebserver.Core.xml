@@ -98,6 +98,202 @@
             Advertised max-age in seconds.
             </summary>
         </member>
+        <member name="T:WatsonWebserver.Core.ApiErrorResponse">
+            <summary>
+            Structured API error response returned to clients when an error occurs.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.ApiErrorResponse.Error">
+            <summary>
+            The API result indicating the type of error.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.ApiErrorResponse.StatusCode">
+            <summary>
+            The HTTP status code derived from the error type.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.ApiErrorResponse.Description">
+            <summary>
+            Human-readable description of the error type.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.ApiErrorResponse.Message">
+            <summary>
+            Optional custom error message providing additional context.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.ApiErrorResponse.Data">
+            <summary>
+            Optional additional data associated with the error.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.ApiErrorResponse.#ctor">
+            <summary>
+            Instantiate.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.ApiRequest">
+            <summary>
+            API request wrapper providing typed access to URL parameters, query parameters, headers,
+            and the deserialized request body. Passed to API route handlers.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.ApiRequest.Data">
+            <summary>
+            The deserialized request body data.
+            Null when using a non-generic route or when no request body was present.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.ApiRequest.Http">
+            <summary>
+            The underlying HTTP context providing full access to the raw request and response.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.ApiRequest.Parameters">
+            <summary>
+            URL path parameters with typed accessors.
+            For a route like /users/{id}, access via Parameters["id"] or Parameters.GetGuid("id").
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.ApiRequest.Query">
+            <summary>
+            Query string parameters with typed accessors.
+            For a URL like /users?page=2, access via Query["page"] or Query.GetInt("page").
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.ApiRequest.Headers">
+            <summary>
+            Request headers with typed accessors.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.ApiRequest.Serializer">
+            <summary>
+            Serialization helper for manual serialization and deserialization.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.ApiRequest.AuthResult">
+            <summary>
+            Authentication and authorization result.
+            Populated when a structured authentication handler is configured.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.ApiRequest.CancellationToken">
+            <summary>
+            Cancellation token for the request.
+            When request timeouts are enabled, this token will be cancelled when the timeout expires.
+            Pass this token to async operations within your route handler to enable cooperative cancellation.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.ApiRequest.Metadata">
+            <summary>
+            User-supplied metadata.
+            Populated from HttpContextBase.Metadata, typically set by an authentication handler.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.ApiRequest.#ctor(WatsonWebserver.Core.HttpContextBase,WatsonWebserver.Core.ISerializationHelper,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Instantiate an API request.
+            </summary>
+            <param name="ctx">The HTTP context.</param>
+            <param name="serializer">Serialization helper.</param>
+            <param name="data">Deserialized request body data, or null.</param>
+            <param name="cancellationToken">Cancellation token for the request. When timeouts are enabled, this token is cancelled on timeout.</param>
+            <exception cref="T:System.ArgumentNullException">Thrown when ctx or serializer is null.</exception>
+        </member>
+        <member name="M:WatsonWebserver.Core.ApiRequest.GetData``1">
+            <summary>
+            Cast the deserialized data to a specific type.
+            </summary>
+            <typeparam name="T">Target type.</typeparam>
+            <returns>The data cast to the specified type, or null if the data is null or not of the expected type.</returns>
+        </member>
+        <member name="T:WatsonWebserver.Core.ApiResultEnum">
+            <summary>
+            API result enumeration indicating the outcome of an API request.
+            Each value maps to an HTTP status code.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.Core.ApiResultEnum.Success">
+            <summary>
+            Success (HTTP 200).
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.Core.ApiResultEnum.Created">
+            <summary>
+            Created (HTTP 201).
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.Core.ApiResultEnum.BadRequest">
+            <summary>
+            Bad request (HTTP 400).
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.Core.ApiResultEnum.NotAuthorized">
+            <summary>
+            Not authorized (HTTP 401).
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.Core.ApiResultEnum.Forbidden">
+            <summary>
+            Forbidden (HTTP 403).
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.Core.ApiResultEnum.NotFound">
+            <summary>
+            Not found (HTTP 404).
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.Core.ApiResultEnum.RequestTimeout">
+            <summary>
+            Request timeout (HTTP 408).
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.Core.ApiResultEnum.Conflict">
+            <summary>
+            Conflict (HTTP 409).
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.Core.ApiResultEnum.SlowDown">
+            <summary>
+            Too many requests (HTTP 429).
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.Core.ApiResultEnum.InternalError">
+            <summary>
+            Internal server error (HTTP 500).
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.Core.ApiResultEnum.DeserializationError">
+            <summary>
+            Deserialization error (HTTP 400).
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.AuthenticationResultEnum">
+            <summary>
+            Authentication result enumeration indicating the outcome of an authentication attempt.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.Core.AuthenticationResultEnum.Success">
+            <summary>
+            Authentication was successful.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.Core.AuthenticationResultEnum.NotFound">
+            <summary>
+            The credentials or identity were not found.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.Core.AuthenticationResultEnum.Expired">
+            <summary>
+            The credentials or session have expired.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.Core.AuthenticationResultEnum.PermissionDenied">
+            <summary>
+            Authentication failed due to insufficient permissions.
+            </summary>
+        </member>
         <member name="T:WatsonWebserver.Core.AuthorizationDetails">
             <summary>
             Authorization details.
@@ -133,6 +329,59 @@
             Authorization details.
             </summary>
             <param name="value">Value from the Authorization header.</param>
+        </member>
+        <member name="T:WatsonWebserver.Core.AuthorizationResultEnum">
+            <summary>
+            Authorization result enumeration indicating whether access is permitted.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.Core.AuthorizationResultEnum.Permitted">
+            <summary>
+            Access is permitted.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.Core.AuthorizationResultEnum.DeniedImplicit">
+            <summary>
+            Access is denied implicitly (no matching rule found).
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.Core.AuthorizationResultEnum.DeniedExplicit">
+            <summary>
+            Access is denied explicitly (a deny rule matched).
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.AuthResult">
+            <summary>
+            Result of an authentication and authorization check.
+            Used by structured API authentication to determine whether a request should proceed.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.AuthResult.AuthenticationResult">
+            <summary>
+            The authentication result.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.AuthResult.AuthorizationResult">
+            <summary>
+            The authorization result.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.AuthResult.Metadata">
+            <summary>
+            User-supplied metadata from the authentication handler.
+            This value is propagated to the route handler via ApiRequest.Metadata and HttpContextBase.Metadata.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.AuthResult.#ctor">
+            <summary>
+            Instantiate.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.AuthResult.IsPermitted">
+            <summary>
+            Returns true if the authentication was successful and authorization is permitted.
+            </summary>
+            <returns>True if allowed to proceed.</returns>
         </member>
         <member name="T:WatsonWebserver.Core.Chunk">
             <summary>
@@ -375,6 +624,94 @@
             </summary>
             <param name="ctx">Context.</param>
             <param name="e">Exception.</param>
+        </member>
+        <member name="T:WatsonWebserver.Core.Health.HealthCheckResult">
+            <summary>
+            Result of a health check evaluation.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Health.HealthCheckResult.Status">
+            <summary>
+            The health status.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Health.HealthCheckResult.Description">
+            <summary>
+            Optional description providing context about the health status.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Health.HealthCheckResult.Data">
+            <summary>
+            Optional additional data about the health status.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.Health.HealthCheckResult.#ctor">
+            <summary>
+            Instantiate.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.Health.HealthCheckSettings">
+            <summary>
+            Configuration for the health check endpoint.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Health.HealthCheckSettings.Path">
+            <summary>
+            URL path for the health check endpoint.
+            Default is /health.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Health.HealthCheckSettings.RequireAuthentication">
+            <summary>
+            When true, the health check endpoint requires authentication.
+            Default is false.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Health.HealthCheckSettings.CustomCheck">
+            <summary>
+            Optional custom health check delegate.
+            When set, this delegate is called to evaluate the health status.
+            When null, the endpoint always returns Healthy.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.Health.HealthCheckSettings.#ctor">
+            <summary>
+            Instantiate.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.Health.HealthStatusEnum">
+            <summary>
+            Health check status enumeration.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.Core.Health.HealthStatusEnum.Healthy">
+            <summary>
+            The application is healthy and fully operational. Maps to HTTP 200.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.Core.Health.HealthStatusEnum.Degraded">
+            <summary>
+            The application is operational but experiencing degraded performance or partial issues. Maps to HTTP 200.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.Core.Health.HealthStatusEnum.Unhealthy">
+            <summary>
+            The application is unhealthy and unable to serve requests properly. Maps to HTTP 503.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.Health.WebserverHealthExtensions">
+            <summary>
+            Extension methods for <see cref="T:WatsonWebserver.Core.WebserverBase"/> to enable health check endpoints.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.Health.WebserverHealthExtensions.UseHealthCheck(WatsonWebserver.Core.WebserverBase,System.Action{WatsonWebserver.Core.Health.HealthCheckSettings})">
+            <summary>
+            Enable a health check endpoint on the server.
+            The endpoint returns HTTP 200 for Healthy/Degraded and HTTP 503 for Unhealthy.
+            </summary>
+            <param name="server">The webserver instance.</param>
+            <param name="configure">Optional action to configure the health check settings.</param>
+            <exception cref="T:System.ArgumentNullException">Thrown when server is null.</exception>
         </member>
         <member name="T:WatsonWebserver.Core.Hpack.HpackCodec">
             <summary>
@@ -2912,6 +3249,59 @@
             <param name="message">Message.</param>
             <param name="innerException">Inner exception.</param>
         </member>
+        <member name="T:WatsonWebserver.Core.Middleware.MiddlewareDelegate">
+            <summary>
+            Delegate for middleware that participates in the request pipeline.
+            Call <paramref name="next"/> to continue to the next middleware or the route handler.
+            Do not call <paramref name="next"/> to short-circuit the pipeline.
+            </summary>
+            <param name="context">The HTTP context for the current request.</param>
+            <param name="next">Invokes the next middleware or the terminal route handler.</param>
+            <param name="token">Cancellation token.</param>
+            <returns>Task.</returns>
+        </member>
+        <member name="T:WatsonWebserver.Core.Middleware.MiddlewarePipeline">
+            <summary>
+            Manages an ordered list of middleware delegates and executes them as a pipeline.
+            Middleware is registered before the server starts and executed per-request.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Middleware.MiddlewarePipeline.HasMiddleware">
+            <summary>
+            True if the pipeline has one or more middleware registered.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.Middleware.MiddlewarePipeline.#ctor">
+            <summary>
+            Instantiate.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.Middleware.MiddlewarePipeline.Add(WatsonWebserver.Core.Middleware.MiddlewareDelegate)">
+            <summary>
+            Add a middleware delegate to the end of the pipeline.
+            Must be called before the server starts.
+            </summary>
+            <param name="middleware">The middleware delegate to add.</param>
+            <exception cref="T:System.ArgumentNullException">Thrown when middleware is null.</exception>
+        </member>
+        <member name="M:WatsonWebserver.Core.Middleware.MiddlewarePipeline.Add(System.Func{WatsonWebserver.Core.HttpContextBase,System.Func{System.Threading.Tasks.Task},System.Threading.Tasks.Task})">
+            <summary>
+            Add a middleware delegate without a cancellation token parameter.
+            </summary>
+            <param name="middleware">The middleware delegate to add.</param>
+            <exception cref="T:System.ArgumentNullException">Thrown when middleware is null.</exception>
+        </member>
+        <member name="M:WatsonWebserver.Core.Middleware.MiddlewarePipeline.Execute(WatsonWebserver.Core.HttpContextBase,System.Func{System.Threading.Tasks.Task},System.Threading.CancellationToken)">
+            <summary>
+            Execute the middleware pipeline, terminating with the provided handler.
+            When no middleware is registered, the terminal handler is called directly.
+            </summary>
+            <param name="context">The HTTP context.</param>
+            <param name="terminalHandler">The route handler to invoke at the end of the pipeline.</param>
+            <param name="token">Cancellation token.</param>
+            <returns>Task.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when context or terminalHandler is null.</exception>
+        </member>
         <member name="T:WatsonWebserver.Core.MimeTypes">
             <summary>
             MIME types and file extensions.
@@ -4157,6 +4547,138 @@
             </summary>
             <param name="ctx"></param>
         </member>
+        <member name="T:WatsonWebserver.Core.RequestParameters">
+            <summary>
+            Provides typed access to request parameters from URL paths, query strings, or headers.
+            Wraps a <see cref="T:System.Collections.Specialized.NameValueCollection"/> with convenience methods for type-safe extraction.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.RequestParameters.#ctor(System.Collections.Specialized.NameValueCollection)">
+            <summary>
+            Instantiate with the supplied name-value collection.
+            </summary>
+            <param name="parameters">The underlying name-value collection. If null, an empty collection is used.</param>
+        </member>
+        <member name="P:WatsonWebserver.Core.RequestParameters.Item(System.String)">
+            <summary>
+            Retrieve a parameter value by name.
+            </summary>
+            <param name="name">Parameter name.</param>
+            <returns>The value, or null if not found.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.RequestParameters.GetInt(System.String,System.Int32)">
+            <summary>
+            Retrieve a parameter as an integer.
+            </summary>
+            <param name="name">Parameter name.</param>
+            <param name="defaultValue">Default value if not found or not parseable.</param>
+            <returns>Integer value.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.RequestParameters.GetLong(System.String,System.Int64)">
+            <summary>
+            Retrieve a parameter as a long integer.
+            </summary>
+            <param name="name">Parameter name.</param>
+            <param name="defaultValue">Default value if not found or not parseable.</param>
+            <returns>Long value.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.RequestParameters.GetDouble(System.String,System.Double)">
+            <summary>
+            Retrieve a parameter as a double.
+            </summary>
+            <param name="name">Parameter name.</param>
+            <param name="defaultValue">Default value if not found or not parseable.</param>
+            <returns>Double value.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.RequestParameters.GetDecimal(System.String,System.Decimal)">
+            <summary>
+            Retrieve a parameter as a decimal.
+            </summary>
+            <param name="name">Parameter name.</param>
+            <param name="defaultValue">Default value if not found or not parseable.</param>
+            <returns>Decimal value.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.RequestParameters.GetBool(System.String,System.Boolean)">
+            <summary>
+            Retrieve a parameter as a boolean.
+            Supports true/false, 1/0, yes/no, y/n, on/off.
+            </summary>
+            <param name="name">Parameter name.</param>
+            <param name="defaultValue">Default value if not found or not parseable.</param>
+            <returns>Boolean value.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.RequestParameters.GetDateTime(System.String,System.Nullable{System.DateTime})">
+            <summary>
+            Retrieve a parameter as a DateTime.
+            </summary>
+            <param name="name">Parameter name.</param>
+            <param name="defaultValue">Default value if not found or not parseable. Defaults to DateTime.MinValue.</param>
+            <returns>DateTime value.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.RequestParameters.GetTimeSpan(System.String,System.Nullable{System.TimeSpan})">
+            <summary>
+            Retrieve a parameter as a TimeSpan.
+            </summary>
+            <param name="name">Parameter name.</param>
+            <param name="defaultValue">Default value if not found or not parseable. Defaults to TimeSpan.Zero.</param>
+            <returns>TimeSpan value.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.RequestParameters.GetGuid(System.String,System.Nullable{System.Guid})">
+            <summary>
+            Retrieve a parameter as a Guid.
+            </summary>
+            <param name="name">Parameter name.</param>
+            <param name="defaultValue">Default value if not found or not parseable. Defaults to Guid.Empty.</param>
+            <returns>Guid value.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.RequestParameters.GetEnum``1(System.String,``0,System.Boolean)">
+            <summary>
+            Retrieve a parameter as an enum value.
+            </summary>
+            <typeparam name="T">Enum type.</typeparam>
+            <param name="name">Parameter name.</param>
+            <param name="defaultValue">Default value if not found or not parseable.</param>
+            <param name="ignoreCase">Whether to ignore case when parsing. Default is true.</param>
+            <returns>Enum value.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.RequestParameters.GetArray(System.String,System.Char)">
+            <summary>
+            Retrieve a parameter as an array of strings by splitting on a separator.
+            </summary>
+            <param name="name">Parameter name.</param>
+            <param name="separator">Separator character. Default is comma.</param>
+            <returns>String array. Empty array if parameter not found.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.RequestParameters.GetValueOrDefault(System.String,System.String)">
+            <summary>
+            Retrieve a parameter with a fallback default value.
+            </summary>
+            <param name="name">Parameter name.</param>
+            <param name="defaultValue">Default value if not found.</param>
+            <returns>String value.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.RequestParameters.Contains(System.String)">
+            <summary>
+            Check if a parameter exists.
+            </summary>
+            <param name="name">Parameter name.</param>
+            <returns>True if the parameter exists.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.RequestParameters.GetKeys">
+            <summary>
+            Retrieve all parameter keys.
+            </summary>
+            <returns>Array of parameter keys.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.RequestParameters.TryGetValue``1(System.String,``0@)">
+            <summary>
+            Try to retrieve a parameter as the specified type.
+            </summary>
+            <typeparam name="T">Target type.</typeparam>
+            <param name="name">Parameter name.</param>
+            <param name="result">The parsed result if successful.</param>
+            <returns>True if the parameter exists and was successfully converted.</returns>
+        </member>
         <member name="T:WatsonWebserver.Core.ResponseEventArgs">
             <summary>
             Response event arguments.
@@ -4248,6 +4770,38 @@
             </summary>
             <param name="ctx">Context.</param>
             <param name="totalMs">Total milliseconds.</param>
+        </member>
+        <member name="T:WatsonWebserver.Core.Routing.ApiResponseProcessor">
+            <summary>
+            Processes the return value from an API route handler and sends the appropriate HTTP response.
+            Handles null, string, primitive, tuple, and object return types.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.Routing.ApiResponseProcessor.ProcessResultAsync(WatsonWebserver.Core.HttpContextBase,System.Object,WatsonWebserver.Core.ISerializationHelper)">
+            <summary>
+            Process the return value from an API route handler and send the response.
+            </summary>
+            <param name="ctx">The HTTP context.</param>
+            <param name="result">The return value from the route handler.</param>
+            <param name="serializer">The serialization helper for JSON serialization.</param>
+            <returns>Task.</returns>
+        </member>
+        <member name="T:WatsonWebserver.Core.Routing.ApiRouteHandler">
+            <summary>
+            Internal factory that wraps Func&lt;ApiRequest, Task&lt;object&gt;&gt; handlers into Func&lt;HttpContextBase, Task&gt; handlers
+            compatible with the Watson routing system. Handles body deserialization, response processing,
+            middleware execution, timeout management, and exception mapping.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.Routing.ApiRouteHandler.WrapNoBody(System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},WatsonWebserver.Core.ISerializationHelper,WatsonWebserver.Core.Middleware.MiddlewarePipeline,WatsonWebserver.Core.WebserverSettings)">
+            <summary>
+            Create a wrapped handler for a route without automatic body deserialization.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.Routing.ApiRouteHandler.WrapWithBody``1(System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},WatsonWebserver.Core.ISerializationHelper,WatsonWebserver.Core.Middleware.MiddlewarePipeline,WatsonWebserver.Core.WebserverSettings)">
+            <summary>
+            Create a wrapped handler for a route with automatic body deserialization.
+            </summary>
         </member>
         <member name="T:WatsonWebserver.Core.Routing.ContentRoute">
             <summary>
@@ -4705,6 +5259,79 @@
             Instantiate.
             </summary>
         </member>
+        <member name="T:WatsonWebserver.Core.Routing.RoutingGroupApiExtensions">
+            <summary>
+            Extension methods on <see cref="T:WatsonWebserver.Core.Routing.RoutingGroup"/> providing FastAPI-like route registration
+            with automatic serialization, typed parameters, and middleware integration.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.Routing.RoutingGroupApiExtensions.Get(WatsonWebserver.Core.Routing.RoutingGroup,System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},WatsonWebserver.Core.ISerializationHelper,WatsonWebserver.Core.Middleware.MiddlewarePipeline,WatsonWebserver.Core.WebserverSettings,System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata)">
+            <summary>
+            Add a GET route with an API request handler.
+            </summary>
+            <param name="group">The routing group.</param>
+            <param name="path">URL path, e.g. /users/{id}.</param>
+            <param name="handler">Async handler that receives an ApiRequest and returns an object to serialize.</param>
+            <param name="serializer">Serialization helper.</param>
+            <param name="middleware">Middleware pipeline.</param>
+            <param name="settings">Webserver settings.</param>
+            <param name="exceptionHandler">Optional exception handler.</param>
+            <param name="openApiMetadata">Optional OpenAPI metadata.</param>
+        </member>
+        <member name="M:WatsonWebserver.Core.Routing.RoutingGroupApiExtensions.Post(WatsonWebserver.Core.Routing.RoutingGroup,System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},WatsonWebserver.Core.ISerializationHelper,WatsonWebserver.Core.Middleware.MiddlewarePipeline,WatsonWebserver.Core.WebserverSettings,System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata)">
+            <summary>
+            Add a POST route without automatic body deserialization.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.Routing.RoutingGroupApiExtensions.Post``1(WatsonWebserver.Core.Routing.RoutingGroup,System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},WatsonWebserver.Core.ISerializationHelper,WatsonWebserver.Core.Middleware.MiddlewarePipeline,WatsonWebserver.Core.WebserverSettings,System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata)">
+            <summary>
+            Add a POST route with automatic body deserialization.
+            </summary>
+            <typeparam name="T">Request body type.</typeparam>
+        </member>
+        <member name="M:WatsonWebserver.Core.Routing.RoutingGroupApiExtensions.Put(WatsonWebserver.Core.Routing.RoutingGroup,System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},WatsonWebserver.Core.ISerializationHelper,WatsonWebserver.Core.Middleware.MiddlewarePipeline,WatsonWebserver.Core.WebserverSettings,System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata)">
+            <summary>
+            Add a PUT route without automatic body deserialization.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.Routing.RoutingGroupApiExtensions.Put``1(WatsonWebserver.Core.Routing.RoutingGroup,System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},WatsonWebserver.Core.ISerializationHelper,WatsonWebserver.Core.Middleware.MiddlewarePipeline,WatsonWebserver.Core.WebserverSettings,System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata)">
+            <summary>
+            Add a PUT route with automatic body deserialization.
+            </summary>
+            <typeparam name="T">Request body type.</typeparam>
+        </member>
+        <member name="M:WatsonWebserver.Core.Routing.RoutingGroupApiExtensions.Patch(WatsonWebserver.Core.Routing.RoutingGroup,System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},WatsonWebserver.Core.ISerializationHelper,WatsonWebserver.Core.Middleware.MiddlewarePipeline,WatsonWebserver.Core.WebserverSettings,System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata)">
+            <summary>
+            Add a PATCH route without automatic body deserialization.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.Routing.RoutingGroupApiExtensions.Patch``1(WatsonWebserver.Core.Routing.RoutingGroup,System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},WatsonWebserver.Core.ISerializationHelper,WatsonWebserver.Core.Middleware.MiddlewarePipeline,WatsonWebserver.Core.WebserverSettings,System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata)">
+            <summary>
+            Add a PATCH route with automatic body deserialization.
+            </summary>
+            <typeparam name="T">Request body type.</typeparam>
+        </member>
+        <member name="M:WatsonWebserver.Core.Routing.RoutingGroupApiExtensions.Delete(WatsonWebserver.Core.Routing.RoutingGroup,System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},WatsonWebserver.Core.ISerializationHelper,WatsonWebserver.Core.Middleware.MiddlewarePipeline,WatsonWebserver.Core.WebserverSettings,System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata)">
+            <summary>
+            Add a DELETE route without automatic body deserialization.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.Routing.RoutingGroupApiExtensions.Delete``1(WatsonWebserver.Core.Routing.RoutingGroup,System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},WatsonWebserver.Core.ISerializationHelper,WatsonWebserver.Core.Middleware.MiddlewarePipeline,WatsonWebserver.Core.WebserverSettings,System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata)">
+            <summary>
+            Add a DELETE route with automatic body deserialization.
+            </summary>
+            <typeparam name="T">Request body type.</typeparam>
+        </member>
+        <member name="M:WatsonWebserver.Core.Routing.RoutingGroupApiExtensions.Head(WatsonWebserver.Core.Routing.RoutingGroup,System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},WatsonWebserver.Core.ISerializationHelper,WatsonWebserver.Core.Middleware.MiddlewarePipeline,WatsonWebserver.Core.WebserverSettings,System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata)">
+            <summary>
+            Add a HEAD route with an API request handler.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.Routing.RoutingGroupApiExtensions.Options(WatsonWebserver.Core.Routing.RoutingGroup,System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},WatsonWebserver.Core.ISerializationHelper,WatsonWebserver.Core.Middleware.MiddlewarePipeline,WatsonWebserver.Core.WebserverSettings,System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata)">
+            <summary>
+            Add an OPTIONS route with an API request handler.
+            </summary>
+        </member>
         <member name="T:WatsonWebserver.Core.Routing.StaticRoute">
             <summary>
             Assign a method handler for when requests are received matching the supplied method and path.
@@ -4852,6 +5479,15 @@
             Attach any session-related metadata to the HttpContextBase.Metadata property.
             </summary>
         </member>
+        <member name="P:WatsonWebserver.Core.Routing.WebserverRoutes.AuthenticateApiRequest">
+            <summary>
+            Structured API authentication handler.
+            Returns an AuthResult indicating whether the request should proceed.
+            When set, this takes precedence over AuthenticateRequest for authentication evaluation.
+            On success, AuthResult.Metadata is propagated to HttpContextBase.Metadata.
+            On failure, a 401 response with a structured ApiErrorResponse is sent automatically.
+            </summary>
+        </member>
         <member name="P:WatsonWebserver.Core.Routing.WebserverRoutes.PostAuthentication">
             <summary>
             Post-authentication routes.
@@ -4966,6 +5602,31 @@
             <summary>
             Indicates whether the protocol supports multiplexing for the stream.
             </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.TimeoutSettings">
+            <summary>
+            Request timeout settings for API route handlers.
+            When enabled, requests that exceed the timeout duration receive a 408 Request Timeout response.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.TimeoutSettings.DefaultTimeout">
+            <summary>
+            Default timeout for API route requests.
+            Set to TimeSpan.Zero (the default) to disable timeouts.
+            When greater than zero, a cancellation token is provided to route handlers that will be
+            cancelled when the timeout expires.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.TimeoutSettings.#ctor">
+            <summary>
+            Instantiate with timeouts disabled.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.TimeoutSettings.#ctor(System.TimeSpan)">
+            <summary>
+            Instantiate with a specified default timeout.
+            </summary>
+            <param name="defaultTimeout">The default timeout duration.</param>
         </member>
         <member name="T:WatsonWebserver.Core.UrlDetails">
             <summary>
@@ -5110,6 +5771,13 @@
             JSON serialization helper.
             </summary>
         </member>
+        <member name="P:WatsonWebserver.Core.WebserverBase.Middleware">
+            <summary>
+            Middleware pipeline for the request processing pipeline.
+            Register middleware using Middleware.Add() before starting the server.
+            Middleware executes in registration order around the matched route handler.
+            </summary>
+        </member>
         <member name="M:WatsonWebserver.Core.WebserverBase.#ctor(WatsonWebserver.Core.WebserverSettings,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task})">
             <summary>
             Creates a new instance of the webserver.
@@ -5149,6 +5817,126 @@
             <summary>
             Stop accepting new connections.
             </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebserverBase.Get(System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},System.Boolean)">
+            <summary>
+            Add a GET API route. Defaults to pre-authentication.
+            </summary>
+            <param name="path">URL path, e.g. /users/{id}.</param>
+            <param name="handler">Async handler that receives an ApiRequest and returns an object to serialize.</param>
+            <param name="auth">When true, the route is registered as a post-authentication route.</param>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebserverBase.Get(System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},System.Action{WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata},System.Boolean)">
+            <summary>
+            Add a GET API route with OpenAPI metadata.
+            </summary>
+            <param name="path">URL path.</param>
+            <param name="handler">Async handler.</param>
+            <param name="openApi">Action to configure OpenAPI metadata for this route.</param>
+            <param name="auth">When true, register as post-authentication route.</param>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebserverBase.Post(System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},System.Boolean)">
+            <summary>
+            Add a POST API route without automatic body deserialization.
+            </summary>
+            <param name="path">URL path.</param>
+            <param name="handler">Async handler.</param>
+            <param name="auth">When true, register as post-authentication route.</param>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebserverBase.Post(System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},System.Action{WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata},System.Boolean)">
+            <summary>
+            Add a POST API route without automatic body deserialization, with OpenAPI metadata.
+            </summary>
+            <param name="path">URL path.</param>
+            <param name="handler">Async handler.</param>
+            <param name="openApi">Action to configure OpenAPI metadata.</param>
+            <param name="auth">When true, register as post-authentication route.</param>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebserverBase.Post``1(System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},System.Boolean)">
+            <summary>
+            Add a POST API route with automatic body deserialization.
+            </summary>
+            <typeparam name="T">Request body type.</typeparam>
+            <param name="path">URL path.</param>
+            <param name="handler">Async handler.</param>
+            <param name="auth">When true, register as post-authentication route.</param>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebserverBase.Post``1(System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},System.Action{WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata},System.Boolean)">
+            <summary>
+            Add a POST API route with automatic body deserialization and OpenAPI metadata.
+            </summary>
+            <typeparam name="T">Request body type.</typeparam>
+            <param name="path">URL path.</param>
+            <param name="handler">Async handler.</param>
+            <param name="openApi">Action to configure OpenAPI metadata.</param>
+            <param name="auth">When true, register as post-authentication route.</param>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebserverBase.Put(System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},System.Boolean)">
+            <summary>
+            Add a PUT API route without automatic body deserialization.
+            </summary>
+            <param name="path">URL path.</param>
+            <param name="handler">Async handler.</param>
+            <param name="auth">When true, register as post-authentication route.</param>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebserverBase.Put``1(System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},System.Boolean)">
+            <summary>
+            Add a PUT API route with automatic body deserialization.
+            </summary>
+            <typeparam name="T">Request body type.</typeparam>
+            <param name="path">URL path.</param>
+            <param name="handler">Async handler.</param>
+            <param name="auth">When true, register as post-authentication route.</param>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebserverBase.Patch(System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},System.Boolean)">
+            <summary>
+            Add a PATCH API route without automatic body deserialization.
+            </summary>
+            <param name="path">URL path.</param>
+            <param name="handler">Async handler.</param>
+            <param name="auth">When true, register as post-authentication route.</param>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebserverBase.Patch``1(System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},System.Boolean)">
+            <summary>
+            Add a PATCH API route with automatic body deserialization.
+            </summary>
+            <typeparam name="T">Request body type.</typeparam>
+            <param name="path">URL path.</param>
+            <param name="handler">Async handler.</param>
+            <param name="auth">When true, register as post-authentication route.</param>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebserverBase.Delete(System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},System.Boolean)">
+            <summary>
+            Add a DELETE API route without automatic body deserialization.
+            </summary>
+            <param name="path">URL path.</param>
+            <param name="handler">Async handler.</param>
+            <param name="auth">When true, register as post-authentication route.</param>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebserverBase.Delete``1(System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},System.Boolean)">
+            <summary>
+            Add a DELETE API route with automatic body deserialization.
+            </summary>
+            <typeparam name="T">Request body type.</typeparam>
+            <param name="path">URL path.</param>
+            <param name="handler">Async handler.</param>
+            <param name="auth">When true, register as post-authentication route.</param>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebserverBase.Head(System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},System.Boolean)">
+            <summary>
+            Add a HEAD API route.
+            </summary>
+            <param name="path">URL path.</param>
+            <param name="handler">Async handler.</param>
+            <param name="auth">When true, register as post-authentication route.</param>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebserverBase.Options(System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},System.Boolean)">
+            <summary>
+            Add an OPTIONS API route.
+            </summary>
+            <param name="path">URL path.</param>
+            <param name="handler">Async handler.</param>
+            <param name="auth">When true, register as post-authentication route.</param>
         </member>
         <member name="P:WatsonWebserver.Core.WebserverBase.SupportsHttp2">
             <summary>
@@ -5520,6 +6308,48 @@
             Indicates whether any response completed handlers are attached.
             </summary>
         </member>
+        <member name="T:WatsonWebserver.Core.WebserverException">
+            <summary>
+            Exception type for API route handlers that automatically maps to structured HTTP error responses.
+            Throw this from within an API route handler to return a specific HTTP status code and error body.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebserverException.Result">
+            <summary>
+            The API result indicating the type of error.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebserverException.StatusCode">
+            <summary>
+            The HTTP status code derived from the result.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebserverException.Data">
+            <summary>
+            Optional additional data to include in the error response.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebserverException.#ctor(WatsonWebserver.Core.ApiResultEnum)">
+            <summary>
+            Instantiate with an API result.
+            </summary>
+            <param name="result">The API result type.</param>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebserverException.#ctor(WatsonWebserver.Core.ApiResultEnum,System.String)">
+            <summary>
+            Instantiate with an API result and custom message.
+            </summary>
+            <param name="result">The API result type.</param>
+            <param name="message">Custom error message.</param>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebserverException.#ctor(WatsonWebserver.Core.ApiResultEnum,System.String,System.Exception)">
+            <summary>
+            Instantiate with an API result, custom message, and inner exception.
+            </summary>
+            <param name="result">The API result type.</param>
+            <param name="message">Custom error message.</param>
+            <param name="innerException">The inner exception.</param>
+        </member>
         <member name="T:WatsonWebserver.Core.WebserverPages">
             <summary>
             Default pages served.
@@ -5611,6 +6441,12 @@
             <summary>
             Debug logging settings.
             Be sure to set Events.Logger in order to receive debug messages.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebserverSettings.Timeout">
+            <summary>
+            Request timeout settings for API route handlers.
+            Set Timeout.DefaultTimeout to a positive TimeSpan to enable request timeouts.
             </summary>
         </member>
         <member name="P:WatsonWebserver.Core.WebserverSettings.UseMachineHostname">

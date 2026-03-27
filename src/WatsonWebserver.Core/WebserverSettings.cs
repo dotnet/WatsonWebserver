@@ -174,6 +174,23 @@
         }
 
         /// <summary>
+        /// Request timeout settings for API route handlers.
+        /// Set Timeout.DefaultTimeout to a positive TimeSpan to enable request timeouts.
+        /// </summary>
+        public TimeoutSettings Timeout
+        {
+            get
+            {
+                return _Timeout;
+            }
+            set
+            {
+                if (value == null) throw new ArgumentNullException(nameof(Timeout));
+                _Timeout = value;
+            }
+        }
+
+        /// <summary>
         /// When true, the machine's hostname will be used instead of the value specified in Hostname.
         /// </summary>
         public bool UseMachineHostname
@@ -202,6 +219,7 @@
         private AccessControlManager _AccessControl = new AccessControlManager(AccessControlMode.DefaultPermit);
         private DebugSettings _Debug = new DebugSettings();
         private HeaderSettings _Headers = new HeaderSettings();
+        private TimeoutSettings _Timeout = new TimeoutSettings();
         private bool _UseMachineHostname = false;
 
         #endregion

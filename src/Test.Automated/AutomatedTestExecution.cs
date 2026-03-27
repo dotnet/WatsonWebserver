@@ -12,6 +12,9 @@ namespace Test.Automated
         /// Run all automated suites and collect results.
         /// </summary>
         /// <returns>Ordered test results.</returns>
+        [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+        [System.Runtime.Versioning.SupportedOSPlatform("linux")]
+        [System.Runtime.Versioning.SupportedOSPlatform("macos")]
         public static async Task<IReadOnlyList<AutomatedTestResult>> RunAllAsync()
         {
             List<AutomatedTestResult> results = new List<AutomatedTestResult>();

@@ -5,6 +5,8 @@ namespace Test.Automated
 
     /// <summary>
     /// Entry point for the automated console test runner.
+    /// When running under xUnit, the test SDK provides the entry point.
+    /// This class is used only when running the project directly as a console application.
     /// </summary>
     internal static class Program
     {
@@ -13,12 +15,15 @@ namespace Test.Automated
         /// </summary>
         /// <param name="args">Command line arguments.</param>
         /// <returns>Process exit code.</returns>
-        public static async Task<int> Main(string[] args)
+        [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+        [System.Runtime.Versioning.SupportedOSPlatform("linux")]
+        [System.Runtime.Versioning.SupportedOSPlatform("macos")]
+        public static async Task Main(string[] args)
         {
             string resultsPath = ParseResultsPath(args);
             AutomatedConsoleRunner runner = new AutomatedConsoleRunner(resultsPath);
             AutomatedRunSummary summary = await runner.RunAsync().ConfigureAwait(false);
-            return summary.FailedCount > 0 ? 1 : 0;
+            Environment.Exit(summary.FailedCount > 0 ? 1 : 0);
         }
 
         private static string ParseResultsPath(string[] args)

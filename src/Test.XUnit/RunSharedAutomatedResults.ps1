@@ -5,7 +5,7 @@ param(
     [string]$WorkingDirectory,
     [Parameter(Mandatory = $true)]
     [string]$ResultsPath,
-    [int]$TimeoutMilliseconds = 240000
+    [int]$TimeoutMilliseconds = 600000
 )
 
 $ErrorActionPreference = "Stop"

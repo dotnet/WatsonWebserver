@@ -216,6 +216,62 @@
             HTTP/2 request.
             </summary>
         </member>
+        <member name="P:WatsonWebserver.Http2.Http2Request.Data">
+            <summary>
+            The request body as a stream.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Http2.Http2Request.DataAsBytes">
+            <summary>
+            The request body as a byte array. Reads and caches the full body from the stream on first access.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Http2.Http2Request.DataAsString">
+            <summary>
+            The request body as a UTF-8 string. Reads and caches the full body from the stream on first access.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Http2.Http2Request.#ctor">
+            <summary>
+            Instantiate.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Http2.Http2Request.ReadChunk(System.Threading.CancellationToken)">
+            <summary>
+            Read a chunk from the request body. Not supported for HTTP/2 requests.
+            </summary>
+            <param name="token">Cancellation token.</param>
+            <returns>Never returns; always throws.</returns>
+            <exception cref="T:System.InvalidOperationException">Always thrown. HTTP/2 does not expose HTTP/1.1 chunked transfer-encoding semantics.</exception>
+        </member>
+        <member name="M:WatsonWebserver.Http2.Http2Request.HeaderExists(System.String)">
+            <summary>
+            Check if a header exists in the request.
+            </summary>
+            <param name="key">Header name.</param>
+            <returns>True if the header exists.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Http2.Http2Request.QuerystringExists(System.String)">
+            <summary>
+            Check if a querystring parameter exists in the request URL.
+            </summary>
+            <param name="key">Querystring key.</param>
+            <returns>True if the querystring parameter exists.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Http2.Http2Request.RetrieveHeaderValue(System.String)">
+            <summary>
+            Retrieve the value of a request header.
+            </summary>
+            <param name="key">Header name.</param>
+            <returns>The header value, or null if not found.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Http2.Http2Request.RetrieveQueryValue(System.String)">
+            <summary>
+            Retrieve the value of a querystring parameter, URL-decoded.
+            </summary>
+            <param name="key">Querystring key.</param>
+            <returns>The URL-decoded value, or null if not found.</returns>
+        </member>
         <member name="T:WatsonWebserver.Http2.Http2Response">
             <summary>
             HTTP/2 response.
@@ -309,6 +365,62 @@
             <summary>
             HTTP/3 request.
             </summary>
+        </member>
+        <member name="P:WatsonWebserver.Http3.Http3Request.Data">
+            <summary>
+            The request body as a stream.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Http3.Http3Request.DataAsBytes">
+            <summary>
+            The request body as a byte array. Reads and caches the full body from the stream on first access.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Http3.Http3Request.DataAsString">
+            <summary>
+            The request body as a UTF-8 string. Reads and caches the full body from the stream on first access.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Http3.Http3Request.#ctor">
+            <summary>
+            Instantiate.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Http3.Http3Request.ReadChunk(System.Threading.CancellationToken)">
+            <summary>
+            Read a chunk from the request body. Not supported for HTTP/3 requests.
+            </summary>
+            <param name="token">Cancellation token.</param>
+            <returns>Never returns; always throws.</returns>
+            <exception cref="T:System.InvalidOperationException">Always thrown. HTTP/3 does not expose HTTP/1.1 chunked transfer-encoding semantics.</exception>
+        </member>
+        <member name="M:WatsonWebserver.Http3.Http3Request.HeaderExists(System.String)">
+            <summary>
+            Check if a header exists in the request.
+            </summary>
+            <param name="key">Header name.</param>
+            <returns>True if the header exists.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Http3.Http3Request.QuerystringExists(System.String)">
+            <summary>
+            Check if a querystring parameter exists in the request URL.
+            </summary>
+            <param name="key">Querystring key.</param>
+            <returns>True if the querystring parameter exists.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Http3.Http3Request.RetrieveHeaderValue(System.String)">
+            <summary>
+            Retrieve the value of a request header.
+            </summary>
+            <param name="key">Header name.</param>
+            <returns>The header value, or null if not found.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Http3.Http3Request.RetrieveQueryValue(System.String)">
+            <summary>
+            Retrieve the value of a querystring parameter, URL-decoded.
+            </summary>
+            <param name="key">Querystring key.</param>
+            <returns>The URL-decoded value, or null if not found.</returns>
         </member>
         <member name="T:WatsonWebserver.Http3.Http3Response">
             <summary>

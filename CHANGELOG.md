@@ -71,6 +71,27 @@ Watson 7.0 is a major release that expands the server from an HTTP/1.1-focused m
 - Added response trailer support when the protocol permits it
 - Added `ReadBodyAsync()` to make full-body reads explicit and cache-aware
 
+### FastAPI-Like API Route Integration (SwiftStack)
+
+Watson 7.0 integrates the SwiftStack REST experience directly into the webserver, providing a FastAPI-like developer experience without requiring a separate library.
+
+- Added `server.Get()`, `server.Post<T>()`, `server.Put<T>()`, `server.Patch<T>()`, `server.Delete()`, `server.Head()`, `server.Options()` convenience methods on `WebserverBase`
+- Added `ApiRequest` wrapper providing typed access to URL parameters, query parameters, headers, and deserialized request body
+- Added `RequestParameters` class with typed accessors (`GetInt`, `GetGuid`, `GetBool`, `GetEnum<T>`, `TryGetValue<T>`, etc.)
+- Added automatic JSON serialization of handler return values via `ApiResponseProcessor`
+  - `null` returns empty response
+  - `string` returns `text/plain`
+  - Objects return `application/json`
+  - `(object, int)` tuples set custom HTTP status codes
+- Added `WebserverException` for structured error responses mapping to HTTP status codes
+- Added `ApiErrorResponse` with `ApiResultEnum` for consistent error payloads
+- Added middleware pipeline (`MiddlewarePipeline`, `MiddlewareDelegate`) with per-request execution and short-circuit support
+- Added structured authentication via `AuthenticateApiRequest` returning `AuthResult` with automatic 401 responses
+- Added request timeout support via `WebserverSettings.Timeout` with cooperative cancellation and 408 responses
+- Added built-in health check endpoints via `UseHealthCheck()` with custom check delegates
+- Added `RoutingGroupApiExtensions` for API route registration on `RoutingGroup` instances
+- API routes support all existing Watson features: OpenAPI metadata, exception handlers, pre/post-authentication groups
+
 ### Routing, Lifecycle, And Extensibility
 
 - Preserved the existing Watson routing pipeline while aligning it with the 7.0 shared protocol architecture
@@ -111,8 +132,9 @@ Optimization candidates that regressed performance or behavior were benchmarked,
 
 ### Testing And Tooling
 
+- Added `Test.RestApi` interactive server demonstrating all API route integration features
 - Replaced `Test.All` with `Test.Automated`
-- Added `Test.XUnit` as a mirror of the same automated coverage surface
+- Added `Test.XUnit` with unit tests for core types (`RequestParameters`, `MiddlewarePipeline`, `AuthResult`, `WebserverException`, `ApiErrorResponse`, `TimeoutSettings`)
 - Refactored automated tests to emit:
   - per-test pass/fail result lines
   - per-test runtime
