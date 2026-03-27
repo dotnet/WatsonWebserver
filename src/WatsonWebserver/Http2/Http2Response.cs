@@ -781,7 +781,6 @@ namespace WatsonWebserver.Http2
             }
         }
 
-
         private List<HpackHeaderField> BuildTrailerHeaders()
         {
             List<HpackHeaderField> headers = new List<HpackHeaderField>();

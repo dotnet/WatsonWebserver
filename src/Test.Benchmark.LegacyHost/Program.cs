@@ -252,20 +252,46 @@ namespace Test.Benchmark.LegacyHost
 
         private sealed class LegacyHostOptions
         {
+            /// <summary>
+            /// Benchmark target name.
+            /// </summary>
             public string Target { get; set; } = "watson6";
 
+            /// <summary>
+            /// Listener port.
+            /// </summary>
             public int Port { get; set; } = 8000;
 
+            /// <summary>
+            /// Indicates whether TLS should be enabled.
+            /// </summary>
             public bool UseTls { get; set; } = false;
 
+            /// <summary>
+            /// Payload size in bytes.
+            /// </summary>
             public int PayloadBytes { get; set; } = 4096;
 
+            /// <summary>
+            /// Number of server-sent events per response.
+            /// </summary>
             public int ServerSentEventCount { get; set; } = 8;
 
+            /// <summary>
+            /// Request timeout in seconds.
+            /// </summary>
             public int TimeoutSeconds { get; set; } = 30;
 
+            /// <summary>
+            /// Request concurrency.
+            /// </summary>
             public int Concurrency { get; set; } = 32;
 
+            /// <summary>
+            /// Parse command-line arguments into host options.
+            /// </summary>
+            /// <param name="args">Command-line arguments.</param>
+            /// <returns>Parsed host options.</returns>
             public static LegacyHostOptions Parse(string[] args)
             {
                 LegacyHostOptions options = new LegacyHostOptions();
@@ -329,6 +355,10 @@ namespace Test.Benchmark.LegacyHost
 
         private static class BenchmarkCertificateFactory
         {
+            /// <summary>
+            /// Create a self-signed localhost certificate for TLS benchmark runs.
+            /// </summary>
+            /// <returns>Certificate instance.</returns>
             public static X509Certificate2 Create()
             {
                 using (RSA rsa = RSA.Create(2048))

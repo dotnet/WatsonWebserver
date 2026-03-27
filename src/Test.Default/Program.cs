@@ -174,6 +174,10 @@ namespace Test
             _Server.Events.Logger("*** Server stopped");
         }
 
+        /// <summary>
+        /// Echo the request as JSON.
+        /// </summary>
+        /// <param name="ctx">HTTP context.</param>
         public static async Task MirrorRoute(HttpContextBase ctx)
         {
             ctx.Response.StatusCode = 200;
@@ -183,6 +187,10 @@ namespace Test
             return;
         }
 
+        /// <summary>
+        /// Return a simple hello response.
+        /// </summary>
+        /// <param name="ctx">HTTP context.</param>
         public static async Task HelloRoute(HttpContextBase ctx)
         {
             ctx.Response.StatusCode = 200;
@@ -192,6 +200,10 @@ namespace Test
             return;
         }
 
+        /// <summary>
+        /// Return a user-by-id sample response.
+        /// </summary>
+        /// <param name="ctx">HTTP context.</param>
         public static async Task GetUserByIdRoute(HttpContextBase ctx)
         {
             string id = ctx.Request.Url.Parameters["id"];
@@ -211,6 +223,10 @@ namespace Test
             return;
         }
 
+        /// <summary>
+        /// Return the first parameter-route sample response.
+        /// </summary>
+        /// <param name="ctx">HTTP context.</param>
         public static async Task ParameterRoute1(HttpContextBase ctx)
         {
             ctx.Response.StatusCode = 200;
@@ -220,6 +236,10 @@ namespace Test
             return;
         }
 
+        /// <summary>
+        /// Return the second parameter-route sample response.
+        /// </summary>
+        /// <param name="ctx">HTTP context.</param>
         public static async Task ParameterRoute2(HttpContextBase ctx)
         {
             ctx.Response.StatusCode = 200;
@@ -229,6 +249,10 @@ namespace Test
             return;
         }
 
+        /// <summary>
+        /// Return the dynamic foo route without an identifier.
+        /// </summary>
+        /// <param name="ctx">HTTP context.</param>
         public static async Task FooWithoutIdRoute(HttpContextBase ctx)
         {
             ctx.Response.StatusCode = 200;
@@ -238,6 +262,10 @@ namespace Test
             return;
         }
 
+        /// <summary>
+        /// Return the dynamic foo route with an identifier.
+        /// </summary>
+        /// <param name="ctx">HTTP context.</param>
         public static async Task FooWithIdRoute(HttpContextBase ctx)
         {
             ctx.Response.StatusCode = 200;

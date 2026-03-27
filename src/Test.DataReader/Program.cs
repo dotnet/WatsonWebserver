@@ -144,17 +144,38 @@ namespace Test
             return hex.ToString();
         }
 
+        /// <summary>
+        /// Example person model used by the data-reader sample.
+        /// </summary>
         public class Person
         {
+            /// <summary>
+            /// First name.
+            /// </summary>
             public string FirstName { get; set; }
+
+            /// <summary>
+            /// Last name.
+            /// </summary>
             public string LastName { get; set; }
+
+            /// <summary>
+            /// Age in years.
+            /// </summary>
             public int Age { get; set; }
 
+            /// <summary>
+            /// Render the person as a friendly string.
+            /// </summary>
+            /// <returns>Formatted person text.</returns>
             public override string ToString()
             {
                 return "Hello, my name is " + FirstName + " " + LastName + " and I am " + Age + " years old!";
             }
 
+            /// <summary>
+            /// Instantiate the person model.
+            /// </summary>
             public Person()
             {
 

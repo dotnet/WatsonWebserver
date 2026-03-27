@@ -211,6 +211,61 @@
             Pending HTTP/2 request state awaiting END_STREAM.
             </summary>
         </member>
+        <member name="P:WatsonWebserver.Http2.Http2PendingRequest.Method">
+            <summary>
+            Parsed request method.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Http2.Http2PendingRequest.MethodRaw">
+            <summary>
+            Raw request method token.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Http2.Http2PendingRequest.Scheme">
+            <summary>
+            Request URL scheme.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Http2.Http2PendingRequest.Authority">
+            <summary>
+            Request authority value.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Http2.Http2PendingRequest.Path">
+            <summary>
+            Request path and optional query string.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Http2.Http2PendingRequest.Headers">
+            <summary>
+            Regular request headers decoded from the header block.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Http2.Http2PendingRequest.Trailers">
+            <summary>
+            Request trailers decoded after the initial header block.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Http2.Http2PendingRequest.Body">
+            <summary>
+            Request body buffer.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Http2.Http2PendingRequest.BodyOrNull">
+            <summary>
+            Request body buffer when any body bytes have been received; otherwise null.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Http2.Http2PendingRequest.ExpectedContentLength">
+            <summary>
+            Declared content length when supplied by the peer.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Http2.Http2PendingRequest.BodyLength">
+            <summary>
+            Number of body bytes currently buffered.
+            </summary>
+        </member>
         <member name="T:WatsonWebserver.Http2.Http2Request">
             <summary>
             HTTP/2 request.

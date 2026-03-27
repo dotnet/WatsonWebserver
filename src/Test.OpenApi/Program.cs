@@ -41,6 +41,10 @@
             new Product { Id = 3, Name = "Gizmo", Price = 14.99m, Category = "Electronics" }
         };
 
+        /// <summary>
+        /// Application entry point.
+        /// </summary>
+        /// <param name="args">Command-line arguments.</param>
         public static void Main(string[] args)
         {
             Console.WriteLine("WatsonWebserver OpenAPI Test Application");

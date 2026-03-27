@@ -10,8 +10,14 @@ namespace WatsonWebserver.Http2
     /// </summary>
     internal class Http2PendingRequest
     {
+        /// <summary>
+        /// Parsed request method.
+        /// </summary>
         public HttpMethod Method { get; set; } = HttpMethod.GET;
 
+        /// <summary>
+        /// Raw request method token.
+        /// </summary>
         public string MethodRaw
         {
             get
@@ -25,6 +31,9 @@ namespace WatsonWebserver.Http2
             }
         }
 
+        /// <summary>
+        /// Request URL scheme.
+        /// </summary>
         public string Scheme
         {
             get
@@ -38,8 +47,14 @@ namespace WatsonWebserver.Http2
             }
         }
 
+        /// <summary>
+        /// Request authority value.
+        /// </summary>
         public string Authority { get; set; } = null;
 
+        /// <summary>
+        /// Request path and optional query string.
+        /// </summary>
         public string Path
         {
             get
@@ -53,6 +68,9 @@ namespace WatsonWebserver.Http2
             }
         }
 
+        /// <summary>
+        /// Regular request headers decoded from the header block.
+        /// </summary>
         public HttpHeaderField[] Headers
         {
             get
@@ -66,6 +84,9 @@ namespace WatsonWebserver.Http2
             }
         }
 
+        /// <summary>
+        /// Request trailers decoded after the initial header block.
+        /// </summary>
         public NameValueCollection Trailers
         {
             get
@@ -79,6 +100,9 @@ namespace WatsonWebserver.Http2
             }
         }
 
+        /// <summary>
+        /// Request body buffer.
+        /// </summary>
         public MemoryStream Body
         {
             get
@@ -109,6 +133,9 @@ namespace WatsonWebserver.Http2
             }
         }
 
+        /// <summary>
+        /// Request body buffer when any body bytes have been received; otherwise null.
+        /// </summary>
         public MemoryStream BodyOrNull
         {
             get
@@ -123,8 +150,14 @@ namespace WatsonWebserver.Http2
             }
         }
 
+        /// <summary>
+        /// Declared content length when supplied by the peer.
+        /// </summary>
         public long? ExpectedContentLength { get; set; } = null;
 
+        /// <summary>
+        /// Number of body bytes currently buffered.
+        /// </summary>
         public long BodyLength
         {
             get

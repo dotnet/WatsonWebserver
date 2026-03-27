@@ -10,6 +10,9 @@ namespace Test
     using WatsonWebserver;
     using WatsonWebserver.Core;
     
+    /// <summary>
+    /// Sample application demonstrating chunked request and response handling.
+    /// </summary>
     public static class Program
     {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
@@ -18,6 +21,10 @@ namespace Test
         static WebserverSettings _Settings = null;
         static WebserverBase _Server = null;
 
+        /// <summary>
+        /// Application entry point.
+        /// </summary>
+        /// <param name="args">Command-line arguments.</param>
         static async Task Main(string[] args)
         {
 
@@ -45,6 +52,10 @@ namespace Test
             Console.ReadLine();
         }
          
+        /// <summary>
+        /// Default route that exercises chunked request and response behavior.
+        /// </summary>
+        /// <param name="ctx">HTTP context.</param>
         static async Task DefaultRoute(HttpContextBase ctx)
         {
             try

@@ -8,6 +8,9 @@ namespace Test.HostBuilder
     using WatsonWebserver;
     using WatsonWebserver.Core;
     
+    /// <summary>
+    /// Sample application demonstrating the host-builder extension API.
+    /// </summary>
     public static class Program
     {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
@@ -17,6 +20,10 @@ namespace Test.HostBuilder
         static WebserverSettings _Settings = null;
         static WebserverBase _Server = null;
 
+        /// <summary>
+        /// Application entry point.
+        /// </summary>
+        /// <param name="args">Command-line arguments.</param>
         public static async Task Main(string[] args)
         {
 
