@@ -114,7 +114,7 @@ namespace WatsonWebserver.Core
             if (String.IsNullOrEmpty(value)) return defaultValue;
             if (bool.TryParse(value, out bool result)) return result;
 
-            value = value.ToLower();
+            value = value.ToLowerInvariant();
             if (value == "1" || value == "yes" || value == "y" || value == "on") return true;
             if (value == "0" || value == "no" || value == "n" || value == "off") return false;
 
@@ -267,7 +267,7 @@ namespace WatsonWebserver.Core
                         return true;
                     }
 
-                    string lower = value.ToLower();
+                    string lower = value.ToLowerInvariant();
                     if (lower == "1" || lower == "yes" || lower == "y" || lower == "on")
                     {
                         result = (T)(object)true;

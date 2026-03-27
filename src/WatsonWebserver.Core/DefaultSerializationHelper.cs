@@ -95,7 +95,7 @@
 
             public override void Write(Utf8JsonWriter writer, TExceptionType value, JsonSerializerOptions options)
             {
-                var serializableProperties = value.GetType()
+                IEnumerable<dynamic> serializableProperties = value.GetType()
                     .GetProperties()
                     .Select(uu => new { uu.Name, Value = uu.GetValue(value) })
                     .Where(uu => uu.Name != nameof(Exception.TargetSite));
@@ -105,7 +105,7 @@
                     serializableProperties = serializableProperties.Where(uu => uu.Value != null);
                 }
 
-                var propList = serializableProperties.ToList();
+                List<dynamic> propList = serializableProperties.ToList();
 
                 if (propList.Count == 0)
                 {
@@ -115,7 +115,7 @@
 
                 writer.WriteStartObject();
 
-                foreach (var prop in propList)
+                foreach (dynamic prop in propList)
                 {
                     writer.WritePropertyName(prop.Name);
                     JsonSerializer.Serialize(writer, prop.Value, options);
@@ -131,7 +131,7 @@
 
             public override void Write(Utf8JsonWriter writer, NameValueCollection value, JsonSerializerOptions options)
             {
-                var val = value.Keys.Cast<string>()
+                Dictionary<string, string> val = value.Keys.Cast<string>()
                     .ToDictionary(k => k, k => string.Join(", ", value.GetValues(k)));
                 System.Text.Json.JsonSerializer.Serialize(writer, val);
             }

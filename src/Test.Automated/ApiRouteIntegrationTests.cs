@@ -269,11 +269,13 @@ namespace Test.Automated
         [Fact]
         public async Task Timeout_Returns408()
         {
-            using HttpClient client = new HttpClient { BaseAddress = new Uri($"http://127.0.0.1:{_Port}"), Timeout = TimeSpan.FromSeconds(15) };
-            HttpResponseMessage resp = await client.GetAsync("/slow");
-            Assert.Equal((HttpStatusCode)408, resp.StatusCode);
-            string body = await resp.Content.ReadAsStringAsync();
-            Assert.Contains("RequestTimeout", body);
+            using (HttpClient client = new HttpClient { BaseAddress = new Uri($"http://127.0.0.1:{_Port}"), Timeout = TimeSpan.FromSeconds(15) })
+            {
+                HttpResponseMessage resp = await client.GetAsync("/slow");
+                Assert.Equal((HttpStatusCode)408, resp.StatusCode);
+                string body = await resp.Content.ReadAsStringAsync();
+                Assert.Contains("RequestTimeout", body);
+            }
         }
 
         // --- Authentication ---
@@ -335,8 +337,4 @@ namespace Test.Automated
         }
     }
 
-    public class TestBody
-    {
-        public string Name { get; set; }
-    }
 }

@@ -79,7 +79,7 @@ namespace WatsonWebserver.Core.Routing
             await ctx.Response.Send(serializer.SerializeJson(result, false)).ConfigureAwait(false);
         }
 
-            private static bool TryProcessTuple(Type resultType, object result, out object body, out int statusCode)
+        private static bool TryProcessTuple(Type resultType, object result, out object body, out int statusCode)
         {
             body = null;
             statusCode = 200;
@@ -106,7 +106,8 @@ namespace WatsonWebserver.Core.Routing
                 return;
             }
 
-            if (body is string bodyString)
+            string bodyString = body as string;
+            if (bodyString != null)
             {
                 if (String.IsNullOrEmpty(ctx.Response.ContentType))
                     ctx.Response.ContentType = "text/plain";

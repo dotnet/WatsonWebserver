@@ -1,8 +1,7 @@
-﻿namespace WatsonWebserver.Core
+namespace WatsonWebserver.Core
 {
     using System;
     using System.Collections.Generic;
-    using System.Text;
 
     /// <summary>
     /// Default pages served.
@@ -14,7 +13,7 @@
         /// <summary>
         /// Pages by status code.
         /// </summary>
-        public Dictionary<int, Page> Pages
+        public Dictionary<int, WebserverPage> Pages
         {
             get
             {
@@ -31,11 +30,11 @@
 
         #region Private-Members
 
-        private Dictionary<int, Page> _Pages = new Dictionary<int, Page>
+        private Dictionary<int, WebserverPage> _Pages = new Dictionary<int, WebserverPage>
         {
-            { 400, new Page(WebserverConstants.ContentTypeHtml, WebserverConstants.PageContent400) },
-            { 404, new Page(WebserverConstants.ContentTypeHtml, WebserverConstants.PageContent404) },
-            { 500, new Page(WebserverConstants.ContentTypeHtml, WebserverConstants.PageContent500) }
+            { 400, new WebserverPage(WebserverConstants.ContentTypeHtml, WebserverConstants.PageContent400) },
+            { 404, new WebserverPage(WebserverConstants.ContentTypeHtml, WebserverConstants.PageContent404) },
+            { 500, new WebserverPage(WebserverConstants.ContentTypeHtml, WebserverConstants.PageContent500) }
         };
 
         #endregion
@@ -57,40 +56,6 @@
         #endregion
 
         #region Private-Methods
-
-        #endregion
-
-        #region Embedded-Classes
-
-        /// <summary>
-        /// Page served by Watson webserver.
-        /// </summary>
-        public class Page
-        {
-            /// <summary>
-            /// Content type.
-            /// </summary>
-            public string ContentType { get; private set; } = null;
-
-            /// <summary>
-            /// Content.
-            /// </summary>
-            public string Content { get; private set; } = null;
-
-            /// <summary>
-            /// Page served by Watson webserver.
-            /// </summary>
-            /// <param name="contentType">Content type.</param>
-            /// <param name="content">Content.</param>
-            public Page(string contentType, string content)
-            {
-                if (String.IsNullOrEmpty(contentType)) throw new ArgumentNullException(nameof(contentType));
-                if (String.IsNullOrEmpty(content)) throw new ArgumentNullException(nameof(content));
-
-                ContentType = contentType;
-                Content = content;
-            }
-        }
 
         #endregion
     }

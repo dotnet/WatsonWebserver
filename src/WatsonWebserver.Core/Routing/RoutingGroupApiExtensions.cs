@@ -45,6 +45,14 @@ namespace WatsonWebserver.Core.Routing
         /// <summary>
         /// Add a POST route without automatic body deserialization.
         /// </summary>
+        /// <param name="group">The routing group.</param>
+        /// <param name="path">URL path, e.g. /items.</param>
+        /// <param name="handler">Async handler that receives an ApiRequest and returns an object to serialize.</param>
+        /// <param name="serializer">Serialization helper.</param>
+        /// <param name="middleware">Middleware pipeline.</param>
+        /// <param name="settings">Webserver settings.</param>
+        /// <param name="exceptionHandler">Optional exception handler.</param>
+        /// <param name="openApiMetadata">Optional OpenAPI metadata.</param>
         public static void Post(
             this RoutingGroup group,
             string path,
@@ -63,6 +71,14 @@ namespace WatsonWebserver.Core.Routing
         /// Add a POST route with automatic body deserialization.
         /// </summary>
         /// <typeparam name="T">Request body type.</typeparam>
+        /// <param name="group">The routing group.</param>
+        /// <param name="path">URL path, e.g. /items.</param>
+        /// <param name="handler">Async handler that receives an ApiRequest and returns an object to serialize.</param>
+        /// <param name="serializer">Serialization helper.</param>
+        /// <param name="middleware">Middleware pipeline.</param>
+        /// <param name="settings">Webserver settings.</param>
+        /// <param name="exceptionHandler">Optional exception handler.</param>
+        /// <param name="openApiMetadata">Optional OpenAPI metadata.</param>
         public static void Post<T>(
             this RoutingGroup group,
             string path,
@@ -84,6 +100,14 @@ namespace WatsonWebserver.Core.Routing
         /// <summary>
         /// Add a PUT route without automatic body deserialization.
         /// </summary>
+        /// <param name="group">The routing group.</param>
+        /// <param name="path">URL path.</param>
+        /// <param name="handler">Async handler that receives an ApiRequest and returns an object to serialize.</param>
+        /// <param name="serializer">Serialization helper.</param>
+        /// <param name="middleware">Middleware pipeline.</param>
+        /// <param name="settings">Webserver settings.</param>
+        /// <param name="exceptionHandler">Optional exception handler.</param>
+        /// <param name="openApiMetadata">Optional OpenAPI metadata.</param>
         public static void Put(
             this RoutingGroup group,
             string path,
@@ -102,6 +126,14 @@ namespace WatsonWebserver.Core.Routing
         /// Add a PUT route with automatic body deserialization.
         /// </summary>
         /// <typeparam name="T">Request body type.</typeparam>
+        /// <param name="group">The routing group.</param>
+        /// <param name="path">URL path.</param>
+        /// <param name="handler">Async handler that receives an ApiRequest and returns an object to serialize.</param>
+        /// <param name="serializer">Serialization helper.</param>
+        /// <param name="middleware">Middleware pipeline.</param>
+        /// <param name="settings">Webserver settings.</param>
+        /// <param name="exceptionHandler">Optional exception handler.</param>
+        /// <param name="openApiMetadata">Optional OpenAPI metadata.</param>
         public static void Put<T>(
             this RoutingGroup group,
             string path,
@@ -123,6 +155,14 @@ namespace WatsonWebserver.Core.Routing
         /// <summary>
         /// Add a PATCH route without automatic body deserialization.
         /// </summary>
+        /// <param name="group">The routing group.</param>
+        /// <param name="path">URL path.</param>
+        /// <param name="handler">Async handler that receives an ApiRequest and returns an object to serialize.</param>
+        /// <param name="serializer">Serialization helper.</param>
+        /// <param name="middleware">Middleware pipeline.</param>
+        /// <param name="settings">Webserver settings.</param>
+        /// <param name="exceptionHandler">Optional exception handler.</param>
+        /// <param name="openApiMetadata">Optional OpenAPI metadata.</param>
         public static void Patch(
             this RoutingGroup group,
             string path,
@@ -141,6 +181,14 @@ namespace WatsonWebserver.Core.Routing
         /// Add a PATCH route with automatic body deserialization.
         /// </summary>
         /// <typeparam name="T">Request body type.</typeparam>
+        /// <param name="group">The routing group.</param>
+        /// <param name="path">URL path.</param>
+        /// <param name="handler">Async handler that receives an ApiRequest and returns an object to serialize.</param>
+        /// <param name="serializer">Serialization helper.</param>
+        /// <param name="middleware">Middleware pipeline.</param>
+        /// <param name="settings">Webserver settings.</param>
+        /// <param name="exceptionHandler">Optional exception handler.</param>
+        /// <param name="openApiMetadata">Optional OpenAPI metadata.</param>
         public static void Patch<T>(
             this RoutingGroup group,
             string path,
@@ -162,6 +210,14 @@ namespace WatsonWebserver.Core.Routing
         /// <summary>
         /// Add a DELETE route without automatic body deserialization.
         /// </summary>
+        /// <param name="group">The routing group.</param>
+        /// <param name="path">URL path.</param>
+        /// <param name="handler">Async handler that receives an ApiRequest and returns an object to serialize.</param>
+        /// <param name="serializer">Serialization helper.</param>
+        /// <param name="middleware">Middleware pipeline.</param>
+        /// <param name="settings">Webserver settings.</param>
+        /// <param name="exceptionHandler">Optional exception handler.</param>
+        /// <param name="openApiMetadata">Optional OpenAPI metadata.</param>
         public static void Delete(
             this RoutingGroup group,
             string path,
@@ -180,6 +236,14 @@ namespace WatsonWebserver.Core.Routing
         /// Add a DELETE route with automatic body deserialization.
         /// </summary>
         /// <typeparam name="T">Request body type.</typeparam>
+        /// <param name="group">The routing group.</param>
+        /// <param name="path">URL path.</param>
+        /// <param name="handler">Async handler that receives an ApiRequest and returns an object to serialize.</param>
+        /// <param name="serializer">Serialization helper.</param>
+        /// <param name="middleware">Middleware pipeline.</param>
+        /// <param name="settings">Webserver settings.</param>
+        /// <param name="exceptionHandler">Optional exception handler.</param>
+        /// <param name="openApiMetadata">Optional OpenAPI metadata.</param>
         public static void Delete<T>(
             this RoutingGroup group,
             string path,
@@ -201,6 +265,14 @@ namespace WatsonWebserver.Core.Routing
         /// <summary>
         /// Add a HEAD route with an API request handler.
         /// </summary>
+        /// <param name="group">The routing group.</param>
+        /// <param name="path">URL path.</param>
+        /// <param name="handler">Async handler that receives an ApiRequest and returns an object to serialize.</param>
+        /// <param name="serializer">Serialization helper.</param>
+        /// <param name="middleware">Middleware pipeline.</param>
+        /// <param name="settings">Webserver settings.</param>
+        /// <param name="exceptionHandler">Optional exception handler.</param>
+        /// <param name="openApiMetadata">Optional OpenAPI metadata.</param>
         public static void Head(
             this RoutingGroup group,
             string path,
@@ -222,6 +294,14 @@ namespace WatsonWebserver.Core.Routing
         /// <summary>
         /// Add an OPTIONS route with an API request handler.
         /// </summary>
+        /// <param name="group">The routing group.</param>
+        /// <param name="path">URL path.</param>
+        /// <param name="handler">Async handler that receives an ApiRequest and returns an object to serialize.</param>
+        /// <param name="serializer">Serialization helper.</param>
+        /// <param name="middleware">Middleware pipeline.</param>
+        /// <param name="settings">Webserver settings.</param>
+        /// <param name="exceptionHandler">Optional exception handler.</param>
+        /// <param name="openApiMetadata">Optional OpenAPI metadata.</param>
         public static void Options(
             this RoutingGroup group,
             string path,

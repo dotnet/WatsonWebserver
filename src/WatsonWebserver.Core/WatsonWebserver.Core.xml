@@ -5282,55 +5282,135 @@
             <summary>
             Add a POST route without automatic body deserialization.
             </summary>
+            <param name="group">The routing group.</param>
+            <param name="path">URL path, e.g. /items.</param>
+            <param name="handler">Async handler that receives an ApiRequest and returns an object to serialize.</param>
+            <param name="serializer">Serialization helper.</param>
+            <param name="middleware">Middleware pipeline.</param>
+            <param name="settings">Webserver settings.</param>
+            <param name="exceptionHandler">Optional exception handler.</param>
+            <param name="openApiMetadata">Optional OpenAPI metadata.</param>
         </member>
         <member name="M:WatsonWebserver.Core.Routing.RoutingGroupApiExtensions.Post``1(WatsonWebserver.Core.Routing.RoutingGroup,System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},WatsonWebserver.Core.ISerializationHelper,WatsonWebserver.Core.Middleware.MiddlewarePipeline,WatsonWebserver.Core.WebserverSettings,System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata)">
             <summary>
             Add a POST route with automatic body deserialization.
             </summary>
             <typeparam name="T">Request body type.</typeparam>
+            <param name="group">The routing group.</param>
+            <param name="path">URL path, e.g. /items.</param>
+            <param name="handler">Async handler that receives an ApiRequest and returns an object to serialize.</param>
+            <param name="serializer">Serialization helper.</param>
+            <param name="middleware">Middleware pipeline.</param>
+            <param name="settings">Webserver settings.</param>
+            <param name="exceptionHandler">Optional exception handler.</param>
+            <param name="openApiMetadata">Optional OpenAPI metadata.</param>
         </member>
         <member name="M:WatsonWebserver.Core.Routing.RoutingGroupApiExtensions.Put(WatsonWebserver.Core.Routing.RoutingGroup,System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},WatsonWebserver.Core.ISerializationHelper,WatsonWebserver.Core.Middleware.MiddlewarePipeline,WatsonWebserver.Core.WebserverSettings,System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata)">
             <summary>
             Add a PUT route without automatic body deserialization.
             </summary>
+            <param name="group">The routing group.</param>
+            <param name="path">URL path.</param>
+            <param name="handler">Async handler that receives an ApiRequest and returns an object to serialize.</param>
+            <param name="serializer">Serialization helper.</param>
+            <param name="middleware">Middleware pipeline.</param>
+            <param name="settings">Webserver settings.</param>
+            <param name="exceptionHandler">Optional exception handler.</param>
+            <param name="openApiMetadata">Optional OpenAPI metadata.</param>
         </member>
         <member name="M:WatsonWebserver.Core.Routing.RoutingGroupApiExtensions.Put``1(WatsonWebserver.Core.Routing.RoutingGroup,System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},WatsonWebserver.Core.ISerializationHelper,WatsonWebserver.Core.Middleware.MiddlewarePipeline,WatsonWebserver.Core.WebserverSettings,System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata)">
             <summary>
             Add a PUT route with automatic body deserialization.
             </summary>
             <typeparam name="T">Request body type.</typeparam>
+            <param name="group">The routing group.</param>
+            <param name="path">URL path.</param>
+            <param name="handler">Async handler that receives an ApiRequest and returns an object to serialize.</param>
+            <param name="serializer">Serialization helper.</param>
+            <param name="middleware">Middleware pipeline.</param>
+            <param name="settings">Webserver settings.</param>
+            <param name="exceptionHandler">Optional exception handler.</param>
+            <param name="openApiMetadata">Optional OpenAPI metadata.</param>
         </member>
         <member name="M:WatsonWebserver.Core.Routing.RoutingGroupApiExtensions.Patch(WatsonWebserver.Core.Routing.RoutingGroup,System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},WatsonWebserver.Core.ISerializationHelper,WatsonWebserver.Core.Middleware.MiddlewarePipeline,WatsonWebserver.Core.WebserverSettings,System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata)">
             <summary>
             Add a PATCH route without automatic body deserialization.
             </summary>
+            <param name="group">The routing group.</param>
+            <param name="path">URL path.</param>
+            <param name="handler">Async handler that receives an ApiRequest and returns an object to serialize.</param>
+            <param name="serializer">Serialization helper.</param>
+            <param name="middleware">Middleware pipeline.</param>
+            <param name="settings">Webserver settings.</param>
+            <param name="exceptionHandler">Optional exception handler.</param>
+            <param name="openApiMetadata">Optional OpenAPI metadata.</param>
         </member>
         <member name="M:WatsonWebserver.Core.Routing.RoutingGroupApiExtensions.Patch``1(WatsonWebserver.Core.Routing.RoutingGroup,System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},WatsonWebserver.Core.ISerializationHelper,WatsonWebserver.Core.Middleware.MiddlewarePipeline,WatsonWebserver.Core.WebserverSettings,System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata)">
             <summary>
             Add a PATCH route with automatic body deserialization.
             </summary>
             <typeparam name="T">Request body type.</typeparam>
+            <param name="group">The routing group.</param>
+            <param name="path">URL path.</param>
+            <param name="handler">Async handler that receives an ApiRequest and returns an object to serialize.</param>
+            <param name="serializer">Serialization helper.</param>
+            <param name="middleware">Middleware pipeline.</param>
+            <param name="settings">Webserver settings.</param>
+            <param name="exceptionHandler">Optional exception handler.</param>
+            <param name="openApiMetadata">Optional OpenAPI metadata.</param>
         </member>
         <member name="M:WatsonWebserver.Core.Routing.RoutingGroupApiExtensions.Delete(WatsonWebserver.Core.Routing.RoutingGroup,System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},WatsonWebserver.Core.ISerializationHelper,WatsonWebserver.Core.Middleware.MiddlewarePipeline,WatsonWebserver.Core.WebserverSettings,System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata)">
             <summary>
             Add a DELETE route without automatic body deserialization.
             </summary>
+            <param name="group">The routing group.</param>
+            <param name="path">URL path.</param>
+            <param name="handler">Async handler that receives an ApiRequest and returns an object to serialize.</param>
+            <param name="serializer">Serialization helper.</param>
+            <param name="middleware">Middleware pipeline.</param>
+            <param name="settings">Webserver settings.</param>
+            <param name="exceptionHandler">Optional exception handler.</param>
+            <param name="openApiMetadata">Optional OpenAPI metadata.</param>
         </member>
         <member name="M:WatsonWebserver.Core.Routing.RoutingGroupApiExtensions.Delete``1(WatsonWebserver.Core.Routing.RoutingGroup,System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},WatsonWebserver.Core.ISerializationHelper,WatsonWebserver.Core.Middleware.MiddlewarePipeline,WatsonWebserver.Core.WebserverSettings,System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata)">
             <summary>
             Add a DELETE route with automatic body deserialization.
             </summary>
             <typeparam name="T">Request body type.</typeparam>
+            <param name="group">The routing group.</param>
+            <param name="path">URL path.</param>
+            <param name="handler">Async handler that receives an ApiRequest and returns an object to serialize.</param>
+            <param name="serializer">Serialization helper.</param>
+            <param name="middleware">Middleware pipeline.</param>
+            <param name="settings">Webserver settings.</param>
+            <param name="exceptionHandler">Optional exception handler.</param>
+            <param name="openApiMetadata">Optional OpenAPI metadata.</param>
         </member>
         <member name="M:WatsonWebserver.Core.Routing.RoutingGroupApiExtensions.Head(WatsonWebserver.Core.Routing.RoutingGroup,System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},WatsonWebserver.Core.ISerializationHelper,WatsonWebserver.Core.Middleware.MiddlewarePipeline,WatsonWebserver.Core.WebserverSettings,System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata)">
             <summary>
             Add a HEAD route with an API request handler.
             </summary>
+            <param name="group">The routing group.</param>
+            <param name="path">URL path.</param>
+            <param name="handler">Async handler that receives an ApiRequest and returns an object to serialize.</param>
+            <param name="serializer">Serialization helper.</param>
+            <param name="middleware">Middleware pipeline.</param>
+            <param name="settings">Webserver settings.</param>
+            <param name="exceptionHandler">Optional exception handler.</param>
+            <param name="openApiMetadata">Optional OpenAPI metadata.</param>
         </member>
         <member name="M:WatsonWebserver.Core.Routing.RoutingGroupApiExtensions.Options(WatsonWebserver.Core.Routing.RoutingGroup,System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},WatsonWebserver.Core.ISerializationHelper,WatsonWebserver.Core.Middleware.MiddlewarePipeline,WatsonWebserver.Core.WebserverSettings,System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata)">
             <summary>
             Add an OPTIONS route with an API request handler.
             </summary>
+            <param name="group">The routing group.</param>
+            <param name="path">URL path.</param>
+            <param name="handler">Async handler that receives an ApiRequest and returns an object to serialize.</param>
+            <param name="serializer">Serialization helper.</param>
+            <param name="middleware">Middleware pipeline.</param>
+            <param name="settings">Webserver settings.</param>
+            <param name="exceptionHandler">Optional exception handler.</param>
+            <param name="openApiMetadata">Optional OpenAPI metadata.</param>
         </member>
         <member name="T:WatsonWebserver.Core.Routing.StaticRoute">
             <summary>
@@ -6350,6 +6430,29 @@
             <param name="message">Custom error message.</param>
             <param name="innerException">The inner exception.</param>
         </member>
+        <member name="T:WatsonWebserver.Core.WebserverPage">
+            <summary>
+            Page served by Watson webserver.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebserverPage.ContentType">
+            <summary>
+            Content type.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebserverPage.Content">
+            <summary>
+            Content.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebserverPage.#ctor(System.String,System.String)">
+            <summary>
+            Instantiate.
+            </summary>
+            <param name="contentType">Content type.</param>
+            <param name="content">Content.</param>
+            <exception cref="T:System.ArgumentNullException">Thrown when contentType or content is null or empty.</exception>
+        </member>
         <member name="T:WatsonWebserver.Core.WebserverPages">
             <summary>
             Default pages served.
@@ -6364,28 +6467,6 @@
             <summary>
             Default pages served by Watson webserver.
             </summary>
-        </member>
-        <member name="T:WatsonWebserver.Core.WebserverPages.Page">
-            <summary>
-            Page served by Watson webserver.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.WebserverPages.Page.ContentType">
-            <summary>
-            Content type.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.WebserverPages.Page.Content">
-            <summary>
-            Content.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.Core.WebserverPages.Page.#ctor(System.String,System.String)">
-            <summary>
-            Page served by Watson webserver.
-            </summary>
-            <param name="contentType">Content type.</param>
-            <param name="content">Content.</param>
         </member>
         <member name="T:WatsonWebserver.Core.WebserverSettings">
             <summary>

@@ -29,7 +29,7 @@ namespace Test.RestApi
             settings.Debug.Responses = true;
             settings.Timeout.DefaultTimeout = TimeSpan.FromSeconds(30);
 
-            using Webserver server = new Webserver(settings, DefaultRoute);
+            Webserver server = new Webserver(settings, DefaultRoute);
 
             server.Events.Logger = Console.WriteLine;
 
@@ -256,30 +256,5 @@ namespace Test.RestApi
             _Products[p2.Id] = p2;
             _Products[p3.Id] = p3;
         }
-    }
-
-    public class Product
-    {
-        public Guid Id { get; set; }
-        public string Name { get; set; }
-        public decimal Price { get; set; }
-    }
-
-    public class CreateProductRequest
-    {
-        public string Name { get; set; }
-        public decimal Price { get; set; }
-    }
-
-    public class UpdateProductRequest
-    {
-        public string Name { get; set; }
-        public decimal? Price { get; set; }
-    }
-
-    public class LoginRequest
-    {
-        public string Username { get; set; }
-        public string Password { get; set; }
     }
 }
