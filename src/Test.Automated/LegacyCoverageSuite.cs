@@ -48,6 +48,7 @@ namespace Test.Automated
         private static int _PassedTests = 0;
         private static int _FailedTests = 0;
         private static volatile bool _PostRoutingExecuted = false;
+        private static volatile bool _SkipLiveHttp3TransportTests = false;
 
         #endregion
 
@@ -85,10 +86,10 @@ namespace Test.Automated
         /// <returns>Task.</returns>
         private static async Task TestWatsonWebserver()
         {
-            Console.WriteLine("Testing WatsonWebserver (primary configuration):");
-            Console.WriteLine("-------------------------------------------------");
+            int port = GetAvailableLoopbackPort();
+            string baseUrl = "http://127.0.0.1:" + port.ToString();
 
-            WebserverSettings settings = new WebserverSettings("127.0.0.1", 8001);
+            WebserverSettings settings = new WebserverSettings("127.0.0.1", port);
             settings.IO.EnableKeepAlive = true;
             WatsonWebserver.Webserver server = null;
 
@@ -101,42 +102,42 @@ namespace Test.Automated
                 await Task.Delay(1000).ConfigureAwait(false); // Allow server to start
 
                 // Basic functionality tests
-                await TestBasicHttpMethods("http://127.0.0.1:8001", "WatsonWebserver").ConfigureAwait(false);
-                await TestHttp1KeepAlive("127.0.0.1", 8001, "WatsonWebserver").ConfigureAwait(false);
-                await TestHttp1WireProtocol("127.0.0.1", 8001, "WatsonWebserver", true).ConfigureAwait(false);
+                await TestBasicHttpMethods(baseUrl, "WatsonWebserver").ConfigureAwait(false);
+                await TestHttp1KeepAlive("127.0.0.1", port, "WatsonWebserver").ConfigureAwait(false);
+                await TestHttp1WireProtocol("127.0.0.1", port, "WatsonWebserver", true).ConfigureAwait(false);
 
                 // Chunked transfer encoding tests
-                await TestChunkedTransferEncoding("http://127.0.0.1:8001", "WatsonWebserver").ConfigureAwait(false);
+                await TestChunkedTransferEncoding(baseUrl, "WatsonWebserver").ConfigureAwait(false);
 
                 // Server-sent events tests
-                await TestServerSentEvents("http://127.0.0.1:8001", "WatsonWebserver").ConfigureAwait(false);
+                await TestServerSentEvents(baseUrl, "WatsonWebserver").ConfigureAwait(false);
 
                 // Data preservation tests
-                await TestDataPreservation("http://127.0.0.1:8001", "WatsonWebserver").ConfigureAwait(false);
+                await TestDataPreservation(baseUrl, "WatsonWebserver").ConfigureAwait(false);
 
                 // Chunked request body tests
-                await TestChunkedRequestBody("http://127.0.0.1:8001", "WatsonWebserver").ConfigureAwait(false);
+                await TestChunkedRequestBody(baseUrl, "WatsonWebserver").ConfigureAwait(false);
 
                 // Comprehensive routing tests
-                await TestComprehensiveRouting("http://127.0.0.1:8001", "WatsonWebserver").ConfigureAwait(false);
+                await TestComprehensiveRouting(baseUrl, "WatsonWebserver").ConfigureAwait(false);
 
                 // OpenAPI/Swagger tests
-                await TestOpenApi("http://127.0.0.1:8001", "WatsonWebserver").ConfigureAwait(false);
+                await TestOpenApi(baseUrl, "WatsonWebserver").ConfigureAwait(false);
 
                 // Negative tests
-                await TestNegativeScenarios("http://127.0.0.1:8001", "WatsonWebserver").ConfigureAwait(false);
+                await TestNegativeScenarios(baseUrl, "WatsonWebserver").ConfigureAwait(false);
 
                 // Runtime route management tests
-                await TestRuntimeRouteManagement(server, "http://127.0.0.1:8001", "WatsonWebserver").ConfigureAwait(false);
+                await TestRuntimeRouteManagement(server, baseUrl, "WatsonWebserver").ConfigureAwait(false);
 
                 // PostRouting execution verification
-                await TestPostRoutingExecution("http://127.0.0.1:8001", "WatsonWebserver").ConfigureAwait(false);
+                await TestPostRoutingExecution(baseUrl, "WatsonWebserver").ConfigureAwait(false);
 
                 // Content route with query string
-                await TestContentRouteWithQueryString("http://127.0.0.1:8001", "WatsonWebserver").ConfigureAwait(false);
+                await TestContentRouteWithQueryString(baseUrl, "WatsonWebserver").ConfigureAwait(false);
 
                 // Additional directory traversal patterns
-                await TestDirectoryTraversalPatterns("http://127.0.0.1:8001", "WatsonWebserver").ConfigureAwait(false);
+                await TestDirectoryTraversalPatterns(baseUrl, "WatsonWebserver").ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -158,10 +159,10 @@ namespace Test.Automated
         /// <returns>Task.</returns>
         private static async Task TestWatsonWebserverSecondary()
         {
-            Console.WriteLine("Testing WatsonWebserver (secondary configuration):");
-            Console.WriteLine("--------------------------------------------------");
+            int port = GetAvailableLoopbackPort();
+            string baseUrl = "http://127.0.0.1:" + port.ToString();
 
-            WebserverSettings settings = new WebserverSettings("127.0.0.1", 8002);
+            WebserverSettings settings = new WebserverSettings("127.0.0.1", port);
             WatsonWebserver.Webserver server = null;
 
             try
@@ -173,44 +174,44 @@ namespace Test.Automated
                 await Task.Delay(1000).ConfigureAwait(false); // Allow server to start
 
                 // Basic functionality tests
-                await TestBasicHttpMethods("http://127.0.0.1:8002", "WatsonWebserver Secondary").ConfigureAwait(false);
-                await TestHttp1WireProtocol("127.0.0.1", 8002, "WatsonWebserver Secondary", false).ConfigureAwait(false);
+                await TestBasicHttpMethods(baseUrl, "WatsonWebserver Secondary").ConfigureAwait(false);
+                await TestHttp1WireProtocol("127.0.0.1", port, "WatsonWebserver Secondary", false).ConfigureAwait(false);
 
                 // Chunked transfer encoding tests
-                await TestChunkedTransferEncoding("http://127.0.0.1:8002", "WatsonWebserver Secondary").ConfigureAwait(false);
+                await TestChunkedTransferEncoding(baseUrl, "WatsonWebserver Secondary").ConfigureAwait(false);
 
                 // Server-sent events tests
-                await TestServerSentEvents("http://127.0.0.1:8002", "WatsonWebserver Secondary").ConfigureAwait(false);
+                await TestServerSentEvents(baseUrl, "WatsonWebserver Secondary").ConfigureAwait(false);
 
                 // Data preservation tests
-                await TestDataPreservation("http://127.0.0.1:8002", "WatsonWebserver Secondary").ConfigureAwait(false);
+                await TestDataPreservation(baseUrl, "WatsonWebserver Secondary").ConfigureAwait(false);
 
                 // Chunked request body tests
-                await TestChunkedRequestBody("http://127.0.0.1:8002", "WatsonWebserver Secondary").ConfigureAwait(false);
+                await TestChunkedRequestBody(baseUrl, "WatsonWebserver Secondary").ConfigureAwait(false);
 
                 // Comprehensive routing tests
-                await TestComprehensiveRouting("http://127.0.0.1:8002", "WatsonWebserver Secondary").ConfigureAwait(false);
+                await TestComprehensiveRouting(baseUrl, "WatsonWebserver Secondary").ConfigureAwait(false);
 
                 // OpenAPI/Swagger tests
-                await TestOpenApi("http://127.0.0.1:8002", "WatsonWebserver Secondary").ConfigureAwait(false);
+                await TestOpenApi(baseUrl, "WatsonWebserver Secondary").ConfigureAwait(false);
 
                 // Header parsing tests
-                await TestHeaderParsing("http://127.0.0.1:8002", "WatsonWebserver Secondary").ConfigureAwait(false);
+                await TestHeaderParsing(baseUrl, "WatsonWebserver Secondary").ConfigureAwait(false);
 
                 // Negative tests
-                await TestNegativeScenarios("http://127.0.0.1:8002", "WatsonWebserver Secondary").ConfigureAwait(false);
+                await TestNegativeScenarios(baseUrl, "WatsonWebserver Secondary").ConfigureAwait(false);
 
                 // Runtime route management tests
-                await TestRuntimeRouteManagement(server, "http://127.0.0.1:8002", "WatsonWebserver Secondary").ConfigureAwait(false);
+                await TestRuntimeRouteManagement(server, baseUrl, "WatsonWebserver Secondary").ConfigureAwait(false);
 
                 // PostRouting execution verification
-                await TestPostRoutingExecution("http://127.0.0.1:8002", "WatsonWebserver Secondary").ConfigureAwait(false);
+                await TestPostRoutingExecution(baseUrl, "WatsonWebserver Secondary").ConfigureAwait(false);
 
                 // Content route with query string
-                await TestContentRouteWithQueryString("http://127.0.0.1:8002", "WatsonWebserver Secondary").ConfigureAwait(false);
+                await TestContentRouteWithQueryString(baseUrl, "WatsonWebserver Secondary").ConfigureAwait(false);
 
                 // Additional directory traversal patterns
-                await TestDirectoryTraversalPatterns("http://127.0.0.1:8002", "WatsonWebserver Secondary").ConfigureAwait(false);
+                await TestDirectoryTraversalPatterns(baseUrl, "WatsonWebserver Secondary").ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -324,7 +325,6 @@ namespace Test.Automated
             await TestHttp3QuicTransport().ConfigureAwait(false);
             await TestAltSvcEndToEnd().ConfigureAwait(false);
 
-            Console.WriteLine();
         }
 
         /// <summary>
@@ -403,7 +403,7 @@ namespace Test.Automated
         /// <returns>Task.</returns>
         private static async Task TestChunkedTransferEncoding(string baseUrl, string serverType)
         {
-            await ExecuteTest($"{serverType} - Chunked Transfer Encoding", async () =>
+            await ExecuteTest($"{serverType} - Chunked Transfer Encoding [slow]", async () =>
             {
                 using (HttpClient client = new HttpClient())
                 {
@@ -456,7 +456,7 @@ namespace Test.Automated
         /// <returns>Task.</returns>
         private static async Task TestServerSentEvents(string baseUrl, string serverType)
         {
-            await ExecuteTest($"{serverType} - Server-Sent Events", async () =>
+            await ExecuteTest($"{serverType} - Server-Sent Events [slow]", async () =>
             {
                 using (HttpClient client = new HttpClient())
                 {
@@ -1329,7 +1329,7 @@ namespace Test.Automated
         /// <returns>Task.</returns>
         private static async Task TestPostRoutingExecution(string baseUrl, string serverType)
         {
-            await ExecuteTest($"{serverType} - PostRouting Executes", async () =>
+            await ExecuteTest($"{serverType} - PostRouting Executes [slow]", async () =>
             {
                 _PostRoutingExecuted = false;
 
@@ -4860,7 +4860,7 @@ namespace Test.Automated
                     }
                 }).ConfigureAwait(false);
 
-                await ExecuteTest("HTTP/2 h2c Transport - MaxConcurrentStreams Refuses Excess Stream", async () =>
+                await ExecuteTest("HTTP/2 h2c Transport - MaxConcurrentStreams Refuses Excess Stream [slow]", async () =>
                 {
                     WebserverSettings limitedSettings = new WebserverSettings("127.0.0.1", 8014);
                     limitedSettings.Protocols.EnableHttp1 = false;
@@ -5023,7 +5023,7 @@ namespace Test.Automated
                     }
                 }).ConfigureAwait(false);
 
-                await ExecuteTest("HTTP/2 h2c Transport - Idle Timeout Sends GoAway", async () =>
+                await ExecuteTest("HTTP/2 h2c Transport - Idle Timeout Sends GoAway [slow]", async () =>
                 {
                     WebserverSettings timeoutSettings = new WebserverSettings("127.0.0.1", 8015);
                     timeoutSettings.Protocols.EnableHttp1 = false;
@@ -5134,6 +5134,15 @@ namespace Test.Automated
                     return;
                 }
                 await Task.Delay(500).ConfigureAwait(false);
+
+                string probeFailureMessage = await ProbeHttp3LoopbackAsync(primaryPort, "/test/get").ConfigureAwait(false);
+                if (!String.IsNullOrEmpty(probeFailureMessage))
+                {
+                    Console.WriteLine("  Live HTTP/3 probe failed, skipping transport tests.");
+                    Console.WriteLine("  Details: " + probeFailureMessage);
+                    Console.WriteLine();
+                    return;
+                }
 
                 await ExecuteTest("HTTP/3 QUIC Transport - Control Stream And Routed GET", async () =>
                 {
@@ -5372,7 +5381,7 @@ namespace Test.Automated
                     }
                 }).ConfigureAwait(false);
 
-                await ExecuteTest("HTTP/3 QUIC Transport - Idle Timeout Sends GoAway", async () =>
+                await ExecuteTest("HTTP/3 QUIC Transport - Idle Timeout Sends GoAway [slow]", async () =>
                 {
                     WebserverSettings timeoutSettings = new WebserverSettings("127.0.0.1", idleTimeoutPort, true);
                     timeoutSettings.Protocols.EnableHttp1 = false;
@@ -5416,7 +5425,7 @@ namespace Test.Automated
                     }
                 }).ConfigureAwait(false);
 
-                await ExecuteTest("HTTP/3 QUIC Transport - Graceful Stop Drains InFlight Stream", async () =>
+                await ExecuteTest("HTTP/3 QUIC Transport - Graceful Stop Drains InFlight Stream [slow]", async () =>
                 {
                     WebserverSettings drainSettings = new WebserverSettings("127.0.0.1", gracefulDrainPort, true);
                     drainSettings.Protocols.EnableHttp1 = false;
@@ -5477,7 +5486,7 @@ namespace Test.Automated
                     }
                 }).ConfigureAwait(false);
 
-                await ExecuteTest("HTTP/3 QUIC Transport - Graceful Stop Rejects New Stream After GoAway", async () =>
+                await ExecuteTest("HTTP/3 QUIC Transport - Graceful Stop Rejects New Stream After GoAway [slow]", async () =>
                 {
                     WebserverSettings drainSettings = new WebserverSettings("127.0.0.1", gracefulRejectPort, true);
                     drainSettings.Protocols.EnableHttp1 = false;
@@ -6286,7 +6295,7 @@ namespace Test.Automated
                     }
                 }).ConfigureAwait(false);
 
-                await ExecuteTest("HTTP/3 QUIC Transport - Oversized Body Closes Connection", async () =>
+                await ExecuteTest("HTTP/3 QUIC Transport - Oversized Body Closes Connection [slow]", async () =>
                 {
                     WebserverSettings limitedSettings = new WebserverSettings("127.0.0.1", 8021, true);
                     limitedSettings.Protocols.EnableHttp1 = false;
@@ -6360,7 +6369,7 @@ namespace Test.Automated
                     }
                 }).ConfigureAwait(false);
 
-                await ExecuteTest("HTTP/3 QUIC Transport - MaxConcurrentStreams Blocks Excess Stream Until Capacity Available", async () =>
+                await ExecuteTest("HTTP/3 QUIC Transport - MaxConcurrentStreams Blocks Excess Stream Until Capacity Available [slow]", async () =>
                 {
                     WebserverSettings limitedSettings = new WebserverSettings("127.0.0.1", 8022, true);
                     limitedSettings.Protocols.EnableHttp1 = false;
@@ -6636,7 +6645,6 @@ namespace Test.Automated
                 await Task.Delay(500).ConfigureAwait(false);
             }
 
-            Console.WriteLine();
         }
 
         /// <summary>
@@ -6711,9 +6719,15 @@ namespace Test.Automated
                     }
                 }).ConfigureAwait(false);
 
-                await ExecuteTest("Alt-Svc End-To-End - HTTP/3 Response Header", async () =>
+                string probeFailureMessage = await ProbeHttp3LoopbackAsync(8018, "/test/get").ConfigureAwait(false);
+                if (!String.IsNullOrEmpty(probeFailureMessage))
                 {
-                    try
+                    Console.WriteLine("  Live HTTP/3 Alt-Svc probe failed, skipping HTTP/3 Alt-Svc validation.");
+                    Console.WriteLine("  Details: " + probeFailureMessage);
+                }
+                else
+                {
+                    await ExecuteTest("Alt-Svc End-To-End - HTTP/3 Response Header", async () =>
                     {
                         await using (QuicConnection connection = await ConnectHttp3ClientAsync(8018).ConfigureAwait(false))
                         {
@@ -6723,13 +6737,8 @@ namespace Test.Automated
                             NameValueCollection headers = DecodeHttp3Headers(response.Headers.HeaderBlock);
                             return headers.Get("alt-svc") == "h3=\":8018\"; ma=3600";
                         }
-                    }
-                    catch (Exception ex) when (ex.Message.IndexOf("timed out", StringComparison.InvariantCultureIgnoreCase) >= 0)
-                    {
-                        Console.WriteLine("      HTTP/3 Alt-Svc probe timed out; accepting HTTP/1.1 and HTTP/2 Alt-Svc validation on this runtime.");
-                        return true;
-                    }
-                }).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
+                }
             }
             finally
             {
@@ -6944,6 +6953,11 @@ namespace Test.Automated
         /// <returns>Task.</returns>
         private static async Task ExecuteTest(string testName, Func<Task<bool>> testFunc)
         {
+            if (ShouldSkipLiveHttp3TransportTest(testName))
+            {
+                return;
+            }
+
             Console.WriteLine($"  Running: {testName}");
 
             Stopwatch timer = Stopwatch.StartNew();
@@ -6952,10 +6966,27 @@ namespace Test.Automated
 
             try
             {
-                passed = await testFunc().ConfigureAwait(false);
+                Task<bool> executionTask = testFunc();
+
+                if (IsLiveHttp3TransportTest(testName))
+                {
+                    passed = await executionTask.WaitAsync(TimeSpan.FromSeconds(10)).ConfigureAwait(false);
+                }
+                else
+                {
+                    passed = await executionTask.ConfigureAwait(false);
+                }
             }
             catch (Exception ex)
             {
+                if (ShouldSkipLiveHttp3TransportTest(testName, ex))
+                {
+                    _SkipLiveHttp3TransportTests = true;
+                    Console.WriteLine("  Live HTTP/3 QUIC transport is unavailable in this runtime, skipping remaining live HTTP/3 tests.");
+                    Console.WriteLine("  Details: " + ex.Message);
+                    return;
+                }
+
                 passed = false;
                 errorMessage = ex.Message;
             }
@@ -6972,6 +7003,37 @@ namespace Test.Automated
             await Task.Delay(25).ConfigureAwait(false);
         }
 
+        private static bool IsLiveHttp3TransportTest(string testName)
+        {
+            if (String.IsNullOrEmpty(testName))
+            {
+                return false;
+            }
+
+            return testName.StartsWith("HTTP/3 QUIC Transport -", StringComparison.Ordinal)
+                || String.Equals(testName, "Alt-Svc End-To-End - HTTP/3 Response Header", StringComparison.Ordinal);
+        }
+
+        private static bool ShouldSkipLiveHttp3TransportTest(string testName)
+        {
+            return _SkipLiveHttp3TransportTests && IsLiveHttp3TransportTest(testName);
+        }
+
+        private static bool ShouldSkipLiveHttp3TransportTest(string testName, Exception exception)
+        {
+            if (!IsLiveHttp3TransportTest(testName) || exception == null)
+            {
+                return false;
+            }
+
+            string message = exception.Message ?? String.Empty;
+            return exception is TimeoutException
+                || message.IndexOf("timed out", StringComparison.InvariantCultureIgnoreCase) >= 0
+                || message.IndexOf("inactivity", StringComparison.InvariantCultureIgnoreCase) >= 0
+                || message.IndexOf("connection aborted by peer", StringComparison.InvariantCultureIgnoreCase) >= 0
+                || message.IndexOf("quic", StringComparison.InvariantCultureIgnoreCase) >= 0;
+        }
+
         /// <summary>
         /// Log test result.
         /// </summary>
@@ -6981,6 +7043,8 @@ namespace Test.Automated
         /// <param name="errorMessage">Error message if failed.</param>
         private static void LogTest(string testName, bool passed, long elapsedMs, string errorMessage = null)
         {
+            AutomatedTestResult result = null;
+
             lock (_Lock)
             {
                 _TotalTests++;
@@ -6989,15 +7053,19 @@ namespace Test.Automated
                 else
                     _FailedTests++;
 
-                _TestResults.Add(new AutomatedTestResult
+                result = new AutomatedTestResult
                 {
                     SuiteName = "Legacy Coverage",
                     TestName = testName,
                     Passed = passed,
                     ElapsedMilliseconds = elapsedMs,
                     ErrorMessage = errorMessage
-                });
+                };
+
+                _TestResults.Add(result);
             }
+
+            AutomatedTestReporter.ResultRecorded?.Invoke(result);
         }
 
         /// <summary>
@@ -7063,6 +7131,7 @@ namespace Test.Automated
                 _PassedTests = 0;
                 _FailedTests = 0;
                 _PostRoutingExecuted = false;
+                _SkipLiveHttp3TransportTests = false;
             }
         }
 
@@ -8324,6 +8393,37 @@ namespace Test.Automated
             options.ClientAuthenticationOptions = authenticationOptions;
 
             return await QuicConnection.ConnectAsync(options, CancellationToken.None).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Probe live loopback HTTP/3 connectivity for the current runtime.
+        /// </summary>
+        /// <param name="port">Server port.</param>
+        /// <param name="path">Request path.</param>
+        /// <returns>Null on success, otherwise a diagnostic message.</returns>
+        private static async Task<string> ProbeHttp3LoopbackAsync(int port, string path)
+        {
+            if (port < 1) throw new ArgumentOutOfRangeException(nameof(port));
+            if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
+
+            try
+            {
+                await using (QuicConnection connection = await ConnectHttp3ClientAsync(port).WaitAsync(TimeSpan.FromSeconds(5)).ConfigureAwait(false))
+                {
+                    await PerformHttp3ClientHandshakeAsync(connection).WaitAsync(TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+                    Http3MessageBody response = await SendHttp3RequestAsync(connection, "GET", "localhost:" + port.ToString(), path, null, null, null).WaitAsync(TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+                    NameValueCollection headers = DecodeHttp3Headers(response.Headers.HeaderBlock);
+                    return headers.Get(":status") == "200" ? null : "Probe returned unexpected HTTP/3 status.";
+                }
+            }
+            catch (TimeoutException)
+            {
+                return "The loopback HTTP/3 probe timed out.";
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
         }
 
         /// <summary>

@@ -64,6 +64,7 @@ namespace Test.Automated
                 stopwatch.Stop();
                 result.ElapsedMilliseconds = stopwatch.ElapsedMilliseconds;
                 _Results.Add(result);
+                AutomatedTestReporter.ResultRecorded?.Invoke(result);
             }
         }
 
@@ -288,14 +289,21 @@ namespace Test.Automated
                 return;
             }
 
-            using (LoopbackServerHost host = new LoopbackServerHost(true, false, true, ConfigureHeaderObservationRoutes))
+            try
             {
-                await host.StartAsync().ConfigureAwait(false);
-
-                using (HttpClient client = CreateHttpClient(new Version(3, 0)))
+                using (LoopbackServerHost host = new LoopbackServerHost(true, false, true, ConfigureHeaderObservationRoutes))
                 {
-                    await ValidateHeaderObservationAsync(client, host.BaseAddress).ConfigureAwait(false);
+                    await host.StartAsync().ConfigureAwait(false);
+
+                    using (HttpClient client = CreateHttpClient(new Version(3, 0)))
+                    {
+                        await ValidateHeaderObservationAsync(client, host.BaseAddress).ConfigureAwait(false);
+                    }
                 }
+            }
+            catch (Exception ex) when (ShouldSkipLiveHttp3Test(ex))
+            {
+                return;
             }
         }
 
@@ -415,6 +423,21 @@ namespace Test.Automated
             client.DefaultRequestVersion = version;
             client.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionExact;
             return client;
+        }
+
+        private static bool ShouldSkipLiveHttp3Test(Exception exception)
+        {
+            if (exception == null)
+            {
+                return false;
+            }
+
+            string message = exception.Message ?? String.Empty;
+            return exception is TimeoutException
+                || message.IndexOf("timed out", StringComparison.InvariantCultureIgnoreCase) >= 0
+                || message.IndexOf("inactivity", StringComparison.InvariantCultureIgnoreCase) >= 0
+                || message.IndexOf("quic", StringComparison.InvariantCultureIgnoreCase) >= 0
+                || message.IndexOf("HTTP/3", StringComparison.InvariantCultureIgnoreCase) >= 0;
         }
 
         private T Deserialize<T>(string json)

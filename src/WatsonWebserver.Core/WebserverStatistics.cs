@@ -149,7 +149,7 @@
         {
             // Calculating the length for _RequestsByMethod array
             int max = 0;
-            foreach (var value in Enum.GetValues(typeof(HttpMethod)))
+            foreach (object value in Enum.GetValues(typeof(HttpMethod)))
             {
                 if ((int)value > max)
                     max = (int)value;

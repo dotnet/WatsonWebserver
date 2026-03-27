@@ -4,36 +4,58 @@ namespace Test.RestApi
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Threading;
     using System.Threading.Tasks;
     using WatsonWebserver;
     using WatsonWebserver.Core;
     using WatsonWebserver.Core.Health;
     using WatsonWebserver.Core.OpenApi;
 
-    class Program
+    internal static class Program
     {
 #pragma warning disable CS1998
 
-        static string _Hostname = "127.0.0.1";
-        static int _Port = 8080;
-        static ConcurrentDictionary<Guid, Product> _Products = new ConcurrentDictionary<Guid, Product>();
+        private static string _Hostname = "127.0.0.1";
+        private static int _Port = 8080;
+        private static ConcurrentDictionary<Guid, Product> _Products = new ConcurrentDictionary<Guid, Product>();
 
-        static async Task Main(string[] args)
+        private static async Task Main(string[] args)
         {
             SeedProducts();
 
+            WebserverSettings settings = CreateSettings();
+            Webserver server = new Webserver(settings, DefaultRoute);
+
+            ConfigureServer(server);
+            WriteStartupBanner();
+
+            server.Start();
+            Console.ReadLine();
+
+#pragma warning restore CS1998
+        }
+
+        private static WebserverSettings CreateSettings()
+        {
             WebserverSettings settings = new WebserverSettings(_Hostname, _Port, false);
             settings.Debug.Routing = true;
             settings.Debug.Requests = true;
             settings.Debug.Responses = true;
             settings.Timeout.DefaultTimeout = TimeSpan.FromSeconds(30);
+            return settings;
+        }
 
-            Webserver server = new Webserver(settings, DefaultRoute);
-
+        private static void ConfigureServer(Webserver server)
+        {
             server.Events.Logger = Console.WriteLine;
+            ConfigureMiddleware(server);
+            ConfigureHealthCheck(server);
+            ConfigureOpenApi(server);
+            ConfigureAuthentication(server);
+            ConfigureRoutes(server);
+        }
 
-            // --- Middleware: request logging ---
+        private static void ConfigureMiddleware(Webserver server)
+        {
             server.Middleware.Add(async (ctx, next, token) =>
             {
                 DateTime start = DateTime.UtcNow;
@@ -41,8 +63,10 @@ namespace Test.RestApi
                 double ms = (DateTime.UtcNow - start).TotalMilliseconds;
                 Console.WriteLine($"[Middleware] {ctx.Request.Method} {ctx.Request.Url.RawWithQuery} -> {ctx.Response.StatusCode} ({ms:F1}ms)");
             });
+        }
 
-            // --- Health check ---
+        private static void ConfigureHealthCheck(Webserver server)
+        {
             server.UseHealthCheck(health =>
             {
                 health.Path = "/health";
@@ -60,8 +84,10 @@ namespace Test.RestApi
                     };
                 };
             });
+        }
 
-            // --- OpenAPI ---
+        private static void ConfigureOpenApi(Webserver server)
+        {
             server.UseOpenApi(api =>
             {
                 api.Info.Title = "Test REST API";
@@ -71,8 +97,10 @@ namespace Test.RestApi
                 api.Tags.Add(new OpenApiTag { Name = "Auth", Description = "Authentication endpoints" });
                 api.Tags.Add(new OpenApiTag { Name = "Misc", Description = "Miscellaneous endpoints" });
             });
+        }
 
-            // --- Structured authentication ---
+        private static void ConfigureAuthentication(Webserver server)
+        {
             server.Routes.AuthenticateApiRequest = async (ctx) =>
             {
                 string authHeader = ctx.Request.RetrieveHeaderValue("Authorization");
@@ -92,15 +120,12 @@ namespace Test.RestApi
                     AuthorizationResult = AuthorizationResultEnum.DeniedImplicit
                 };
             };
+        }
 
-            // =====================
-            // Public routes (pre-auth)
-            // =====================
-
-            // GET / - hello world
+        private static void ConfigureRoutes(Webserver server)
+        {
             server.Get("/", async (req) => new { Message = "Hello, World!", Version = "7.0.0" });
 
-            // GET /products - list all products
             server.Get("/products", async (req) =>
             {
                 int page = req.Query.GetInt("page", 1);
@@ -110,22 +135,24 @@ namespace Test.RestApi
                 return new { Total = all.Count, Page = page, Size = size, Products = paged };
             });
 
-            // GET /products/{id} - get product by ID
             server.Get("/products/{id}", async (req) =>
             {
                 Guid id = req.Parameters.GetGuid("id");
                 if (_Products.TryGetValue(id, out Product product))
+                {
                     return product;
+                }
 
                 throw new WebserverException(ApiResultEnum.NotFound, "Product not found");
             });
 
-            // POST /products - create product (auto-deserialized body)
             server.Post<CreateProductRequest>("/products", async (req) =>
             {
                 CreateProductRequest body = req.GetData<CreateProductRequest>();
                 if (body == null || String.IsNullOrEmpty(body.Name))
+                {
                     throw new WebserverException(ApiResultEnum.BadRequest, "Name is required");
+                }
 
                 Product product = new Product
                 {
@@ -139,12 +166,13 @@ namespace Test.RestApi
                 return product;
             });
 
-            // PUT /products/{id} - update product (auto-deserialized body)
             server.Put<UpdateProductRequest>("/products/{id}", async (req) =>
             {
                 Guid id = req.Parameters.GetGuid("id");
                 if (!_Products.TryGetValue(id, out Product existing))
+                {
                     throw new WebserverException(ApiResultEnum.NotFound, "Product not found");
+                }
 
                 UpdateProductRequest body = req.GetData<UpdateProductRequest>();
                 if (body.Name != null) existing.Name = body.Name;
@@ -153,53 +181,54 @@ namespace Test.RestApi
                 return existing;
             });
 
-            // DELETE /products/{id} - delete product
             server.Delete("/products/{id}", async (req) =>
             {
                 Guid id = req.Parameters.GetGuid("id");
                 if (!_Products.TryRemove(id, out Product _))
+                {
                     throw new WebserverException(ApiResultEnum.NotFound, "Product not found");
+                }
 
                 return new { Deleted = true, Id = id };
             });
 
-            // POST /upload - non-generic POST (manual body access)
             server.Post("/upload", async (req) =>
             {
                 string rawBody = req.Http.Request.DataAsString;
-                return new { ReceivedBytes = rawBody?.Length ?? 0, Preview = rawBody?.Substring(0, Math.Min(100, rawBody?.Length ?? 0)) };
+                return new
+                {
+                    ReceivedBytes = rawBody?.Length ?? 0,
+                    Preview = rawBody?.Substring(0, Math.Min(100, rawBody?.Length ?? 0))
+                };
             });
 
-            // POST /login - returns tuple for custom status code
             server.Post<LoginRequest>("/login", async (req) =>
             {
                 LoginRequest body = req.GetData<LoginRequest>();
                 if (body != null && body.Username == "admin" && body.Password == "secret")
                 {
-                    return (new { Token = "test-token-123", ExpiresIn = 3600 }, 201);
+                    req.Http.Response.StatusCode = 201;
+                    return new LoginSuccessResponse
+                    {
+                        Token = "test-token-123",
+                        ExpiresIn = 3600
+                    };
                 }
 
                 throw new WebserverException(ApiResultEnum.NotAuthorized, "Invalid credentials");
             });
 
-            // GET /slow - demonstrates timeout (sleeps 60s, timeout is 30s)
             server.Get("/slow", async (req) =>
             {
                 await Task.Delay(60000, req.CancellationToken);
                 return new { Result = "This should never be returned" };
             });
 
-            // GET /error - throws WebserverException
             server.Get("/error", async (req) =>
             {
                 throw new WebserverException(ApiResultEnum.NotFound, "This is a test error");
             });
 
-            // =====================
-            // Protected routes (post-auth)
-            // =====================
-
-            // GET /admin/stats - requires authentication
             server.Get("/admin/stats", async (req) =>
             {
                 return new
@@ -209,8 +238,10 @@ namespace Test.RestApi
                     ServerTime = DateTime.UtcNow
                 };
             }, auth: true);
+        }
 
-            // --- Start ---
+        private static void WriteStartupBanner()
+        {
             Console.WriteLine("===========================================");
             Console.WriteLine("  Watson Webserver 7.0 - Test.RestApi");
             Console.WriteLine("===========================================");
@@ -233,21 +264,16 @@ namespace Test.RestApi
             Console.WriteLine();
             Console.WriteLine("Press ENTER to exit.");
             Console.WriteLine();
-
-            server.Start();
-            Console.ReadLine();
-
-#pragma warning restore CS1998
         }
 
-        static async Task DefaultRoute(HttpContextBase ctx)
+        private static async Task DefaultRoute(HttpContextBase ctx)
         {
             ctx.Response.StatusCode = 404;
             ctx.Response.ContentType = "application/json";
             await ctx.Response.Send("{\"Error\":\"NotFound\",\"Message\":\"No route matched\"}");
         }
 
-        static void SeedProducts()
+        private static void SeedProducts()
         {
             Product p1 = new Product { Id = Guid.NewGuid(), Name = "Widget", Price = 9.99m };
             Product p2 = new Product { Id = Guid.NewGuid(), Name = "Gadget", Price = 24.99m };

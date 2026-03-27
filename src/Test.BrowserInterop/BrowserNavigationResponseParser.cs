@@ -1,6 +1,7 @@
 namespace Test.BrowserInterop
 {
     using System;
+    using System.Collections.Generic;
     using System.Text.Json;
 
     /// <summary>
@@ -11,67 +12,46 @@ namespace Test.BrowserInterop
         /// <summary>
         /// Parse a CDP response-received event payload.
         /// </summary>
-        /// <param name="payload">Event payload.</param>
+        /// <param name="payload">Event payload JSON.</param>
         /// <returns>Navigation observation.</returns>
-        public static BrowserNavigationObservation Parse(JsonElement payload)
+        public static BrowserNavigationObservation Parse(string payload)
         {
-            BrowserNavigationObservation observation = new BrowserNavigationObservation();
+            if (String.IsNullOrEmpty(payload)) throw new ArgumentNullException(nameof(payload));
 
-            if (payload.TryGetProperty("type", out JsonElement typeElement))
-            {
-                if (!String.Equals(typeElement.GetString(), "Document", StringComparison.OrdinalIgnoreCase))
-                {
-                    return null;
-                }
-            }
-
-            if (!payload.TryGetProperty("response", out JsonElement responseElement))
+            BrowserNavigationResponseReceivedPayload navigationPayload = JsonSerializer.Deserialize<BrowserNavigationResponseReceivedPayload>(payload);
+            if (navigationPayload == null)
             {
                 return null;
             }
 
-            if (responseElement.TryGetProperty("url", out JsonElement urlElement))
+            if (!String.Equals(navigationPayload.Type, "Document", StringComparison.OrdinalIgnoreCase))
             {
-                observation.Url = urlElement.GetString() ?? String.Empty;
+                return null;
             }
 
-            if (responseElement.TryGetProperty("status", out JsonElement statusElement))
+            if (navigationPayload.Response == null)
             {
-                observation.StatusCode = statusElement.GetInt32();
+                return null;
             }
 
-            if (responseElement.TryGetProperty("protocol", out JsonElement protocolElement))
-            {
-                observation.Protocol = protocolElement.GetString() ?? String.Empty;
-            }
-
-            if (responseElement.TryGetProperty("headers", out JsonElement headersElement))
-            {
-                if (TryGetHeader(headersElement, "alt-svc", out string headerValue))
-                {
-                    observation.AltSvcHeader = headerValue;
-                }
-            }
-
+            BrowserNavigationObservation observation = new BrowserNavigationObservation();
+            observation.Url = navigationPayload.Response.Url ?? String.Empty;
+            observation.StatusCode = navigationPayload.Response.Status;
+            observation.Protocol = navigationPayload.Response.Protocol ?? String.Empty;
+            observation.AltSvcHeader = GetHeaderValue(navigationPayload.Response.Headers, "alt-svc");
             return observation;
         }
 
-        private static bool TryGetHeader(JsonElement headersElement, string name, out string value)
+        private static string GetHeaderValue(Dictionary<string, string> headers, string name)
         {
-            value = String.Empty;
-
-            JsonElement.ObjectEnumerator enumerator = headersElement.EnumerateObject();
-            while (enumerator.MoveNext())
+            if (headers == null) return String.Empty;
+            if (String.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name));
+            if (headers.TryGetValue(name, out string value))
             {
-                JsonProperty property = enumerator.Current;
-                if (String.Equals(property.Name, name, StringComparison.OrdinalIgnoreCase))
-                {
-                    value = property.Value.GetString() ?? String.Empty;
-                    return true;
-                }
+                return value ?? String.Empty;
             }
 
-            return false;
+            return String.Empty;
         }
     }
 }

@@ -4,7 +4,6 @@ namespace Test.Automated
     using System.Net;
     using System.Net.Http;
     using System.Text;
-    using System.Text.Json;
     using System.Threading;
     using System.Threading.Tasks;
     using WatsonWebserver;
@@ -12,6 +11,9 @@ namespace Test.Automated
     using WatsonWebserver.Core.Health;
     using Xunit;
 
+    /// <summary>
+    /// Integration tests covering API-route behavior.
+    /// </summary>
     public class ApiRouteIntegrationTests : IAsyncLifetime
     {
         private Webserver _Server;
@@ -19,6 +21,7 @@ namespace Test.Automated
         private int _Port;
         private CancellationTokenSource _Cts;
 
+        /// <inheritdoc />
         public async Task InitializeAsync()
         {
             _Port = GetRandomPort();
@@ -29,10 +32,8 @@ namespace Test.Automated
 
             _Server = new Webserver(settings, DefaultRoute);
 
-            // Health check
             _Server.UseHealthCheck();
 
-            // Auth
             _Server.Routes.AuthenticateApiRequest = async (ctx) =>
             {
                 string auth = ctx.Request.RetrieveHeaderValue("Authorization");
@@ -52,7 +53,6 @@ namespace Test.Automated
                 };
             };
 
-            // --- Routes ---
             _Server.Get("/hello", async (req) => new { Message = "Hello" });
 
             _Server.Get("/items/{id}", async (req) =>
@@ -98,7 +98,11 @@ namespace Test.Automated
 
             _Server.Get("/null", async (req) => null);
 
-            _Server.Get("/tuple", async (req) => (new { Custom = true }, 202));
+            _Server.Get("/tuple", async (req) =>
+            {
+                req.Http.Response.StatusCode = 202;
+                return new { Custom = true };
+            });
 
             _Server.Get("/error", async (req) =>
             {
@@ -116,7 +120,6 @@ namespace Test.Automated
                 return new { Secure = true, Metadata = req.Metadata };
             }, auth: true);
 
-            // Middleware
             _Server.Middleware.Add(async (ctx, next, token) =>
             {
                 ctx.Response.Headers.Add("X-Middleware", "executed");
@@ -124,11 +127,12 @@ namespace Test.Automated
             });
 
             _Server.Start(_Cts.Token);
-            await Task.Delay(1000); // Let server start
+            await Task.Delay(1000);
 
             _Client = new HttpClient { BaseAddress = new Uri($"http://127.0.0.1:{_Port}") };
         }
 
+        /// <inheritdoc />
         public async Task DisposeAsync()
         {
             _Client?.Dispose();
@@ -137,8 +141,9 @@ namespace Test.Automated
             _Cts?.Dispose();
         }
 
-        // --- GET tests ---
-
+        /// <summary>
+        /// Verifies that a basic API route returns JSON successfully.
+        /// </summary>
         [Fact]
         public async Task Get_ReturnsJson()
         {
@@ -148,6 +153,9 @@ namespace Test.Automated
             Assert.Contains("Hello", body);
         }
 
+        /// <summary>
+        /// Verifies parameter and query extraction for API routes.
+        /// </summary>
         [Fact]
         public async Task Get_ExtractsParameters()
         {
@@ -159,8 +167,9 @@ namespace Test.Automated
             Assert.Contains("5", body);
         }
 
-        // --- POST tests ---
-
+        /// <summary>
+        /// Verifies typed request-body deserialization for POST routes.
+        /// </summary>
         [Fact]
         public async Task Post_DeserializesBody()
         {
@@ -171,6 +180,9 @@ namespace Test.Automated
             Assert.Contains("Widget", body);
         }
 
+        /// <summary>
+        /// Verifies raw body access for non-generic POST routes.
+        /// </summary>
         [Fact]
         public async Task Post_RawBody()
         {
@@ -178,11 +190,12 @@ namespace Test.Automated
             HttpResponseMessage resp = await _Client.PostAsync("/raw", content);
             Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
             string body = await resp.Content.ReadAsStringAsync();
-            Assert.Contains("13", body); // "raw data here" is 13 chars
+            Assert.Contains("13", body);
         }
 
-        // --- PUT / PATCH / DELETE ---
-
+        /// <summary>
+        /// Verifies PUT request handling.
+        /// </summary>
         [Fact]
         public async Task Put_Works()
         {
@@ -194,6 +207,9 @@ namespace Test.Automated
             Assert.Contains("Updated", body);
         }
 
+        /// <summary>
+        /// Verifies PATCH request handling.
+        /// </summary>
         [Fact]
         public async Task Patch_Works()
         {
@@ -206,6 +222,9 @@ namespace Test.Automated
             Assert.Contains("Patched", body);
         }
 
+        /// <summary>
+        /// Verifies DELETE request handling.
+        /// </summary>
         [Fact]
         public async Task Delete_Works()
         {
@@ -216,8 +235,9 @@ namespace Test.Automated
             Assert.Contains(id.ToString(), body);
         }
 
-        // --- Response type tests ---
-
+        /// <summary>
+        /// Verifies plain-text responses from string-returning routes.
+        /// </summary>
         [Fact]
         public async Task StringReturn_TextPlain()
         {
@@ -227,6 +247,9 @@ namespace Test.Automated
             Assert.Equal("plain text", body);
         }
 
+        /// <summary>
+        /// Verifies null results serialize to an empty successful response.
+        /// </summary>
         [Fact]
         public async Task NullReturn_EmptyResponse()
         {
@@ -234,8 +257,11 @@ namespace Test.Automated
             Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
         }
 
+        /// <summary>
+        /// Verifies explicit response-status changes are preserved.
+        /// </summary>
         [Fact]
-        public async Task TupleReturn_CustomStatusCode()
+        public async Task ExplicitStatusCodeReturn_CustomStatusCode()
         {
             HttpResponseMessage resp = await _Client.GetAsync("/tuple");
             string body = await resp.Content.ReadAsStringAsync();
@@ -243,8 +269,9 @@ namespace Test.Automated
             Assert.Contains("Custom", body);
         }
 
-        // --- Error handling ---
-
+        /// <summary>
+        /// Verifies webserver exceptions produce structured API errors.
+        /// </summary>
         [Fact]
         public async Task WebserverException_ReturnsStructuredError()
         {
@@ -255,17 +282,19 @@ namespace Test.Automated
             Assert.Contains("Item not found", body);
         }
 
+        /// <summary>
+        /// Verifies unmatched routes still enforce API authentication behavior.
+        /// </summary>
         [Fact]
         public async Task UnmatchedRoute_Returns401_WithAuthEnabled()
         {
-            // With structured auth enabled, unmatched pre-auth routes fall through to auth,
-            // which returns 401 for unauthenticated requests
             HttpResponseMessage resp = await _Client.GetAsync("/nonexistent");
             Assert.Equal(HttpStatusCode.Unauthorized, resp.StatusCode);
         }
 
-        // --- Timeout ---
-
+        /// <summary>
+        /// Verifies timed-out API handlers return 408.
+        /// </summary>
         [Fact]
         public async Task Timeout_Returns408()
         {
@@ -278,8 +307,9 @@ namespace Test.Automated
             }
         }
 
-        // --- Authentication ---
-
+        /// <summary>
+        /// Verifies protected routes reject requests without a bearer token.
+        /// </summary>
         [Fact]
         public async Task ProtectedRoute_Returns401_WithoutToken()
         {
@@ -287,6 +317,9 @@ namespace Test.Automated
             Assert.Equal(HttpStatusCode.Unauthorized, resp.StatusCode);
         }
 
+        /// <summary>
+        /// Verifies protected routes accept requests with a valid bearer token.
+        /// </summary>
         [Fact]
         public async Task ProtectedRoute_Returns200_WithValidToken()
         {
@@ -298,8 +331,9 @@ namespace Test.Automated
             Assert.Contains("Secure", body);
         }
 
-        // --- Middleware ---
-
+        /// <summary>
+        /// Verifies middleware can mutate outgoing response headers.
+        /// </summary>
         [Fact]
         public async Task Middleware_AddsHeader()
         {
@@ -307,8 +341,9 @@ namespace Test.Automated
             Assert.True(resp.Headers.Contains("X-Middleware"));
         }
 
-        // --- Health check ---
-
+        /// <summary>
+        /// Verifies the health-check endpoint is available.
+        /// </summary>
         [Fact]
         public async Task HealthCheck_Returns200()
         {
@@ -317,8 +352,6 @@ namespace Test.Automated
             string body = await resp.Content.ReadAsStringAsync();
             Assert.Contains("Healthy", body);
         }
-
-        // --- Helpers ---
 
         private static async Task DefaultRoute(HttpContextBase ctx)
         {
@@ -329,12 +362,12 @@ namespace Test.Automated
 
         private static int GetRandomPort()
         {
-            System.Net.Sockets.TcpListener listener = new System.Net.Sockets.TcpListener(IPAddress.Loopback, 0);
-            listener.Start();
-            int port = ((IPEndPoint)listener.LocalEndpoint).Port;
-            listener.Stop();
-            return port;
+            using (System.Net.Sockets.TcpListener listener = new System.Net.Sockets.TcpListener(IPAddress.Loopback, 0))
+            {
+                listener.Start();
+                int port = ((IPEndPoint)listener.LocalEndpoint).Port;
+                return port;
+            }
         }
     }
-
 }

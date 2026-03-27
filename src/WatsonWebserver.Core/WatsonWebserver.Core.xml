@@ -4774,7 +4774,7 @@
         <member name="T:WatsonWebserver.Core.Routing.ApiResponseProcessor">
             <summary>
             Processes the return value from an API route handler and sends the appropriate HTTP response.
-            Handles null, string, primitive, tuple, and object return types.
+            Handles null, string, primitive, and object return types.
             </summary>
         </member>
         <member name="M:WatsonWebserver.Core.Routing.ApiResponseProcessor.ProcessResultAsync(WatsonWebserver.Core.HttpContextBase,System.Object,WatsonWebserver.Core.ISerializationHelper)">
@@ -5635,6 +5635,149 @@
             Create a string representation useful for transmission.
             </summary>
             <returns>String.</returns>
+        </member>
+        <member name="T:WatsonWebserver.Core.Settings.DebugSettings">
+            <summary>
+            Debug logging settings.
+            Be sure to set Events.Logger in order to receive debug messages.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.DebugSettings.AccessControl">
+            <summary>
+            Enable or disable debug logging of access control.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.DebugSettings.Routing">
+            <summary>
+            Enable or disable debug logging of routing.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.DebugSettings.Requests">
+            <summary>
+            Enable or disable debug logging of requests.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.DebugSettings.Responses">
+            <summary>
+            Enable or disable debug logging of responses.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.Settings.DebugSettings.#ctor">
+            <summary>
+            Debug logging settings.
+            Be sure to set Events.Logger in order to receive debug messages.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.Settings.HeaderSettings">
+            <summary>
+            Header settings.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.HeaderSettings.IncludeContentLength">
+            <summary>
+            Automatically set content length if not already set.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.HeaderSettings.DefaultHeaders">
+            <summary>
+            Headers to add to each request.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.Settings.HeaderSettings.#ctor">
+            <summary>
+            Headers that will be added to every response unless previously set.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.Settings.IOSettings">
+            <summary>
+            Input-output settings.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.IOSettings.StreamBufferSize">
+            <summary>
+            Buffer size to use when interacting with streams.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.IOSettings.MaxRequests">
+            <summary>
+            Maximum number of concurrent requests.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.IOSettings.ReadTimeoutMs">
+            <summary>
+            Read timeout, in milliseconds, for inbound socket reads.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.IOSettings.MaxIncomingHeadersSize">
+            <summary>
+            Maximum incoming header size, in bytes.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.IOSettings.EnableKeepAlive">
+            <summary>
+            Flag indicating whether or not the server requests a persistent connection.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.IOSettings.MaxRequestBodySize">
+            <summary>
+            Maximum request body size in bytes.
+            A value of zero or less disables this check.
+            Default is 0 (unlimited).
+            This limit applies to Content-Length validation before reading the body.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.IOSettings.MaxHeaderCount">
+            <summary>
+            Maximum number of headers allowed in a request.
+            A value of zero or less disables this check.
+            Default is 64.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.Settings.IOSettings.#ctor">
+            <summary>
+            Input-output settings.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.Settings.SslSettings">
+            <summary>
+            SSL settings.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.SslSettings.Enable">
+            <summary>
+            Enable or disable SSL.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.SslSettings.SslCertificate">
+            <summary>
+            Certificate for SSL.
+            If not set directly, the certificate can be loaded from the configured PFX file.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.SslSettings.PfxCertificateFile">
+            <summary>
+            PFX certificate filename.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.SslSettings.PfxCertificatePassword">
+            <summary>
+            PFX certificate password.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.SslSettings.MutuallyAuthenticate">
+            <summary>
+            Require mutual authentication.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.SslSettings.AcceptInvalidAcertificates">
+            <summary>
+            Accept invalid certificates including self-signed and those that are unable to be verified.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.Settings.SslSettings.#ctor">
+            <summary>
+            SSL settings.
+            </summary>
         </member>
         <member name="T:WatsonWebserver.Core.SourceDetails">
             <summary>
@@ -6547,149 +6690,6 @@
             <param name="hostname">The hostname on which to listen.</param>
             <param name="port">The port on which to listen.</param>
             <param name="ssl">Enable or disable SSL.</param>
-        </member>
-        <member name="T:WatsonWebserver.Core.WebserverSettings.IOSettings">
-            <summary>
-            Input-output settings.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.WebserverSettings.IOSettings.StreamBufferSize">
-            <summary>
-            Buffer size to use when interacting with streams.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.WebserverSettings.IOSettings.MaxRequests">
-            <summary>
-            Maximum number of concurrent requests.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.WebserverSettings.IOSettings.ReadTimeoutMs">
-            <summary>
-            Read timeout, in milliseconds, for inbound socket reads.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.WebserverSettings.IOSettings.MaxIncomingHeadersSize">
-            <summary>
-            Maximum incoming header size, in bytes.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.WebserverSettings.IOSettings.EnableKeepAlive">
-            <summary>
-            Flag indicating whether or not the server requests a persistent connection.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.WebserverSettings.IOSettings.MaxRequestBodySize">
-            <summary>
-            Maximum request body size in bytes.
-            A value of zero or less disables this check.
-            Default is 0 (unlimited).
-            This limit applies to Content-Length validation before reading the body.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.WebserverSettings.IOSettings.MaxHeaderCount">
-            <summary>
-            Maximum number of headers allowed in a request.
-            A value of zero or less disables this check.
-            Default is 64.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.Core.WebserverSettings.IOSettings.#ctor">
-            <summary>
-            Input-output settings.
-            </summary>
-        </member>
-        <member name="T:WatsonWebserver.Core.WebserverSettings.SslSettings">
-            <summary>
-            SSL settings.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.WebserverSettings.SslSettings.Enable">
-            <summary>
-            Enable or disable SSL.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.WebserverSettings.SslSettings.SslCertificate">
-            <summary>
-            Certificate for SSL.
-            If not set directly, the certificate can be loaded from the configured PFX file.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.WebserverSettings.SslSettings.PfxCertificateFile">
-            <summary>
-            PFX certificate filename.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.WebserverSettings.SslSettings.PfxCertificatePassword">
-            <summary>
-            PFX certificate password.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.WebserverSettings.SslSettings.MutuallyAuthenticate">
-            <summary>
-            Require mutual authentication.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.WebserverSettings.SslSettings.AcceptInvalidAcertificates">
-            <summary>
-            Accept invalid certificates including self-signed and those that are unable to be verified.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.Core.WebserverSettings.SslSettings.#ctor">
-            <summary>
-            SSL settings.
-            </summary>
-        </member>
-        <member name="T:WatsonWebserver.Core.WebserverSettings.HeaderSettings">
-            <summary>
-            Header settings.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.WebserverSettings.HeaderSettings.IncludeContentLength">
-            <summary>
-            Automatically set content length if not already set.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.WebserverSettings.HeaderSettings.DefaultHeaders">
-            <summary>
-            Headers to add to each request.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.Core.WebserverSettings.HeaderSettings.#ctor">
-            <summary>
-            Headers that will be added to every response unless previously set.
-            </summary>
-        </member>
-        <member name="T:WatsonWebserver.Core.WebserverSettings.DebugSettings">
-            <summary>
-            Debug logging settings.
-            Be sure to set Events.Logger in order to receive debug messages.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.WebserverSettings.DebugSettings.AccessControl">
-            <summary>
-            Enable or disable debug logging of access control.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.WebserverSettings.DebugSettings.Routing">
-            <summary>
-            Enable or disable debug logging of routing.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.WebserverSettings.DebugSettings.Requests">
-            <summary>
-            Enable or disable debug logging of requests.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.WebserverSettings.DebugSettings.Responses">
-            <summary>
-            Enable or disable debug logging of responses.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.Core.WebserverSettings.DebugSettings.#ctor">
-            <summary>
-            Debug logging settings.
-            Be sure to set Events.Logger in order to receive debug messages.
-            </summary>
         </member>
         <member name="T:WatsonWebserver.Core.WebserverSettingsValidator">
             <summary>
