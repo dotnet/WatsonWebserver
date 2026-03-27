@@ -247,6 +247,26 @@ namespace WatsonWebserver.Http3
             return true;
         }
 
+        /// <summary>
+        /// Dispose of response resources.
+        /// </summary>
+        /// <param name="disposing">Disposing.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (_Data != null)
+                {
+                    _Data.Dispose();
+                    _Data = null;
+                }
+
+                _WriteLock.Dispose();
+            }
+
+            base.Dispose(disposing);
+        }
+
         private bool HasTrailers()
         {
             return Trailers != null && Trailers.Count > 0;

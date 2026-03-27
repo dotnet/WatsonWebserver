@@ -148,6 +148,8 @@
 
             Statistics = new WebserverStatistics();
 
+            DisposeTokenSource();
+            DisposeRequestSemaphore();
             _TokenSource = CancellationTokenSource.CreateLinkedTokenSource(token);
             _Token = token;
             _RequestSemaphore = new SemaphoreSlim(Settings.IO.MaxRequests, Settings.IO.MaxRequests);
@@ -182,6 +184,8 @@
 
             Statistics = new WebserverStatistics();
 
+            DisposeTokenSource();
+            DisposeRequestSemaphore();
             _TokenSource = CancellationTokenSource.CreateLinkedTokenSource(token);
             _Token = token;
             _RequestSemaphore = new SemaphoreSlim(Settings.IO.MaxRequests, Settings.IO.MaxRequests);
@@ -216,6 +220,8 @@
             {
                 _TokenSource.Cancel();
             }
+
+            DisposeTokenSource();
         }
 
         #endregion
@@ -252,10 +258,30 @@
                 _TcpListener = null;
                 _QuicListener = null;
                 Settings = null;
-                _TokenSource = null;
+                DisposeTokenSource();
                 _AcceptConnections = null;
                 _AcceptQuicConnections = null;
             }
+        }
+
+        private void DisposeTokenSource()
+        {
+            if (_TokenSource == null) return;
+
+            if (!_TokenSource.IsCancellationRequested)
+            {
+                _TokenSource.Cancel();
+            }
+
+            _TokenSource.Dispose();
+            _TokenSource = null;
+        }
+
+        private void DisposeRequestSemaphore()
+        {
+            if (_RequestSemaphore == null) return;
+            _RequestSemaphore.Dispose();
+            _RequestSemaphore = null;
         }
 
         private async Task StartTransportLoopsAsync()

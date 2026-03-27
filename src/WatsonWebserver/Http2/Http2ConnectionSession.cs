@@ -280,7 +280,7 @@ namespace WatsonWebserver.Http2
                     NameValueCollection trailers = ParseTrailerFields(headerBlock);
                     MergeTrailers(pendingRequest.Trailers, trailers);
                     stateMachine.ReceiveHeaders(true);
-                    RemovePendingRequest(frame.Header.StreamIdentifier);
+                    pendingRequest = TakePendingRequest(frame.Header.StreamIdentifier);
                     await DispatchRequestAsync(writer, frame.Header.StreamIdentifier, stateMachine, pendingRequest, token).ConfigureAwait(false);
                     return;
                 }
@@ -343,7 +343,7 @@ namespace WatsonWebserver.Http2
 
                 if (endStream)
                 {
-                    RemovePendingRequest(frame.Header.StreamIdentifier);
+                    pendingRequest = TakePendingRequest(frame.Header.StreamIdentifier);
                     await DispatchRequestAsync(writer, frame.Header.StreamIdentifier, stateMachine, pendingRequest, token).ConfigureAwait(false);
                 }
             }
@@ -642,7 +642,7 @@ namespace WatsonWebserver.Http2
         {
             if (pendingRequest == null) throw new ArgumentNullException(nameof(pendingRequest));
 
-            MemoryStream body = pendingRequest.BodyOrNull;
+            MemoryStream body = pendingRequest.DetachBodyStream();
             Stream bodyStream = body != null ? (Stream)body : Stream.Null;
             long bodyLength = body != null ? body.Length : 0;
             if (body != null && body.CanSeek)
@@ -934,15 +934,34 @@ namespace WatsonWebserver.Http2
             }
         }
 
-        private void RemovePendingRequest(int streamIdentifier)
+        private Http2PendingRequest TakePendingRequest(int streamIdentifier)
         {
+            Http2PendingRequest pendingRequest = null;
+
             lock (_SessionLock)
             {
-                if (_PendingRequests.ContainsKey(streamIdentifier))
+                if (_PendingRequests.TryGetValue(streamIdentifier, out pendingRequest))
                 {
                     _PendingRequests.Remove(streamIdentifier);
                 }
             }
+
+            return pendingRequest;
+        }
+
+        private void RemovePendingRequest(int streamIdentifier)
+        {
+            Http2PendingRequest pendingRequest = null;
+
+            lock (_SessionLock)
+            {
+                if (_PendingRequests.TryGetValue(streamIdentifier, out pendingRequest))
+                {
+                    _PendingRequests.Remove(streamIdentifier);
+                }
+            }
+
+            pendingRequest?.ReleaseResources();
         }
 
         private NameValueCollection ParseTrailerFields(byte[] headerBlockFragment)

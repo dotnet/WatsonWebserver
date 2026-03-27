@@ -12,8 +12,6 @@ namespace Test.RestApi
 
     internal static class Program
     {
-#pragma warning disable CS1998
-
         private static string _Hostname = "127.0.0.1";
         private static int _Port = 8080;
         private static ConcurrentDictionary<Guid, Product> _Products = new ConcurrentDictionary<Guid, Product>();
@@ -28,10 +26,8 @@ namespace Test.RestApi
             ConfigureServer(server);
             WriteStartupBanner();
 
-            server.Start();
+            await server.StartAsync();
             Console.ReadLine();
-
-#pragma warning restore CS1998
         }
 
         private static WebserverSettings CreateSettings()

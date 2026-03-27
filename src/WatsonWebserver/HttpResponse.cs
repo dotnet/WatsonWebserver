@@ -110,6 +110,8 @@
         private bool _DirectRequestBodyPassthrough = false;
         private static readonly ConcurrentDictionary<string, byte[]> _SimpleHeaderTemplateCache = new ConcurrentDictionary<string, byte[]>();
         private static readonly ConcurrentDictionary<string, byte[]> _StatusLineCache = new ConcurrentDictionary<string, byte[]>();
+        private static readonly object _SimpleHeaderTemplateCacheSync = new object();
+        private static readonly object _StatusLineCacheSync = new object();
         private static readonly byte[] _ColonSpaceBytes = Encoding.ASCII.GetBytes(": ");
         private static readonly byte[] _CrlfBytes = Encoding.ASCII.GetBytes("\r\n");
         private static readonly byte[] _ChunkedTransferEncodingBytes = Encoding.ASCII.GetBytes("chunked");
@@ -124,6 +126,8 @@
         private static long _CachedDateHeaderSecond = -1;
         private static string _CachedDateHeaderValue = null;
         private static byte[] _CachedDateHeaderBytes = null;
+        private const int SimpleHeaderTemplateCacheLimit = 256;
+        private const int StatusLineCacheLimit = 64;
         private const int SmallResponseFirstWriteLimit = 16 * 1024;
 
         #endregion
@@ -767,6 +771,12 @@
             int statusCode = StatusCode;
             string contentType = ContentType ?? String.Empty;
             string cacheKey = protocolVersion + "|" + statusCode.ToString() + "|" + contentType;
+            if (_SimpleHeaderTemplateCache.TryGetValue(cacheKey, out byte[] cachedTemplatePrefix))
+            {
+                return cachedTemplatePrefix;
+            }
+
+            TrimBoundedCache(_SimpleHeaderTemplateCache, _SimpleHeaderTemplateCacheSync, SimpleHeaderTemplateCacheLimit);
             return _SimpleHeaderTemplateCache.GetOrAdd(cacheKey, key =>
             {
                 ArrayBufferWriter<byte> writer = new ArrayBufferWriter<byte>(128);
@@ -784,6 +794,12 @@
         private byte[] GetStatusLineBytes(string protocolVersion, int statusCode)
         {
             string cacheKey = (protocolVersion ?? String.Empty) + "|" + statusCode.ToString();
+            if (_StatusLineCache.TryGetValue(cacheKey, out byte[] cachedStatusLine))
+            {
+                return cachedStatusLine;
+            }
+
+            TrimBoundedCache(_StatusLineCache, _StatusLineCacheSync, StatusLineCacheLimit);
             return _StatusLineCache.GetOrAdd(cacheKey, key =>
             {
                 string[] parts = key.Split('|');
@@ -799,6 +815,22 @@
                 WriteCrlf(writer);
                 return writer.WrittenMemory.ToArray();
             });
+        }
+
+        private static void TrimBoundedCache(ConcurrentDictionary<string, byte[]> cache, object sync, int limit)
+        {
+            if (cache == null) throw new ArgumentNullException(nameof(cache));
+            if (sync == null) throw new ArgumentNullException(nameof(sync));
+            if (limit < 1) throw new ArgumentOutOfRangeException(nameof(limit));
+            if (cache.Count < limit) return;
+
+            lock (sync)
+            {
+                if (cache.Count >= limit)
+                {
+                    cache.Clear();
+                }
+            }
         }
 
         private static string GetStatusDescriptionStatic(int statusCode)

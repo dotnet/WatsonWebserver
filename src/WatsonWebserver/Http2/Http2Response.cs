@@ -270,6 +270,24 @@ namespace WatsonWebserver.Http2
             return true;
         }
 
+        /// <summary>
+        /// Dispose of response resources.
+        /// </summary>
+        /// <param name="disposing">Disposing.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (_Data != null)
+                {
+                    _Data.Dispose();
+                    _Data = null;
+                }
+            }
+
+            base.Dispose(disposing);
+        }
+
         #endregion
 
         #region Private-Methods

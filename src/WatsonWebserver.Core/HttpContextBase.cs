@@ -228,6 +228,32 @@
             {
                 if (disposing)
                 {
+                    if (Response != null)
+                    {
+                        try
+                        {
+                            Response.Dispose();
+                        }
+                        catch
+                        {
+                        }
+
+                        Response = null;
+                    }
+
+                    if (Request != null)
+                    {
+                        try
+                        {
+                            Request.Dispose();
+                        }
+                        catch
+                        {
+                        }
+
+                        Request = null;
+                    }
+
                     if (_TokenSource != null)
                     {
                         _TokenSource.Cancel();

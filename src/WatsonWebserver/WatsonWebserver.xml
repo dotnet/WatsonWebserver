@@ -380,6 +380,12 @@
         <member name="M:WatsonWebserver.Http2.Http2Response.SendEvent(WatsonWebserver.Core.ServerSentEvent,System.Boolean,System.Threading.CancellationToken)">
             <inheritdoc />
         </member>
+        <member name="M:WatsonWebserver.Http2.Http2Response.Dispose(System.Boolean)">
+            <summary>
+            Dispose of response resources.
+            </summary>
+            <param name="disposing">Disposing.</param>
+        </member>
         <member name="T:WatsonWebserver.Http3.Http3ConnectionSession">
             <summary>
             Minimal HTTP/3 server connection session.
@@ -525,6 +531,12 @@
         </member>
         <member name="M:WatsonWebserver.Http3.Http3Response.SendEvent(WatsonWebserver.Core.ServerSentEvent,System.Boolean,System.Threading.CancellationToken)">
             <inheritdoc />
+        </member>
+        <member name="M:WatsonWebserver.Http3.Http3Response.Dispose(System.Boolean)">
+            <summary>
+            Dispose of response resources.
+            </summary>
+            <param name="disposing">Disposing.</param>
         </member>
         <member name="T:WatsonWebserver.HttpContext">
             <summary>

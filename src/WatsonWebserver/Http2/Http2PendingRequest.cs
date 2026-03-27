@@ -8,7 +8,7 @@ namespace WatsonWebserver.Http2
     /// <summary>
     /// Pending HTTP/2 request state awaiting END_STREAM.
     /// </summary>
-    internal class Http2PendingRequest
+    internal class Http2PendingRequest : IDisposable
     {
         /// <summary>
         /// Parsed request method.
@@ -165,6 +165,32 @@ namespace WatsonWebserver.Http2
                 if (_ExactBodyBuffer != null) return _ExactBodyBytesWritten;
                 return _Body != null ? _Body.Length : 0;
             }
+        }
+
+        internal MemoryStream DetachBodyStream()
+        {
+            MemoryStream body = BodyOrNull;
+            _Body = null;
+            _ExactBodyBuffer = null;
+            _ExactBodyBytesWritten = 0;
+            return body;
+        }
+
+        internal void ReleaseResources()
+        {
+            if (_Body != null)
+            {
+                _Body.Dispose();
+                _Body = null;
+            }
+
+            _ExactBodyBuffer = null;
+            _ExactBodyBytesWritten = 0;
+        }
+
+        public void Dispose()
+        {
+            ReleaseResources();
         }
 
         internal void InitializeExactBodyBuffer(int contentLength)

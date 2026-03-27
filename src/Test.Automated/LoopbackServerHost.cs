@@ -1,6 +1,7 @@
 namespace Test.Automated
 {
     using System;
+    using System.Collections.Generic;
     using System.Net;
     using System.Net.Sockets;
     using System.Security.Cryptography.X509Certificates;
@@ -13,6 +14,8 @@ namespace Test.Automated
     /// </summary>
     internal class LoopbackServerHost : IDisposable
     {
+        private static readonly object _PortSync = new object();
+        private static readonly HashSet<int> _ReservedPorts = new HashSet<int>();
         private readonly int _Port;
         private readonly X509Certificate2 _Certificate;
         private readonly Webserver _Server;
@@ -90,6 +93,8 @@ namespace Test.Automated
             {
                 _Certificate.Dispose();
             }
+
+            ReleasePort(_Port);
         }
 
         private static Task DefaultRouteAsync(HttpContextBase context)
@@ -100,10 +105,34 @@ namespace Test.Automated
 
         private static int GetAvailablePort()
         {
-            using (TcpListener listener = new TcpListener(IPAddress.Loopback, 0))
+            while (true)
             {
-                listener.Start();
-                return ((IPEndPoint)listener.LocalEndpoint).Port;
+                using (TcpListener listener = new TcpListener(IPAddress.Loopback, 0))
+                {
+                    listener.Start();
+                    int port = ((IPEndPoint)listener.LocalEndpoint).Port;
+
+                    lock (_PortSync)
+                    {
+                        if (_ReservedPorts.Contains(port))
+                        {
+                            continue;
+                        }
+
+                        _ReservedPorts.Add(port);
+                        return port;
+                    }
+                }
+            }
+        }
+
+        private static void ReleasePort(int port)
+        {
+            if (port < 1) return;
+
+            lock (_PortSync)
+            {
+                _ReservedPorts.Remove(port);
             }
         }
     }
