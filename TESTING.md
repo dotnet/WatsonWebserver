@@ -27,7 +27,7 @@ Behavior:
 
 ## Test.XUnit
 
-`Test.XUnit` mirrors the same coverage surface as `Test.Automated`, but it consumes a shared serialized results artifact instead of re-implementing the test logic independently.
+`Test.XUnit` is the CI-oriented xUnit runner. It shares reusable logic through `Test.Shared` and does not invoke `Test.Automated`.
 
 The stable execution flow is:
 
@@ -38,8 +38,7 @@ powershell -ExecutionPolicy Bypass -File src\Test.XUnit\Run-Test.XUnit.ps1
 That script performs these steps:
 
 1. Builds `src/Test.XUnit/Test.XUnit.csproj`
-2. Generates `src/Test.XUnit/bin/Debug/net10.0/shared-automated-results.json` using the shared automated runner
-3. Executes `dotnet test --no-build`
+2. Executes `dotnet test --no-build`
 
 ## Test.Benchmark
 
@@ -75,19 +74,6 @@ Notes:
 ### `src/Test.XUnit/Run-Test.XUnit.ps1`
 
 Wrapper for the full stable xUnit flow.
-
-### `src/Test.XUnit/RunSharedAutomatedResults.ps1`
-
-Generates the shared `shared-automated-results.json` artifact consumed by `Test.XUnit`.
-
-Example:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File src\Test.XUnit\RunSharedAutomatedResults.ps1 `
-  -AutomatedExecutablePath "C:\Code\Dotnet\WatsonWebserver-7.0\src\Test.Automated\bin\Debug\net10.0\Test.Automated.exe" `
-  -WorkingDirectory "C:\Code\Dotnet\WatsonWebserver-7.0\src\Test.Automated\bin\Debug\net10.0\." `
-  -ResultsPath "C:\Code\Dotnet\WatsonWebserver-7.0\src\Test.XUnit\bin\Debug\net10.0\shared-automated-results.json"
-```
 
 ## Recommended Usage
 

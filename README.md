@@ -890,7 +890,7 @@ Refer to `src/Test.Docker` and its companion documentation.
 Automated validation is covered by:
 
 - `src/Test.Automated`: integration tests with real HTTP requests against a running server
-- `src/Test.XUnit`: unit tests for core types (RequestParameters, MiddlewarePipeline, AuthResult, etc.)
+- `src/Test.XUnit`: CI-oriented test runner that executes shared test logic from `Test.Shared` without invoking `Test.Automated`
 - `src/Test.RestApi`: interactive server demonstrating all API route features (run and test manually with curl/Postman)
 - `src/Test.Benchmark`: benchmark harness for cross-target and cross-protocol performance comparisons
 
