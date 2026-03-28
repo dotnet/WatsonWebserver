@@ -25,6 +25,7 @@ Before submitting a PR, please run the relevant automated validation.
 
 - Primary automated suite: `dotnet run --project src\Test.Automated\Test.Automated.csproj`
 - Mirrored xUnit validation: `powershell -ExecutionPolicy Bypass -File src\Test.XUnit\Run-Test.XUnit.ps1`
+- Detailed xUnit console output: `dotnet test src\Test.XUnit\Test.XUnit.csproj --no-build -c Debug -f net10.0 --logger "console;verbosity=detailed"`
 
 If your change affects request parsing, routing, protocol behavior, or response serialization, run both.
 

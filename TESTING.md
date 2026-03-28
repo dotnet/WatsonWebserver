@@ -40,6 +40,18 @@ That script performs these steps:
 1. Builds `src/Test.XUnit/Test.XUnit.csproj`
 2. Executes `dotnet test --no-build`
 
+If you want console output that shows each xUnit test with its pass/fail result and runtime, run:
+
+```powershell
+dotnet test src\Test.XUnit\Test.XUnit.csproj --no-build -c Debug -f net10.0 --logger "console;verbosity=detailed"
+```
+
+Notes:
+
+- `verbosity=detailed` is what causes per-test output to appear
+- `--no-build` keeps the console output focused on test execution if the project is already built
+- omit `--no-build` if you want `dotnet test` to build first
+
 ## Test.Benchmark
 
 `Test.Benchmark` is the performance harness used to compare Watson 7 against Watson 6, WatsonLite6, and Kestrel across supported protocols and scenarios.
@@ -87,6 +99,12 @@ For CI-style xUnit validation in this repository:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File src\Test.XUnit\Run-Test.XUnit.ps1
+```
+
+For local xUnit runs where you want to see each test result and elapsed time:
+
+```powershell
+dotnet test src\Test.XUnit\Test.XUnit.csproj --no-build -c Debug -f net10.0 --logger "console;verbosity=detailed"
 ```
 
 For local performance validation:

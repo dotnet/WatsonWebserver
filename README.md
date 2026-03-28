@@ -904,6 +904,12 @@ dotnet run --project src\Test.Automated\Test.Automated.csproj
 powershell -ExecutionPolicy Bypass -File src\Test.XUnit\Run-Test.XUnit.ps1
 ```
 
+To see each xUnit test with pass/fail status and runtime in the console:
+
+```powershell
+dotnet test src\Test.XUnit\Test.XUnit.csproj --no-build -c Debug -f net10.0 --logger "console;verbosity=detailed"
+```
+
 For more detail, refer to [TESTING.md](TESTING.md).
 
 ## Special Thanks
