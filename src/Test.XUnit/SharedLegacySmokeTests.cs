@@ -30,6 +30,16 @@ namespace Test.XUnit
         }
 
         /// <summary>
+        /// Verify a basic HTTP/1.1 POST body can be read and echoed by the route.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11BodyEchoRequest()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11BodyEchoAsync();
+        }
+
+        /// <summary>
         /// Verify a basic HTTP/1.1 DELETE request succeeds against a low-level route.
         /// </summary>
         /// <returns>Task.</returns>
