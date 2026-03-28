@@ -210,6 +210,56 @@ namespace Test.XUnit
         }
 
         /// <summary>
+        /// Verify a route that attempts to send twice still returns the first response without crashing the server.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11DoubleSendResponseHandling()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11DoubleSendResponseAsync();
+        }
+
+        /// <summary>
+        /// Verify an exception thrown from a route handler produces an HTTP 500 response.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11ExceptionInRouteHandlerReturns500()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11ExceptionInRouteHandlerAsync();
+        }
+
+        /// <summary>
+        /// Verify an empty HTTP/1.1 POST body is handled without failing.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11EmptyPostBody()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11EmptyPostBodyAsync();
+        }
+
+        /// <summary>
+        /// Verify an HTTP/1.1 OPTIONS preflight request succeeds and emits CORS headers.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11OptionsPreflight()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11OptionsPreflightAsync();
+        }
+
+        /// <summary>
+        /// Verify a request with many headers is handled and echoed correctly.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11RequestWithManyHeaders()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11RequestWithManyHeadersAsync();
+        }
+
+        /// <summary>
         /// Verify an unmatched HTTP/1.1 route returns the default 404 response.
         /// </summary>
         /// <returns>Task.</returns>

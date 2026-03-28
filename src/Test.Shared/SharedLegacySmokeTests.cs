@@ -545,6 +545,135 @@ namespace Test.Shared
             }
         }
 
+        /// <summary>
+        /// Verify a route that attempts to send twice still returns the first response without crashing the server.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11DoubleSendResponseAsync()
+        {
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, ConfigureBasicRoutes))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                {
+                    HttpResponseMessage response = await client.GetAsync(new Uri(host.BaseAddress, "/test/double-send")).ConfigureAwait(false);
+                    string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                    if (!response.IsSuccessStatusCode || !String.Equals(body, "First response", StringComparison.Ordinal))
+                    {
+                        throw new InvalidOperationException("Unexpected HTTP/1.1 double-send response behavior.");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Verify an exception thrown from a route handler produces an HTTP 500 response.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11ExceptionInRouteHandlerAsync()
+        {
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, ConfigureBasicRoutes))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                {
+                    HttpResponseMessage response = await client.GetAsync(new Uri(host.BaseAddress, "/error/test")).ConfigureAwait(false);
+
+                    if (response.StatusCode != System.Net.HttpStatusCode.InternalServerError)
+                    {
+                        throw new InvalidOperationException("Expected HTTP/1.1 exception route to return 500.");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Verify an empty HTTP/1.1 POST body is handled without failing.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11EmptyPostBodyAsync()
+        {
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, ConfigureBasicRoutes))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                using (ByteArrayContent content = new ByteArrayContent(Array.Empty<byte>()))
+                {
+                    HttpResponseMessage response = await client.PostAsync(new Uri(host.BaseAddress, "/test/echo"), content).ConfigureAwait(false);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        throw new InvalidOperationException("Expected HTTP/1.1 empty POST body to succeed.");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Verify an HTTP/1.1 OPTIONS preflight request succeeds and emits CORS headers.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11OptionsPreflightAsync()
+        {
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, ConfigureBasicRoutes))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                using (HttpRequestMessage request = new HttpRequestMessage(new System.Net.Http.HttpMethod("OPTIONS"), new Uri(host.BaseAddress, "/hello")))
+                {
+                    HttpResponseMessage response = await client.SendAsync(request).ConfigureAwait(false);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        throw new InvalidOperationException("Expected HTTP/1.1 OPTIONS preflight request to succeed.");
+                    }
+
+                    if (!response.Headers.Contains("Access-Control-Allow-Origin")
+                        || !response.Headers.Contains("Access-Control-Allow-Methods")
+                        || !response.Headers.Contains("Access-Control-Allow-Headers"))
+                    {
+                        throw new InvalidOperationException("Expected HTTP/1.1 OPTIONS preflight response to include CORS headers.");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Verify a request with many headers is handled and echoed correctly.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11RequestWithManyHeadersAsync()
+        {
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, ConfigureBasicRoutes))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                using (HttpRequestMessage request = new HttpRequestMessage(System.Net.Http.HttpMethod.Get, new Uri(host.BaseAddress, "/test/header-echo")))
+                {
+                    for (int i = 0; i < 50; i++)
+                    {
+                        request.Headers.TryAddWithoutValidation("X-Custom-Header-" + i.ToString(), "value-" + i.ToString());
+                    }
+
+                    HttpResponseMessage response = await client.SendAsync(request).ConfigureAwait(false);
+                    string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                    if (!response.IsSuccessStatusCode
+                        || !body.Contains("X-Custom-Header-0: value-0", StringComparison.Ordinal)
+                        || !body.Contains("X-Custom-Header-49: value-49", StringComparison.Ordinal))
+                    {
+                        throw new InvalidOperationException("Unexpected HTTP/1.1 many-headers response behavior.");
+                    }
+                }
+            }
+        }
+
         private static void ConfigureBasicRoutes(Webserver server)
         {
             if (server == null) throw new ArgumentNullException(nameof(server));
@@ -610,6 +739,13 @@ namespace Test.Shared
                 context.Response.StatusCode = 200;
                 context.Response.ContentType = "text/plain";
                 await context.Response.Send("Static route response", context.Token).ConfigureAwait(false);
+            });
+
+            server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.GET, "/hello", async (HttpContextBase context) =>
+            {
+                context.Response.StatusCode = 200;
+                context.Response.ContentType = "text/plain";
+                await context.Response.Send("Hello world", context.Token).ConfigureAwait(false);
             });
 
             server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.GET, "/test/header-echo", async (HttpContextBase context) =>
@@ -727,6 +863,33 @@ namespace Test.Shared
                 finalEvent.Data = "done";
                 await context.Response.SendEvent(finalEvent, true, context.Token).ConfigureAwait(false);
             });
+
+            server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.GET, "/test/double-send", async (HttpContextBase context) =>
+            {
+                await context.Response.Send("First response", context.Token).ConfigureAwait(false);
+
+                try
+                {
+                    await context.Response.Send("Second response", context.Token).ConfigureAwait(false);
+                }
+                catch (Exception)
+                {
+                }
+            });
+
+            server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.GET, "/error/test", async (HttpContextBase context) =>
+            {
+                throw new Exception("Test exception");
+            });
+
+            server.Routes.Preflight = async (HttpContextBase context) =>
+            {
+                context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+                context.Response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+                context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
+                context.Response.StatusCode = 200;
+                await context.Response.Send(String.Empty, context.Token).ConfigureAwait(false);
+            };
         }
 
         private static HttpClient CreateHttpClient(Version version)

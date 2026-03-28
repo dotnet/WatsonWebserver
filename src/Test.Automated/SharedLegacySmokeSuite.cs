@@ -40,6 +40,11 @@ namespace Test.Automated
             await ExecuteTestAsync("HTTP/1.1 data preservation hello CRLF", SharedLegacySmokeTests.TestHttp11DataPreservationHelloCrLfAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 server-sent events", SharedLegacySmokeTests.TestHttp11ServerSentEventsAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 server-sent events edge cases", SharedLegacySmokeTests.TestHttp11ServerSentEventsEdgeCasesAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 double-send response handling", SharedLegacySmokeTests.TestHttp11DoubleSendResponseAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 exception in route handler returns 500", SharedLegacySmokeTests.TestHttp11ExceptionInRouteHandlerAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 empty POST body", SharedLegacySmokeTests.TestHttp11EmptyPostBodyAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 OPTIONS preflight", SharedLegacySmokeTests.TestHttp11OptionsPreflightAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 request with many headers", SharedLegacySmokeTests.TestHttp11RequestWithManyHeadersAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 unmatched route returns 404", SharedLegacySmokeTests.TestHttp11NotFoundRouteAsync).ConfigureAwait(false);
             return _Results.ToArray();
         }
