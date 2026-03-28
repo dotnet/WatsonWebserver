@@ -1,4 +1,4 @@
-namespace Test.Automated
+namespace Test.Shared
 {
     using System;
 

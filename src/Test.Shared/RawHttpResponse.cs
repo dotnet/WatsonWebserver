@@ -1,11 +1,11 @@
-namespace Test.Automated
+namespace Test.Shared
 {
     using System.Collections.Specialized;
 
     /// <summary>
     /// Minimal parsed HTTP/1.x response.
     /// </summary>
-    internal class RawHttpResponse
+    public class RawHttpResponse
     {
         /// <summary>
         /// Status line.

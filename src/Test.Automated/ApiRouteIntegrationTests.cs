@@ -6,6 +6,7 @@ namespace Test.Automated
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
+    using Test.Shared;
     using WatsonWebserver;
     using WatsonWebserver.Core;
     using WatsonWebserver.Core.Health;

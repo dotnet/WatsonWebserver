@@ -9,6 +9,7 @@ namespace Test.Automated
     using System.Text;
     using System.Text.Json;
     using System.Threading.Tasks;
+    using Test.Shared;
     using WatsonWebserver;
     using WatsonWebserver.Core;
     using WatsonWebserver.Core.Routing;
