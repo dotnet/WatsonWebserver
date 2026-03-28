@@ -100,6 +100,76 @@ namespace Test.XUnit
         }
 
         /// <summary>
+        /// Verify a chunked HTTP/1.1 response delivers all chunks and advertises chunked transfer encoding.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11ChunkedTransferResponse()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11ChunkedTransferEncodingAsync();
+        }
+
+        /// <summary>
+        /// Verify chunked edge-case responses succeed.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11ChunkedEdgeCaseResponse()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11ChunkedEdgeCasesAsync();
+        }
+
+        /// <summary>
+        /// Verify a chunked HTTP/1.1 request body is read correctly through <c>DataAsBytes</c>.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11ChunkedRequestBodyViaDataAsBytes()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11ChunkedRequestBodyDataAsBytesAsync();
+        }
+
+        /// <summary>
+        /// Verify a chunked HTTP/1.1 request body is read correctly through <c>DataAsString</c>.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11ChunkedRequestBodyViaDataAsString()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11ChunkedRequestBodyDataAsStringAsync();
+        }
+
+        /// <summary>
+        /// Verify a chunked HTTP/1.1 request body is read correctly through <c>ReadBodyAsync</c>.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11ChunkedRequestBodyViaReadBodyAsync()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11ChunkedRequestBodyReadBodyAsync();
+        }
+
+        /// <summary>
+        /// Verify a chunked HTTP/1.1 request body is read correctly through manual chunk reads.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11ChunkedRequestBodyViaManualChunkRead()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11ChunkedRequestBodyManualReadChunkAsync();
+        }
+
+        /// <summary>
+        /// Verify a large binary chunked HTTP/1.1 request body round-trips successfully.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11LargeChunkedRequestBody()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11LargeChunkedRequestBodyAsync();
+        }
+
+        /// <summary>
         /// Verify an unmatched HTTP/1.1 route returns the default 404 response.
         /// </summary>
         /// <returns>Task.</returns>

@@ -307,6 +307,155 @@ namespace Test.Shared
             }
         }
 
+        /// <summary>
+        /// Verify a chunked HTTP/1.1 response delivers all chunks and advertises chunked transfer encoding.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11ChunkedTransferEncodingAsync()
+        {
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, ConfigureBasicRoutes))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                {
+                    client.Timeout = TimeSpan.FromSeconds(30);
+
+                    HttpResponseMessage response = await client.GetAsync(new Uri(host.BaseAddress, "/test/chunked")).ConfigureAwait(false);
+                    string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        throw new InvalidOperationException("Expected HTTP/1.1 chunked transfer response to succeed.");
+                    }
+
+                    for (int i = 1; i <= 5; i++)
+                    {
+                        if (!body.Contains("Chunk " + i.ToString(), StringComparison.Ordinal))
+                        {
+                            throw new InvalidOperationException("Missing expected chunk content in HTTP/1.1 chunked response.");
+                        }
+                    }
+
+                    if (response.Headers.TransferEncodingChunked != true)
+                    {
+                        throw new InvalidOperationException("Expected HTTP/1.1 chunked response header to advertise chunked transfer encoding.");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Verify chunked edge-case responses succeed.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11ChunkedEdgeCasesAsync()
+        {
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, ConfigureBasicRoutes))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                {
+                    HttpResponseMessage response = await client.GetAsync(new Uri(host.BaseAddress, "/test/chunked-edge")).ConfigureAwait(false);
+                    string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        throw new InvalidOperationException("Expected HTTP/1.1 chunked edge-case response to succeed.");
+                    }
+
+                    if (!body.Contains("single-byte", StringComparison.Ordinal)
+                        || !body.Contains("large-chunk", StringComparison.Ordinal))
+                    {
+                        throw new InvalidOperationException("Unexpected HTTP/1.1 chunked edge-case response body.");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Verify a chunked HTTP/1.1 request body is read correctly through <c>DataAsBytes</c>.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11ChunkedRequestBodyDataAsBytesAsync()
+        {
+            await TestChunkedRequestBodyAsync("/test/chunked-echo", "Hello, chunked world!", "text/plain").ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Verify a chunked HTTP/1.1 request body is read correctly through <c>DataAsString</c>.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11ChunkedRequestBodyDataAsStringAsync()
+        {
+            await TestChunkedRequestBodyAsync("/test/chunked-echo-string", "Hello, chunked string!", "text/plain").ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Verify a chunked HTTP/1.1 request body is read correctly through <c>ReadBodyAsync</c>.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11ChunkedRequestBodyReadBodyAsync()
+        {
+            await TestChunkedRequestBodyAsync("/test/chunked-echo-async", "Hello, async chunked!", "text/plain").ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Verify a chunked HTTP/1.1 request body is read correctly through manual chunk reads.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11ChunkedRequestBodyManualReadChunkAsync()
+        {
+            await TestChunkedRequestBodyAsync("/test/chunked-manual", "Hello, manual chunks!", "text/plain").ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Verify a large binary chunked HTTP/1.1 request body round-trips successfully.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11LargeChunkedRequestBodyAsync()
+        {
+            byte[] body = new byte[65536 + 1024];
+            Random random = new Random(42);
+            random.NextBytes(body);
+
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, ConfigureBasicRoutes))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                using (HttpRequestMessage request = new HttpRequestMessage(System.Net.Http.HttpMethod.Post, new Uri(host.BaseAddress, "/test/chunked-echo")))
+                {
+                    client.Timeout = TimeSpan.FromSeconds(30);
+                    request.Content = new StreamContent(new System.IO.MemoryStream(body));
+                    request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
+                    request.Headers.TransferEncodingChunked = true;
+
+                    HttpResponseMessage response = await client.SendAsync(request).ConfigureAwait(false);
+                    byte[] echoed = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        throw new InvalidOperationException("Expected HTTP/1.1 large chunked request body to succeed.");
+                    }
+
+                    if (echoed.Length != body.Length)
+                    {
+                        throw new InvalidOperationException("Unexpected HTTP/1.1 large chunked request body length.");
+                    }
+
+                    for (int i = 0; i < body.Length; i++)
+                    {
+                        if (echoed[i] != body[i])
+                        {
+                            throw new InvalidOperationException("Unexpected HTTP/1.1 large chunked request body content.");
+                        }
+                    }
+                }
+            }
+        }
+
         private static void ConfigureBasicRoutes(Webserver server)
         {
             if (server == null) throw new ArgumentNullException(nameof(server));
@@ -391,6 +540,60 @@ namespace Test.Shared
                 context.Response.ContentType = "text/plain";
                 await context.Response.Send(builder.ToString(), context.Token).ConfigureAwait(false);
             });
+
+            server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.POST, "/test/chunked-echo", async (HttpContextBase context) =>
+            {
+                context.Response.StatusCode = 200;
+                context.Response.ContentType = "application/octet-stream";
+                await context.Response.Send(context.Request.DataAsBytes, context.Token).ConfigureAwait(false);
+            });
+
+            server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.POST, "/test/chunked-echo-string", async (HttpContextBase context) =>
+            {
+                context.Response.StatusCode = 200;
+                context.Response.ContentType = "text/plain";
+                await context.Response.Send(context.Request.DataAsString, context.Token).ConfigureAwait(false);
+            });
+
+            server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.POST, "/test/chunked-echo-async", async (HttpContextBase context) =>
+            {
+                byte[] body = await context.Request.ReadBodyAsync(context.Token).ConfigureAwait(false);
+                context.Response.StatusCode = 200;
+                context.Response.ContentType = "text/plain";
+                await context.Response.Send(Encoding.UTF8.GetString(body), context.Token).ConfigureAwait(false);
+            });
+
+            server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.POST, "/test/chunked-manual", async (HttpContextBase context) =>
+            {
+                byte[] body = await context.Request.ReadBodyAsync(context.Token).ConfigureAwait(false);
+                context.Response.StatusCode = 200;
+                context.Response.ContentType = "text/plain";
+                await context.Response.Send(Encoding.UTF8.GetString(body), context.Token).ConfigureAwait(false);
+            });
+
+            server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.GET, "/test/chunked", async (HttpContextBase context) =>
+            {
+                context.Response.StatusCode = 200;
+                context.Response.ContentType = "text/plain";
+                context.Response.ChunkedTransfer = true;
+
+                for (int i = 1; i <= 5; i++)
+                {
+                    byte[] chunk = Encoding.UTF8.GetBytes("Chunk " + i.ToString() + "\n");
+                    bool isFinal = i == 5;
+                    await context.Response.SendChunk(chunk, isFinal, context.Token).ConfigureAwait(false);
+                }
+            });
+
+            server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.GET, "/test/chunked-edge", async (HttpContextBase context) =>
+            {
+                context.Response.StatusCode = 200;
+                context.Response.ContentType = "text/plain";
+                context.Response.ChunkedTransfer = true;
+                await context.Response.SendChunk(Array.Empty<byte>(), false, context.Token).ConfigureAwait(false);
+                await context.Response.SendChunk(Encoding.UTF8.GetBytes("single-byte\n"), false, context.Token).ConfigureAwait(false);
+                await context.Response.SendChunk(Encoding.UTF8.GetBytes(new string('x', 1024) + "\nlarge-chunk"), true, context.Token).ConfigureAwait(false);
+            });
         }
 
         private static HttpClient CreateHttpClient(Version version)
@@ -404,6 +607,39 @@ namespace Test.Shared
             client.DefaultRequestVersion = version;
             client.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionExact;
             return client;
+        }
+
+        private static async Task TestChunkedRequestBodyAsync(string relativePath, string body, string contentType)
+        {
+            if (String.IsNullOrEmpty(relativePath)) throw new ArgumentNullException(nameof(relativePath));
+            if (body == null) throw new ArgumentNullException(nameof(body));
+            if (String.IsNullOrEmpty(contentType)) throw new ArgumentNullException(nameof(contentType));
+
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, ConfigureBasicRoutes))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                using (HttpRequestMessage request = new HttpRequestMessage(System.Net.Http.HttpMethod.Post, new Uri(host.BaseAddress, relativePath)))
+                {
+                    request.Content = new StreamContent(new System.IO.MemoryStream(Encoding.UTF8.GetBytes(body)));
+                    request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
+                    request.Headers.TransferEncodingChunked = true;
+
+                    HttpResponseMessage response = await client.SendAsync(request).ConfigureAwait(false);
+                    string echoed = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        throw new InvalidOperationException("Expected HTTP/1.1 chunked request body to succeed.");
+                    }
+
+                    if (!String.Equals(echoed, body, StringComparison.Ordinal))
+                    {
+                        throw new InvalidOperationException("Unexpected HTTP/1.1 chunked request body response.");
+                    }
+                }
+            }
         }
     }
 }
