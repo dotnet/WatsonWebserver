@@ -21,11 +21,13 @@ namespace Test.Automated
             LegacyCoverageSuite legacyCoverageSuite = new LegacyCoverageSuite();
             OptimizationCoverageSuite optimizationCoverageSuite = new OptimizationCoverageSuite();
             SharedProtocolGapSuite sharedProtocolGapSuite = new SharedProtocolGapSuite();
+            SharedLegacySmokeSuite sharedLegacySmokeSuite = new SharedLegacySmokeSuite();
             SharedCoreUnitCoverageSuite sharedCoreUnitCoverageSuite = new SharedCoreUnitCoverageSuite();
 
             results.AddRange(await legacyCoverageSuite.RunAsync().ConfigureAwait(false));
             results.AddRange(await optimizationCoverageSuite.RunAsync().ConfigureAwait(false));
             results.AddRange(await sharedProtocolGapSuite.RunAsync().ConfigureAwait(false));
+            results.AddRange(await sharedLegacySmokeSuite.RunAsync().ConfigureAwait(false));
             results.AddRange(await sharedCoreUnitCoverageSuite.RunAsync().ConfigureAwait(false));
 
             return results.ToArray();
