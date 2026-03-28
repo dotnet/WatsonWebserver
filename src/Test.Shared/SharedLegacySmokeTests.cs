@@ -103,6 +103,34 @@ namespace Test.Shared
             }
         }
 
+        /// <summary>
+        /// Verify a basic HTTP/1.1 parameter route resolves and returns the parameterized value.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11ParameterRouteAsync()
+        {
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, ConfigureBasicRoutes))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                {
+                    HttpResponseMessage response = await client.GetAsync(new Uri(host.BaseAddress, "/users/42")).ConfigureAwait(false);
+                    string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        throw new InvalidOperationException("Expected HTTP/1.1 parameter route request to succeed.");
+                    }
+
+                    if (!String.Equals(body, "User 42", StringComparison.Ordinal))
+                    {
+                        throw new InvalidOperationException("Unexpected HTTP/1.1 parameter route response body.");
+                    }
+                }
+            }
+        }
+
         private static void ConfigureBasicRoutes(Webserver server)
         {
             if (server == null) throw new ArgumentNullException(nameof(server));
@@ -126,6 +154,13 @@ namespace Test.Shared
                 context.Response.StatusCode = 200;
                 context.Response.ContentType = "text/plain";
                 await context.Response.Send("DELETE response", context.Token).ConfigureAwait(false);
+            });
+
+            server.Routes.PostAuthentication.Parameter.Add(CoreHttpMethod.GET, "/users/{id}", async (HttpContextBase context) =>
+            {
+                context.Response.StatusCode = 200;
+                context.Response.ContentType = "text/plain";
+                await context.Response.Send("User " + context.Request.Url.Parameters["id"], context.Token).ConfigureAwait(false);
             });
         }
 

@@ -23,6 +23,7 @@ namespace Test.Automated
             await ExecuteTestAsync("HTTP/1.1 basic GET request", SharedLegacySmokeTests.TestHttp11BasicGetAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 basic POST request", SharedLegacySmokeTests.TestHttp11BasicPostAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 basic DELETE request", SharedLegacySmokeTests.TestHttp11BasicDeleteAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 parameter route request", SharedLegacySmokeTests.TestHttp11ParameterRouteAsync).ConfigureAwait(false);
             return _Results.ToArray();
         }
 

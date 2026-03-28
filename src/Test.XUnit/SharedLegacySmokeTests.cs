@@ -38,5 +38,15 @@ namespace Test.XUnit
         {
             await Test.Shared.SharedLegacySmokeTests.TestHttp11BasicDeleteAsync();
         }
+
+        /// <summary>
+        /// Verify a basic HTTP/1.1 parameter route resolves and returns the parameterized value.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11ParameterRouteRequest()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11ParameterRouteAsync();
+        }
     }
 }
