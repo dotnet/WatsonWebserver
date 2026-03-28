@@ -141,7 +141,7 @@
         public bool ResponseCompleted { get; private set; } = false;
 
         /// <summary>
-        /// Boolean indicating if the response has been sent.
+        /// bool indicating if the response has been sent.
         /// </summary>
         public bool ResponseSent
         {
@@ -265,7 +265,7 @@
         /// This method is specific to HTTP/1.1 chunked transfer encoding.
         /// </summary>
         /// <param name="chunk">Chunk of data.</param>
-        /// <param name="isFinal">Boolean indicating if this is the final chunk.</param>
+        /// <param name="isFinal">bool indicating if this is the final chunk.</param>
         /// <param name="token">Cancellation token useful for canceling the request.</param>
         /// <returns>True if successful.</returns>
         public abstract Task<bool> SendChunk(byte[] chunk, bool isFinal, CancellationToken token = default);
@@ -276,7 +276,7 @@
         /// The connection will be kept in-tact unless isFinal is set to true.
         /// </summary>
         /// <param name="sse">Server sent event.</param>
-        /// <param name="isFinal">Boolean indicating if this is the final chunk.</param>
+        /// <param name="isFinal">bool indicating if this is the final chunk.</param>
         /// <param name="token">Cancellation token useful for canceling the request.</param>
         /// <returns>True if successful.</returns>
         public abstract Task<bool> SendEvent(ServerSentEvent sse, bool isFinal, CancellationToken token = default);

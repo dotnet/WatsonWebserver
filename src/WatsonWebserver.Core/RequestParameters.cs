@@ -8,6 +8,10 @@ namespace WatsonWebserver.Core
     /// Provides typed access to request parameters from URL paths, query strings, or headers.
     /// Wraps a <see cref="NameValueCollection"/> with convenience methods for type-safe extraction.
     /// </summary>
+    /// <remarks>
+    /// Instances are lightweight request-scoped wrappers and are not intended for mutation or concurrent use.
+    /// Conversion helpers return the supplied default value, or the documented intrinsic default, when parsing fails.
+    /// </remarks>
     public class RequestParameters
     {
         #region Public-Members
@@ -107,7 +111,7 @@ namespace WatsonWebserver.Core
         /// </summary>
         /// <param name="name">Parameter name.</param>
         /// <param name="defaultValue">Default value if not found or not parseable.</param>
-        /// <returns>Boolean value.</returns>
+        /// <returns>bool value.</returns>
         public bool GetBool(string name, bool defaultValue = false)
         {
             string value = _Parameters[name];
@@ -230,6 +234,7 @@ namespace WatsonWebserver.Core
         /// <param name="name">Parameter name.</param>
         /// <param name="result">The parsed result if successful.</param>
         /// <returns>True if the parameter exists and was successfully converted.</returns>
+        /// <exception cref="NotSupportedException">Thrown when <typeparamref name="T"/> is not a supported conversion target.</exception>
         public bool TryGetValue<T>(string name, out T result)
         {
             result = default;

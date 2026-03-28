@@ -1,4 +1,4 @@
-namespace WatsonWebserver.Core
+namespace WatsonWebserver.Core.Settings
 {
     using System;
 
@@ -6,6 +6,9 @@ namespace WatsonWebserver.Core
     /// Request timeout settings for API route handlers.
     /// When enabled, requests that exceed the timeout duration receive a 408 Request Timeout response.
     /// </summary>
+    /// <remarks>
+    /// These settings are typically configured during server startup and are not intended for concurrent mutation while requests are in flight.
+    /// </remarks>
     public class TimeoutSettings
     {
         #region Public-Members
@@ -49,7 +52,8 @@ namespace WatsonWebserver.Core
         /// <summary>
         /// Instantiate with a specified default timeout.
         /// </summary>
-        /// <param name="defaultTimeout">The default timeout duration.</param>
+        /// <param name="defaultTimeout">The default timeout duration. Must be zero or positive.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="defaultTimeout"/> is negative.</exception>
         public TimeoutSettings(TimeSpan defaultTimeout)
         {
             DefaultTimeout = defaultTimeout;

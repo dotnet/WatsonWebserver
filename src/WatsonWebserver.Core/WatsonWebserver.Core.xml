@@ -68,36 +68,6 @@
             <param name="settings">Server settings.</param>
             <returns>Alt-Svc header value, or null when disabled.</returns>
         </member>
-        <member name="T:WatsonWebserver.Core.AltSvcSettings">
-            <summary>
-            Alt-Svc advertising settings.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.AltSvcSettings.Enabled">
-            <summary>
-            Enable Alt-Svc emission.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.AltSvcSettings.Authority">
-            <summary>
-            Optional advertised authority.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.AltSvcSettings.Port">
-            <summary>
-            Port advertised in Alt-Svc. A value of zero uses the primary server port.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.AltSvcSettings.Http3Alpn">
-            <summary>
-            HTTP/3 ALPN token to advertise.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.AltSvcSettings.MaxAgeSeconds">
-            <summary>
-            Advertised max-age in seconds.
-            </summary>
-        </member>
         <member name="T:WatsonWebserver.Core.ApiErrorResponse">
             <summary>
             Structured API error response returned to clients when an error occurs.
@@ -138,6 +108,11 @@
             API request wrapper providing typed access to URL parameters, query parameters, headers,
             and the deserialized request body. Passed to API route handlers.
             </summary>
+            <remarks>
+            Instances are created per request and are not intended for concurrent use across threads.
+            <see cref="P:WatsonWebserver.Core.ApiRequest.Data"/>, <see cref="P:WatsonWebserver.Core.ApiRequest.AuthResult"/>, and <see cref="P:WatsonWebserver.Core.ApiRequest.Metadata"/> may be null depending on
+            the route shape and authentication outcome.
+            </remarks>
         </member>
         <member name="P:WatsonWebserver.Core.ApiRequest.Data">
             <summary>
@@ -176,6 +151,7 @@
             <summary>
             Authentication and authorization result.
             Populated when a structured authentication handler is configured.
+            Null when no structured authentication result was produced for the request.
             </summary>
         </member>
         <member name="P:WatsonWebserver.Core.ApiRequest.CancellationToken">
@@ -189,6 +165,7 @@
             <summary>
             User-supplied metadata.
             Populated from HttpContextBase.Metadata, typically set by an authentication handler.
+            Null when no metadata was attached to the request.
             </summary>
         </member>
         <member name="M:WatsonWebserver.Core.ApiRequest.#ctor(WatsonWebserver.Core.HttpContextBase,WatsonWebserver.Core.ISerializationHelper,System.Object,System.Threading.CancellationToken)">
@@ -710,7 +687,7 @@
             The endpoint returns HTTP 200 for Healthy/Degraded and HTTP 503 for Unhealthy.
             </summary>
             <param name="server">The webserver instance.</param>
-            <param name="configure">Optional action to configure the health check settings.</param>
+            <param name="configure">Optional action to configure the health check settings. When null, the default path and default healthy response are used.</param>
             <exception cref="T:System.ArgumentNullException">Thrown when server is null.</exception>
         </member>
         <member name="T:WatsonWebserver.Core.Hpack.HpackCodec">
@@ -3018,7 +2995,7 @@
         </member>
         <member name="P:WatsonWebserver.Core.HttpResponseBase.ResponseSent">
             <summary>
-            Boolean indicating if the response has been sent.
+            bool indicating if the response has been sent.
             </summary>
         </member>
         <member name="M:WatsonWebserver.Core.HttpResponseBase.Dispose">
@@ -3084,7 +3061,7 @@
             This method is specific to HTTP/1.1 chunked transfer encoding.
             </summary>
             <param name="chunk">Chunk of data.</param>
-            <param name="isFinal">Boolean indicating if this is the final chunk.</param>
+            <param name="isFinal">bool indicating if this is the final chunk.</param>
             <param name="token">Cancellation token useful for canceling the request.</param>
             <returns>True if successful.</returns>
         </member>
@@ -3095,7 +3072,7 @@
             The connection will be kept in-tact unless isFinal is set to true.
             </summary>
             <param name="sse">Server sent event.</param>
-            <param name="isFinal">Boolean indicating if this is the final chunk.</param>
+            <param name="isFinal">bool indicating if this is the final chunk.</param>
             <param name="token">Cancellation token useful for canceling the request.</param>
             <returns>True if successful.</returns>
         </member>
@@ -4369,51 +4346,6 @@
             Indicates whether Alt-Svc emission was disabled due to HTTP/3 unavailability.
             </summary>
         </member>
-        <member name="T:WatsonWebserver.Core.ProtocolSettings">
-            <summary>
-            Protocol enablement and limits.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.ProtocolSettings.EnableHttp1">
-            <summary>
-            Enable HTTP/1.1 support.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.ProtocolSettings.EnableHttp2">
-            <summary>
-            Enable HTTP/2 support.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.ProtocolSettings.EnableHttp3">
-            <summary>
-            Enable HTTP/3 support.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.ProtocolSettings.EnableHttp2Cleartext">
-            <summary>
-            Enable cleartext HTTP/2 prior-knowledge mode.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.ProtocolSettings.MaxConcurrentStreams">
-            <summary>
-            Maximum concurrent streams per connection.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.ProtocolSettings.Http2">
-            <summary>
-            HTTP/2 protocol settings advertised to peers.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.ProtocolSettings.Http3">
-            <summary>
-            HTTP/3 protocol settings advertised to peers.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.ProtocolSettings.IdleTimeoutMs">
-            <summary>
-            Idle connection timeout in milliseconds.
-            </summary>
-        </member>
         <member name="T:WatsonWebserver.Core.Qpack.QpackCodec">
             <summary>
             Minimal QPACK encoder and decoder supporting static-table references and literal fields.
@@ -4552,6 +4484,10 @@
             Provides typed access to request parameters from URL paths, query strings, or headers.
             Wraps a <see cref="T:System.Collections.Specialized.NameValueCollection"/> with convenience methods for type-safe extraction.
             </summary>
+            <remarks>
+            Instances are lightweight request-scoped wrappers and are not intended for mutation or concurrent use.
+            Conversion helpers return the supplied default value, or the documented intrinsic default, when parsing fails.
+            </remarks>
         </member>
         <member name="M:WatsonWebserver.Core.RequestParameters.#ctor(System.Collections.Specialized.NameValueCollection)">
             <summary>
@@ -4605,7 +4541,7 @@
             </summary>
             <param name="name">Parameter name.</param>
             <param name="defaultValue">Default value if not found or not parseable.</param>
-            <returns>Boolean value.</returns>
+            <returns>bool value.</returns>
         </member>
         <member name="M:WatsonWebserver.Core.RequestParameters.GetDateTime(System.String,System.Nullable{System.DateTime})">
             <summary>
@@ -4678,6 +4614,7 @@
             <param name="name">Parameter name.</param>
             <param name="result">The parsed result if successful.</param>
             <returns>True if the parameter exists and was successfully converted.</returns>
+            <exception cref="T:System.NotSupportedException">Thrown when <typeparamref name="T"/> is not a supported conversion target.</exception>
         </member>
         <member name="T:WatsonWebserver.Core.ResponseEventArgs">
             <summary>
@@ -5636,6 +5573,36 @@
             </summary>
             <returns>String.</returns>
         </member>
+        <member name="T:WatsonWebserver.Core.Settings.AltSvcSettings">
+            <summary>
+            Alt-Svc advertising settings.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.AltSvcSettings.Enabled">
+            <summary>
+            Enable Alt-Svc emission.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.AltSvcSettings.Authority">
+            <summary>
+            Optional advertised authority.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.AltSvcSettings.Port">
+            <summary>
+            Port advertised in Alt-Svc. A value of zero uses the primary server port.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.AltSvcSettings.Http3Alpn">
+            <summary>
+            HTTP/3 ALPN token to advertise.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.AltSvcSettings.MaxAgeSeconds">
+            <summary>
+            Advertised max-age in seconds.
+            </summary>
+        </member>
         <member name="T:WatsonWebserver.Core.Settings.DebugSettings">
             <summary>
             Debug logging settings.
@@ -5771,6 +5738,51 @@
             Input-output settings.
             </summary>
         </member>
+        <member name="T:WatsonWebserver.Core.Settings.ProtocolSettings">
+            <summary>
+            Protocol enablement and limits.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.ProtocolSettings.EnableHttp1">
+            <summary>
+            Enable HTTP/1.1 support.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.ProtocolSettings.EnableHttp2">
+            <summary>
+            Enable HTTP/2 support.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.ProtocolSettings.EnableHttp3">
+            <summary>
+            Enable HTTP/3 support.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.ProtocolSettings.EnableHttp2Cleartext">
+            <summary>
+            Enable cleartext HTTP/2 prior-knowledge mode.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.ProtocolSettings.MaxConcurrentStreams">
+            <summary>
+            Maximum concurrent streams per connection.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.ProtocolSettings.Http2">
+            <summary>
+            HTTP/2 protocol settings advertised to peers.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.ProtocolSettings.Http3">
+            <summary>
+            HTTP/3 protocol settings advertised to peers.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.ProtocolSettings.IdleTimeoutMs">
+            <summary>
+            Idle connection timeout in milliseconds.
+            </summary>
+        </member>
         <member name="T:WatsonWebserver.Core.Settings.SslSettings">
             <summary>
             SSL settings.
@@ -5811,6 +5823,35 @@
             <summary>
             SSL settings.
             </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.Settings.TimeoutSettings">
+            <summary>
+            Request timeout settings for API route handlers.
+            When enabled, requests that exceed the timeout duration receive a 408 Request Timeout response.
+            </summary>
+            <remarks>
+            These settings are typically configured during server startup and are not intended for concurrent mutation while requests are in flight.
+            </remarks>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.TimeoutSettings.DefaultTimeout">
+            <summary>
+            Default timeout for API route requests.
+            Set to TimeSpan.Zero (the default) to disable timeouts.
+            When greater than zero, a cancellation token is provided to route handlers that will be
+            cancelled when the timeout expires.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.Settings.TimeoutSettings.#ctor">
+            <summary>
+            Instantiate with timeouts disabled.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.Settings.TimeoutSettings.#ctor(System.TimeSpan)">
+            <summary>
+            Instantiate with a specified default timeout.
+            </summary>
+            <param name="defaultTimeout">The default timeout duration. Must be zero or positive.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="defaultTimeout"/> is negative.</exception>
         </member>
         <member name="T:WatsonWebserver.Core.SourceDetails">
             <summary>
@@ -5858,31 +5899,6 @@
             <summary>
             Indicates whether the protocol supports multiplexing for the stream.
             </summary>
-        </member>
-        <member name="T:WatsonWebserver.Core.TimeoutSettings">
-            <summary>
-            Request timeout settings for API route handlers.
-            When enabled, requests that exceed the timeout duration receive a 408 Request Timeout response.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Core.TimeoutSettings.DefaultTimeout">
-            <summary>
-            Default timeout for API route requests.
-            Set to TimeSpan.Zero (the default) to disable timeouts.
-            When greater than zero, a cancellation token is provided to route handlers that will be
-            cancelled when the timeout expires.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.Core.TimeoutSettings.#ctor">
-            <summary>
-            Instantiate with timeouts disabled.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.Core.TimeoutSettings.#ctor(System.TimeSpan)">
-            <summary>
-            Instantiate with a specified default timeout.
-            </summary>
-            <param name="defaultTimeout">The default timeout duration.</param>
         </member>
         <member name="T:WatsonWebserver.Core.UrlDetails">
             <summary>

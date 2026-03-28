@@ -1,4 +1,4 @@
-namespace WatsonWebserver.Core
+namespace WatsonWebserver.Core.Settings
 {
     using System;
 

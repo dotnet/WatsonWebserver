@@ -13,7 +13,7 @@ namespace WatsonWebserver.Core.Health
         /// The endpoint returns HTTP 200 for Healthy/Degraded and HTTP 503 for Unhealthy.
         /// </summary>
         /// <param name="server">The webserver instance.</param>
-        /// <param name="configure">Optional action to configure the health check settings.</param>
+        /// <param name="configure">Optional action to configure the health check settings. When null, the default path and default healthy response are used.</param>
         /// <exception cref="ArgumentNullException">Thrown when server is null.</exception>
         public static void UseHealthCheck(this WebserverBase server, Action<HealthCheckSettings> configure = null)
         {

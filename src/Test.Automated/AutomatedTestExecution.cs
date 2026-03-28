@@ -20,9 +20,11 @@ namespace Test.Automated
             List<AutomatedTestResult> results = new List<AutomatedTestResult>();
             LegacyCoverageSuite legacyCoverageSuite = new LegacyCoverageSuite();
             OptimizationCoverageSuite optimizationCoverageSuite = new OptimizationCoverageSuite();
+            SharedProtocolGapSuite sharedProtocolGapSuite = new SharedProtocolGapSuite();
 
             results.AddRange(await legacyCoverageSuite.RunAsync().ConfigureAwait(false));
             results.AddRange(await optimizationCoverageSuite.RunAsync().ConfigureAwait(false));
+            results.AddRange(await sharedProtocolGapSuite.RunAsync().ConfigureAwait(false));
 
             return results.ToArray();
         }

@@ -243,7 +243,7 @@
 
             List<User> users = _Users;
             string activeFilter = ctx.Request.Query.Elements["active"];
-            if (!String.IsNullOrEmpty(activeFilter) && Boolean.TryParse(activeFilter, out bool active))
+            if (!String.IsNullOrEmpty(activeFilter) && bool.TryParse(activeFilter, out bool active))
             {
                 users = users.FindAll(u => u.Active == active);
             }

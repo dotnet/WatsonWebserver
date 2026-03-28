@@ -13,6 +13,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\WatsonWebserver\WatsonWebserver.csproj" />
+		<ProjectReference Include="..\Test.Shared\Test.Shared.csproj" />
 	</ItemGroup>
 
 </Project>

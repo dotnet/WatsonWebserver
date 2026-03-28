@@ -7,6 +7,11 @@ namespace WatsonWebserver.Core
     /// API request wrapper providing typed access to URL parameters, query parameters, headers,
     /// and the deserialized request body. Passed to API route handlers.
     /// </summary>
+    /// <remarks>
+    /// Instances are created per request and are not intended for concurrent use across threads.
+    /// <see cref="Data"/>, <see cref="AuthResult"/>, and <see cref="Metadata"/> may be null depending on
+    /// the route shape and authentication outcome.
+    /// </remarks>
     public class ApiRequest
     {
         #region Public-Members
@@ -47,6 +52,7 @@ namespace WatsonWebserver.Core
         /// <summary>
         /// Authentication and authorization result.
         /// Populated when a structured authentication handler is configured.
+        /// Null when no structured authentication result was produced for the request.
         /// </summary>
         public AuthResult AuthResult { get; set; } = null;
 
@@ -60,6 +66,7 @@ namespace WatsonWebserver.Core
         /// <summary>
         /// User-supplied metadata.
         /// Populated from HttpContextBase.Metadata, typically set by an authentication handler.
+        /// Null when no metadata was attached to the request.
         /// </summary>
         public object Metadata { get; set; } = null;
 

@@ -280,7 +280,7 @@
         private static bool ParseBool(string value, bool fallback)
         {
             bool parsed;
-            if (!Boolean.TryParse(value, out parsed)) return fallback;
+            if (!bool.TryParse(value, out parsed)) return fallback;
             return parsed;
         }
 

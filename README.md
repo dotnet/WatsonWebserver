@@ -56,7 +56,9 @@ In summary:
 dotnet add package Watson
 ```
 
-If you are building extensions or shared components on top of the common abstractions:
+For normal server consumption, install `Watson` only. It depends on `Watson.Core` and NuGet will restore that dependency automatically.
+
+Install `Watson.Core` directly only if you are building extensions, shared components, or tooling on top of the common abstractions without taking a direct dependency on the server package:
 
 ```powershell
 dotnet add package Watson.Core
@@ -499,15 +501,17 @@ settings.Protocols.Http3.EnableDatagram = false;
 
 The most important 7.0 consumption rule is this:
 
-- For protocol-agnostic body handling, use `ctx.Request.Data`, `ReadBodyAsync()`, `DataAsBytes`, or `DataAsString`
+- For protocol-agnostic body handling, use `DataAsBytes`, `DataAsString`, or `ReadBodyAsync()`
 - Only use `ReadChunk()` when you are explicitly handling HTTP/1.1 chunked transfer-encoding
 
 ### Recommended protocol-agnostic body read
 
+Use `DataAsBytes` when synchronous first-read semantics are acceptable:
+
 ```csharp
 private static async Task EchoBody(HttpContextBase ctx)
 {
-    byte[] body = await ctx.Request.ReadBodyAsync(ctx.Token);
+    byte[] body = ctx.Request.DataAsBytes;
 
     ctx.Response.StatusCode = 200;
     ctx.Response.ContentType = "application/octet-stream";
@@ -515,12 +519,13 @@ private static async Task EchoBody(HttpContextBase ctx)
 }
 ```
 
+Use `ReadBodyAsync()` when you want an explicit async body read with cancellation support.
+
 ### Read as string
 
 ```csharp
 private static async Task EchoText(HttpContextBase ctx)
 {
-    byte[] body = await ctx.Request.ReadBodyAsync(ctx.Token);
     string text = ctx.Request.DataAsString;
 
     ctx.Response.ContentType = "text/plain";
@@ -528,7 +533,7 @@ private static async Task EchoText(HttpContextBase ctx)
 }
 ```
 
-After `ReadBodyAsync()`, `DataAsBytes` and `DataAsString` use cached content.
+`DataAsBytes` and `DataAsString` fully read the body on first access. `ReadBodyAsync()` does the same thing explicitly and asynchronously. After any of those first reads, the body is cached.
 
 ### HTTP/1.1 chunked request bodies
 
@@ -542,7 +547,7 @@ private static async Task UploadData(HttpContextBase ctx)
         return;
     }
 
-    Boolean finalChunk = false;
+    bool finalChunk = false;
 
     while (!finalChunk)
     {
@@ -627,7 +632,7 @@ private static async Task SendEvents(HttpContextBase ctx)
             Data = "Event " + i.ToString()
         };
 
-        Boolean isFinal = i == 5;
+        bool isFinal = i == 5;
         await ctx.Response.SendEvent(serverEvent, isFinal, ctx.Token);
     }
 }
@@ -887,6 +892,7 @@ Automated validation is covered by:
 - `src/Test.Automated`: integration tests with real HTTP requests against a running server
 - `src/Test.XUnit`: unit tests for core types (RequestParameters, MiddlewarePipeline, AuthResult, etc.)
 - `src/Test.RestApi`: interactive server demonstrating all API route features (run and test manually with curl/Postman)
+- `src/Test.Benchmark`: benchmark harness for cross-target and cross-protocol performance comparisons
 
 Recommended commands:
 

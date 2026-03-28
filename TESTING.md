@@ -5,6 +5,10 @@ This repository has two automated test entry points:
 - `src/Test.Automated`
 - `src/Test.XUnit`
 
+It also includes a benchmark harness:
+
+- `src/Test.Benchmark`
+
 ## Test.Automated
 
 `Test.Automated` is the primary automated console suite. It contains the migrated legacy coverage plus the added optimization-safety coverage.
@@ -37,6 +41,35 @@ That script performs these steps:
 2. Generates `src/Test.XUnit/bin/Debug/net10.0/shared-automated-results.json` using the shared automated runner
 3. Executes `dotnet test --no-build`
 
+## Test.Benchmark
+
+`Test.Benchmark` is the performance harness used to compare Watson 7 against Watson 6, WatsonLite6, and Kestrel across supported protocols and scenarios.
+
+Run it with:
+
+```powershell
+dotnet run --project src\Test.Benchmark\Test.Benchmark.csproj -- --targets all --protocols http1,http2,http3 --scenarios hello,json
+```
+
+Behavior:
+
+- Prints one formatted line per benchmark combination during the live run
+- Prints a summary table after completion
+- Prints protocol comparison tables after the summary
+
+Useful examples:
+
+```powershell
+dotnet run --project src\Test.Benchmark\Test.Benchmark.csproj -- --targets watson7 --protocols http1 --scenarios hello,json --warmup-seconds 2 --duration-seconds 5 --concurrency 16
+dotnet run --project src\Test.Benchmark\Test.Benchmark.csproj -- --targets all --protocols http3 --scenarios echo,json-echo --warmup-seconds 2 --duration-seconds 5 --concurrency 16
+```
+
+Notes:
+
+- `Watson6`, `WatsonLite6`, and `Kestrel` availability depends on the selected protocol and scenario
+- some combinations are intentionally skipped when the harness does not support them
+- HTTP/3 benchmarking depends on local QUIC support
+
 ## Supporting Scripts
 
 ### `src/Test.XUnit/Run-Test.XUnit.ps1`
@@ -68,4 +101,10 @@ For CI-style xUnit validation in this repository:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File src\Test.XUnit\Run-Test.XUnit.ps1
+```
+
+For local performance validation:
+
+```powershell
+dotnet run --project src\Test.Benchmark\Test.Benchmark.csproj -- --targets watson7 --protocols http1,http2,http3 --scenarios hello,json,echo,json-echo
 ```

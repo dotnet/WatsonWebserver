@@ -74,7 +74,7 @@
             <param name="path">Route path.</param>
             <param name="handler">Route handler.</param>
             <param name="exceptionHandler">Method to invoke when handling exceptions.</param>
-            <param name="requiresAuthentication">Boolean to indicate if the route requires authentication.</param>
+            <param name="requiresAuthentication">bool indicating if the route requires authentication.</param>
             <returns>Host builder.</returns>
         </member>
         <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder.MapParameteRoute(WatsonWebserver.Core.HttpMethod,System.String,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},System.Boolean)">
@@ -85,7 +85,7 @@
             <param name="path">Route path.</param>
             <param name="handler">Route handler.</param>
             <param name="exceptionHandler">Method to invoke when handling exceptions.</param>
-            <param name="requiresAuthentication">Boolean to indicate if the route requires authentication.</param>
+            <param name="requiresAuthentication">bool indicating if the route requires authentication.</param>
             <returns>Host builder.</returns>
         </member>
         <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder.MapParameterRoute(WatsonWebserver.Core.HttpMethod,System.String,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},System.Boolean)">
@@ -96,7 +96,7 @@
             <param name="path">Route path.</param>
             <param name="handler">Route handler.</param>
             <param name="exceptionHandler">Method to invoke when handling exceptions.</param>
-            <param name="requiresAuthentication">Boolean to indicate if the route requires authentication.</param>
+            <param name="requiresAuthentication">bool indicating if the route requires authentication.</param>
             <returns>Host builder.</returns>
         </member>
         <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder.MapDynamicRoute(WatsonWebserver.Core.HttpMethod,System.Text.RegularExpressions.Regex,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task},System.Func{WatsonWebserver.Core.HttpContextBase,System.Exception,System.Threading.Tasks.Task},System.Boolean)">
@@ -107,7 +107,7 @@
             <param name="regex">Regular expression.</param>
             <param name="handler">Route handler.</param>
             <param name="exceptionHandler">Method to invoke when handling exceptions.</param>
-            <param name="requiresAuthentication">Boolean to indicate if the route requires authentication.</param>
+            <param name="requiresAuthentication">bool indicating if the route requires authentication.</param>
             <returns>Host builder.</returns>
         </member>
         <member name="M:WatsonWebserver.Extensions.HostBuilderExtension.HostBuilder.MapDefaultRoute(System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task})">

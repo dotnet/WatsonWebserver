@@ -11,13 +11,11 @@
 		<Company>Joel Christner</Company>
 		<Copyright>(c)2026 Joel Christner</Copyright>
 		<PackageProjectUrl>https://github.com/dotnet/WatsonWebserver</PackageProjectUrl>
-		<PackageLicenseUrl></PackageLicenseUrl>
 		<RepositoryUrl>https://github.com/dotnet/WatsonWebserver</RepositoryUrl>
-		<RepositoryType>Github</RepositoryType>
-		<PackageTags>web server rest restful http https api async ssl</PackageTags>
+		<RepositoryType>git</RepositoryType>
+		<PackageTags>watson webserver web-server rest restful http http2 http3 quic api async openapi swagger</PackageTags>
 		<PackageId>Watson</PackageId>
 		<Product>Watson</Product>
-		<PackageIconUrl></PackageIconUrl>
 		<PackageLicenseFile>LICENSE.md</PackageLicenseFile>
 		<PackageIcon>watson.png</PackageIcon>
 		<PackageReadmeFile>README.md</PackageReadmeFile>

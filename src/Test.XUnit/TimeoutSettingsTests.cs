@@ -2,6 +2,7 @@ namespace Test.XUnit
 {
     using System;
     using WatsonWebserver.Core;
+    using WatsonWebserver.Core.Settings;
     using Xunit;
 
     public class TimeoutSettingsTests

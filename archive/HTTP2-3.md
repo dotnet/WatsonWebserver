@@ -20,6 +20,30 @@ The target is no longer an additive 6.x sidecar rollout. The target is WatsonWeb
 - [x] Complete
 - [!] Needs decision
 
+## Repository Annotation (2026-03-27)
+
+This file is now primarily historical. The repository already contains a large portion of the implementation described here.
+
+Completed or clearly present in the repository:
+
+- [x] Watson 7 targets `net8.0` and `net10.0`
+- [x] Watson 7 uses direct transport ownership rather than `HttpListener` / `http.sys`
+- [x] A unified server surface exists with protocol-specific internals
+- [x] HTTP/1.1 implementation exists on raw TCP/TLS paths
+- [x] HTTP/2 implementation exists, including connection preface, settings negotiation, frame parsing/writing, stream state management, GOAWAY handling, and a serialized connection writer
+- [x] HTTP/3 implementation exists, including QUIC accept loop, control stream handling, request/response mapping, GOAWAY handling, runtime availability detection, and graceful runtime normalization when QUIC is unavailable
+- [x] `WebserverSettings.Protocols`, `AltSvc`, and startup validation exist
+- [x] Alt-Svc is explicit configuration and is not emitted by default
+- [x] Shared semantics live in `WatsonWebserver.Core`
+- [x] `Test.Automated`, `Test.XUnit`, and `Test.Benchmark` exist
+- [x] Cross-target benchmarking against Watson 6, WatsonLite6, Watson 7, and Kestrel exists in `Test.Benchmark`
+
+Still best read as open, incomplete, or only partially evidenced by the repository:
+
+- [~] Formal closeout of every acceptance criterion inside this document
+- [~] Explicit proof in-repo that every benchmark and protocol test was run on both Windows and Linux
+- [~] Exhaustive standards-compliance signoff for every HPACK/QPACK adversarial case beyond the implemented automated coverage
+
 ## Target Framework Strategy
 
 WatsonWebserver 7.x targets `net8.0` and `net10.0` only. Support for .NET Framework (`net462`, `net48`), `netstandard2.0`, and `netstandard2.1` is dropped. Legacy runtime users remain on Watson 6.x.
@@ -214,23 +238,23 @@ The semantic specification resolves observable behavioral divergences between Wa
 
 #### Semantic specification deliverables
 
-- [ ] Request body exposure contract: how chunked bodies are presented, what `ContentLength` means when chunked encoding is in play, whether the server de-chunks or exposes raw transfer encoding
-- [ ] Malformed header policy: which invalid headers are rejected vs. passed through, and at what layer
-- [ ] Disconnect and abort timing contract: how and when the application is notified of client disconnect
-- [ ] Trailer semantics: when trailers are surfaced, on which protocols, and what the application can rely on
-- [ ] Metrics contract: what `RequestCount`, `ActiveConnectionCount`, and stream-level metrics mean precisely
-- [ ] HTTP/1.1-only behavior on HTTP/2 and HTTP/3: explicit rejection vs. silent ignore policy for each feature
+- [x] Request body exposure contract: how chunked bodies are presented, what `ContentLength` means when chunked encoding is in play, whether the server de-chunks or exposes raw transfer encoding
+- [x] Malformed header policy: which invalid headers are rejected vs. passed through, and at what layer
+- [x] Disconnect and abort timing contract: how and when the application is notified of client disconnect
+- [x] Trailer semantics: when trailers are surfaced, on which protocols, and what the application can rely on
+- [x] Metrics contract: what `RequestCount`, `ActiveConnectionCount`, and stream-level metrics mean precisely
+- [x] HTTP/1.1-only behavior on HTTP/2 and HTTP/3: explicit rejection vs. silent ignore policy for each feature
 
 #### Core extraction deliverables
 
-- [ ] Extract the route execution pipeline into Core
-- [ ] Extract shared auth/session/event sequencing into Core
-- [ ] Normalize request/response/context lifecycle behavior per the semantic spec
-- [ ] Add protocol/version metadata
-- [ ] Add connection/stream metadata
-- [ ] Add explicit lifecycle signals for response start, response completion, and aborts
-- [ ] Define the internal writer contract: `ValueTask`-based, cancellation-aware, bounded buffering, no sync-over-async
-- [ ] Define the configuration validation contract for fail-fast startup checks
+- [x] Extract the route execution pipeline into Core
+- [x] Extract shared auth/session/event sequencing into Core
+- [x] Normalize request/response/context lifecycle behavior per the semantic spec
+- [x] Add protocol/version metadata
+- [x] Add connection/stream metadata
+- [x] Add explicit lifecycle signals for response start, response completion, and aborts
+- [~] Define the internal writer contract: `ValueTask`-based, cancellation-aware, bounded buffering, no sync-over-async
+- [x] Define the configuration validation contract for fail-fast startup checks
 
 ### Phase 1: HTTP/1.1 on raw TCP (the hardest phase)
 
@@ -240,76 +264,76 @@ Phase 1 is broken into explicit sub-phases with distinct acceptance criteria.
 
 #### Phase 1a: HTTP/1.1 request parser
 
-- [ ] Incremental, span-based HTTP/1.1 request line and header parser
-- [ ] Chunked transfer-encoding decoder
-- [ ] Content-Length body reader
-- [ ] Malformed input handling per the Phase 0 semantic spec
-- [ ] Parser fuzzing with malformed, truncated, and adversarial inputs (obs-fold headers, chunk extensions, request smuggling vectors)
+- [x] Incremental, span-based HTTP/1.1 request line and header parser
+- [x] Chunked transfer-encoding decoder
+- [x] Content-Length body reader
+- [x] Malformed input handling per the Phase 0 semantic spec
+- [x] Parser fuzzing with malformed, truncated, and adversarial inputs (obs-fold headers, chunk extensions, request smuggling vectors)
 
 #### Phase 1b: Connection manager
 
-- [ ] Persistent connection (keepalive) handling with configurable idle timeout
-- [ ] Connection tracking for metrics (`ActiveHttp1ConnectionCount`)
-- [ ] Graceful connection drain on server shutdown
-- [ ] Disconnect detection and abort signaling per the Phase 0 semantic spec
+- [x] Persistent connection (keepalive) handling with configurable idle timeout
+- [x] Connection tracking for metrics (`ActiveHttp1ConnectionCount`)
+- [x] Graceful connection drain on server shutdown
+- [x] Disconnect detection and abort signaling per the Phase 0 semantic spec
 
 #### Phase 1c: Response writer
 
-- [ ] Response writer with explicit Content-Length, chunked, and connection-close semantics
-- [ ] `SendChunk()` support preserving existing Watson behavior
-- [ ] `ValueTask`-based async writes with cancellation support
-- [ ] Bounded output buffering — no unbounded intermediate queues
+- [x] Response writer with explicit Content-Length, chunked, and connection-close semantics
+- [x] `SendChunk()` support preserving existing Watson behavior
+- [~] `ValueTask`-based async writes with cancellation support
+- [~] Bounded output buffering -- no unbounded intermediate queues
 
 #### Phase 1d: TLS integration
 
-- [ ] TLS via `SslStream` with configurable certificate
-- [ ] ALPN negotiation support (preparing for HTTP/2 in Phase 2)
-- [ ] TLS configuration validation at startup
+- [x] TLS via `SslStream` with configurable certificate
+- [x] ALPN negotiation support (preparing for HTTP/2 in Phase 2)
+- [x] TLS configuration validation at startup
 
 #### Phase 1e: Parity validation
 
-- [ ] Behavior parity tests against the Phase 0 semantic spec (not against either existing product's quirks)
-- [ ] Existing console-app test suite passes against the new foundation
-- [ ] Ship as alpha for early feedback before proceeding to Phase 2
+- [x] Behavior parity tests against the Phase 0 semantic spec (not against either existing product's quirks)
+- [x] Existing console-app test suite passes against the new foundation
+- [~] Ship as alpha for early feedback before proceeding to Phase 2
 
 ### Phase 2: HTTP/2 implementation
 
 Repository note: the implemented HTTP/2 milestone and acceptance coverage are summarized in [PHASE2_HTTP2_CLOSEOUT.md](PHASE2_HTTP2_CLOSEOUT.md).
 
-- [ ] Implement HTTP/2 connection preface and settings negotiation
-- [ ] Implement frame parsing and frame writing
-- [ ] Implement serialized connection writer
-- [ ] Implement stream state management
-- [ ] Implement HPACK using existing battle-tested code (e.g., port from Kestrel's `System.Net.Http.HPack` or a standalone library — do not write from scratch)
-- [ ] Implement per-stream and connection-level flow control
-- [ ] Implement connection lifecycle: idle timeout, max concurrent streams negotiation, graceful drain
-- [ ] Implement GOAWAY behavior
-- [ ] Implement Alt-Svc header emission when HTTP/3 is also enabled (off by default, explicit configuration required)
-- [ ] Validate HTTP/2 route handling against the Phase 0 semantic spec
-- [ ] Verify HTTP/2 code paths build and pass on both `net8.0` and `net10.0`
+- [x] Implement HTTP/2 connection preface and settings negotiation
+- [x] Implement frame parsing and frame writing
+- [x] Implement serialized connection writer
+- [x] Implement stream state management
+- [x] Implement HPACK using existing battle-tested code (e.g., port from Kestrel's `System.Net.Http.HPack` or a standalone library -- do not write from scratch)
+- [x] Implement per-stream and connection-level flow control
+- [x] Implement connection lifecycle: idle timeout, max concurrent streams negotiation, graceful drain
+- [x] Implement GOAWAY behavior
+- [x] Implement Alt-Svc header emission when HTTP/3 is also enabled (off by default, explicit configuration required)
+- [x] Validate HTTP/2 route handling against the Phase 0 semantic spec
+- [x] Verify HTTP/2 code paths build and pass on both `net8.0` and `net10.0`
 
 ### Phase 3: HTTP/3 implementation
 
-- [ ] Runtime capability detection for `System.Net.Quic` availability at startup
-- [ ] Graceful degradation: server starts without HTTP/3 if QUIC is unavailable, logs a clear warning
-- [ ] Implement QUIC accept loop and stream handling
-- [ ] Implement HTTP/3 control stream handling
-- [ ] Implement QPACK static-table-plus-literals mode using existing battle-tested code where available (do not write from scratch)
-- [ ] Implement request/response mapping to QUIC streams
-- [ ] Implement connection lifecycle: idle timeout, max concurrent streams, graceful drain
-- [ ] Implement abort, cancellation, and backpressure behavior
-- [ ] Implement graceful shutdown behavior
-- [ ] Alt-Svc coordination with HTTP/2 responses (respecting explicit configuration)
-- [ ] Validate HTTP/3 route handling against the Phase 0 semantic spec
-- [ ] Verify HTTP/3 code paths build and pass on both `net8.0` and `net10.0`
-- [ ] Document platform requirements: Windows (msquic ships with recent versions), Linux (requires `libmsquic` package)
+- [x] Runtime capability detection for `System.Net.Quic` availability at startup
+- [x] Graceful degradation: server starts without HTTP/3 if QUIC is unavailable, logs a clear warning
+- [x] Implement QUIC accept loop and stream handling
+- [x] Implement HTTP/3 control stream handling
+- [x] Implement QPACK static-table-plus-literals mode using existing battle-tested code where available (do not write from scratch)
+- [x] Implement request/response mapping to QUIC streams
+- [x] Implement connection lifecycle: idle timeout, max concurrent streams, graceful drain
+- [x] Implement abort, cancellation, and backpressure behavior
+- [x] Implement graceful shutdown behavior
+- [x] Alt-Svc coordination with HTTP/2 responses (respecting explicit configuration)
+- [x] Validate HTTP/3 route handling against the Phase 0 semantic spec
+- [x] Verify HTTP/3 code paths build and pass on both `net8.0` and `net10.0`
+- [x] Document platform requirements: Windows (msquic ships with recent versions), Linux (requires `libmsquic` package)
 
 ### Phase 4: Unified validation
 
-- [ ] All acceptance criteria (below) pass
-- [ ] Full cross-protocol behavior parity validated against the Phase 0 semantic spec
-- [ ] Configuration validation covers all protocol/TLS/platform combinations
-- [ ] Alt-Svc-based HTTP/3 discovery works end-to-end with curl and a browser (when explicitly configured)
+- [~] All acceptance criteria (below) pass
+- [~] Full cross-protocol behavior parity validated against the Phase 0 semantic spec
+- [x] Configuration validation covers all protocol/TLS/platform combinations
+- [x] Alt-Svc-based HTTP/3 discovery works end-to-end with curl and a browser (when explicitly configured)
 
 ## Testing Strategy
 
@@ -319,76 +343,76 @@ The current baseline is 103 `ExecuteTest(...)` call sites, not 158.
 
 ### 1. Keep and expand the console-app harness
 
-- [ ] Preserve the existing console test applications
-- [ ] Add unified-server coverage for HTTP/1.1, HTTP/2, and HTTP/3
-- [ ] Add side-by-side behavior parity tests across protocols where semantics should match
-- [ ] Add explicit tests for HTTP/1.1-only features and expected rejection/ignore behavior on HTTP/2 and HTTP/3
+- [x] Preserve the existing console test applications
+- [x] Add unified-server coverage for HTTP/1.1, HTTP/2, and HTTP/3
+- [x] Add side-by-side behavior parity tests across protocols where semantics should match
+- [x] Add explicit tests for HTTP/1.1-only features and expected rejection/ignore behavior on HTTP/2 and HTTP/3
 
 ### 2. Add protocol-level test harnesses
 
 HTTP/1.1 tests:
 
-- [ ] keepalive behavior
-- [ ] chunked transfer behavior
-- [ ] large body streaming
-- [ ] malformed header and parser edge cases
-- [ ] request smuggling vector resistance
-- [ ] obs-fold header handling
-- [ ] chunk extension handling
+- [x] keepalive behavior
+- [x] chunked transfer behavior
+- [x] large body streaming
+- [x] malformed header and parser edge cases
+- [x] request smuggling vector resistance
+- [x] obs-fold header handling
+- [x] chunk extension handling
 
 HTTP/2 tests:
 
-- [ ] frame parser coverage
-- [ ] SETTINGS negotiation
-- [ ] HEADERS and CONTINUATION handling
-- [ ] DATA flow-control behavior
-- [ ] WINDOW_UPDATE behavior
-- [ ] GOAWAY behavior
-- [ ] RST_STREAM behavior
-- [ ] deterministic multiplexing on one connection
-- [ ] writer serialization correctness
-- [ ] sibling stream survival during cancellation or reset
-- [ ] connection lifecycle: idle timeout, max concurrent streams, graceful drain
-- [ ] HPACK encoder/decoder correctness including edge cases and size limits (HPACK bomb resistance)
+- [x] frame parser coverage
+- [x] SETTINGS negotiation
+- [x] HEADERS and CONTINUATION handling
+- [x] DATA flow-control behavior
+- [x] WINDOW_UPDATE behavior
+- [x] GOAWAY behavior
+- [x] RST_STREAM behavior
+- [x] deterministic multiplexing on one connection
+- [x] writer serialization correctness
+- [x] sibling stream survival during cancellation or reset
+- [x] connection lifecycle: idle timeout, max concurrent streams, graceful drain
+- [x] HPACK encoder/decoder correctness including edge cases and size limits (HPACK bomb resistance)
 
 HTTP/3 tests:
 
-- [ ] QUIC stream concurrency
-- [ ] control stream handling
-- [ ] QPACK static table plus literals
-- [ ] cancellation and abort behavior
-- [ ] transport backpressure behavior
-- [ ] sibling stream survival
-- [ ] connection lifecycle: idle timeout, max concurrent streams, graceful drain
-- [ ] QUIC unavailability graceful degradation
+- [x] QUIC stream concurrency
+- [x] control stream handling
+- [x] QPACK static table plus literals
+- [x] cancellation and abort behavior
+- [x] transport backpressure behavior
+- [x] sibling stream survival
+- [x] connection lifecycle: idle timeout, max concurrent streams, graceful drain
+- [x] QUIC unavailability graceful degradation
 
 Cross-protocol behavior tests:
 
-- [ ] route matching parity
-- [ ] auth/session/event parity
-- [ ] trailer behavior where valid
-- [ ] long-lived SSE and delayed streaming behavior
-- [ ] large uploads and downloads
-- [ ] connection shutdown semantics
+- [x] route matching parity
+- [x] auth/session/event parity
+- [x] trailer behavior where valid
+- [x] long-lived SSE and delayed streaming behavior
+- [x] large uploads and downloads
+- [x] connection shutdown semantics
 
 ### 3. Negative and interoperability testing
 
-- [ ] malformed requests
-- [ ] invalid frame sequences
-- [ ] invalid HPACK/QPACK inputs
-- [ ] protocol downgrade and negotiation failures
-- [ ] mixed-version client interoperability checks
-- [ ] configuration validation: verify all fail-fast checks produce correct errors
+- [x] malformed requests
+- [x] invalid frame sequences
+- [x] invalid HPACK/QPACK inputs
+- [x] protocol downgrade and negotiation failures
+- [x] mixed-version client interoperability checks
+- [x] configuration validation: verify all fail-fast checks produce correct errors
 
 ### 4. Benchmark and workload validation
 
-- [ ] benchmark HTTP/1.1, HTTP/2, and HTTP/3 throughput
-- [ ] benchmark p50/p95/p99 latency under realistic concurrency
-- [ ] track allocations per request/stream
-- [ ] measure TLS and QUIC handshake cost
-- [ ] measure long-lived streaming and SSE behavior
-- [ ] compare against current Watson, current Lite, and a simple Kestrel baseline
-- [ ] run benchmark coverage on both Windows and Linux
+- [x] benchmark HTTP/1.1, HTTP/2, and HTTP/3 throughput
+- [x] benchmark p50/p95/p99 latency under realistic concurrency
+- [x] track allocations per request/stream
+- [x] measure TLS and QUIC handshake cost
+- [x] measure long-lived streaming and SSE behavior
+- [x] compare against current Watson, current Lite, and a simple Kestrel baseline
+- [~] run benchmark coverage on both Windows and Linux
 
 ## Compatibility and Breaking Changes
 
