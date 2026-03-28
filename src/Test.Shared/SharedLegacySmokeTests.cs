@@ -456,6 +456,95 @@ namespace Test.Shared
             }
         }
 
+        /// <summary>
+        /// Verify a simple HTTP/1.1 echo request preserves a plain-text payload exactly.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11DataPreservationHelloAsync()
+        {
+            await TestBodyEchoAsync("hello").ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Verify a simple HTTP/1.1 echo request preserves a payload containing CRLF exactly.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11DataPreservationHelloCrLfAsync()
+        {
+            await TestBodyEchoAsync("hello\r\n").ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Verify HTTP/1.1 server-sent events stream the expected events with the correct content type.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11ServerSentEventsAsync()
+        {
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, ConfigureBasicRoutes))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                {
+                    client.Timeout = TimeSpan.FromSeconds(30);
+
+                    HttpResponseMessage response = await client.GetAsync(new Uri(host.BaseAddress, "/test/sse")).ConfigureAwait(false);
+                    string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    string contentType = response.Content.Headers.ContentType?.ToString() ?? String.Empty;
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        throw new InvalidOperationException("Expected HTTP/1.1 server-sent events response to succeed.");
+                    }
+
+                    if (!body.Contains("data: Event 1", StringComparison.Ordinal)
+                        || !body.Contains("data: Event 5", StringComparison.Ordinal))
+                    {
+                        throw new InvalidOperationException("Unexpected HTTP/1.1 server-sent events body.");
+                    }
+
+                    if (!contentType.Contains("text/event-stream", StringComparison.Ordinal))
+                    {
+                        throw new InvalidOperationException("Expected HTTP/1.1 server-sent events content type.");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Verify HTTP/1.1 server-sent event edge cases preserve multi-line, special-character, and unicode content.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11ServerSentEventsEdgeCasesAsync()
+        {
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, ConfigureBasicRoutes))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                {
+                    client.Timeout = TimeSpan.FromSeconds(30);
+
+                    HttpResponseMessage response = await client.GetAsync(new Uri(host.BaseAddress, "/test/sse-edge")).ConfigureAwait(false);
+                    string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        throw new InvalidOperationException("Expected HTTP/1.1 server-sent events edge-case response to succeed.");
+                    }
+
+                    if (!body.Contains("data: Line1", StringComparison.Ordinal)
+                        || !body.Contains("data: Line2", StringComparison.Ordinal)
+                        || !body.Contains("data: Special: <>&\"'", StringComparison.Ordinal)
+                        || !body.Contains("data: Unicode: 世界", StringComparison.Ordinal)
+                        || !body.Contains("data: done", StringComparison.Ordinal))
+                    {
+                        throw new InvalidOperationException("Unexpected HTTP/1.1 server-sent events edge-case body.");
+                    }
+                }
+            }
+        }
+
         private static void ConfigureBasicRoutes(Webserver server)
         {
             if (server == null) throw new ArgumentNullException(nameof(server));
@@ -475,6 +564,13 @@ namespace Test.Shared
             });
 
             server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.POST, "/test/echo-body", async (HttpContextBase context) =>
+            {
+                context.Response.StatusCode = 200;
+                context.Response.ContentType = "text/plain";
+                await context.Response.Send(context.Request.DataAsString, context.Token).ConfigureAwait(false);
+            });
+
+            server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.POST, "/test/echo", async (HttpContextBase context) =>
             {
                 context.Response.StatusCode = 200;
                 context.Response.ContentType = "text/plain";
@@ -594,6 +690,43 @@ namespace Test.Shared
                 await context.Response.SendChunk(Encoding.UTF8.GetBytes("single-byte\n"), false, context.Token).ConfigureAwait(false);
                 await context.Response.SendChunk(Encoding.UTF8.GetBytes(new string('x', 1024) + "\nlarge-chunk"), true, context.Token).ConfigureAwait(false);
             });
+
+            server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.GET, "/test/sse", async (HttpContextBase context) =>
+            {
+                context.Response.ServerSentEvents = true;
+                context.Response.StatusCode = 200;
+
+                for (int i = 1; i <= 5; i++)
+                {
+                    bool isFinal = i == 5;
+                    ServerSentEvent sse = new ServerSentEvent();
+                    sse.Id = i.ToString();
+                    sse.Data = "Event " + i.ToString();
+                    await context.Response.SendEvent(sse, isFinal, context.Token).ConfigureAwait(false);
+                }
+            });
+
+            server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.GET, "/test/sse-edge", async (HttpContextBase context) =>
+            {
+                context.Response.ServerSentEvents = true;
+                context.Response.StatusCode = 200;
+
+                ServerSentEvent multiLineEvent = new ServerSentEvent();
+                multiLineEvent.Data = "Line1\nLine2\nLine3";
+                await context.Response.SendEvent(multiLineEvent, false, context.Token).ConfigureAwait(false);
+
+                ServerSentEvent specialCharactersEvent = new ServerSentEvent();
+                specialCharactersEvent.Data = "Special: <>&\"'";
+                await context.Response.SendEvent(specialCharactersEvent, false, context.Token).ConfigureAwait(false);
+
+                ServerSentEvent unicodeEvent = new ServerSentEvent();
+                unicodeEvent.Data = "Unicode: 世界";
+                await context.Response.SendEvent(unicodeEvent, false, context.Token).ConfigureAwait(false);
+
+                ServerSentEvent finalEvent = new ServerSentEvent();
+                finalEvent.Data = "done";
+                await context.Response.SendEvent(finalEvent, true, context.Token).ConfigureAwait(false);
+            });
         }
 
         private static HttpClient CreateHttpClient(Version version)
@@ -637,6 +770,33 @@ namespace Test.Shared
                     if (!String.Equals(echoed, body, StringComparison.Ordinal))
                     {
                         throw new InvalidOperationException("Unexpected HTTP/1.1 chunked request body response.");
+                    }
+                }
+            }
+        }
+
+        private static async Task TestBodyEchoAsync(string body)
+        {
+            if (body == null) throw new ArgumentNullException(nameof(body));
+
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, ConfigureBasicRoutes))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                using (StringContent content = new StringContent(body, Encoding.UTF8, "text/plain"))
+                {
+                    HttpResponseMessage response = await client.PostAsync(new Uri(host.BaseAddress, "/test/echo"), content).ConfigureAwait(false);
+                    string echoed = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        throw new InvalidOperationException("Expected HTTP/1.1 echo request to succeed.");
+                    }
+
+                    if (!String.Equals(echoed, body, StringComparison.Ordinal))
+                    {
+                        throw new InvalidOperationException("Unexpected HTTP/1.1 echo response body.");
                     }
                 }
             }

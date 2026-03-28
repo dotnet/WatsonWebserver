@@ -170,6 +170,46 @@ namespace Test.XUnit
         }
 
         /// <summary>
+        /// Verify a simple HTTP/1.1 echo request preserves a plain-text payload exactly.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11DataPreservationHello()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11DataPreservationHelloAsync();
+        }
+
+        /// <summary>
+        /// Verify a simple HTTP/1.1 echo request preserves a payload containing CRLF exactly.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11DataPreservationHelloCrLf()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11DataPreservationHelloCrLfAsync();
+        }
+
+        /// <summary>
+        /// Verify HTTP/1.1 server-sent events stream the expected events with the correct content type.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11ServerSentEvents()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11ServerSentEventsAsync();
+        }
+
+        /// <summary>
+        /// Verify HTTP/1.1 server-sent event edge cases preserve multi-line, special-character, and unicode content.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11ServerSentEventsEdgeCases()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11ServerSentEventsEdgeCasesAsync();
+        }
+
+        /// <summary>
         /// Verify an unmatched HTTP/1.1 route returns the default 404 response.
         /// </summary>
         /// <returns>Task.</returns>
