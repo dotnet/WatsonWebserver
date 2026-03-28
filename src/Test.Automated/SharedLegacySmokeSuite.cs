@@ -21,6 +21,7 @@ namespace Test.Automated
         {
             _Results.Clear();
             await ExecuteTestAsync("HTTP/1.1 basic GET request", SharedLegacySmokeTests.TestHttp11BasicGetAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 basic POST request", SharedLegacySmokeTests.TestHttp11BasicPostAsync).ConfigureAwait(false);
             return _Results.ToArray();
         }
 

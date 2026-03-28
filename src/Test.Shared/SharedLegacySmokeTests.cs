@@ -1,6 +1,7 @@
 namespace Test.Shared
 {
     using System;
+    using System.Text;
     using System.Net.Http;
     using System.Threading.Tasks;
     using WatsonWebserver;
@@ -40,6 +41,35 @@ namespace Test.Shared
             }
         }
 
+        /// <summary>
+        /// Verify a basic HTTP/1.1 POST request succeeds against a low-level route.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11BasicPostAsync()
+        {
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, ConfigureBasicRoutes))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                using (StringContent content = new StringContent("test data", Encoding.UTF8, "text/plain"))
+                {
+                    HttpResponseMessage response = await client.PostAsync(new Uri(host.BaseAddress, "/test/post"), content).ConfigureAwait(false);
+                    string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        throw new InvalidOperationException("Expected HTTP/1.1 POST request to succeed.");
+                    }
+
+                    if (!String.Equals(body, "POST response", StringComparison.Ordinal))
+                    {
+                        throw new InvalidOperationException("Unexpected HTTP/1.1 POST response body.");
+                    }
+                }
+            }
+        }
+
         private static void ConfigureBasicRoutes(Webserver server)
         {
             if (server == null) throw new ArgumentNullException(nameof(server));
@@ -49,6 +79,13 @@ namespace Test.Shared
                 context.Response.StatusCode = 200;
                 context.Response.ContentType = "text/plain";
                 await context.Response.Send("GET response", context.Token).ConfigureAwait(false);
+            });
+
+            server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.POST, "/test/post", async (HttpContextBase context) =>
+            {
+                context.Response.StatusCode = 200;
+                context.Response.ContentType = "text/plain";
+                await context.Response.Send("POST response", context.Token).ConfigureAwait(false);
             });
         }
 

@@ -18,5 +18,15 @@ namespace Test.XUnit
         {
             await Test.Shared.SharedLegacySmokeTests.TestHttp11BasicGetAsync();
         }
+
+        /// <summary>
+        /// Verify a basic HTTP/1.1 POST request succeeds against a low-level route.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11BasicPostRequest()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11BasicPostAsync();
+        }
     }
 }
