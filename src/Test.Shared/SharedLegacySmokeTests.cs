@@ -100,6 +100,35 @@ namespace Test.Shared
         }
 
         /// <summary>
+        /// Verify a basic HTTP/1.1 PUT request succeeds against a low-level route.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11BasicPutAsync()
+        {
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, ConfigureBasicRoutes))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                using (StringContent content = new StringContent("put-data", Encoding.UTF8, "text/plain"))
+                {
+                    HttpResponseMessage response = await client.PutAsync(new Uri(host.BaseAddress, "/test/put"), content).ConfigureAwait(false);
+                    string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        throw new InvalidOperationException("Expected HTTP/1.1 PUT request to succeed.");
+                    }
+
+                    if (!String.Equals(body, "PUT response", StringComparison.Ordinal))
+                    {
+                        throw new InvalidOperationException("Unexpected HTTP/1.1 PUT response body.");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Verify a basic HTTP/1.1 DELETE request succeeds against a low-level route.
         /// </summary>
         /// <returns>Task.</returns>
@@ -216,6 +245,68 @@ namespace Test.Shared
             }
         }
 
+        /// <summary>
+        /// Verify a static content route returns the expected content.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11StaticContentRouteAsync()
+        {
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, ConfigureBasicRoutes))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                {
+                    HttpResponseMessage response = await client.GetAsync(new Uri(host.BaseAddress, "/static/test")).ConfigureAwait(false);
+                    string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        throw new InvalidOperationException("Expected HTTP/1.1 static content route to succeed.");
+                    }
+
+                    if (!String.Equals(body, "Static route response", StringComparison.Ordinal))
+                    {
+                        throw new InvalidOperationException("Unexpected HTTP/1.1 static content route response body.");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Verify request headers are echoed back with values preserved.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11HeaderEchoAsync()
+        {
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, ConfigureBasicRoutes))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                {
+                    HttpRequestMessage request = new HttpRequestMessage(System.Net.Http.HttpMethod.Get, new Uri(host.BaseAddress, "/test/header-echo"));
+                    request.Headers.TryAddWithoutValidation("X-Test-Colon", "value1:value2:value3");
+
+                    using (request)
+                    {
+                        HttpResponseMessage response = await client.SendAsync(request).ConfigureAwait(false);
+                        string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                        if (!response.IsSuccessStatusCode)
+                        {
+                            throw new InvalidOperationException("Expected HTTP/1.1 header echo request to succeed.");
+                        }
+
+                        if (!body.Contains("X-Test-Colon: value1:value2:value3", StringComparison.Ordinal))
+                        {
+                            throw new InvalidOperationException("Unexpected HTTP/1.1 header echo response body.");
+                        }
+                    }
+                }
+            }
+        }
+
         private static void ConfigureBasicRoutes(Webserver server)
         {
             if (server == null) throw new ArgumentNullException(nameof(server));
@@ -241,6 +332,13 @@ namespace Test.Shared
                 await context.Response.Send(context.Request.DataAsString, context.Token).ConfigureAwait(false);
             });
 
+            server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.PUT, "/test/put", async (HttpContextBase context) =>
+            {
+                context.Response.StatusCode = 200;
+                context.Response.ContentType = "text/plain";
+                await context.Response.Send("PUT response", context.Token).ConfigureAwait(false);
+            });
+
             server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.DELETE, "/test/delete", async (HttpContextBase context) =>
             {
                 context.Response.StatusCode = 200;
@@ -260,6 +358,38 @@ namespace Test.Shared
                 context.Response.StatusCode = 200;
                 context.Response.ContentType = "text/plain";
                 await context.Response.Send("Query " + context.Request.RetrieveQueryValue("name"), context.Token).ConfigureAwait(false);
+            });
+
+            server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.GET, "/static/test", async (HttpContextBase context) =>
+            {
+                context.Response.StatusCode = 200;
+                context.Response.ContentType = "text/plain";
+                await context.Response.Send("Static route response", context.Token).ConfigureAwait(false);
+            });
+
+            server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.GET, "/test/header-echo", async (HttpContextBase context) =>
+            {
+                StringBuilder builder = new StringBuilder();
+
+                for (int i = 0; i < context.Request.Headers.Count; i++)
+                {
+                    string key = context.Request.Headers.GetKey(i);
+                    string[] values = context.Request.Headers.GetValues(i);
+
+                    if (values == null) continue;
+
+                    for (int j = 0; j < values.Length; j++)
+                    {
+                        builder.Append(key);
+                        builder.Append(": ");
+                        builder.Append(values[j]);
+                        builder.Append('\n');
+                    }
+                }
+
+                context.Response.StatusCode = 200;
+                context.Response.ContentType = "text/plain";
+                await context.Response.Send(builder.ToString(), context.Token).ConfigureAwait(false);
             });
         }
 

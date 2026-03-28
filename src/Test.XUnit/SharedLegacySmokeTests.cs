@@ -40,6 +40,16 @@ namespace Test.XUnit
         }
 
         /// <summary>
+        /// Verify a basic HTTP/1.1 PUT request succeeds against a low-level route.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11BasicPutRequest()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11BasicPutAsync();
+        }
+
+        /// <summary>
         /// Verify a basic HTTP/1.1 DELETE request succeeds against a low-level route.
         /// </summary>
         /// <returns>Task.</returns>
@@ -67,6 +77,26 @@ namespace Test.XUnit
         public async Task Http11QueryStringRouteRequest()
         {
             await Test.Shared.SharedLegacySmokeTests.TestHttp11QueryStringRouteAsync();
+        }
+
+        /// <summary>
+        /// Verify a static content route returns the expected content.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11StaticContentRoute()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11StaticContentRouteAsync();
+        }
+
+        /// <summary>
+        /// Verify request headers are echoed back with values preserved.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11HeaderEchoRequest()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11HeaderEchoAsync();
         }
 
         /// <summary>

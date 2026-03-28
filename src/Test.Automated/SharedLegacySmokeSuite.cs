@@ -23,9 +23,12 @@ namespace Test.Automated
             await ExecuteTestAsync("HTTP/1.1 basic GET request", SharedLegacySmokeTests.TestHttp11BasicGetAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 basic POST request", SharedLegacySmokeTests.TestHttp11BasicPostAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 body echo request", SharedLegacySmokeTests.TestHttp11BodyEchoAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 basic PUT request", SharedLegacySmokeTests.TestHttp11BasicPutAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 basic DELETE request", SharedLegacySmokeTests.TestHttp11BasicDeleteAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 parameter route request", SharedLegacySmokeTests.TestHttp11ParameterRouteAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 query-string route request", SharedLegacySmokeTests.TestHttp11QueryStringRouteAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 static content route", SharedLegacySmokeTests.TestHttp11StaticContentRouteAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 header echo request", SharedLegacySmokeTests.TestHttp11HeaderEchoAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 unmatched route returns 404", SharedLegacySmokeTests.TestHttp11NotFoundRouteAsync).ConfigureAwait(false);
             return _Results.ToArray();
         }
