@@ -48,5 +48,15 @@ namespace Test.XUnit
         {
             await Test.Shared.SharedLegacySmokeTests.TestHttp11ParameterRouteAsync();
         }
+
+        /// <summary>
+        /// Verify a basic HTTP/1.1 query-string route resolves and returns the query value.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11QueryStringRouteRequest()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11QueryStringRouteAsync();
+        }
     }
 }

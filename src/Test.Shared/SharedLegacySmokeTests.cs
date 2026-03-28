@@ -131,6 +131,34 @@ namespace Test.Shared
             }
         }
 
+        /// <summary>
+        /// Verify a basic HTTP/1.1 query-string route resolves and returns the query value.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11QueryStringRouteAsync()
+        {
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, ConfigureBasicRoutes))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                {
+                    HttpResponseMessage response = await client.GetAsync(new Uri(host.BaseAddress, "/query?name=alpha")).ConfigureAwait(false);
+                    string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        throw new InvalidOperationException("Expected HTTP/1.1 query-string route request to succeed.");
+                    }
+
+                    if (!String.Equals(body, "Query alpha", StringComparison.Ordinal))
+                    {
+                        throw new InvalidOperationException("Unexpected HTTP/1.1 query-string route response body.");
+                    }
+                }
+            }
+        }
+
         private static void ConfigureBasicRoutes(Webserver server)
         {
             if (server == null) throw new ArgumentNullException(nameof(server));
@@ -161,6 +189,13 @@ namespace Test.Shared
                 context.Response.StatusCode = 200;
                 context.Response.ContentType = "text/plain";
                 await context.Response.Send("User " + context.Request.Url.Parameters["id"], context.Token).ConfigureAwait(false);
+            });
+
+            server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.GET, "/query", async (HttpContextBase context) =>
+            {
+                context.Response.StatusCode = 200;
+                context.Response.ContentType = "text/plain";
+                await context.Response.Send("Query " + context.Request.RetrieveQueryValue("name"), context.Token).ConfigureAwait(false);
             });
         }
 
