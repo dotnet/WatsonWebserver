@@ -3,6 +3,7 @@ namespace Test.Shared
     using System;
     using System.Collections.Generic;
     using System.Net.Http;
+    using System.Text;
     using System.Threading.Tasks;
     using WatsonWebserver;
     using WatsonWebserver.Core;
@@ -143,6 +144,31 @@ namespace Test.Shared
             }
         }
 
+        /// <summary>
+        /// Verify HTTP/1.1 stream send preserves direct passthrough body content.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp1StreamSendAsync()
+        {
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, ConfigureStreamRoutes))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                {
+                    string requestBody = "stream-payload";
+                    StringContent content = new StringContent(requestBody, Encoding.UTF8, "text/plain");
+                    HttpResponseMessage response = await client.PostAsync(new Uri(host.BaseAddress, "/stream"), content).ConfigureAwait(false);
+                    string responseBody = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                    if (!String.Equals(responseBody, requestBody, StringComparison.Ordinal))
+                    {
+                        throw new InvalidOperationException("Stream send response body did not match the direct passthrough request body.");
+                    }
+                }
+            }
+        }
+
         private static Task NoOpRouteAsync(HttpContextBase context)
         {
             return Task.CompletedTask;
@@ -167,6 +193,18 @@ namespace Test.Shared
                 {
                     await context.Response.Send("beta-beta", context.Token).ConfigureAwait(false);
                 }
+            });
+        }
+
+        private static void ConfigureStreamRoutes(Webserver server)
+        {
+            if (server == null) throw new ArgumentNullException(nameof(server));
+
+            server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.POST, "/stream", async (HttpContextBase context) =>
+            {
+                context.Response.StatusCode = 200;
+                context.Response.ContentType = "text/plain";
+                await context.Response.Send(context.Request.ContentLength, context.Request.Data, context.Token).ConfigureAwait(false);
             });
         }
 

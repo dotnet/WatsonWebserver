@@ -38,5 +38,15 @@ namespace Test.XUnit
         {
             await Test.Shared.SharedOptimizationSmokeTests.TestHttp1CachedHeadersAsync();
         }
+
+        /// <summary>
+        /// Verify HTTP/1.1 stream send preserves direct passthrough body content.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http1StreamSendPreservesDirectPassthroughBody()
+        {
+            await Test.Shared.SharedOptimizationSmokeTests.TestHttp1StreamSendAsync();
+        }
     }
 }

@@ -36,7 +36,7 @@ namespace Test.Automated
             await ExecuteTestAsync("Default serialization helper preserves pretty and compact JSON", SharedOptimizationSmokeTests.TestDefaultSerializationHelperAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 cached response headers preserve dynamic fields", SharedOptimizationSmokeTests.TestHttp1CachedHeadersAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 keep-alive pooling resets request state", TestHttp1KeepAlivePoolingAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/1.1 stream send preserves direct passthrough body", TestHttp1StreamSendAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 stream send preserves direct passthrough body", SharedOptimizationSmokeTests.TestHttp1StreamSendAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/2 lazy header materialization stays coherent", TestHttp2LazyHeaderMaterializationAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/3 lazy header materialization stays coherent", TestHttp3LazyHeaderMaterializationAsync).ConfigureAwait(false);
 
@@ -132,27 +132,6 @@ namespace Test.Automated
             }
         }
 
-        private async Task TestHttp1StreamSendAsync()
-        {
-            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, ConfigureStreamRoutes))
-            {
-                await host.StartAsync().ConfigureAwait(false);
-
-                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
-                {
-                    string requestBody = "stream-payload";
-                    StringContent content = new StringContent(requestBody, Encoding.UTF8, "text/plain");
-                    HttpResponseMessage response = await client.PostAsync(new Uri(host.BaseAddress, "/stream"), content).ConfigureAwait(false);
-                    string responseBody = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-
-                    if (!String.Equals(responseBody, requestBody, StringComparison.Ordinal))
-                    {
-                        throw new InvalidOperationException("Stream send response body did not match the direct passthrough request body.");
-                    }
-                }
-            }
-        }
-
         private async Task TestHttp2LazyHeaderMaterializationAsync()
         {
             using (LoopbackServerHost host = new LoopbackServerHost(true, true, false, ConfigureHeaderObservationRoutes))
@@ -195,16 +174,6 @@ namespace Test.Automated
         {
             server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.GET, "/state", SendStateObservationAsync);
             server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.POST, "/state", SendStateObservationAsync);
-        }
-
-        private static void ConfigureStreamRoutes(Webserver server)
-        {
-            server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.POST, "/stream", async (HttpContextBase context) =>
-            {
-                context.Response.StatusCode = 200;
-                context.Response.ContentType = "text/plain";
-                await context.Response.Send(context.Request.ContentLength, context.Request.Data, context.Token).ConfigureAwait(false);
-            });
         }
 
         private static void ConfigureHeaderObservationRoutes(Webserver server)
