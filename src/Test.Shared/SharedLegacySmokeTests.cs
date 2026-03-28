@@ -159,6 +159,34 @@ namespace Test.Shared
             }
         }
 
+        /// <summary>
+        /// Verify an unmatched HTTP/1.1 route returns the default 404 response.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11NotFoundRouteAsync()
+        {
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, ConfigureBasicRoutes))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                {
+                    HttpResponseMessage response = await client.GetAsync(new Uri(host.BaseAddress, "/does-not-exist")).ConfigureAwait(false);
+                    string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                    if ((int)response.StatusCode != 404)
+                    {
+                        throw new InvalidOperationException("Expected HTTP/1.1 unmatched route to return 404.");
+                    }
+
+                    if (!String.Equals(body, "not-found", StringComparison.Ordinal))
+                    {
+                        throw new InvalidOperationException("Unexpected HTTP/1.1 unmatched route response body.");
+                    }
+                }
+            }
+        }
+
         private static void ConfigureBasicRoutes(Webserver server)
         {
             if (server == null) throw new ArgumentNullException(nameof(server));

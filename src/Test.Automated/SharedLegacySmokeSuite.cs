@@ -25,6 +25,7 @@ namespace Test.Automated
             await ExecuteTestAsync("HTTP/1.1 basic DELETE request", SharedLegacySmokeTests.TestHttp11BasicDeleteAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 parameter route request", SharedLegacySmokeTests.TestHttp11ParameterRouteAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 query-string route request", SharedLegacySmokeTests.TestHttp11QueryStringRouteAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 unmatched route returns 404", SharedLegacySmokeTests.TestHttp11NotFoundRouteAsync).ConfigureAwait(false);
             return _Results.ToArray();
         }
 

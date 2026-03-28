@@ -58,5 +58,15 @@ namespace Test.XUnit
         {
             await Test.Shared.SharedLegacySmokeTests.TestHttp11QueryStringRouteAsync();
         }
+
+        /// <summary>
+        /// Verify an unmatched HTTP/1.1 route returns the default 404 response.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11UnmatchedRouteReturnsNotFound()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11NotFoundRouteAsync();
+        }
     }
 }
