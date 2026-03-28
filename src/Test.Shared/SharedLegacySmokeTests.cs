@@ -70,6 +70,39 @@ namespace Test.Shared
             }
         }
 
+        /// <summary>
+        /// Verify a basic HTTP/1.1 DELETE request succeeds against a low-level route.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11BasicDeleteAsync()
+        {
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, ConfigureBasicRoutes))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                {
+                    HttpRequestMessage request = new HttpRequestMessage(System.Net.Http.HttpMethod.Delete, new Uri(host.BaseAddress, "/test/delete"));
+
+                    using (request)
+                    {
+                        HttpResponseMessage response = await client.SendAsync(request).ConfigureAwait(false);
+                        string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                        if (!response.IsSuccessStatusCode)
+                        {
+                            throw new InvalidOperationException("Expected HTTP/1.1 DELETE request to succeed.");
+                        }
+
+                        if (!String.Equals(body, "DELETE response", StringComparison.Ordinal))
+                        {
+                            throw new InvalidOperationException("Unexpected HTTP/1.1 DELETE response body.");
+                        }
+                    }
+                }
+            }
+        }
+
         private static void ConfigureBasicRoutes(Webserver server)
         {
             if (server == null) throw new ArgumentNullException(nameof(server));
@@ -86,6 +119,13 @@ namespace Test.Shared
                 context.Response.StatusCode = 200;
                 context.Response.ContentType = "text/plain";
                 await context.Response.Send("POST response", context.Token).ConfigureAwait(false);
+            });
+
+            server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.DELETE, "/test/delete", async (HttpContextBase context) =>
+            {
+                context.Response.StatusCode = 200;
+                context.Response.ContentType = "text/plain";
+                await context.Response.Send("DELETE response", context.Token).ConfigureAwait(false);
             });
         }
 

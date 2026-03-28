@@ -28,5 +28,15 @@ namespace Test.XUnit
         {
             await Test.Shared.SharedLegacySmokeTests.TestHttp11BasicPostAsync();
         }
+
+        /// <summary>
+        /// Verify a basic HTTP/1.1 DELETE request succeeds against a low-level route.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11BasicDeleteRequest()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11BasicDeleteAsync();
+        }
     }
 }
