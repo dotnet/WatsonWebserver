@@ -32,13 +32,13 @@ namespace Test.Automated
         {
             _Results.Clear();
 
-            await ExecuteTestAsync("Static route snapshots remain readable during concurrent mutation", SharedOptimizationSmokeTests.TestStaticRouteSnapshotsAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("Default serialization helper preserves pretty and compact JSON", SharedOptimizationSmokeTests.TestDefaultSerializationHelperAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/1.1 cached response headers preserve dynamic fields", SharedOptimizationSmokeTests.TestHttp1CachedHeadersAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/1.1 keep-alive pooling resets request state", SharedOptimizationSmokeTests.TestHttp1KeepAlivePoolingAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/1.1 stream send preserves direct passthrough body", SharedOptimizationSmokeTests.TestHttp1StreamSendAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/2 lazy header materialization stays coherent", SharedOptimizationSmokeTests.TestHttp2LazyHeaderMaterializationAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/3 lazy header materialization stays coherent", SharedOptimizationSmokeTests.TestHttp3LazyHeaderMaterializationAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("Routing :: Static Route Snapshots Remain Readable During Concurrent Mutation", SharedOptimizationSmokeTests.TestStaticRouteSnapshotsAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("Serialization :: Default Helper Preserves Pretty And Compact JSON", SharedOptimizationSmokeTests.TestDefaultSerializationHelperAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Cached Response Headers Preserve Dynamic Fields", SharedOptimizationSmokeTests.TestHttp1CachedHeadersAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Keep-Alive Pooling Resets Request State", SharedOptimizationSmokeTests.TestHttp1KeepAlivePoolingAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Stream Send Preserves Direct Passthrough Body", SharedOptimizationSmokeTests.TestHttp1StreamSendAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/2 :: Lazy Header Materialization Stays Coherent", SharedOptimizationSmokeTests.TestHttp2LazyHeaderMaterializationAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/3 :: Lazy Header Materialization Stays Coherent", SharedOptimizationSmokeTests.TestHttp3LazyHeaderMaterializationAsync).ConfigureAwait(false);
 
             return _Results.ToArray();
         }
@@ -47,7 +47,7 @@ namespace Test.Automated
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
             AutomatedTestResult result = new AutomatedTestResult();
-            result.SuiteName = "Optimization Coverage";
+            result.SuiteName = String.Empty;
             result.TestName = testName;
 
             try

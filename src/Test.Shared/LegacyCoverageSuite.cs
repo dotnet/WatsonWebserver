@@ -41,6 +41,9 @@ namespace Test.Automated
     {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
+        private const string _Http11KeepAliveEnabledName = "HTTP/1.1 Keep-Alive Enabled";
+        private const string _Http11DefaultConfigurationName = "HTTP/1.1 Default Configuration";
+
         #region Private-Members
 
         private static readonly List<AutomatedTestResult> _TestResults = new List<AutomatedTestResult>();
@@ -71,7 +74,7 @@ namespace Test.Automated
             }
             catch (Exception ex)
             {
-                LogTest("Legacy Coverage Suite Fatal Error", false, 0, ex.Message);
+                LogTest("Automated Coverage Fatal Error", false, 0, ex.Message);
             }
 
             return _TestResults.ToArray();
@@ -103,46 +106,46 @@ namespace Test.Automated
                 await Task.Delay(1000).ConfigureAwait(false); // Allow server to start
 
                 // Basic functionality tests
-                await TestBasicHttpMethods(baseUrl, "WatsonWebserver").ConfigureAwait(false);
-                await TestHttp1KeepAlive("127.0.0.1", port, "WatsonWebserver").ConfigureAwait(false);
-                await TestHttp1WireProtocol("127.0.0.1", port, "WatsonWebserver", true).ConfigureAwait(false);
+                await TestBasicHttpMethods(baseUrl, _Http11KeepAliveEnabledName).ConfigureAwait(false);
+                await TestHttp1KeepAlive("127.0.0.1", port, _Http11KeepAliveEnabledName).ConfigureAwait(false);
+                await TestHttp1WireProtocol("127.0.0.1", port, _Http11KeepAliveEnabledName, true).ConfigureAwait(false);
 
                 // Chunked transfer encoding tests
-                await TestChunkedTransferEncoding(baseUrl, "WatsonWebserver").ConfigureAwait(false);
+                await TestChunkedTransferEncoding(baseUrl, _Http11KeepAliveEnabledName).ConfigureAwait(false);
 
                 // Server-sent events tests
-                await TestServerSentEvents(baseUrl, "WatsonWebserver").ConfigureAwait(false);
+                await TestServerSentEvents(baseUrl, _Http11KeepAliveEnabledName).ConfigureAwait(false);
 
                 // Data preservation tests
-                await TestDataPreservation(baseUrl, "WatsonWebserver").ConfigureAwait(false);
+                await TestDataPreservation(baseUrl, _Http11KeepAliveEnabledName).ConfigureAwait(false);
 
                 // Chunked request body tests
-                await TestChunkedRequestBody(baseUrl, "WatsonWebserver").ConfigureAwait(false);
+                await TestChunkedRequestBody(baseUrl, _Http11KeepAliveEnabledName).ConfigureAwait(false);
 
                 // Comprehensive routing tests
-                await TestComprehensiveRouting(baseUrl, "WatsonWebserver").ConfigureAwait(false);
+                await TestComprehensiveRouting(baseUrl, _Http11KeepAliveEnabledName).ConfigureAwait(false);
 
                 // OpenAPI/Swagger tests
-                await TestOpenApi(baseUrl, "WatsonWebserver").ConfigureAwait(false);
+                await TestOpenApi(baseUrl, _Http11KeepAliveEnabledName).ConfigureAwait(false);
 
                 // Negative tests
-                await TestNegativeScenarios(baseUrl, "WatsonWebserver").ConfigureAwait(false);
+                await TestNegativeScenarios(baseUrl, _Http11KeepAliveEnabledName).ConfigureAwait(false);
 
                 // Runtime route management tests
-                await TestRuntimeRouteManagement(server, baseUrl, "WatsonWebserver").ConfigureAwait(false);
+                await TestRuntimeRouteManagement(server, baseUrl, _Http11KeepAliveEnabledName).ConfigureAwait(false);
 
                 // PostRouting execution verification
-                await TestPostRoutingExecution(baseUrl, "WatsonWebserver").ConfigureAwait(false);
+                await TestPostRoutingExecution(baseUrl, _Http11KeepAliveEnabledName).ConfigureAwait(false);
 
                 // Content route with query string
-                await TestContentRouteWithQueryString(baseUrl, "WatsonWebserver").ConfigureAwait(false);
+                await TestContentRouteWithQueryString(baseUrl, _Http11KeepAliveEnabledName).ConfigureAwait(false);
 
                 // Additional directory traversal patterns
-                await TestDirectoryTraversalPatterns(baseUrl, "WatsonWebserver").ConfigureAwait(false);
+                await TestDirectoryTraversalPatterns(baseUrl, _Http11KeepAliveEnabledName).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                LogTest("WatsonWebserver Setup", false, 0, $"Failed to start: {ex.Message}");
+                LogTest(_Http11KeepAliveEnabledName + " Setup", false, 0, $"Failed to start: {ex.Message}");
             }
             finally
             {
@@ -175,48 +178,48 @@ namespace Test.Automated
                 await Task.Delay(1000).ConfigureAwait(false); // Allow server to start
 
                 // Basic functionality tests
-                await TestBasicHttpMethods(baseUrl, "WatsonWebserver Secondary").ConfigureAwait(false);
-                await TestHttp1WireProtocol("127.0.0.1", port, "WatsonWebserver Secondary", false).ConfigureAwait(false);
+                await TestBasicHttpMethods(baseUrl, _Http11DefaultConfigurationName).ConfigureAwait(false);
+                await TestHttp1WireProtocol("127.0.0.1", port, _Http11DefaultConfigurationName, false).ConfigureAwait(false);
 
                 // Chunked transfer encoding tests
-                await TestChunkedTransferEncoding(baseUrl, "WatsonWebserver Secondary").ConfigureAwait(false);
+                await TestChunkedTransferEncoding(baseUrl, _Http11DefaultConfigurationName).ConfigureAwait(false);
 
                 // Server-sent events tests
-                await TestServerSentEvents(baseUrl, "WatsonWebserver Secondary").ConfigureAwait(false);
+                await TestServerSentEvents(baseUrl, _Http11DefaultConfigurationName).ConfigureAwait(false);
 
                 // Data preservation tests
-                await TestDataPreservation(baseUrl, "WatsonWebserver Secondary").ConfigureAwait(false);
+                await TestDataPreservation(baseUrl, _Http11DefaultConfigurationName).ConfigureAwait(false);
 
                 // Chunked request body tests
-                await TestChunkedRequestBody(baseUrl, "WatsonWebserver Secondary").ConfigureAwait(false);
+                await TestChunkedRequestBody(baseUrl, _Http11DefaultConfigurationName).ConfigureAwait(false);
 
                 // Comprehensive routing tests
-                await TestComprehensiveRouting(baseUrl, "WatsonWebserver Secondary").ConfigureAwait(false);
+                await TestComprehensiveRouting(baseUrl, _Http11DefaultConfigurationName).ConfigureAwait(false);
 
                 // OpenAPI/Swagger tests
-                await TestOpenApi(baseUrl, "WatsonWebserver Secondary").ConfigureAwait(false);
+                await TestOpenApi(baseUrl, _Http11DefaultConfigurationName).ConfigureAwait(false);
 
                 // Header parsing tests
-                await TestHeaderParsing(baseUrl, "WatsonWebserver Secondary").ConfigureAwait(false);
+                await TestHeaderParsing(baseUrl, _Http11DefaultConfigurationName).ConfigureAwait(false);
 
                 // Negative tests
-                await TestNegativeScenarios(baseUrl, "WatsonWebserver Secondary").ConfigureAwait(false);
+                await TestNegativeScenarios(baseUrl, _Http11DefaultConfigurationName).ConfigureAwait(false);
 
                 // Runtime route management tests
-                await TestRuntimeRouteManagement(server, baseUrl, "WatsonWebserver Secondary").ConfigureAwait(false);
+                await TestRuntimeRouteManagement(server, baseUrl, _Http11DefaultConfigurationName).ConfigureAwait(false);
 
                 // PostRouting execution verification
-                await TestPostRoutingExecution(baseUrl, "WatsonWebserver Secondary").ConfigureAwait(false);
+                await TestPostRoutingExecution(baseUrl, _Http11DefaultConfigurationName).ConfigureAwait(false);
 
                 // Content route with query string
-                await TestContentRouteWithQueryString(baseUrl, "WatsonWebserver Secondary").ConfigureAwait(false);
+                await TestContentRouteWithQueryString(baseUrl, _Http11DefaultConfigurationName).ConfigureAwait(false);
 
                 // Additional directory traversal patterns
-                await TestDirectoryTraversalPatterns(baseUrl, "WatsonWebserver Secondary").ConfigureAwait(false);
+                await TestDirectoryTraversalPatterns(baseUrl, _Http11DefaultConfigurationName).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                LogTest("WatsonWebserver Secondary Setup", false, 0, $"Failed to start: {ex.Message}");
+                LogTest(_Http11DefaultConfigurationName + " Setup", false, 0, $"Failed to start: {ex.Message}");
             }
             finally
             {
@@ -7056,7 +7059,7 @@ namespace Test.Automated
 
                 result = new AutomatedTestResult
                 {
-                    SuiteName = "Legacy Coverage",
+                    SuiteName = String.Empty,
                     TestName = testName,
                     Passed = passed,
                     ElapsedMilliseconds = elapsedMs,

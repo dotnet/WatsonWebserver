@@ -24,11 +24,11 @@ namespace Test.Automated
         {
             _Results.Clear();
 
-            await ExecuteTestAsync("HTTP/2 writer serialization correctness", ProtocolGapSharedTests.RunHttp2WriterSerializationCorrectnessAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/3 transport backpressure behavior", ProtocolGapSharedTests.RunHttp3TransportBackpressureAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/3 sibling stream survival after abort", ProtocolGapSharedTests.RunHttp3SiblingStreamSurvivalAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("Cross-protocol auth/session/event parity", ProtocolGapSharedTests.RunCrossProtocolAuthSessionEventParityAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("Mixed-version client interoperability", ProtocolGapSharedTests.RunMixedVersionClientInteroperabilityAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/2 :: Writer Serialization Correctness", ProtocolGapSharedTests.RunHttp2WriterSerializationCorrectnessAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/3 :: Transport Backpressure Behavior", ProtocolGapSharedTests.RunHttp3TransportBackpressureAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/3 :: Sibling Stream Survival After Abort", ProtocolGapSharedTests.RunHttp3SiblingStreamSurvivalAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("Cross-Protocol :: Auth, Session, And Event Parity", ProtocolGapSharedTests.RunCrossProtocolAuthSessionEventParityAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("Interop :: Mixed-Version Client Interoperability", ProtocolGapSharedTests.RunMixedVersionClientInteroperabilityAsync).ConfigureAwait(false);
 
             return _Results.ToArray();
         }
@@ -37,7 +37,7 @@ namespace Test.Automated
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
             AutomatedTestResult result = new AutomatedTestResult();
-            result.SuiteName = "Shared Protocol Gap Coverage";
+            result.SuiteName = String.Empty;
             result.TestName = testName;
 
             try

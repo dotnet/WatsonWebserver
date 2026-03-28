@@ -23,12 +23,12 @@ namespace Test.Automated
         public async Task<IReadOnlyList<AutomatedTestResult>> RunAsync()
         {
             _Results.Clear();
-            await ExecuteTestAsync("HTTP/2 h2c basic GET request", SharedHttp2SmokeTests.TestHttp2BasicGetAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/2 h2c continuation header block request", SharedHttp2SmokeTests.TestHttp2ContinuationHeaderBlockAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/2 h2c padded priority headers and data request", SharedHttp2SmokeTests.TestHttp2PaddedPriorityHeadersAndDataAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/2 h2c response trailers", SharedHttp2SmokeTests.TestHttp2ResponseTrailersAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/2 h2c chunked API response", SharedHttp2SmokeTests.TestHttp2ChunkedApiResponseAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/2 h2c SSE API response", SharedHttp2SmokeTests.TestHttp2ServerSentEventsResponseAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/2 h2c :: Basic GET Request", SharedHttp2SmokeTests.TestHttp2BasicGetAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/2 h2c :: Continuation Header Block Request", SharedHttp2SmokeTests.TestHttp2ContinuationHeaderBlockAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/2 h2c :: Padded Priority Headers And Data Request", SharedHttp2SmokeTests.TestHttp2PaddedPriorityHeadersAndDataAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/2 h2c :: Response Trailers", SharedHttp2SmokeTests.TestHttp2ResponseTrailersAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/2 h2c :: Chunked API Response", SharedHttp2SmokeTests.TestHttp2ChunkedApiResponseAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/2 h2c :: SSE API Response", SharedHttp2SmokeTests.TestHttp2ServerSentEventsResponseAsync).ConfigureAwait(false);
             return _Results.ToArray();
         }
 
@@ -36,7 +36,7 @@ namespace Test.Automated
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
             AutomatedTestResult result = new AutomatedTestResult();
-            result.SuiteName = "Shared HTTP/2 Smoke Coverage";
+            result.SuiteName = String.Empty;
             result.TestName = testName;
 
             try

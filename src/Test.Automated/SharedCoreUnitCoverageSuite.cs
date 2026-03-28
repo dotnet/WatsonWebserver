@@ -43,7 +43,7 @@ namespace Test.Automated
 
             Stopwatch stopwatch = Stopwatch.StartNew();
             AutomatedTestResult result = new AutomatedTestResult();
-            result.SuiteName = "Shared Core Unit Coverage";
+            result.SuiteName = String.Empty;
             result.TestName = test.Name;
 
             try

@@ -42,7 +42,7 @@ namespace Test.XUnit
         /// </summary>
         /// <param name="testName">Legacy automated test name.</param>
         [Theory]
-        [MemberData(nameof(LegacyCoverageCases))]
+        [MemberData(nameof(LegacyCoverageCases), DisableDiscoveryEnumeration = true)]
         public void LegacyCoverageCasePasses(string testName)
         {
             bool found = _Fixture.Results.TryGetValue(testName, out AutomatedTestResult result);

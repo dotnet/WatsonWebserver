@@ -39,7 +39,7 @@ namespace Test.Automated
         {
             get
             {
-                return String.IsNullOrEmpty(SuiteName) ? TestName : SuiteName + " :: " + TestName;
+                return TestName;
             }
         }
     }

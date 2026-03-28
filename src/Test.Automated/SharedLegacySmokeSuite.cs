@@ -20,32 +20,32 @@ namespace Test.Automated
         public async Task<IReadOnlyList<AutomatedTestResult>> RunAsync()
         {
             _Results.Clear();
-            await ExecuteTestAsync("HTTP/1.1 basic GET request", SharedLegacySmokeTests.TestHttp11BasicGetAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/1.1 basic POST request", SharedLegacySmokeTests.TestHttp11BasicPostAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/1.1 body echo request", SharedLegacySmokeTests.TestHttp11BodyEchoAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/1.1 basic PUT request", SharedLegacySmokeTests.TestHttp11BasicPutAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/1.1 basic DELETE request", SharedLegacySmokeTests.TestHttp11BasicDeleteAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/1.1 parameter route request", SharedLegacySmokeTests.TestHttp11ParameterRouteAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/1.1 query-string route request", SharedLegacySmokeTests.TestHttp11QueryStringRouteAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/1.1 static content route", SharedLegacySmokeTests.TestHttp11StaticContentRouteAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/1.1 header echo request", SharedLegacySmokeTests.TestHttp11HeaderEchoAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/1.1 chunked transfer response", SharedLegacySmokeTests.TestHttp11ChunkedTransferEncodingAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/1.1 chunked edge-case response", SharedLegacySmokeTests.TestHttp11ChunkedEdgeCasesAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/1.1 chunked request body via DataAsBytes", SharedLegacySmokeTests.TestHttp11ChunkedRequestBodyDataAsBytesAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/1.1 chunked request body via DataAsString", SharedLegacySmokeTests.TestHttp11ChunkedRequestBodyDataAsStringAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/1.1 chunked request body via ReadBodyAsync", SharedLegacySmokeTests.TestHttp11ChunkedRequestBodyReadBodyAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/1.1 chunked request body via manual chunk read", SharedLegacySmokeTests.TestHttp11ChunkedRequestBodyManualReadChunkAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/1.1 large chunked request body", SharedLegacySmokeTests.TestHttp11LargeChunkedRequestBodyAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/1.1 data preservation hello", SharedLegacySmokeTests.TestHttp11DataPreservationHelloAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/1.1 data preservation hello CRLF", SharedLegacySmokeTests.TestHttp11DataPreservationHelloCrLfAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/1.1 server-sent events", SharedLegacySmokeTests.TestHttp11ServerSentEventsAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/1.1 server-sent events edge cases", SharedLegacySmokeTests.TestHttp11ServerSentEventsEdgeCasesAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/1.1 double-send response handling", SharedLegacySmokeTests.TestHttp11DoubleSendResponseAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/1.1 exception in route handler returns 500", SharedLegacySmokeTests.TestHttp11ExceptionInRouteHandlerAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/1.1 empty POST body", SharedLegacySmokeTests.TestHttp11EmptyPostBodyAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/1.1 OPTIONS preflight", SharedLegacySmokeTests.TestHttp11OptionsPreflightAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/1.1 request with many headers", SharedLegacySmokeTests.TestHttp11RequestWithManyHeadersAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/1.1 unmatched route returns 404", SharedLegacySmokeTests.TestHttp11NotFoundRouteAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Basic GET Request", SharedLegacySmokeTests.TestHttp11BasicGetAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Basic POST Request", SharedLegacySmokeTests.TestHttp11BasicPostAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Body Echo Request", SharedLegacySmokeTests.TestHttp11BodyEchoAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Basic PUT Request", SharedLegacySmokeTests.TestHttp11BasicPutAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Basic DELETE Request", SharedLegacySmokeTests.TestHttp11BasicDeleteAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Parameter Route Request", SharedLegacySmokeTests.TestHttp11ParameterRouteAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Query-String Route Request", SharedLegacySmokeTests.TestHttp11QueryStringRouteAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Static Content Route", SharedLegacySmokeTests.TestHttp11StaticContentRouteAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Header Echo Request", SharedLegacySmokeTests.TestHttp11HeaderEchoAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Chunked Transfer Response", SharedLegacySmokeTests.TestHttp11ChunkedTransferEncodingAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Chunked Edge-Case Response", SharedLegacySmokeTests.TestHttp11ChunkedEdgeCasesAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Chunked Request Body Via DataAsBytes", SharedLegacySmokeTests.TestHttp11ChunkedRequestBodyDataAsBytesAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Chunked Request Body Via DataAsString", SharedLegacySmokeTests.TestHttp11ChunkedRequestBodyDataAsStringAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Chunked Request Body Via ReadBodyAsync", SharedLegacySmokeTests.TestHttp11ChunkedRequestBodyReadBodyAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Chunked Request Body Via Manual Chunk Read", SharedLegacySmokeTests.TestHttp11ChunkedRequestBodyManualReadChunkAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Large Chunked Request Body", SharedLegacySmokeTests.TestHttp11LargeChunkedRequestBodyAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Data Preservation Hello", SharedLegacySmokeTests.TestHttp11DataPreservationHelloAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Data Preservation Hello CRLF", SharedLegacySmokeTests.TestHttp11DataPreservationHelloCrLfAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Server-Sent Events", SharedLegacySmokeTests.TestHttp11ServerSentEventsAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Server-Sent Events Edge Cases", SharedLegacySmokeTests.TestHttp11ServerSentEventsEdgeCasesAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Double-Send Response Handling", SharedLegacySmokeTests.TestHttp11DoubleSendResponseAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Exception In Route Handler Returns 500", SharedLegacySmokeTests.TestHttp11ExceptionInRouteHandlerAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Empty POST Body", SharedLegacySmokeTests.TestHttp11EmptyPostBodyAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: OPTIONS Preflight", SharedLegacySmokeTests.TestHttp11OptionsPreflightAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Request With Many Headers", SharedLegacySmokeTests.TestHttp11RequestWithManyHeadersAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Unmatched Route Returns 404", SharedLegacySmokeTests.TestHttp11NotFoundRouteAsync).ConfigureAwait(false);
             return _Results.ToArray();
         }
 
@@ -53,7 +53,7 @@ namespace Test.Automated
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
             AutomatedTestResult result = new AutomatedTestResult();
-            result.SuiteName = "Shared Legacy Smoke Coverage";
+            result.SuiteName = String.Empty;
             result.TestName = testName;
 
             try
