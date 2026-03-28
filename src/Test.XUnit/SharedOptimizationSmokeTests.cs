@@ -28,5 +28,15 @@ namespace Test.XUnit
         {
             await Test.Shared.SharedOptimizationSmokeTests.TestDefaultSerializationHelperAsync();
         }
+
+        /// <summary>
+        /// Verify HTTP/1.1 cached response headers preserve dynamic fields.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http1CachedResponseHeadersPreserveDynamicFields()
+        {
+            await Test.Shared.SharedOptimizationSmokeTests.TestHttp1CachedHeadersAsync();
+        }
     }
 }

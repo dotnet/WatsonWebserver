@@ -2,7 +2,9 @@ namespace Test.Shared
 {
     using System;
     using System.Collections.Generic;
+    using System.Net.Http;
     using System.Threading.Tasks;
+    using WatsonWebserver;
     using WatsonWebserver.Core;
     using WatsonWebserver.Core.Routing;
     using CoreHttpMethod = WatsonWebserver.Core.HttpMethod;
@@ -96,9 +98,89 @@ namespace Test.Shared
             return Task.CompletedTask;
         }
 
+        /// <summary>
+        /// Verify HTTP/1.1 cached response headers preserve dynamic fields.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp1CachedHeadersAsync()
+        {
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, ConfigureCachedHeaderRoutes))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                {
+                    HttpResponseMessage firstResponse = await client.GetAsync(new Uri(host.BaseAddress, "/cache?case=first")).ConfigureAwait(false);
+                    HttpResponseMessage secondResponse = await client.GetAsync(new Uri(host.BaseAddress, "/cache?case=second")).ConfigureAwait(false);
+                    string firstBody = await firstResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    string secondBody = await secondResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                    if (!String.Equals(firstBody, "alpha", StringComparison.Ordinal))
+                    {
+                        throw new InvalidOperationException("Unexpected first response body.");
+                    }
+
+                    if (!String.Equals(secondBody, "beta-beta", StringComparison.Ordinal))
+                    {
+                        throw new InvalidOperationException("Unexpected second response body.");
+                    }
+
+                    if (!firstResponse.Headers.Contains("X-Test-Only"))
+                    {
+                        throw new InvalidOperationException("Expected first response custom header.");
+                    }
+
+                    if (secondResponse.Headers.Contains("X-Test-Only"))
+                    {
+                        throw new InvalidOperationException("Second response should not inherit a cached custom header.");
+                    }
+
+                    if (firstResponse.Content.Headers.ContentLength != 5 || secondResponse.Content.Headers.ContentLength != 9)
+                    {
+                        throw new InvalidOperationException("Content-Length should remain dynamic when header templates are cached.");
+                    }
+                }
+            }
+        }
+
         private static Task NoOpRouteAsync(HttpContextBase context)
         {
             return Task.CompletedTask;
+        }
+
+        private static void ConfigureCachedHeaderRoutes(Webserver server)
+        {
+            if (server == null) throw new ArgumentNullException(nameof(server));
+
+            server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.GET, "/cache", async (HttpContextBase context) =>
+            {
+                string testCase = context.Request.RetrieveQueryValue("case");
+                context.Response.StatusCode = 200;
+                context.Response.ContentType = "text/plain";
+
+                if (String.Equals(testCase, "first", StringComparison.Ordinal))
+                {
+                    context.Response.Headers["X-Test-Only"] = "yes";
+                    await context.Response.Send("alpha", context.Token).ConfigureAwait(false);
+                }
+                else
+                {
+                    await context.Response.Send("beta-beta", context.Token).ConfigureAwait(false);
+                }
+            });
+        }
+
+        private static HttpClient CreateHttpClient(Version version)
+        {
+            if (version == null) throw new ArgumentNullException(nameof(version));
+
+            HttpClientHandler handler = new HttpClientHandler();
+            handler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+
+            HttpClient client = new HttpClient(handler);
+            client.DefaultRequestVersion = version;
+            client.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionExact;
+            return client;
         }
     }
 }
