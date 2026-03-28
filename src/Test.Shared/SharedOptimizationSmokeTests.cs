@@ -3,6 +3,7 @@ namespace Test.Shared
     using System;
     using System.Collections.Generic;
     using System.Net.Http;
+    using System.Net.Sockets;
     using System.Text;
     using System.Threading.Tasks;
     using WatsonWebserver;
@@ -169,6 +170,73 @@ namespace Test.Shared
             }
         }
 
+        /// <summary>
+        /// Verify HTTP/1.1 keep-alive pooling resets request state between requests.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp1KeepAlivePoolingAsync()
+        {
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, ConfigureStateRoutes))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+
+                using (TcpClient client = new TcpClient())
+                {
+                    await client.ConnectAsync("127.0.0.1", host.BaseAddress.Port).ConfigureAwait(false);
+
+                    using (NetworkStream stream = client.GetStream())
+                    {
+                        string firstBody = "first-body";
+                        byte[] firstBodyBytes = Encoding.UTF8.GetBytes(firstBody);
+                        string firstRequest =
+                            "POST /state HTTP/1.1\r\n" +
+                            "Host: 127.0.0.1\r\n" +
+                            "Connection: keep-alive\r\n" +
+                            "Content-Type: text/plain\r\n" +
+                            "X-Trace: first\r\n" +
+                            "Content-Length: " + firstBodyBytes.Length.ToString() + "\r\n\r\n" +
+                            firstBody;
+                        byte[] firstRequestBytes = Encoding.ASCII.GetBytes(firstRequest);
+
+                        await stream.WriteAsync(firstRequestBytes, 0, firstRequestBytes.Length).ConfigureAwait(false);
+                        await stream.FlushAsync().ConfigureAwait(false);
+
+                        RawHttpResponse firstResponse = await ReadRawHttpResponseAsync(stream).ConfigureAwait(false);
+                        StateObservationResponse firstObservation = Deserialize<StateObservationResponse>(firstResponse.Body);
+
+                        if (!String.Equals(firstObservation.TraceHeader, "first", StringComparison.Ordinal)
+                            || !String.Equals(firstObservation.Body, firstBody, StringComparison.Ordinal)
+                            || firstObservation.ContentLength != firstBodyBytes.Length)
+                        {
+                            throw new InvalidOperationException("First keep-alive request did not echo the expected state.");
+                        }
+
+                        string secondRequest =
+                            "GET /state HTTP/1.1\r\n" +
+                            "Host: 127.0.0.1\r\n" +
+                            "Connection: close\r\n\r\n";
+                        byte[] secondRequestBytes = Encoding.ASCII.GetBytes(secondRequest);
+
+                        await stream.WriteAsync(secondRequestBytes, 0, secondRequestBytes.Length).ConfigureAwait(false);
+                        await stream.FlushAsync().ConfigureAwait(false);
+
+                        RawHttpResponse secondResponse = await ReadRawHttpResponseAsync(stream).ConfigureAwait(false);
+                        StateObservationResponse secondObservation = Deserialize<StateObservationResponse>(secondResponse.Body);
+
+                        if (!String.IsNullOrEmpty(secondObservation.TraceHeader))
+                        {
+                            throw new InvalidOperationException("Pooled request state leaked a header into the next keep-alive request.");
+                        }
+
+                        if (!String.IsNullOrEmpty(secondObservation.Body) || secondObservation.ContentLength != 0 || secondObservation.ChunkedTransfer)
+                        {
+                            throw new InvalidOperationException("Pooled request state leaked body metadata into the next keep-alive request.");
+                        }
+                    }
+                }
+            }
+        }
+
         private static Task NoOpRouteAsync(HttpContextBase context)
         {
             return Task.CompletedTask;
@@ -208,6 +276,27 @@ namespace Test.Shared
             });
         }
 
+        private static void ConfigureStateRoutes(Webserver server)
+        {
+            if (server == null) throw new ArgumentNullException(nameof(server));
+
+            server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.GET, "/state", SendStateObservationAsync);
+            server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.POST, "/state", SendStateObservationAsync);
+        }
+
+        private static async Task SendStateObservationAsync(HttpContextBase context)
+        {
+            StateObservationResponse response = new StateObservationResponse();
+            response.TraceHeader = context.Request.RetrieveHeaderValue("x-trace");
+            response.Body = context.Request.DataAsString;
+            response.ContentLength = context.Request.ContentLength;
+            response.ChunkedTransfer = context.Request.ChunkedTransfer;
+
+            context.Response.StatusCode = 200;
+            context.Response.ContentType = "application/json";
+            await context.Response.Send(System.Text.Json.JsonSerializer.Serialize(response), context.Token).ConfigureAwait(false);
+        }
+
         private static HttpClient CreateHttpClient(Version version)
         {
             if (version == null) throw new ArgumentNullException(nameof(version));
@@ -219,6 +308,92 @@ namespace Test.Shared
             client.DefaultRequestVersion = version;
             client.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionExact;
             return client;
+        }
+
+        private static T Deserialize<T>(string json)
+        {
+            T model = System.Text.Json.JsonSerializer.Deserialize<T>(json);
+
+            if (model == null)
+            {
+                throw new InvalidOperationException("JSON payload deserialized to null.");
+            }
+
+            return model;
+        }
+
+        private static async Task<RawHttpResponse> ReadRawHttpResponseAsync(NetworkStream stream)
+        {
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+
+            List<byte> headerBytes = new List<byte>();
+            byte[] oneByte = new byte[1];
+
+            while (true)
+            {
+                int bytesRead = await stream.ReadAsync(oneByte, 0, 1).ConfigureAwait(false);
+                if (bytesRead < 1)
+                {
+                    throw new InvalidOperationException("Unexpected end of stream while reading HTTP response headers.");
+                }
+
+                headerBytes.Add(oneByte[0]);
+
+                if (headerBytes.Count >= 4
+                    && headerBytes[headerBytes.Count - 4] == (byte)'\r'
+                    && headerBytes[headerBytes.Count - 3] == (byte)'\n'
+                    && headerBytes[headerBytes.Count - 2] == (byte)'\r'
+                    && headerBytes[headerBytes.Count - 1] == (byte)'\n')
+                {
+                    break;
+                }
+            }
+
+            string headerText = Encoding.ASCII.GetString(headerBytes.ToArray());
+            string[] headerLines = headerText.Split(new string[] { "\r\n" }, StringSplitOptions.None);
+            RawHttpResponse response = new RawHttpResponse();
+            response.StatusLine = headerLines[0];
+
+            for (int i = 1; i < headerLines.Length; i++)
+            {
+                if (String.IsNullOrEmpty(headerLines[i]))
+                {
+                    continue;
+                }
+
+                int separator = headerLines[i].IndexOf(':');
+                if (separator > 0)
+                {
+                    string key = headerLines[i].Substring(0, separator);
+                    string value = headerLines[i].Substring(separator + 1).Trim();
+                    response.Headers[key] = value;
+                }
+            }
+
+            int contentLength = 0;
+            string contentLengthValue = response.Headers["Content-Length"];
+
+            if (!String.IsNullOrEmpty(contentLengthValue))
+            {
+                contentLength = Int32.Parse(contentLengthValue);
+            }
+
+            byte[] bodyBytes = new byte[contentLength];
+            int totalRead = 0;
+
+            while (totalRead < contentLength)
+            {
+                int bytesRead = await stream.ReadAsync(bodyBytes, totalRead, contentLength - totalRead).ConfigureAwait(false);
+                if (bytesRead < 1)
+                {
+                    throw new InvalidOperationException("Unexpected end of stream while reading HTTP response body.");
+                }
+
+                totalRead += bytesRead;
+            }
+
+            response.Body = Encoding.UTF8.GetString(bodyBytes);
+            return response;
         }
     }
 }

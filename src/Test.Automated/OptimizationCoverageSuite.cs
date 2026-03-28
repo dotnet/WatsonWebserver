@@ -35,7 +35,7 @@ namespace Test.Automated
             await ExecuteTestAsync("Static route snapshots remain readable during concurrent mutation", SharedOptimizationSmokeTests.TestStaticRouteSnapshotsAsync).ConfigureAwait(false);
             await ExecuteTestAsync("Default serialization helper preserves pretty and compact JSON", SharedOptimizationSmokeTests.TestDefaultSerializationHelperAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 cached response headers preserve dynamic fields", SharedOptimizationSmokeTests.TestHttp1CachedHeadersAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("HTTP/1.1 keep-alive pooling resets request state", TestHttp1KeepAlivePoolingAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 keep-alive pooling resets request state", SharedOptimizationSmokeTests.TestHttp1KeepAlivePoolingAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 stream send preserves direct passthrough body", SharedOptimizationSmokeTests.TestHttp1StreamSendAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/2 lazy header materialization stays coherent", TestHttp2LazyHeaderMaterializationAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/3 lazy header materialization stays coherent", TestHttp3LazyHeaderMaterializationAsync).ConfigureAwait(false);
@@ -66,69 +66,6 @@ namespace Test.Automated
                 result.ElapsedMilliseconds = stopwatch.ElapsedMilliseconds;
                 _Results.Add(result);
                 AutomatedTestReporter.ResultRecorded?.Invoke(result);
-            }
-        }
-
-        private async Task TestHttp1KeepAlivePoolingAsync()
-        {
-            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, ConfigureStateRoutes))
-            {
-                await host.StartAsync().ConfigureAwait(false);
-
-                using (TcpClient client = new TcpClient())
-                {
-                    await client.ConnectAsync("127.0.0.1", host.BaseAddress.Port).ConfigureAwait(false);
-
-                    using (NetworkStream stream = client.GetStream())
-                    {
-                        string firstBody = "first-body";
-                        byte[] firstBodyBytes = Encoding.UTF8.GetBytes(firstBody);
-                        string firstRequest =
-                            "POST /state HTTP/1.1\r\n" +
-                            "Host: 127.0.0.1\r\n" +
-                            "Connection: keep-alive\r\n" +
-                            "Content-Type: text/plain\r\n" +
-                            "X-Trace: first\r\n" +
-                            "Content-Length: " + firstBodyBytes.Length.ToString() + "\r\n\r\n" +
-                            firstBody;
-                        byte[] firstRequestBytes = Encoding.ASCII.GetBytes(firstRequest);
-
-                        await stream.WriteAsync(firstRequestBytes, 0, firstRequestBytes.Length).ConfigureAwait(false);
-                        await stream.FlushAsync().ConfigureAwait(false);
-
-                        RawHttpResponse firstResponse = await ReadRawHttpResponseAsync(stream).ConfigureAwait(false);
-                        StateObservationResponse firstObservation = Deserialize<StateObservationResponse>(firstResponse.Body);
-
-                        if (!String.Equals(firstObservation.TraceHeader, "first", StringComparison.Ordinal)
-                            || !String.Equals(firstObservation.Body, firstBody, StringComparison.Ordinal)
-                            || firstObservation.ContentLength != firstBodyBytes.Length)
-                        {
-                            throw new InvalidOperationException("First keep-alive request did not echo the expected state.");
-                        }
-
-                        string secondRequest =
-                            "GET /state HTTP/1.1\r\n" +
-                            "Host: 127.0.0.1\r\n" +
-                            "Connection: close\r\n\r\n";
-                        byte[] secondRequestBytes = Encoding.ASCII.GetBytes(secondRequest);
-
-                        await stream.WriteAsync(secondRequestBytes, 0, secondRequestBytes.Length).ConfigureAwait(false);
-                        await stream.FlushAsync().ConfigureAwait(false);
-
-                        RawHttpResponse secondResponse = await ReadRawHttpResponseAsync(stream).ConfigureAwait(false);
-                        StateObservationResponse secondObservation = Deserialize<StateObservationResponse>(secondResponse.Body);
-
-                        if (!String.IsNullOrEmpty(secondObservation.TraceHeader))
-                        {
-                            throw new InvalidOperationException("Pooled request state leaked a header into the next keep-alive request.");
-                        }
-
-                        if (!String.IsNullOrEmpty(secondObservation.Body) || secondObservation.ContentLength != 0 || secondObservation.ChunkedTransfer)
-                        {
-                            throw new InvalidOperationException("Pooled request state leaked body metadata into the next keep-alive request.");
-                        }
-                    }
-                }
             }
         }
 
@@ -170,12 +107,6 @@ namespace Test.Automated
             }
         }
 
-        private static void ConfigureStateRoutes(Webserver server)
-        {
-            server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.GET, "/state", SendStateObservationAsync);
-            server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.POST, "/state", SendStateObservationAsync);
-        }
-
         private static void ConfigureHeaderObservationRoutes(Webserver server)
         {
             server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.POST, "/headers", async (HttpContextBase context) =>
@@ -195,19 +126,6 @@ namespace Test.Automated
             });
         }
 
-        private static async Task SendStateObservationAsync(HttpContextBase context)
-        {
-            StateObservationResponse response = new StateObservationResponse();
-            response.TraceHeader = context.Request.RetrieveHeaderValue("x-trace");
-            response.Body = context.Request.DataAsString;
-            response.ContentLength = context.Request.ContentLength;
-            response.ChunkedTransfer = context.Request.ChunkedTransfer;
-
-            context.Response.StatusCode = 200;
-            context.Response.ContentType = "application/json";
-            await context.Response.Send(JsonSerializer.Serialize(response), context.Token).ConfigureAwait(false);
-        }
-
         private async Task ValidateHeaderObservationAsync(HttpClient client, Uri baseAddress)
         {
             HeaderObservationResponse responseModel = null;
@@ -222,7 +140,7 @@ namespace Test.Automated
                 using (HttpResponseMessage response = await client.SendAsync(request).ConfigureAwait(false))
                 {
                     string json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    responseModel = Deserialize<HeaderObservationResponse>(json);
+                    responseModel = JsonSerializer.Deserialize<HeaderObservationResponse>(json, _JsonSerializerOptions);
                 }
             }
 
@@ -268,88 +186,5 @@ namespace Test.Automated
                 || message.IndexOf("HTTP/3", StringComparison.InvariantCultureIgnoreCase) >= 0;
         }
 
-        private T Deserialize<T>(string json)
-        {
-            T model = JsonSerializer.Deserialize<T>(json, _JsonSerializerOptions);
-
-            if (model == null)
-            {
-                throw new InvalidOperationException("JSON payload deserialized to null.");
-            }
-
-            return model;
-        }
-
-        private static async Task<RawHttpResponse> ReadRawHttpResponseAsync(NetworkStream stream)
-        {
-            List<byte> headerBytes = new List<byte>();
-            byte[] oneByte = new byte[1];
-
-            while (true)
-            {
-                int bytesRead = await stream.ReadAsync(oneByte, 0, 1).ConfigureAwait(false);
-                if (bytesRead < 1)
-                {
-                    throw new IOException("Unexpected end of stream while reading HTTP response headers.");
-                }
-
-                headerBytes.Add(oneByte[0]);
-
-                if (headerBytes.Count >= 4
-                    && headerBytes[headerBytes.Count - 4] == (byte)'\r'
-                    && headerBytes[headerBytes.Count - 3] == (byte)'\n'
-                    && headerBytes[headerBytes.Count - 2] == (byte)'\r'
-                    && headerBytes[headerBytes.Count - 1] == (byte)'\n')
-                {
-                    break;
-                }
-            }
-
-            string headerText = Encoding.ASCII.GetString(headerBytes.ToArray());
-            string[] headerLines = headerText.Split(new string[] { "\r\n" }, StringSplitOptions.None);
-            RawHttpResponse response = new RawHttpResponse();
-            response.StatusLine = headerLines[0];
-
-            for (int i = 1; i < headerLines.Length; i++)
-            {
-                if (String.IsNullOrEmpty(headerLines[i]))
-                {
-                    continue;
-                }
-
-                int separator = headerLines[i].IndexOf(':');
-                if (separator > 0)
-                {
-                    string key = headerLines[i].Substring(0, separator);
-                    string value = headerLines[i].Substring(separator + 1).Trim();
-                    response.Headers[key] = value;
-                }
-            }
-
-            int contentLength = 0;
-            string contentLengthValue = response.Headers["Content-Length"];
-
-            if (!String.IsNullOrEmpty(contentLengthValue))
-            {
-                contentLength = Int32.Parse(contentLengthValue);
-            }
-
-            byte[] bodyBytes = new byte[contentLength];
-            int totalRead = 0;
-
-            while (totalRead < contentLength)
-            {
-                int bytesRead = await stream.ReadAsync(bodyBytes, totalRead, contentLength - totalRead).ConfigureAwait(false);
-                if (bytesRead < 1)
-                {
-                    throw new IOException("Unexpected end of stream while reading HTTP response body.");
-                }
-
-                totalRead += bytesRead;
-            }
-
-            response.Body = Encoding.UTF8.GetString(bodyBytes);
-            return response;
-        }
     }
 }

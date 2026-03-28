@@ -48,5 +48,15 @@ namespace Test.XUnit
         {
             await Test.Shared.SharedOptimizationSmokeTests.TestHttp1StreamSendAsync();
         }
+
+        /// <summary>
+        /// Verify HTTP/1.1 keep-alive pooling resets request state between requests.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http1KeepAlivePoolingResetsRequestState()
+        {
+            await Test.Shared.SharedOptimizationSmokeTests.TestHttp1KeepAlivePoolingAsync();
+        }
     }
 }
