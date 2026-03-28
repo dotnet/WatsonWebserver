@@ -124,8 +124,18 @@ namespace Test.Shared
                     listener.Start();
                     int port = ((IPEndPoint)listener.LocalEndpoint).Port;
 
+                    using (UdpClient datagramListener = new UdpClient(AddressFamily.InterNetwork))
                     lock (_PortSync)
                     {
+                        try
+                        {
+                            datagramListener.Client.Bind(new IPEndPoint(IPAddress.Loopback, port));
+                        }
+                        catch (SocketException)
+                        {
+                            continue;
+                        }
+
                         if (_ReservedPorts.Contains(port))
                         {
                             continue;

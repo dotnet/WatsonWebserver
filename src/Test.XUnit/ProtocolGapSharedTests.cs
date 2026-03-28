@@ -10,6 +10,7 @@ namespace Test.XUnit
     [System.Runtime.Versioning.SupportedOSPlatform("windows")]
     [System.Runtime.Versioning.SupportedOSPlatform("linux")]
     [System.Runtime.Versioning.SupportedOSPlatform("macos")]
+    [Collection("ProtocolGapSharedCoverage")]
     public class ProtocolGapSharedCoverageTests
     {
         /// <summary>
