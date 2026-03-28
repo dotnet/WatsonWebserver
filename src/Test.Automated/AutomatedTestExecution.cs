@@ -22,12 +22,14 @@ namespace Test.Automated
             OptimizationCoverageSuite optimizationCoverageSuite = new OptimizationCoverageSuite();
             SharedProtocolGapSuite sharedProtocolGapSuite = new SharedProtocolGapSuite();
             SharedLegacySmokeSuite sharedLegacySmokeSuite = new SharedLegacySmokeSuite();
+            SharedHttp2SmokeSuite sharedHttp2SmokeSuite = new SharedHttp2SmokeSuite();
             SharedCoreUnitCoverageSuite sharedCoreUnitCoverageSuite = new SharedCoreUnitCoverageSuite();
 
             results.AddRange(await legacyCoverageSuite.RunAsync().ConfigureAwait(false));
             results.AddRange(await optimizationCoverageSuite.RunAsync().ConfigureAwait(false));
             results.AddRange(await sharedProtocolGapSuite.RunAsync().ConfigureAwait(false));
             results.AddRange(await sharedLegacySmokeSuite.RunAsync().ConfigureAwait(false));
+            results.AddRange(await sharedHttp2SmokeSuite.RunAsync().ConfigureAwait(false));
             results.AddRange(await sharedCoreUnitCoverageSuite.RunAsync().ConfigureAwait(false));
 
             return results.ToArray();
