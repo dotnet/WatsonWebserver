@@ -58,5 +58,25 @@ namespace Test.XUnit
         {
             await Test.Shared.SharedOptimizationSmokeTests.TestHttp1KeepAlivePoolingAsync();
         }
+
+        /// <summary>
+        /// Verify HTTP/2 lazy header materialization stays coherent.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http2LazyHeaderMaterializationStaysCoherent()
+        {
+            await Test.Shared.SharedOptimizationSmokeTests.TestHttp2LazyHeaderMaterializationAsync();
+        }
+
+        /// <summary>
+        /// Verify HTTP/3 lazy header materialization stays coherent.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http3LazyHeaderMaterializationStaysCoherent()
+        {
+            await Test.Shared.SharedOptimizationSmokeTests.TestHttp3LazyHeaderMaterializationAsync();
+        }
     }
 }
