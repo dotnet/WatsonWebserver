@@ -32,8 +32,8 @@ namespace Test.Automated
         {
             _Results.Clear();
 
-            await ExecuteTestAsync("Static route snapshots remain readable during concurrent mutation", TestStaticRouteSnapshotsAsync).ConfigureAwait(false);
-            await ExecuteTestAsync("Default serialization helper preserves pretty and compact JSON", TestDefaultSerializationHelperAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("Static route snapshots remain readable during concurrent mutation", SharedOptimizationSmokeTests.TestStaticRouteSnapshotsAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("Default serialization helper preserves pretty and compact JSON", SharedOptimizationSmokeTests.TestDefaultSerializationHelperAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 cached response headers preserve dynamic fields", TestHttp1CachedHeadersAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 keep-alive pooling resets request state", TestHttp1KeepAlivePoolingAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 stream send preserves direct passthrough body", TestHttp1StreamSendAsync).ConfigureAwait(false);
@@ -67,82 +67,6 @@ namespace Test.Automated
                 _Results.Add(result);
                 AutomatedTestReporter.ResultRecorded?.Invoke(result);
             }
-        }
-
-        private static Task TestStaticRouteSnapshotsAsync()
-        {
-            StaticRouteManager routeManager = new StaticRouteManager();
-            Func<HttpContextBase, Task> handler = NoOpRouteAsync;
-            List<Task> tasks = new List<Task>();
-
-            for (int i = 0; i < 25; i++)
-            {
-                int pathIndex = i;
-                tasks.Add(Task.Run(() =>
-                {
-                    for (int iteration = 0; iteration < 100; iteration++)
-                    {
-                        string path = "/snapshot/" + pathIndex.ToString() + "/" + iteration.ToString();
-                        routeManager.Add(CoreHttpMethod.GET, path, handler);
-                        routeManager.Exists(CoreHttpMethod.GET, path);
-                        routeManager.GetAll();
-                        routeManager.Match(CoreHttpMethod.GET, path, out StaticRoute route);
-
-                        if (route == null)
-                        {
-                            throw new InvalidOperationException("Expected route lookup to succeed during mutation.");
-                        }
-
-                        routeManager.Remove(CoreHttpMethod.GET, path);
-                    }
-                }));
-            }
-
-            return Task.WhenAll(tasks);
-        }
-
-        private Task TestDefaultSerializationHelperAsync()
-        {
-            DefaultSerializationHelper serializer = new DefaultSerializationHelper();
-            StateObservationResponse payload = new StateObservationResponse();
-            payload.TraceHeader = "abc";
-            payload.Body = "hello";
-            payload.ContentLength = 5;
-            payload.ChunkedTransfer = false;
-
-            string compact = serializer.SerializeJson(payload, false);
-            string pretty = serializer.SerializeJson(payload, true);
-
-            if (String.IsNullOrEmpty(compact) || String.IsNullOrEmpty(pretty))
-            {
-                throw new InvalidOperationException("Serialized JSON should not be empty.");
-            }
-
-            if (compact.Contains(Environment.NewLine, StringComparison.Ordinal))
-            {
-                throw new InvalidOperationException("Compact JSON should not be indented.");
-            }
-
-            if (!pretty.Contains(Environment.NewLine, StringComparison.Ordinal))
-            {
-                throw new InvalidOperationException("Pretty JSON should be indented.");
-            }
-
-            StateObservationResponse compactRoundTrip = serializer.DeserializeJson<StateObservationResponse>(compact);
-            StateObservationResponse prettyRoundTrip = serializer.DeserializeJson<StateObservationResponse>(pretty);
-
-            if (compactRoundTrip == null || prettyRoundTrip == null)
-            {
-                throw new InvalidOperationException("Serialized JSON should round-trip to typed instances.");
-            }
-
-            if (!String.Equals(compactRoundTrip.TraceHeader, payload.TraceHeader, StringComparison.Ordinal)
-                || !String.Equals(prettyRoundTrip.Body, payload.Body, StringComparison.Ordinal))
-            {
-                throw new InvalidOperationException("Round-tripped JSON payload does not match the source instance.");
-            }
-
-            return Task.CompletedTask;
         }
 
         private async Task TestHttp1CachedHeadersAsync()
@@ -374,11 +298,6 @@ namespace Test.Automated
             context.Response.StatusCode = 200;
             context.Response.ContentType = "application/json";
             await context.Response.Send(JsonSerializer.Serialize(response), context.Token).ConfigureAwait(false);
-        }
-
-        private static Task NoOpRouteAsync(HttpContextBase context)
-        {
-            return Task.CompletedTask;
         }
 
         private async Task ValidateHeaderObservationAsync(HttpClient client, Uri baseAddress)
