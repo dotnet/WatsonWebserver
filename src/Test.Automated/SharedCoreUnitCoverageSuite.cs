@@ -22,6 +22,7 @@ namespace Test.Automated
             _Results.Clear();
             await ExecuteTestsAsync(SharedCoreUnitTests.GetTests()).ConfigureAwait(false);
             await ExecuteTestsAsync(SharedRequestParametersTests.GetTests()).ConfigureAwait(false);
+            await ExecuteTestsAsync(SharedMiddlewarePipelineTests.GetTests()).ConfigureAwait(false);
 
             return _Results.ToArray();
         }

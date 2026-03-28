@@ -32,6 +32,7 @@ namespace Test.XUnit
             List<SharedNamedTestCase> tests = new List<SharedNamedTestCase>();
             tests.AddRange(Test.Shared.SharedCoreUnitTests.GetTests());
             tests.AddRange(Test.Shared.SharedRequestParametersTests.GetTests());
+            tests.AddRange(Test.Shared.SharedMiddlewarePipelineTests.GetTests());
 
             for (int i = 0; i < tests.Count; i++)
             {
