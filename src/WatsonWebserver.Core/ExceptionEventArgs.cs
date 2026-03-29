@@ -106,7 +106,7 @@
                 Port = ctx.Request.Source.Port;
                 Method = ctx.Request.Method;
                 Url = ctx.Request.Url.Full;
-                Query = ctx.Request.Query.Elements;
+                Query = ctx.Request.Query?.Elements ?? new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
                 RequestHeaders = ctx.Request.Headers;
                 RequestContentLength = ctx.Request.ContentLength;
                 StatusCode = ctx.Response.StatusCode;

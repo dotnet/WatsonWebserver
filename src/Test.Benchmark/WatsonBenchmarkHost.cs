@@ -1,6 +1,7 @@
 namespace Test.Benchmark
 {
     using System;
+    using System.Net.WebSockets;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
@@ -8,6 +9,7 @@ namespace Test.Benchmark
     using System.Text.Json;
     using WatsonWebserver;
     using WatsonWebserver.Core;
+    using WatsonWebserver.Core.WebSockets;
 
     /// <summary>
     /// Watson benchmark host.
@@ -99,6 +101,7 @@ namespace Test.Benchmark
             }
 
             _Server = new Webserver(settings, DefaultRouteAsync);
+            _Server.Settings.WebSockets.Enable = true;
             if (_DebugFailures)
             {
                 _Server.Events.ExceptionEncountered += HandleExceptionEncountered;
@@ -154,6 +157,10 @@ namespace Test.Benchmark
             server.Routes.PostAuthentication.Static.Add(HttpMethod.GET, "/benchmark/serialize-json", SerializeJsonRouteAsync);
             server.Routes.PostAuthentication.Static.Add(HttpMethod.POST, "/benchmark/json-echo", JsonEchoRouteAsync);
             server.Routes.PostAuthentication.Static.Add(HttpMethod.GET, "/benchmark/sse", ServerSentEventsRouteAsync);
+            server.WebSocket("/benchmark/ws-echo", WebSocketEchoRouteAsync);
+            server.WebSocket("/benchmark/ws-client-text", WebSocketClientTextRouteAsync);
+            server.WebSocket("/benchmark/ws-server-text", WebSocketServerTextRouteAsync);
+            server.WebSocket("/benchmark/ws-connect-close", WebSocketConnectCloseRouteAsync);
         }
 
         private Task DefaultRouteAsync(HttpContextBase context)
@@ -245,6 +252,48 @@ namespace Test.Benchmark
 
                 await context.Response.SendEvent(serverSentEvent, i == (_Options.ServerSentEventCount - 1), context.Token).ConfigureAwait(false);
             }
+        }
+
+        private async Task WebSocketEchoRouteAsync(HttpContextBase context, WebSocketSession session)
+        {
+            await foreach (WebSocketMessage message in session.ReadMessagesAsync(context.Token).ConfigureAwait(false))
+            {
+                if (message.MessageType == WebSocketMessageType.Text)
+                {
+                    await session.SendTextAsync(message.Text, context.Token).ConfigureAwait(false);
+                }
+                else
+                {
+                    await session.SendBinaryAsync(message.Data, context.Token).ConfigureAwait(false);
+                }
+            }
+        }
+
+        private async Task WebSocketClientTextRouteAsync(HttpContextBase context, WebSocketSession session)
+        {
+            await foreach (WebSocketMessage message in session.ReadMessagesAsync(context.Token).ConfigureAwait(false))
+            {
+                if (message.MessageType == WebSocketMessageType.Text)
+                {
+                    await session.SendTextAsync("ok", context.Token).ConfigureAwait(false);
+                }
+            }
+        }
+
+        private async Task WebSocketServerTextRouteAsync(HttpContextBase context, WebSocketSession session)
+        {
+            await foreach (WebSocketMessage message in session.ReadMessagesAsync(context.Token).ConfigureAwait(false))
+            {
+                if (message.MessageType == WebSocketMessageType.Text)
+                {
+                    await session.SendTextAsync(_HelloPayload, context.Token).ConfigureAwait(false);
+                }
+            }
+        }
+
+        private async Task WebSocketConnectCloseRouteAsync(HttpContextBase context, WebSocketSession session)
+        {
+            await session.ReceiveAsync(context.Token).ConfigureAwait(false);
         }
 
         private static string BuildJsonPayload(int payloadBytes)

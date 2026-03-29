@@ -41,7 +41,11 @@
             BenchmarkScenario.ServerSentEvents,
             BenchmarkScenario.Json,
             BenchmarkScenario.SerializeJson,
-            BenchmarkScenario.JsonEcho
+            BenchmarkScenario.JsonEcho,
+            BenchmarkScenario.WebSocketEcho,
+            BenchmarkScenario.WebSocketConnectClose,
+            BenchmarkScenario.WebSocketClientText,
+            BenchmarkScenario.WebSocketServerText
         };
 
         /// <summary>
@@ -226,6 +230,10 @@
                     AddScenarioIfMissing(scenarios, BenchmarkScenario.Json);
                     AddScenarioIfMissing(scenarios, BenchmarkScenario.SerializeJson);
                     AddScenarioIfMissing(scenarios, BenchmarkScenario.JsonEcho);
+                    AddScenarioIfMissing(scenarios, BenchmarkScenario.WebSocketEcho);
+                    AddScenarioIfMissing(scenarios, BenchmarkScenario.WebSocketConnectClose);
+                    AddScenarioIfMissing(scenarios, BenchmarkScenario.WebSocketClientText);
+                    AddScenarioIfMissing(scenarios, BenchmarkScenario.WebSocketServerText);
                 }
                 else if (String.Equals(current, "hello", StringComparison.OrdinalIgnoreCase))
                 {
@@ -258,6 +266,22 @@
                 else if (String.Equals(current, "jsonecho", StringComparison.OrdinalIgnoreCase) || String.Equals(current, "json-echo", StringComparison.OrdinalIgnoreCase))
                 {
                     AddScenarioIfMissing(scenarios, BenchmarkScenario.JsonEcho);
+                }
+                else if (String.Equals(current, "websocketecho", StringComparison.OrdinalIgnoreCase) || String.Equals(current, "websocket-echo", StringComparison.OrdinalIgnoreCase) || String.Equals(current, "ws-echo", StringComparison.OrdinalIgnoreCase))
+                {
+                    AddScenarioIfMissing(scenarios, BenchmarkScenario.WebSocketEcho);
+                }
+                else if (String.Equals(current, "websocketconnectclose", StringComparison.OrdinalIgnoreCase) || String.Equals(current, "websocket-connect-close", StringComparison.OrdinalIgnoreCase) || String.Equals(current, "ws-connect-close", StringComparison.OrdinalIgnoreCase))
+                {
+                    AddScenarioIfMissing(scenarios, BenchmarkScenario.WebSocketConnectClose);
+                }
+                else if (String.Equals(current, "websocketclienttext", StringComparison.OrdinalIgnoreCase) || String.Equals(current, "websocket-client-text", StringComparison.OrdinalIgnoreCase) || String.Equals(current, "ws-client-text", StringComparison.OrdinalIgnoreCase))
+                {
+                    AddScenarioIfMissing(scenarios, BenchmarkScenario.WebSocketClientText);
+                }
+                else if (String.Equals(current, "websocketservertext", StringComparison.OrdinalIgnoreCase) || String.Equals(current, "websocket-server-text", StringComparison.OrdinalIgnoreCase) || String.Equals(current, "ws-server-text", StringComparison.OrdinalIgnoreCase))
+                {
+                    AddScenarioIfMissing(scenarios, BenchmarkScenario.WebSocketServerText);
                 }
             }
         }

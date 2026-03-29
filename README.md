@@ -339,6 +339,112 @@ server.Routes.PreAuthentication.Static.Add(HttpMethod.GET, "/legacy", async (ctx
 
 ## Protocol Support
 
+## WebSockets
+
+Watson 7 includes native server-side WebSocket support.
+
+Current scope:
+
+- HTTP/1.1 WebSockets are supported
+- HTTP/2 and HTTP/3 WebSockets are not yet implemented
+- Routing is Watson-native and works with the existing pre-auth and post-auth routing groups
+- Whole-message receive semantics are exposed through `WebSocketSession`
+- Same-path HTTP and WebSocket registration is supported
+
+Example:
+
+```csharp
+using System.Net.WebSockets;
+using WatsonWebserver;
+using WatsonWebserver.Core;
+using WatsonWebserver.Core.WebSockets;
+
+WebserverSettings settings = new WebserverSettings("127.0.0.1", 9000);
+settings.WebSockets.Enable = true;
+
+Webserver server = new Webserver(settings, DefaultRoute);
+
+server.Get("/chat", async req => new { Mode = "http" });
+
+server.WebSocket("/chat", async (ctx, session) =>
+{
+    await foreach (WebSocketMessage message in session.ReadMessagesAsync(ctx.Token))
+    {
+        if (message.MessageType == WebSocketMessageType.Text)
+        {
+            await session.SendTextAsync("echo:" + message.Text, ctx.Token);
+        }
+    }
+});
+
+server.Start();
+
+static async Task DefaultRoute(HttpContextBase ctx)
+{
+    ctx.Response.StatusCode = 404;
+    await ctx.Response.Send("Not found");
+}
+```
+
+### Session API
+
+`WebSocketSession` exposes:
+
+- `Id`
+- `IsConnected`
+- `Subprotocol`
+- `RemoteIp`
+- `RemotePort`
+- `Request`
+- `Metadata`
+- `Statistics`
+- `ReceiveAsync()`
+- `ReadMessagesAsync()`
+- `SendTextAsync()`
+- `SendBinaryAsync()`
+- `CloseAsync()`
+
+### Settings
+
+WebSocket settings live under `WebserverSettings.WebSockets`.
+
+Important settings:
+
+- `Enable`
+- `MaxMessageSize`
+- `ReceiveBufferSize`
+- `CloseHandshakeTimeoutMs`
+- `AllowClientSuppliedGuid`
+- `ClientGuidHeaderName`
+- `SupportedVersions`
+- `EnableHttp1`
+
+Important defaults:
+
+- `Enable = false`
+- `MaxMessageSize = 16777216`
+- `ReceiveBufferSize = 65536`
+- `CloseHandshakeTimeoutMs = 5000`
+- `AllowClientSuppliedGuid = false`
+- `ClientGuidHeaderName = "x-guid"`
+- `SupportedVersions = ["13"]`
+- `EnableHttp1 = true`
+
+### TLS expectations
+
+- Use `ws://` when SSL is disabled
+- Use `wss://` when SSL is enabled
+- The current implementation still uses the HTTP/1.1 upgrade path even when running over TLS
+
+### Current limitations
+
+- WebSocket support is HTTP/1.1-only in the current implementation
+- No raw underlying `System.Net.WebSockets.WebSocket` is exposed publicly
+- Receive semantics are message-oriented and session-owned
+- Optional subprotocol negotiation support is not yet exposed as a public configuration surface
+
+See [WEBSOCKETS_API.md](WEBSOCKETS_API.md) for the focused WebSocket API guide and [MIGRATING_FROM_WATSONWEBSOCKET.md](MIGRATING_FROM_WATSONWEBSOCKET.md) for WatsonWebsocket migration guidance.
+
 ### Default behavior
 
 By default:

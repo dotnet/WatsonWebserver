@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Text;
+    using WatsonWebserver.Core.WebSockets;
 
     /// <summary>
     /// Callbacks/actions to use when various events are encountered.
@@ -82,6 +83,21 @@
         /// Event to fire when the server is being disposed.
         /// </summary>
         public event EventHandler ServerDisposing; 
+
+        /// <summary>
+        /// Event to fire when a WebSocket session starts.
+        /// </summary>
+        public event EventHandler<WebSocketSessionEventArgs> WebSocketSessionStarted;
+
+        /// <summary>
+        /// Event to fire when a WebSocket session ends.
+        /// </summary>
+        public event EventHandler<WebSocketSessionEventArgs> WebSocketSessionEnded;
+
+        /// <summary>
+        /// Event to fire when a WebSocket handshake fails.
+        /// </summary>
+        public event EventHandler<WebSocketHandshakeFailureEventArgs> WebSocketHandshakeFailed;
 
         #endregion
 
@@ -248,6 +264,42 @@
         }
 
         /// <summary>
+        /// Handle WebSocket session started event.
+        /// </summary>
+        /// <param name="sender">Sender.</param>
+        /// <param name="args">Args.</param>
+        public void HandleWebSocketSessionStarted(object sender, WebSocketSessionEventArgs args)
+        {
+            EventHandler<WebSocketSessionEventArgs> handler = WebSocketSessionStarted;
+            if (handler == null) return;
+            WrappedEventHandler(() => handler(sender, args), "WebSocketSessionStarted");
+        }
+
+        /// <summary>
+        /// Handle WebSocket session ended event.
+        /// </summary>
+        /// <param name="sender">Sender.</param>
+        /// <param name="args">Args.</param>
+        public void HandleWebSocketSessionEnded(object sender, WebSocketSessionEventArgs args)
+        {
+            EventHandler<WebSocketSessionEventArgs> handler = WebSocketSessionEnded;
+            if (handler == null) return;
+            WrappedEventHandler(() => handler(sender, args), "WebSocketSessionEnded");
+        }
+
+        /// <summary>
+        /// Handle WebSocket handshake failed event.
+        /// </summary>
+        /// <param name="sender">Sender.</param>
+        /// <param name="args">Args.</param>
+        public void HandleWebSocketHandshakeFailed(object sender, WebSocketHandshakeFailureEventArgs args)
+        {
+            EventHandler<WebSocketHandshakeFailureEventArgs> handler = WebSocketHandshakeFailed;
+            if (handler == null) return;
+            WrappedEventHandler(() => handler(sender, args), "WebSocketHandshakeFailed");
+        }
+
+        /// <summary>
         /// Indicates whether any request received handlers are attached.
         /// </summary>
         public bool HasRequestReceivedHandlers
@@ -321,6 +373,39 @@
             get
             {
                 return ResponseCompleted != null;
+            }
+        }
+
+        /// <summary>
+        /// Indicates whether any WebSocket session-started handlers are attached.
+        /// </summary>
+        public bool HasWebSocketSessionStartedHandlers
+        {
+            get
+            {
+                return WebSocketSessionStarted != null;
+            }
+        }
+
+        /// <summary>
+        /// Indicates whether any WebSocket session-ended handlers are attached.
+        /// </summary>
+        public bool HasWebSocketSessionEndedHandlers
+        {
+            get
+            {
+                return WebSocketSessionEnded != null;
+            }
+        }
+
+        /// <summary>
+        /// Indicates whether any WebSocket handshake-failed handlers are attached.
+        /// </summary>
+        public bool HasWebSocketHandshakeFailedHandlers
+        {
+            get
+            {
+                return WebSocketHandshakeFailed != null;
             }
         }
 

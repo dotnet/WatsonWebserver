@@ -32,6 +32,11 @@
         /// Dynamic route.
         /// </summary>
         [EnumMember(Value = "Dynamic")]
-        Dynamic
+        Dynamic,
+        /// <summary>
+        /// WebSocket route.
+        /// </summary>
+        [EnumMember(Value = "WebSocket")]
+        WebSocket
     }
 }

@@ -8,6 +8,7 @@
     using System.Linq;
     using System.Net;
     using System.Net.Security;
+    using System.Net.WebSockets;
     using System.Net.Quic;
     using System.Net.Sockets;
     using System.Reflection;
@@ -20,12 +21,15 @@
     using WatsonWebserver.Http1;
     using WatsonWebserver.Http2;
     using WatsonWebserver.Http3;
+    using WatsonWebserver.WebSockets;
     using WatsonWebserver.Core;
     using WatsonWebserver.Core.Http1;
     using WatsonWebserver.Core.Http2;
     using WatsonWebserver.Core.Http3;
+    using WatsonWebserver.Core.WebSockets;
     using System.Runtime.InteropServices;
     using System.Text;
+    using NetWebSocket = System.Net.WebSockets.WebSocket;
 
     /// <summary>
     /// Watson webserver.
@@ -75,6 +79,92 @@
             get
             {
                 return Http3RuntimeDetector.Detect().IsAvailable;
+            }
+        }
+
+        /// <summary>
+        /// Execute a matched WebSocket route.
+        /// </summary>
+        protected override async Task<bool> ProcessWebSocketRouteAsync(
+            HttpContextBase ctx,
+            WebSocketRoute route,
+            Func<HttpContextBase, WebSocketSession, Task> handler,
+            CancellationToken token)
+        {
+            if (ctx == null) throw new ArgumentNullException(nameof(ctx));
+            if (route == null) throw new ArgumentNullException(nameof(route));
+            if (handler == null) throw new ArgumentNullException(nameof(handler));
+
+            Stream stream = ctx.Request?.Data;
+            if (stream == null || !stream.CanWrite)
+            {
+                return false;
+            }
+
+            if (!Http1WebSocketHandshake.TryValidate(Settings, ctx, out int statusCode, out string failureReason, out Dictionary<string, string> responseHeaders, out string acceptKey))
+            {
+                await Http1WebSocketHandshake.SendFailureResponseAsync(stream, statusCode, failureReason, responseHeaders, token).ConfigureAwait(false);
+                ctx.Response.StatusCode = statusCode;
+                ctx.Response.ResponseSent = true;
+
+                if (Events.HasWebSocketHandshakeFailedHandlers)
+                {
+                    Events.HandleWebSocketHandshakeFailed(this, new WebSocketHandshakeFailureEventArgs(ctx, failureReason));
+                }
+
+                return true;
+            }
+
+            ctx.Response.StatusCode = 101;
+            await Http1WebSocketHandshake.SendUpgradeResponseAsync(stream, acceptKey, null, token).ConfigureAwait(false);
+            ctx.Response.ResponseSent = true;
+
+            NetWebSocket socket = NetWebSocket.CreateFromStream(stream, true, null, TimeSpan.FromSeconds(30));
+            WebSocketSession session = CreateWebSocketSession(ctx, socket);
+
+            WebSocketConnections.Add(session);
+
+            if (Events.HasWebSocketSessionStartedHandlers)
+            {
+                Events.HandleWebSocketSessionStarted(this, new WebSocketSessionEventArgs(ctx, session));
+            }
+
+            try
+            {
+                try
+                {
+                    await handler(ctx, session).ConfigureAwait(false);
+                }
+                catch (Exception e)
+                {
+                    Events.HandleExceptionEncountered(this, new ExceptionEventArgs(ctx, e));
+
+                    try
+                    {
+                        await session.CloseAsync(WebSocketCloseStatus.InternalServerError, "WebSocket route handler exception.", CancellationToken.None).ConfigureAwait(false);
+                    }
+                    catch (Exception)
+                    {
+                    }
+
+                    return true;
+                }
+
+                if (session.IsConnected)
+                {
+                    await session.CloseAsync(WebSocketCloseStatus.NormalClosure, "WebSocket route completed.", CancellationToken.None).ConfigureAwait(false);
+                }
+
+                return true;
+            }
+            finally
+            {
+                WebSocketConnections.Remove(session.Id);
+
+                if (Events.HasWebSocketSessionEndedHandlers)
+                {
+                    Events.HandleWebSocketSessionEnded(this, new WebSocketSessionEventArgs(ctx, session));
+                }
             }
         }
 
@@ -207,6 +297,8 @@
         {
             if (!_IsListening) throw new InvalidOperationException("WatsonWebserver is already stopped.");
 
+            CloseActiveWebSocketSessions();
+
             if (_TcpListener != null && _IsListening)
             {
                 _TcpListener.Stop();
@@ -248,6 +340,10 @@
                 if (_TcpListener != null && _IsListening)
                 {
                     Stop();
+                }
+                else
+                {
+                    CloseActiveWebSocketSessions();
                 }
 
                 Events.HandleServerDisposing(this, EventArgs.Empty);
@@ -359,6 +455,34 @@
             connectionOptions.DefaultCloseErrorCode = 0;
             connectionOptions.DefaultStreamErrorCode = 0;
             return ValueTask.FromResult(connectionOptions);
+        }
+
+        private void CloseActiveWebSocketSessions()
+        {
+            List<WebSocketSession> sessions = ListWebSocketSessions().ToList();
+            for (int i = 0; i < sessions.Count; i++)
+            {
+                WebSocketSession session = sessions[i];
+                if (session == null) continue;
+
+                try
+                {
+                    if (session.IsConnected)
+                    {
+                        session.CloseAsync(WebSocketCloseStatus.NormalClosure, "Server stopping.", CancellationToken.None).GetAwaiter().GetResult();
+                    }
+                }
+                catch (Exception)
+                {
+                    try
+                    {
+                        session.Dispose();
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+            }
         }
 
         [SupportedOSPlatform("windows")]
@@ -658,6 +782,7 @@
         private bool ShouldKeepConnectionOpen(HttpContext ctx)
         {
             if (ctx == null) return false;
+            if (ctx.RouteType == WatsonWebserver.Core.Routing.RouteTypeEnum.WebSocket) return false;
             if (!Settings.IO.EnableKeepAlive) return false;
             if (ctx.Response == null || !ctx.Response.ResponseSent) return false;
             if (!ctx.Request.Keepalive) return false;
@@ -667,6 +792,36 @@
             if (request == null) return false;
 
             return request.IsRequestBodyComplete;
+        }
+
+        private WebSocketSession CreateWebSocketSession(HttpContextBase ctx, NetWebSocket socket)
+        {
+            if (ctx == null) throw new ArgumentNullException(nameof(ctx));
+            if (socket == null) throw new ArgumentNullException(nameof(socket));
+
+            WebSocketRequestDescriptor request = WebSocketRequestDescriptor.FromHttpContext(ctx);
+            Guid sessionGuid = ResolveWebSocketSessionGuid(ctx.Request);
+            return new WebSocketSession(
+                socket,
+                request,
+                sessionGuid,
+                Settings.WebSockets.ReceiveBufferSize,
+                Settings.WebSockets.MaxMessageSize,
+                Settings.WebSockets.CloseHandshakeTimeoutMs);
+        }
+
+        private Guid ResolveWebSocketSessionGuid(HttpRequestBase request)
+        {
+            if (request == null) return Guid.NewGuid();
+            if (!Settings.WebSockets.AllowClientSuppliedGuid) return Guid.NewGuid();
+
+            string headerValue = request.RetrieveHeaderValue(Settings.WebSockets.ClientGuidHeaderName);
+            if (Guid.TryParse(headerValue, out Guid guid) && guid != Guid.Empty)
+            {
+                return guid;
+            }
+
+            return Guid.NewGuid();
         }
 
         private HttpContext RentHttpContext(Stream stream, Http1RequestMetadata requestMetadata)

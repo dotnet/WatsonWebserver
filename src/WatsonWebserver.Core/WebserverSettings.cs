@@ -188,6 +188,22 @@
         }
 
         /// <summary>
+        /// WebSocket settings.
+        /// </summary>
+        public WebSocketSettings WebSockets
+        {
+            get
+            {
+                return _WebSockets;
+            }
+            set
+            {
+                if (value == null) throw new ArgumentNullException(nameof(WebSockets));
+                _WebSockets = value;
+            }
+        }
+
+        /// <summary>
         /// When true, the machine's hostname will be used instead of the value specified in Hostname.
         /// </summary>
         public bool UseMachineHostname
@@ -217,6 +233,7 @@
         private DebugSettings _Debug = new DebugSettings();
         private HeaderSettings _Headers = new HeaderSettings();
         private TimeoutSettings _Timeout = new TimeoutSettings();
+        private WebSocketSettings _WebSockets = new WebSocketSettings();
         private bool _UseMachineHostname = false;
 
         #endregion

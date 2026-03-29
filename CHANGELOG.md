@@ -8,6 +8,17 @@
 
 Watson 7.0 is a major release that expands the server from an HTTP/1.1-focused model into a unified multi-protocol platform with shared consumer semantics across HTTP/1.1, HTTP/2, and HTTP/3.
 
+### WebSockets
+
+- Added native Watson 7 HTTP/1.1 WebSocket support with Watson-owned handshake handling and `WebSocketSession`
+- Added websocket route registration through `server.WebSocket(...)`, including same-path HTTP and websocket dispatch
+- Added websocket session enumeration, connectivity checks, and disconnect-by-guid APIs
+- Added websocket observability events for session start, session end, and handshake failure
+- Added `Test.WebsocketServer` and `Test.WebsocketClient` interactive sample applications
+- Added shared websocket coverage in `Test.Shared`, surfaced through both `Test.XUnit` and `Test.Automated`
+- Added initial websocket benchmark coverage in `Test.Benchmark`
+- Added websocket-specific documentation in `README.md`, `WEBSOCKETS_API.md`, `MIGRATING_FROM_WATSONWEBSOCKET.md`, and `TESTING.md`
+
 ### Protocols And Transport
 
 - Added protocol-level configuration through `WebserverSettings.Protocols`

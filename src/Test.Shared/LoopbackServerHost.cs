@@ -65,6 +65,17 @@ namespace Test.Shared
         }
 
         /// <summary>
+        /// The hosted server instance.
+        /// </summary>
+        public Webserver Server
+        {
+            get
+            {
+                return _Server;
+            }
+        }
+
+        /// <summary>
         /// Base address.
         /// </summary>
         public Uri BaseAddress

@@ -2,6 +2,7 @@
 {
     using System;
     using WatsonWebserver.Core.Http3;
+    using WatsonWebserver.Core.Settings;
 
     /// <summary>
     /// Validates webserver settings against the current transport capability matrix.
@@ -64,6 +65,7 @@
             if (settings.Protocols == null) throw new WebserverConfigurationException("Protocol settings are required.");
             if (settings.Protocols.Http2 == null) throw new WebserverConfigurationException("HTTP/2 settings are required.");
             if (settings.Protocols.Http3 == null) throw new WebserverConfigurationException("HTTP/3 settings are required.");
+            if (settings.WebSockets == null) throw new WebserverConfigurationException("WebSocket settings are required.");
 
             if (!settings.Protocols.EnableHttp1
                 && !settings.Protocols.EnableHttp2
@@ -95,6 +97,31 @@
             if (settings.AltSvc != null && settings.AltSvc.Enabled && !settings.Protocols.EnableHttp3)
             {
                 throw new WebserverConfigurationException("Alt-Svc emission is enabled but HTTP/3 is disabled. This will advertise a protocol the server cannot serve.");
+            }
+
+            ValidateWebSocketSettings(settings.WebSockets);
+        }
+
+        private static void ValidateWebSocketSettings(WebSocketSettings settings)
+        {
+            if (settings == null) throw new ArgumentNullException(nameof(settings));
+            if (settings.SupportedVersions == null || settings.SupportedVersions.Count < 1)
+            {
+                throw new WebserverConfigurationException("At least one WebSocket version must be configured.");
+            }
+
+            for (int i = 0; i < settings.SupportedVersions.Count; i++)
+            {
+                string version = settings.SupportedVersions[i];
+                if (String.IsNullOrWhiteSpace(version))
+                {
+                    throw new WebserverConfigurationException("WebSocket versions cannot be null or whitespace.");
+                }
+
+                if (!String.Equals(version.Trim(), "13", StringComparison.Ordinal))
+                {
+                    throw new WebserverConfigurationException("Watson v1 supports WebSocket version 13 only.");
+                }
             }
         }
     }

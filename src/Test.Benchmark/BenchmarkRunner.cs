@@ -7,6 +7,7 @@ namespace Test.Benchmark
     using System.IO;
     using System.Net;
     using System.Net.Http;
+    using System.Net.WebSockets;
     using System.Text.Json;
     using System.Runtime.Versioning;
     using System.Text;
@@ -81,6 +82,11 @@ namespace Test.Benchmark
             if (host == null) throw new ArgumentNullException(nameof(host));
             if (combination == null) throw new ArgumentNullException(nameof(combination));
 
+            if (combination.Scenario == BenchmarkScenario.WebSocketEcho)
+            {
+                return await RunWebSocketAsync(host, combination, token).ConfigureAwait(false);
+            }
+
             if (combination.Protocol == BenchmarkProtocol.Http3 && combination.Target == BenchmarkTarget.Watson7)
             {
                 if (OperatingSystem.IsWindows() || OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
@@ -127,6 +133,46 @@ namespace Test.Benchmark
                 result.P99LatencyMs = GetPercentile(phase.LatenciesMs, 0.99);
                 return result;
             }
+        }
+
+        private async Task<BenchmarkResult> RunWebSocketAsync(IBenchmarkHost host, BenchmarkCombination combination, CancellationToken token)
+        {
+            Stopwatch handshakeStopwatch = Stopwatch.StartNew();
+            using (ClientWebSocket handshakeClient = CreateWebSocketClient(host.BaseAddress))
+            {
+                await handshakeClient.ConnectAsync(BuildWebSocketUri(host.BaseAddress, GetWebSocketPath(combination.Scenario)), token).ConfigureAwait(false);
+                handshakeStopwatch.Stop();
+                await CloseWebSocketQuietlyAsync(handshakeClient, token).ConfigureAwait(false);
+            }
+
+            if (_Options.WarmupSeconds > 0)
+            {
+                await ExecuteWebSocketPhaseAsync(host, combination, _Options.WarmupSeconds, false, token).ConfigureAwait(false);
+            }
+
+            long allocatedBefore = GC.GetTotalAllocatedBytes(true);
+            BenchmarkPhaseResult phase = await ExecuteWebSocketPhaseAsync(host, combination, _Options.DurationSeconds, true, token).ConfigureAwait(false);
+            long allocatedAfter = GC.GetTotalAllocatedBytes(true);
+
+            phase.LatenciesMs.Sort();
+
+            BenchmarkResult result = new BenchmarkResult();
+            result.Combination = combination;
+            result.HandshakeMs = handshakeStopwatch.Elapsed.TotalMilliseconds;
+            result.DurationMs = phase.DurationMs;
+            result.SuccessCount = phase.SuccessCount;
+            result.FailureCount = phase.FailureCount;
+            result.RequestBytes = phase.RequestBytes;
+            result.ResponseBytes = phase.ResponseBytes;
+            result.RequestsPerSecond = phase.DurationMs > 0 ? (phase.SuccessCount / (phase.DurationMs / 1000.0)) : 0;
+            result.ResponseBytesPerSecond = phase.DurationMs > 0 ? (phase.ResponseBytes / (phase.DurationMs / 1000.0)) : 0;
+            result.TotalBytesPerSecond = phase.DurationMs > 0 ? ((phase.RequestBytes + phase.ResponseBytes) / (phase.DurationMs / 1000.0)) : 0;
+            result.ManagedBytesAllocated = allocatedAfter - allocatedBefore;
+            result.MeanLatencyMs = GetMean(phase.LatenciesMs);
+            result.P50LatencyMs = GetPercentile(phase.LatenciesMs, 0.50);
+            result.P95LatencyMs = GetPercentile(phase.LatenciesMs, 0.95);
+            result.P99LatencyMs = GetPercentile(phase.LatenciesMs, 0.99);
+            return result;
         }
 
         [SupportedOSPlatform("windows")]
@@ -218,6 +264,29 @@ namespace Test.Benchmark
             return result;
         }
 
+        private async Task<BenchmarkPhaseResult> ExecuteWebSocketPhaseAsync(IBenchmarkHost host, BenchmarkCombination combination, int durationSeconds, bool captureLatencies, CancellationToken token)
+        {
+            BenchmarkPhaseResult result = new BenchmarkPhaseResult();
+            Stopwatch stopwatch = Stopwatch.StartNew();
+
+            using (CancellationTokenSource durationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(token))
+            {
+                durationTokenSource.CancelAfter(TimeSpan.FromSeconds(durationSeconds));
+                List<Task> tasks = new List<Task>();
+
+                for (int i = 0; i < _Options.Concurrency; i++)
+                {
+                    tasks.Add(RunWebSocketWorkerAsync(host, combination, result, captureLatencies, durationTokenSource.Token));
+                }
+
+                await Task.WhenAll(tasks).ConfigureAwait(false);
+            }
+
+            stopwatch.Stop();
+            result.DurationMs = stopwatch.Elapsed.TotalMilliseconds;
+            return result;
+        }
+
         [SupportedOSPlatform("windows")]
         [SupportedOSPlatform("linux")]
         [SupportedOSPlatform("macos")]
@@ -290,6 +359,82 @@ namespace Test.Benchmark
                     {
                         result.FailureCount++;
                     }
+                }
+            }
+        }
+
+        private async Task RunWebSocketWorkerAsync(IBenchmarkHost host, BenchmarkCombination combination, BenchmarkPhaseResult result, bool captureLatencies, CancellationToken token)
+        {
+            Uri uri = BuildWebSocketUri(host.BaseAddress, GetWebSocketPath(combination.Scenario));
+
+            if (combination.Scenario == BenchmarkScenario.WebSocketConnectClose)
+            {
+                await RunWebSocketConnectCloseWorkerAsync(host.BaseAddress, uri, combination, result, captureLatencies, token).ConfigureAwait(false);
+                return;
+            }
+
+            using (ClientWebSocket socket = CreateWebSocketClient(host.BaseAddress))
+            {
+                await socket.ConnectAsync(uri, token).ConfigureAwait(false);
+
+                while (!token.IsCancellationRequested)
+                {
+                    long startTimestamp = Stopwatch.GetTimestamp();
+
+                    try
+                    {
+                        RequestExecutionResult executionResult = await ExecuteWebSocketOperationAsync(socket, combination, token).ConfigureAwait(false);
+
+                        double latencyMs = GetElapsedMilliseconds(startTimestamp, Stopwatch.GetTimestamp());
+                        lock (result.SyncRoot)
+                        {
+                            result.SuccessCount++;
+                            result.RequestBytes += executionResult.RequestBytes;
+                            result.ResponseBytes += executionResult.ResponseBytes;
+                            if (captureLatencies)
+                            {
+                                result.LatenciesMs.Add(latencyMs);
+                            }
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        if (token.IsCancellationRequested)
+                        {
+                            break;
+                        }
+
+                        lock (result.SyncRoot)
+                        {
+                            result.FailureCount++;
+                        }
+                    }
+                    catch (Exception exception)
+                    {
+                        if (IsCancellationRelatedFailure(exception, token))
+                        {
+                            break;
+                        }
+
+                        DebugFailure(combination, exception);
+                        lock (result.SyncRoot)
+                        {
+                            result.FailureCount++;
+                        }
+                        break;
+                    }
+                }
+
+                try
+                {
+                    if (socket.State == WebSocketState.Open || socket.State == WebSocketState.CloseReceived)
+                    {
+                        await CloseWebSocketQuietlyAsync(socket, CancellationToken.None).ConfigureAwait(false);
+                    }
+                }
+                catch (Exception)
+                {
+                    try { socket.Abort(); } catch (Exception) { }
                 }
             }
         }
@@ -463,6 +608,187 @@ namespace Test.Benchmark
 
             request.VersionPolicy = HttpVersionPolicy.RequestVersionExact;
             return request;
+        }
+
+        private async Task RunWebSocketConnectCloseWorkerAsync(Uri baseAddress, Uri uri, BenchmarkCombination combination, BenchmarkPhaseResult result, bool captureLatencies, CancellationToken token)
+        {
+            while (!token.IsCancellationRequested)
+            {
+                long startTimestamp = Stopwatch.GetTimestamp();
+
+                try
+                {
+                    using (ClientWebSocket socket = CreateWebSocketClient(baseAddress))
+                    {
+                        await socket.ConnectAsync(uri, token).ConfigureAwait(false);
+                        await CloseWebSocketQuietlyAsync(socket, token).ConfigureAwait(false);
+                    }
+
+                    double latencyMs = GetElapsedMilliseconds(startTimestamp, Stopwatch.GetTimestamp());
+                    lock (result.SyncRoot)
+                    {
+                        result.SuccessCount++;
+                        if (captureLatencies)
+                        {
+                            result.LatenciesMs.Add(latencyMs);
+                        }
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    if (token.IsCancellationRequested)
+                    {
+                        break;
+                    }
+
+                    lock (result.SyncRoot)
+                    {
+                        result.FailureCount++;
+                    }
+                }
+                catch (Exception exception)
+                {
+                    if (IsCancellationRelatedFailure(exception, token))
+                    {
+                        break;
+                    }
+
+                    DebugFailure(combination, exception);
+                    lock (result.SyncRoot)
+                    {
+                        result.FailureCount++;
+                    }
+                }
+            }
+        }
+
+        private async Task<RequestExecutionResult> ExecuteWebSocketOperationAsync(ClientWebSocket socket, BenchmarkCombination combination, CancellationToken token)
+        {
+            if (combination == null) throw new ArgumentNullException(nameof(combination));
+
+            if (combination.Scenario == BenchmarkScenario.WebSocketEcho)
+            {
+                byte[] payload = _RequestPayload;
+                string expected = Encoding.UTF8.GetString(payload);
+                await socket.SendAsync(new ArraySegment<byte>(payload), WebSocketMessageType.Text, true, token).ConfigureAwait(false);
+                string response = await ReceiveWebSocketTextAsync(socket, token).ConfigureAwait(false);
+                if (!String.Equals(response, expected, StringComparison.Ordinal))
+                {
+                    throw new IOException("Invalid websocket echo response payload.");
+                }
+
+                return new RequestExecutionResult
+                {
+                    RequestBytes = payload.Length,
+                    ResponseBytes = Encoding.UTF8.GetByteCount(response ?? String.Empty)
+                };
+            }
+
+            if (combination.Scenario == BenchmarkScenario.WebSocketClientText)
+            {
+                byte[] payload = _RequestPayload;
+                await socket.SendAsync(new ArraySegment<byte>(payload), WebSocketMessageType.Text, true, token).ConfigureAwait(false);
+                string response = await ReceiveWebSocketTextAsync(socket, token).ConfigureAwait(false);
+                if (!String.Equals(response, "ok", StringComparison.Ordinal))
+                {
+                    throw new IOException("Invalid websocket client-text acknowledgement payload.");
+                }
+
+                return new RequestExecutionResult
+                {
+                    RequestBytes = payload.Length,
+                    ResponseBytes = Encoding.UTF8.GetByteCount(response)
+                };
+            }
+
+            if (combination.Scenario == BenchmarkScenario.WebSocketServerText)
+            {
+                byte[] triggerPayload = Encoding.UTF8.GetBytes("go");
+                await socket.SendAsync(new ArraySegment<byte>(triggerPayload), WebSocketMessageType.Text, true, token).ConfigureAwait(false);
+                string response = await ReceiveWebSocketTextAsync(socket, token).ConfigureAwait(false);
+                if (!String.Equals(response, _HelloPayload, StringComparison.Ordinal))
+                {
+                    throw new IOException("Invalid websocket server-text response payload.");
+                }
+
+                return new RequestExecutionResult
+                {
+                    RequestBytes = triggerPayload.Length,
+                    ResponseBytes = Encoding.UTF8.GetByteCount(response)
+                };
+            }
+
+            throw new NotSupportedException("Unsupported websocket benchmark scenario.");
+        }
+
+        private ClientWebSocket CreateWebSocketClient(Uri baseAddress)
+        {
+            ClientWebSocket socket = new ClientWebSocket();
+            if (baseAddress != null && String.Equals(baseAddress.Scheme, "https", StringComparison.OrdinalIgnoreCase))
+            {
+                socket.Options.RemoteCertificateValidationCallback = static (_, _, _, _) => true;
+            }
+
+            return socket;
+        }
+
+        private string GetWebSocketPath(BenchmarkScenario scenario)
+        {
+            if (scenario == BenchmarkScenario.WebSocketConnectClose) return "/benchmark/ws-connect-close";
+            if (scenario == BenchmarkScenario.WebSocketClientText) return "/benchmark/ws-client-text";
+            if (scenario == BenchmarkScenario.WebSocketServerText) return "/benchmark/ws-server-text";
+            return "/benchmark/ws-echo";
+        }
+
+        private static Uri BuildWebSocketUri(Uri baseAddress, string path)
+        {
+            if (baseAddress == null) throw new ArgumentNullException(nameof(baseAddress));
+            string scheme = String.Equals(baseAddress.Scheme, "https", StringComparison.OrdinalIgnoreCase) ? "wss" : "ws";
+            return new UriBuilder(baseAddress) { Scheme = scheme, Path = path, Query = String.Empty }.Uri;
+        }
+
+        private static async Task<string> ReceiveWebSocketTextAsync(ClientWebSocket socket, CancellationToken token)
+        {
+            byte[] buffer = ArrayPool<byte>.Shared.Rent(8192);
+            try
+            {
+                int offset = 0;
+                while (true)
+                {
+                    WebSocketReceiveResult result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer, offset, buffer.Length - offset), token).ConfigureAwait(false);
+                    if (result.MessageType == WebSocketMessageType.Close)
+                    {
+                        return null;
+                    }
+
+                    offset += result.Count;
+                    if (result.EndOfMessage)
+                    {
+                        return Encoding.UTF8.GetString(buffer, 0, offset);
+                    }
+                }
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
+            }
+        }
+
+        private static async Task CloseWebSocketQuietlyAsync(ClientWebSocket socket, CancellationToken token)
+        {
+            if (socket == null) return;
+
+            try
+            {
+                if (socket.State == WebSocketState.Open || socket.State == WebSocketState.CloseReceived)
+                {
+                    await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "done", token).ConfigureAwait(false);
+                }
+            }
+            catch (Exception)
+            {
+                try { socket.Abort(); } catch (Exception) { }
+            }
         }
 
         private void DebugFailure(BenchmarkCombination combination, Exception exception)

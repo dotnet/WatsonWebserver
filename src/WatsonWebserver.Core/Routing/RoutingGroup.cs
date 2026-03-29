@@ -5,6 +5,7 @@
     using System.Collections.Generic;
     using System.Text;
     using System.Threading.Tasks;
+    using WatsonWebserver.Core.WebSockets;
 
     /// <summary>
     /// Routing group.
@@ -77,6 +78,22 @@
             }
         }
 
+        /// <summary>
+        /// WebSocket routes.
+        /// </summary>
+        public WebSocketRouteManager WebSockets
+        {
+            get
+            {
+                return _WebSockets;
+            }
+            set
+            {
+                if (value == null) _WebSockets = new WebSocketRouteManager();
+                else _WebSockets = value;
+            }
+        }
+
         #endregion
 
         #region Private-Members
@@ -85,6 +102,7 @@
         private ContentRouteManager _Content = new ContentRouteManager();
         private ParameterRouteManager _Parameter = new ParameterRouteManager();
         private DynamicRouteManager _Dynamic = new DynamicRouteManager();
+        private WebSocketRouteManager _WebSockets = new WebSocketRouteManager();
 
         #endregion
 

@@ -12,6 +12,10 @@ namespace Test.Benchmark
         ServerSentEvents,
         Json,
         SerializeJson,
-        JsonEcho
+        JsonEcho,
+        WebSocketEcho,
+        WebSocketConnectClose,
+        WebSocketClientText,
+        WebSocketServerText
     }
 }

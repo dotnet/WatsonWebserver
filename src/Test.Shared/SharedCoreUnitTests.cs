@@ -2,9 +2,14 @@ namespace Test.Shared
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.Specialized;
+    using System.Net.WebSockets;
+    using System.Threading;
     using System.Threading.Tasks;
     using WatsonWebserver.Core;
+    using WatsonWebserver.Core.Routing;
     using WatsonWebserver.Core.Settings;
+    using WatsonWebserver.Core.WebSockets;
 
     /// <summary>
     /// Shared core unit-style tests that can execute in both runners.
@@ -38,6 +43,18 @@ namespace Test.Shared
             tests.Add(CreateSync("TimeoutSettings :: Default is zero", TestTimeoutSettingsDefaultIsZero));
             tests.Add(CreateSync("TimeoutSettings :: Constructor sets timeout", TestTimeoutSettingsConstructorSetsTimeout));
             tests.Add(CreateSync("TimeoutSettings :: Negative timeout throws", TestTimeoutSettingsNegativeTimeoutThrows));
+
+            tests.Add(CreateSync("WebSocketSettings :: Defaults match v1 plan", TestWebSocketSettingsDefaults));
+            tests.Add(CreateSync("WebSocketSettings :: Numeric values clamp to safe ranges", TestWebSocketSettingsClampValues));
+            tests.Add(CreateSync("WebSocketSettings :: Empty client guid header resets to default", TestWebSocketSettingsClientGuidHeaderDefaults));
+            tests.Add(CreateSync("WebSocketSettings :: Invalid supported version rejected", TestWebSocketSettingsInvalidVersionRejected));
+            tests.Add(CreateSync("WebSocketHandshakeUtilities :: Accept key matches RFC example", TestWebSocketHandshakeAcceptKey));
+            tests.Add(CreateSync("WebSocketMessage :: Text factory preserves payload", TestWebSocketMessageTextFactory));
+            tests.Add(CreateSync("WebSocketSessionStatistics :: Counters accumulate correctly", TestWebSocketSessionStatisticsCounters));
+            tests.Add(CreateSync("WebSocketRouteManager :: Same-path HTTP and WebSocket registration remain separate", TestWebSocketRouteManagerSamePathHttpAndWebSocket));
+            tests.Add(CreateSync("WebSocketRouteManager :: Parameter routes populate path values", TestWebSocketRouteManagerParameterizedRoute));
+            tests.Add(CreateSync("WebSocketConnectionRegistry :: Connected lookup and removal work", TestWebSocketConnectionRegistryOperations));
+            tests.Add(CreateSync("WebserverBase :: WebSocket registration lands in selected routing group", TestWebserverBaseWebSocketRegistration));
 
             tests.Add(CreateSync("WebserverException :: Status code maps from result", TestWebserverExceptionStatusCodeMapsFromResult));
             tests.Add(CreateSync("WebserverException :: Message custom message", TestWebserverExceptionMessageCustomMessage));
@@ -139,6 +156,133 @@ namespace Test.Shared
             }
         }
 
+        private static void TestWebSocketSettingsDefaults()
+        {
+            WebSocketSettings settings = new WebSocketSettings();
+            AssertTrue(!settings.Enable, "WebSockets should be disabled by default.");
+            AssertEquals(16777216, settings.MaxMessageSize, "Unexpected default max-message size.");
+            AssertEquals(65536, settings.ReceiveBufferSize, "Unexpected default receive-buffer size.");
+            AssertEquals(5000, settings.CloseHandshakeTimeoutMs, "Unexpected default close-handshake timeout.");
+            AssertTrue(!settings.AllowClientSuppliedGuid, "Client-supplied GUIDs should be disabled by default.");
+            AssertEquals("x-guid", settings.ClientGuidHeaderName, "Unexpected default client GUID header name.");
+            AssertEquals(1, settings.SupportedVersions.Count, "Unexpected supported-version count.");
+            AssertEquals("13", settings.SupportedVersions[0], "Unexpected supported version.");
+            AssertTrue(settings.EnableHttp1, "HTTP/1 WebSockets should be enabled by default.");
+            AssertTrue(!settings.EnableHttp2, "HTTP/2 WebSockets should be disabled by default.");
+            AssertTrue(!settings.EnableHttp3, "HTTP/3 WebSockets should be disabled by default.");
+        }
+
+        private static void TestWebSocketSettingsClampValues()
+        {
+            WebSocketSettings settings = new WebSocketSettings();
+            settings.MaxMessageSize = 1;
+            settings.ReceiveBufferSize = Int32.MaxValue;
+            settings.CloseHandshakeTimeoutMs = 10;
+
+            AssertEquals(WebSocketSettings.MinMaxMessageSize, settings.MaxMessageSize, "Max-message size should clamp to the minimum.");
+            AssertEquals(WebSocketSettings.MaxReceiveBufferSize, settings.ReceiveBufferSize, "Receive buffer size should clamp to the maximum.");
+            AssertEquals(WebSocketSettings.MinCloseHandshakeTimeoutMs, settings.CloseHandshakeTimeoutMs, "Close timeout should clamp to the minimum.");
+        }
+
+        private static void TestWebSocketSettingsClientGuidHeaderDefaults()
+        {
+            WebSocketSettings settings = new WebSocketSettings();
+            settings.ClientGuidHeaderName = "   ";
+            AssertEquals("x-guid", settings.ClientGuidHeaderName, "Blank client GUID header names should reset to the default.");
+        }
+
+        private static void TestWebSocketSettingsInvalidVersionRejected()
+        {
+            try
+            {
+                WebserverSettings settings = new WebserverSettings();
+                settings.WebSockets.SupportedVersions = new List<string> { "12" };
+                WebserverSettingsValidator.Validate(settings, supportsHttp2: true, supportsHttp3: true);
+                throw new InvalidOperationException("Expected invalid WebSocket versions to be rejected.");
+            }
+            catch (WebserverConfigurationException)
+            {
+            }
+        }
+
+        private static void TestWebSocketHandshakeAcceptKey()
+        {
+            string acceptKey = WebSocketHandshakeUtilities.ComputeAcceptKey("dGhlIHNhbXBsZSBub25jZQ==");
+            AssertEquals("s3pPLMBiTxaQ9kYGzzhZRbK+xOo=", acceptKey, "Unexpected RFC 6455 accept key.");
+        }
+
+        private static void TestWebSocketMessageTextFactory()
+        {
+            WebSocketMessage message = WebSocketMessage.FromText("hello");
+            AssertEquals(WebSocketMessageType.Text, message.MessageType, "Unexpected message type.");
+            AssertEquals("hello", message.Text, "Unexpected text payload.");
+            AssertEquals(5, message.Length, "Unexpected payload length.");
+        }
+
+        private static void TestWebSocketSessionStatisticsCounters()
+        {
+            WebSocketSessionStatistics statistics = new WebSocketSessionStatistics();
+            statistics.IncrementReceived(5);
+            statistics.IncrementReceived(0);
+            statistics.IncrementSent(7);
+            WebSocketSessionStatistics snapshot = statistics.Snapshot();
+
+            AssertEquals(2L, snapshot.MessagesReceived, "Unexpected received-message count.");
+            AssertEquals(5L, snapshot.BytesReceived, "Unexpected received-byte count.");
+            AssertEquals(1L, snapshot.MessagesSent, "Unexpected sent-message count.");
+            AssertEquals(7L, snapshot.BytesSent, "Unexpected sent-byte count.");
+        }
+
+        private static void TestWebSocketRouteManagerSamePathHttpAndWebSocket()
+        {
+            RoutingGroup group = new RoutingGroup();
+            group.Static.Add(HttpMethod.GET, "/chat", ctx => Task.CompletedTask);
+            group.WebSockets.Add("/chat", (ctx, session) => Task.CompletedTask);
+
+            Func<HttpContextBase, Task> httpHandler = group.Static.Match(HttpMethod.GET, "/chat", out StaticRoute httpRoute);
+            Func<HttpContextBase, WebSocketSession, Task> wsHandler = group.WebSockets.Match("/chat", out NameValueCollection _, out WebSocketRoute wsRoute);
+
+            AssertTrue(httpHandler != null, "Expected the HTTP route to remain registered.");
+            AssertTrue(wsHandler != null, "Expected the WebSocket route to remain registered.");
+            AssertEquals("/chat/", httpRoute.Path, "Unexpected HTTP route path.");
+            AssertEquals("/chat/", wsRoute.Path, "Unexpected WebSocket route path.");
+        }
+
+        private static void TestWebSocketRouteManagerParameterizedRoute()
+        {
+            WebSocketRouteManager manager = new WebSocketRouteManager();
+            manager.Add("/chat/{room}", (ctx, session) => Task.CompletedTask);
+
+            Func<HttpContextBase, WebSocketSession, Task> handler = manager.Match("/chat/general", out NameValueCollection parameters, out WebSocketRoute route);
+            AssertTrue(handler != null, "Expected parameterized WebSocket route to match.");
+            AssertTrue(parameters != null, "Expected route parameters.");
+            AssertEquals("general", parameters["room"], "Unexpected route parameter value.");
+            AssertEquals("/chat/{room}", route.Path, "Unexpected parameterized route path.");
+        }
+
+        private static void TestWebSocketConnectionRegistryOperations()
+        {
+            TestWebSocket socket = new TestWebSocket();
+            WebSocketRequestDescriptor descriptor = new WebSocketRequestDescriptor("/chat", null, null, "13", Array.Empty<string>(), "127.0.0.1", 12345);
+            WebSocketSession session = new WebSocketSession(socket, descriptor);
+            WebSocketConnectionRegistry registry = new WebSocketConnectionRegistry();
+
+            registry.Add(session);
+            AssertTrue(registry.IsConnected(session.Id), "Expected the session to appear connected.");
+            AssertTrue(registry.Remove(session.Id), "Expected registry removal to succeed.");
+            AssertTrue(!registry.IsConnected(session.Id), "Expected removed session to be absent.");
+        }
+
+        private static void TestWebserverBaseWebSocketRegistration()
+        {
+            TestWebserver server = new TestWebserver();
+            server.WebSocket("/chat", (ctx, session) => Task.CompletedTask, auth: true);
+            Func<HttpContextBase, WebSocketSession, Task> handler = server.Routes.PostAuthentication.WebSockets.Match("/chat", out NameValueCollection _, out WebSocketRoute route);
+
+            AssertTrue(handler != null, "Expected the WebSocket route to be added to the post-auth group.");
+            AssertEquals("/chat/", route.Path, "Unexpected route path.");
+        }
+
         private static void TestWebserverExceptionStatusCodeMapsFromResult()
         {
             WebserverException exception = new WebserverException(ApiResultEnum.NotFound);
@@ -184,6 +328,79 @@ namespace Test.Shared
             if (!EqualityComparer<T>.Default.Equals(expected, actual))
             {
                 throw new InvalidOperationException(message + " Expected: " + expected + " Actual: " + actual);
+            }
+        }
+
+        private sealed class TestWebserver : WebserverBase
+        {
+            public TestWebserver() : base(new WebserverSettings(), ctx => Task.CompletedTask)
+            {
+            }
+
+            public override bool IsListening => false;
+
+            public override int RequestCount => 0;
+
+            public override void Dispose()
+            {
+            }
+
+            public override void Start(CancellationToken token = default)
+            {
+            }
+
+            public override Task StartAsync(CancellationToken token = default)
+            {
+                return Task.CompletedTask;
+            }
+
+            public override void Stop()
+            {
+            }
+        }
+
+        private sealed class TestWebSocket : WebSocket
+        {
+            private WebSocketState _State = WebSocketState.Open;
+
+            public override WebSocketCloseStatus? CloseStatus => null;
+
+            public override string CloseStatusDescription => null;
+
+            public override string SubProtocol => null;
+
+            public override WebSocketState State => _State;
+
+            public override void Abort()
+            {
+                _State = WebSocketState.Aborted;
+            }
+
+            public override Task CloseAsync(WebSocketCloseStatus closeStatus, string statusDescription, CancellationToken cancellationToken)
+            {
+                _State = WebSocketState.Closed;
+                return Task.CompletedTask;
+            }
+
+            public override Task CloseOutputAsync(WebSocketCloseStatus closeStatus, string statusDescription, CancellationToken cancellationToken)
+            {
+                _State = WebSocketState.CloseSent;
+                return Task.CompletedTask;
+            }
+
+            public override void Dispose()
+            {
+                _State = WebSocketState.Closed;
+            }
+
+            public override Task<WebSocketReceiveResult> ReceiveAsync(ArraySegment<byte> buffer, CancellationToken cancellationToken)
+            {
+                return Task.FromResult(new WebSocketReceiveResult(0, WebSocketMessageType.Close, true));
+            }
+
+            public override Task SendAsync(ArraySegment<byte> buffer, WebSocketMessageType messageType, bool endOfMessage, CancellationToken cancellationToken)
+            {
+                return Task.CompletedTask;
             }
         }
     }

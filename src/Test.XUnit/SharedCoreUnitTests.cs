@@ -33,6 +33,7 @@ namespace Test.XUnit
             tests.AddRange(Test.Shared.SharedCoreUnitTests.GetTests());
             tests.AddRange(Test.Shared.SharedRequestParametersTests.GetTests());
             tests.AddRange(Test.Shared.SharedMiddlewarePipelineTests.GetTests());
+            tests.AddRange(Test.Shared.SharedWebSocketTests.GetTests());
 
             for (int i = 0; i < tests.Count; i++)
             {

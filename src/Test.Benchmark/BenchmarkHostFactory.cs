@@ -33,6 +33,14 @@
         public static bool Supports(BenchmarkTarget target, BenchmarkProtocol protocol, BenchmarkScenario scenario)
         {
             if (!Supports(target, protocol)) return false;
+            if (scenario == BenchmarkScenario.WebSocketEcho
+                || scenario == BenchmarkScenario.WebSocketConnectClose
+                || scenario == BenchmarkScenario.WebSocketClientText
+                || scenario == BenchmarkScenario.WebSocketServerText)
+            {
+                return target == BenchmarkTarget.Watson7 && protocol == BenchmarkProtocol.Http11;
+            }
+
             if ((scenario == BenchmarkScenario.ChunkedEcho || scenario == BenchmarkScenario.ChunkedResponse) && protocol != BenchmarkProtocol.Http11) return false;
             return true;
         }

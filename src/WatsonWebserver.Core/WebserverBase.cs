@@ -1,8 +1,10 @@
 ﻿namespace WatsonWebserver.Core
 {
+    using System.Net.WebSockets;
     using WatsonWebserver.Core.Middleware;
     using WatsonWebserver.Core.OpenApi;
     using WatsonWebserver.Core.Routing;
+    using WatsonWebserver.Core.WebSockets;
     using System;
     using System.Collections.Generic;
     using System.Collections.Specialized;
@@ -157,6 +159,7 @@
         private WebserverRoutes _Routes = new WebserverRoutes();
         private ISerializationHelper _Serializer = new DefaultSerializationHelper();
         private MiddlewarePipeline _Middleware = new MiddlewarePipeline();
+        private WebSocketConnectionRegistry _WebSocketConnections = new WebSocketConnectionRegistry();
 
         #endregion
 
@@ -405,6 +408,52 @@
             group.Options(path, handler, Serializer, Middleware, Settings);
         }
 
+        /// <summary>
+        /// Add a WebSocket route. Defaults to pre-authentication.
+        /// </summary>
+        /// <param name="path">URL path.</param>
+        /// <param name="handler">WebSocket handler.</param>
+        /// <param name="auth">When true, the route is registered as a post-authentication route.</param>
+        public void WebSocket(string path, Func<HttpContextBase, WebSocketSession, Task> handler, bool auth = false)
+        {
+            if (String.IsNullOrWhiteSpace(path)) throw new ArgumentNullException(nameof(path));
+            if (handler == null) throw new ArgumentNullException(nameof(handler));
+
+            RoutingGroup group = auth ? Routes.PostAuthentication : Routes.PreAuthentication;
+            group.WebSockets.Add(path, handler);
+        }
+
+        /// <summary>
+        /// List all known WebSocket sessions.
+        /// </summary>
+        /// <returns>Sessions.</returns>
+        public IEnumerable<WebSocketSession> ListWebSocketSessions()
+        {
+            return _WebSocketConnections.List();
+        }
+
+        /// <summary>
+        /// Determine whether a WebSocket session is currently connected.
+        /// </summary>
+        /// <param name="guid">Session identifier.</param>
+        /// <returns>True if connected.</returns>
+        public bool IsWebSocketSessionConnected(Guid guid)
+        {
+            return _WebSocketConnections.IsConnected(guid);
+        }
+
+        /// <summary>
+        /// Disconnect a WebSocket session by identifier.
+        /// </summary>
+        /// <param name="guid">Session identifier.</param>
+        /// <param name="status">Close status.</param>
+        /// <param name="reason">Close reason.</param>
+        /// <returns>True if a session was found.</returns>
+        public Task<bool> DisconnectWebSocketSessionAsync(Guid guid, WebSocketCloseStatus status, string reason)
+        {
+            return _WebSocketConnections.DisconnectAsync(guid, status, reason);
+        }
+
         #endregion
 
         #region Protected-Methods
@@ -437,6 +486,44 @@
         protected void ValidateSettings()
         {
             WebserverSettingsValidator.Validate(Settings, SupportsHttp2, SupportsHttp3);
+        }
+
+        /// <summary>
+        /// Access the shared WebSocket session registry.
+        /// </summary>
+        protected WebSocketConnectionRegistry WebSocketConnections
+        {
+            get
+            {
+                return _WebSocketConnections;
+            }
+        }
+
+        /// <summary>
+        /// Determine whether the request is attempting a WebSocket upgrade.
+        /// </summary>
+        /// <param name="ctx">HTTP context.</param>
+        /// <returns>True if the request is a WebSocket upgrade attempt.</returns>
+        protected virtual bool IsWebSocketRequest(HttpContextBase ctx)
+        {
+            return WebSocketProtocolDetector.IsWebSocketUpgradeRequest(ctx);
+        }
+
+        /// <summary>
+        /// Execute a matched WebSocket route.
+        /// </summary>
+        /// <param name="ctx">HTTP context.</param>
+        /// <param name="route">Matched route.</param>
+        /// <param name="handler">Route handler.</param>
+        /// <param name="token">Cancellation token.</param>
+        /// <returns>True if the route was handled.</returns>
+        protected virtual Task<bool> ProcessWebSocketRouteAsync(
+            HttpContextBase ctx,
+            WebSocketRoute route,
+            Func<HttpContextBase, WebSocketSession, Task> handler,
+            CancellationToken token)
+        {
+            return Task.FromResult(false);
         }
 
         /// <summary>
@@ -522,7 +609,7 @@
 
                 if (Routes.PreAuthentication != null)
                 {
-                    if (await ProcessRoutingGroupAsync(ctx, Routes.PreAuthentication, "pre-auth", header).ConfigureAwait(false))
+                    if (await ProcessRoutingGroupAsync(ctx, Routes.PreAuthentication, "pre-auth", header, token).ConfigureAwait(false))
                         return;
                 }
 
@@ -571,7 +658,7 @@
 
                 if (Routes.PostAuthentication != null)
                 {
-                    if (await ProcessRoutingGroupAsync(ctx, Routes.PostAuthentication, "post-auth", header).ConfigureAwait(false))
+                    if (await ProcessRoutingGroupAsync(ctx, Routes.PostAuthentication, "post-auth", header, token).ConfigureAwait(false))
                         return;
                 }
 
@@ -707,11 +794,36 @@
             }
         }
 
-        private async Task<bool> ProcessRoutingGroupAsync(HttpContextBase ctx, RoutingGroup group, string authPhase, string header)
+        private async Task<bool> ProcessRoutingGroupAsync(HttpContextBase ctx, RoutingGroup group, string authPhase, string header, CancellationToken token)
         {
             Func<HttpContextBase, Task> handler = null;
             string requestPath = ctx.Request.Url.RawWithoutQuery;
             string normalizedRequestPath = ctx.Request.Url.NormalizedRawWithoutQuery;
+
+            if (group.WebSockets != null && IsWebSocketRequest(ctx))
+            {
+                Func<HttpContextBase, WebSocketSession, Task> webSocketHandler =
+                    group.WebSockets.Match(requestPath, out NameValueCollection parameters, out WebSocketRoute webSocketRoute);
+                if (webSocketHandler != null)
+                {
+                    ctx.Request.Url.Parameters = parameters;
+
+                    if (Settings.Debug.Routing)
+                    {
+                        Events.Logger?.Invoke(
+                            header + authPhase + " websocket route for " + ctx.Request.Source.IpAddress + ":" + ctx.Request.Source.Port + " " +
+                            ctx.Request.Method.ToString() + " " + requestPath);
+                    }
+
+                    ctx.RouteType = RouteTypeEnum.WebSocket;
+                    ctx.Route = webSocketRoute;
+
+                    if (await ProcessWebSocketRouteAsync(ctx, webSocketRoute, webSocketHandler, token).ConfigureAwait(false))
+                    {
+                        return true;
+                    }
+                }
+            }
 
             if (group.Static != null)
             {

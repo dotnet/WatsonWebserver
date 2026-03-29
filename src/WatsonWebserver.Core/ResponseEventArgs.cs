@@ -107,6 +107,8 @@
         /// <param name="totalMs">Total milliseconds.</param>
         public ResponseEventArgs(HttpContextBase ctx, double totalMs)
         {
+            if (ctx == null) throw new ArgumentNullException(nameof(ctx));
+
             Protocol = ctx.Protocol;
             ConnectionId = ctx.Connection.Guid;
             StreamId = ctx.Stream.Guid;
@@ -114,7 +116,7 @@
             Port = ctx.Request.Source.Port;
             Method = ctx.Request.Method;
             Url = ctx.Request.Url.Full;
-            Query = ctx.Request.Query.Elements;
+            Query = ctx.Request.Query?.Elements ?? new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
             RequestHeaders = ctx.Request.Headers;
             RequestContentLength = ctx.Request.ContentLength;
             StatusCode = ctx.Response.StatusCode;

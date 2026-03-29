@@ -374,6 +374,10 @@
             if (scenario == BenchmarkScenario.Json) return "Json";
             if (scenario == BenchmarkScenario.SerializeJson) return "SerializeJson";
             if (scenario == BenchmarkScenario.JsonEcho) return "JsonEcho";
+            if (scenario == BenchmarkScenario.WebSocketEcho) return "WebSocketEcho";
+            if (scenario == BenchmarkScenario.WebSocketConnectClose) return "WebSocketConnectClose";
+            if (scenario == BenchmarkScenario.WebSocketClientText) return "WebSocketClientText";
+            if (scenario == BenchmarkScenario.WebSocketServerText) return "WebSocketServerText";
             return scenario.ToString();
         }
 
@@ -505,7 +509,11 @@
                 BenchmarkScenario.ServerSentEvents,
                 BenchmarkScenario.Json,
                 BenchmarkScenario.SerializeJson,
-                BenchmarkScenario.JsonEcho
+                BenchmarkScenario.JsonEcho,
+                BenchmarkScenario.WebSocketEcho,
+                BenchmarkScenario.WebSocketConnectClose,
+                BenchmarkScenario.WebSocketClientText,
+                BenchmarkScenario.WebSocketServerText
             };
 
             for (int i = 0; i < preferredOrder.Length; i++)
