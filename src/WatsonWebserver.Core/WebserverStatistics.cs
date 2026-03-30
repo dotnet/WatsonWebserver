@@ -36,6 +36,66 @@
         }
 
         /// <summary>
+        /// Active connection count.
+        /// </summary>
+        public long ActiveConnectionCount
+        {
+            get
+            {
+                return _ActiveConnectionCount;
+            }
+            internal set
+            {
+                _ActiveConnectionCount = value;
+            }
+        }
+
+        /// <summary>
+        /// Active HTTP/1.1 connection count.
+        /// </summary>
+        public long ActiveHttp1ConnectionCount
+        {
+            get
+            {
+                return _ActiveHttp1ConnectionCount;
+            }
+            internal set
+            {
+                _ActiveHttp1ConnectionCount = value;
+            }
+        }
+
+        /// <summary>
+        /// Active HTTP/2 stream count.
+        /// </summary>
+        public long ActiveHttp2StreamCount
+        {
+            get
+            {
+                return _ActiveHttp2StreamCount;
+            }
+            internal set
+            {
+                _ActiveHttp2StreamCount = value;
+            }
+        }
+
+        /// <summary>
+        /// Active HTTP/3 stream count.
+        /// </summary>
+        public long ActiveHttp3StreamCount
+        {
+            get
+            {
+                return _ActiveHttp3StreamCount;
+            }
+            internal set
+            {
+                _ActiveHttp3StreamCount = value;
+            }
+        }
+
+        /// <summary>
         /// The number of payload bytes received (incoming request body).
         /// </summary>
         public long ReceivedPayloadBytes
@@ -70,6 +130,10 @@
         #region Private-Members
 
         private DateTime _StartTime = DateTime.Now.ToUniversalTime();
+        private long _ActiveConnectionCount = 0;
+        private long _ActiveHttp1ConnectionCount = 0;
+        private long _ActiveHttp2StreamCount = 0;
+        private long _ActiveHttp3StreamCount = 0;
         private long _ReceivedPayloadBytes = 0;
         private long _SentPayloadBytes = 0;
         private long[] _RequestsByMethod; // _RequestsByMethod[(int)HttpMethod.Xyz] = Count
@@ -85,7 +149,7 @@
         {
             // Calculating the length for _RequestsByMethod array
             int max = 0;
-            foreach (var value in Enum.GetValues(typeof(HttpMethod)))
+            foreach (object value in Enum.GetValues(typeof(HttpMethod)))
             {
                 if ((int)value > max)
                     max = (int)value;
@@ -111,6 +175,7 @@
                 "--- Statistics ---" + Environment.NewLine +
                 "    Start Time     : " + StartTime.ToString() + Environment.NewLine +
                 "    Up Time        : " + UpTime.ToString("h'h 'm'm 's's'") + Environment.NewLine +
+                "    Active Conns   : " + ActiveConnectionCount.ToString("N0") + Environment.NewLine +
                 "    Received Bytes : " + ReceivedPayloadBytes.ToString("N0") + " bytes" + Environment.NewLine +
                 "    Sent Bytes     : " + SentPayloadBytes.ToString("N0") + " bytes" + Environment.NewLine;
 
@@ -122,6 +187,10 @@
         /// </summary>
         public void Reset()
         {
+            Interlocked.Exchange(ref _ActiveConnectionCount, 0);
+            Interlocked.Exchange(ref _ActiveHttp1ConnectionCount, 0);
+            Interlocked.Exchange(ref _ActiveHttp2StreamCount, 0);
+            Interlocked.Exchange(ref _ActiveHttp3StreamCount, 0);
             Interlocked.Exchange(ref _ReceivedPayloadBytes, 0);
             Interlocked.Exchange(ref _SentPayloadBytes, 0);
 
@@ -136,6 +205,32 @@
         public void IncrementRequestCounter(HttpMethod method)
         {
             Interlocked.Increment(ref _RequestsByMethod[(int)method]);
+        }
+
+        /// <summary>
+        /// Increment active connection count for the supplied protocol.
+        /// </summary>
+        /// <param name="protocol">HTTP protocol.</param>
+        public void IncrementActiveConnectionCount(HttpProtocol protocol)
+        {
+            Interlocked.Increment(ref _ActiveConnectionCount);
+
+            if (protocol == HttpProtocol.Http1) Interlocked.Increment(ref _ActiveHttp1ConnectionCount);
+            else if (protocol == HttpProtocol.Http2) Interlocked.Increment(ref _ActiveHttp2StreamCount);
+            else if (protocol == HttpProtocol.Http3) Interlocked.Increment(ref _ActiveHttp3StreamCount);
+        }
+
+        /// <summary>
+        /// Decrement active connection count for the supplied protocol.
+        /// </summary>
+        /// <param name="protocol">HTTP protocol.</param>
+        public void DecrementActiveConnectionCount(HttpProtocol protocol)
+        {
+            Interlocked.Decrement(ref _ActiveConnectionCount);
+
+            if (protocol == HttpProtocol.Http1) Interlocked.Decrement(ref _ActiveHttp1ConnectionCount);
+            else if (protocol == HttpProtocol.Http2) Interlocked.Decrement(ref _ActiveHttp2StreamCount);
+            else if (protocol == HttpProtocol.Http3) Interlocked.Decrement(ref _ActiveHttp3StreamCount);
         }
 
         /// <summary>

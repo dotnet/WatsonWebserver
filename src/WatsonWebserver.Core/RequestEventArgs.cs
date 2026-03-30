@@ -13,6 +13,21 @@
         #region Public-Members
 
         /// <summary>
+        /// Request protocol.
+        /// </summary>
+        public HttpProtocol Protocol { get; set; } = HttpProtocol.Http1;
+
+        /// <summary>
+        /// Connection identifier.
+        /// </summary>
+        public Guid ConnectionId { get; set; } = Guid.Empty;
+
+        /// <summary>
+        /// Stream identifier.
+        /// </summary>
+        public Guid StreamId { get; set; } = Guid.Empty;
+
+        /// <summary>
         /// IP address.
         /// </summary>
         public string Ip { get; set; } = null;
@@ -61,11 +76,16 @@
         /// <param name="ctx"></param>
         public RequestEventArgs(HttpContextBase ctx)
         {
+            if (ctx == null) throw new ArgumentNullException(nameof(ctx));
+
+            Protocol = ctx.Protocol;
+            ConnectionId = ctx.Connection.Guid;
+            StreamId = ctx.Stream.Guid;
             Ip = ctx.Request.Source.IpAddress;
             Port = ctx.Request.Source.Port;
             Method = ctx.Request.Method;
             Url = ctx.Request.Url.Full;
-            Query = ctx.Request.Query.Elements;
+            Query = ctx.Request.Query?.Elements ?? new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
             Headers = ctx.Request.Headers;
             ContentLength = ctx.Request.ContentLength;
         }

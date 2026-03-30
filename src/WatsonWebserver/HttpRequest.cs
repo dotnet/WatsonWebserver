@@ -1,6 +1,7 @@
 ﻿namespace WatsonWebserver
 {
     using System;
+    using System.Buffers;
     using System.Collections;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
@@ -17,6 +18,7 @@
     using System.Threading.Tasks;
     using Timestamps;
     using WatsonWebserver.Core;
+    using WatsonWebserver.Core.Http1;
 
     /// <summary>
     /// HTTP request.
@@ -29,7 +31,7 @@
         /// The stream from which to read the request body sent by the requestor (client).
         /// </summary>
         [JsonIgnore]
-        public override Stream Data { get; set; } = new MemoryStream();
+        public override Stream Data { get; set; } = null;
          
         /// <summary>
         /// Retrieve the request body as a byte array.  This will fully read the stream. 
@@ -42,7 +44,13 @@
                 if (_DataAsBytes != null) return _DataAsBytes;
                 if (Data != null)
                 {
-                    _DataAsBytes = ReadStreamFully(Data);
+                    if (ContentLength > 0) _DataAsBytes = ReadStreamFully(Data, ContentLength);
+                    else if (ChunkedTransfer) _DataAsBytes = ReadChunkedBodyAsync(CancellationToken.None).GetAwaiter().GetResult();
+                    else
+                    {
+                        _DataAsBytes = Array.Empty<byte>();
+                        _BodyComplete = true;
+                    }
                     return _DataAsBytes;
                 }
                 return null;
@@ -57,11 +65,26 @@
         {
             get
             {
-                if (_DataAsBytes != null) return Encoding.UTF8.GetString(_DataAsBytes);
+                if (_DataAsString != null) return _DataAsString;
+                if (_DataAsBytes != null)
+                {
+                    _DataAsString = Encoding.UTF8.GetString(_DataAsBytes);
+                    return _DataAsString;
+                }
                 if (Data != null)
                 {
-                    _DataAsBytes = ReadStreamFully(Data);
-                    if (_DataAsBytes != null) return Encoding.UTF8.GetString(_DataAsBytes);
+                    if (ContentLength > 0) _DataAsBytes = ReadStreamFully(Data, ContentLength);
+                    else if (ChunkedTransfer) _DataAsBytes = ReadChunkedBodyAsync(CancellationToken.None).GetAwaiter().GetResult();
+                    else
+                    {
+                        _DataAsBytes = Array.Empty<byte>();
+                        _BodyComplete = true;
+                    }
+                    if (_DataAsBytes != null)
+                    {
+                        _DataAsString = Encoding.UTF8.GetString(_DataAsBytes);
+                        return _DataAsString;
+                    }
                 }
                 return null;
             }
@@ -80,8 +103,11 @@
         private int _StreamBufferSize = 65536;
         private Uri _Uri = null;
         private byte[] _DataAsBytes = null;
+        private string _DataAsString = null;
         private ISerializationHelper _Serializer = null;
-        private NameValueCollection _Headers = new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
+        private WebserverSettings _Settings = null;
+        private bool _BodyComplete = false;
+        private Http1RequestMetadata _Http1Metadata = null;
 
         #endregion
 
@@ -105,62 +131,22 @@
             if (ctx == null) throw new ArgumentNullException(nameof(ctx));
             if (ctx.Request == null) throw new ArgumentNullException(nameof(ctx.Request));
             if (serializer == null) throw new ArgumentNullException(nameof(serializer));
+            Initialize(ctx, serializer);
+        }
 
-            _Serializer = serializer;
-
-            ListenerContext = ctx; 
-            Keepalive = ctx.Request.KeepAlive;
-            ContentLength = ctx.Request.ContentLength64;
-            Useragent = ctx.Request.UserAgent;
-            ContentType = ctx.Request.ContentType;
-
-            _Uri = new Uri(ctx.Request.Url.ToString().Trim()); 
-
-            ProtocolVersion = "HTTP/" + ctx.Request.ProtocolVersion.ToString(); 
-            Source = new SourceDetails(ctx.Request.RemoteEndPoint.Address.ToString(), ctx.Request.RemoteEndPoint.Port);
-            Destination = new DestinationDetails(ctx.Request.LocalEndPoint.Address.ToString(), ctx.Request.LocalEndPoint.Port, _Uri.Host);
-            Url = new UrlDetails(ctx.Request.Url.ToString().Trim(), ctx.Request.RawUrl.ToString().Trim()); 
-            Query = new QueryDetails(Url.Full);
-            MethodRaw = ctx.Request.HttpMethod;
-
-            try
-            {
-                Method = (HttpMethod)Enum.Parse(typeof(HttpMethod), ctx.Request.HttpMethod, true);
-            }
-            catch (Exception)
-            {
-                Method = HttpMethod.UNKNOWN;
-            }
-
-            Headers = ctx.Request.Headers;
-             
-            for (int i = 0; i < Headers.Count; i++)
-            {
-                string key = Headers.GetKey(i);
-                string[] vals = Headers.GetValues(i);
-
-                if (String.IsNullOrEmpty(key)) continue;
-                if (vals == null || vals.Length < 1) continue;
-
-                if (key.ToLower().Equals("transfer-encoding"))
-                {
-                    if (vals.Contains("chunked", StringComparer.InvariantCultureIgnoreCase))
-                        ChunkedTransfer = true;
-                    if (vals.Contains("gzip", StringComparer.InvariantCultureIgnoreCase))
-                        Gzip = true;
-                    if (vals.Contains("deflate", StringComparer.InvariantCultureIgnoreCase))
-                        Deflate = true;
-                }
-                else if (key.ToLower().Equals("x-amz-content-sha256"))
-                {
-                    if (vals.Contains("streaming", StringComparer.InvariantCultureIgnoreCase))
-                    {
-                        ChunkedTransfer = true;
-                    }
-                }
-            }
-              
-            Data = ctx.Request.InputStream;
+        /// <summary>
+        /// HTTP request from a raw HTTP/1.1 stream.
+        /// </summary>
+        /// <param name="settings">Webserver settings.</param>
+        /// <param name="stream">Readable request stream.</param>
+        /// <param name="metadata">Parsed request metadata.</param>
+        public HttpRequest(WebserverSettings settings, Stream stream, Http1RequestMetadata metadata)
+        {
+            if (settings == null) throw new ArgumentNullException(nameof(settings));
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            if (!stream.CanRead) throw new IOException("Cannot read from supplied stream.");
+            if (metadata == null) throw new ArgumentNullException(nameof(metadata));
+            Initialize(settings, stream, metadata);
         }
 
         #endregion
@@ -175,96 +161,9 @@
         /// <returns>Chunk.</returns>
         public override async Task<Chunk> ReadChunk(CancellationToken token = default)
         {
-            Chunk chunk = new Chunk();
-             
-            #region Get-Length-and-Metadata
-
-            byte[] buffer = new byte[1];
-            byte[] lenBytes = null;
-            int bytesRead = 0;
-
-            while (true)
-            {
-                bytesRead = await Data.ReadAsync(buffer, 0, buffer.Length, token).ConfigureAwait(false);
-                if (bytesRead > 0)
-                {
-                    lenBytes = AppendBytes(lenBytes, buffer);  
-                    string lenStr = Encoding.UTF8.GetString(lenBytes); 
-
-                    if (lenBytes[lenBytes.Length - 1] == 10)
-                    {
-                        lenStr = lenStr.Trim();
-
-                        if (lenStr.Contains(";"))
-                        {
-                            string[] lenParts = lenStr.Split(new char[] { ';' }, 2);
-                            chunk.Length = int.Parse(lenParts[0], NumberStyles.HexNumber);
-                            if (lenParts.Length >= 2) chunk.Metadata = lenParts[1];
-                        }
-                        else
-                        {
-                            chunk.Length = int.Parse(lenStr, NumberStyles.HexNumber);
-                        }
-                         
-                        break;
-                    }
-                }
-            }
-
-            #endregion
-
-            #region Get-Data
-
-            int bytesRemaining = chunk.Length;
-
-            if (chunk.Length > 0)
-            {
-                chunk.IsFinal = false;
-                using (MemoryStream ms = new MemoryStream())
-                {
-                    while (true)
-                    {
-                        if (bytesRemaining > _StreamBufferSize) buffer = new byte[_StreamBufferSize];
-                        else buffer = new byte[bytesRemaining];
-
-                        bytesRead = await Data.ReadAsync(buffer, 0, buffer.Length, token).ConfigureAwait(false);
-
-                        if (bytesRead > 0)
-                        {
-                            await ms.WriteAsync(buffer, 0, bytesRead);
-                            bytesRemaining -= bytesRead;
-                        }
-
-                        if (bytesRemaining == 0) break;
-                    }
-
-                    ms.Seek(0, SeekOrigin.Begin);
-                    chunk.Data = ms.ToArray();
-                }
-            }
-            else
-            {
-                chunk.IsFinal = true;
-            }
-
-            #endregion
-
-            #region Get-Trailing-CRLF
-
-            buffer = new byte[1];
-
-            while (true)
-            {
-                bytesRead = await Data.ReadAsync(buffer, 0, buffer.Length, token).ConfigureAwait(false);
-                if (bytesRead > 0)
-                {
-                    if (buffer[0] == 10) break;
-                }
-            }
-
-            #endregion
-
-            return chunk; 
+            Chunk chunk = await Http1ChunkReader.ReadAsync(Data, _StreamBufferSize, token).ConfigureAwait(false);
+            if (chunk != null && chunk.IsFinal) _BodyComplete = true;
+            return chunk;
         }
          
         /// <summary>
@@ -276,9 +175,14 @@
         {
             if (String.IsNullOrEmpty(key)) throw new ArgumentNullException(nameof(key));
 
+            if (_Http1Metadata != null)
+            {
+                return _Http1Metadata.HeaderExists(key);
+            }
+
             if (Headers != null)
             {
-                return Headers.AllKeys.Any(k => k.ToLower().Equals(key.ToLower()));
+                return Headers.AllKeys.Any(k => !String.IsNullOrEmpty(k) && String.Equals(k, key, StringComparison.InvariantCultureIgnoreCase));
             }
 
             return false;
@@ -296,7 +200,7 @@
             if (Query != null
                 && Query.Elements != null)
             {
-                return Query.Elements.AllKeys.Any(k => k.ToLower().Equals(key.ToLower()));
+                return Query.Elements.AllKeys.Any(k => !String.IsNullOrEmpty(k) && String.Equals(k, key, StringComparison.InvariantCultureIgnoreCase));
             }
 
             return false;
@@ -310,6 +214,11 @@
         public override string RetrieveHeaderValue(string key)
         {
             if (String.IsNullOrEmpty(key)) throw new ArgumentNullException(nameof(key));
+
+            if (_Http1Metadata != null)
+            {
+                return _Http1Metadata.RetrieveHeaderValue(key);
+            }
 
             if (Headers != null)
             { 
@@ -354,58 +263,223 @@
             if (_DataAsBytes != null) return _DataAsBytes;
             if (Data == null) return null;
 
-            _DataAsBytes = await ReadStreamFullyAsync(Data, token).ConfigureAwait(false);
+            if (ContentLength > 0)
+            {
+                _DataAsBytes = await ReadStreamExactAsync(Data, ContentLength, token).ConfigureAwait(false);
+            }
+            else if (ChunkedTransfer)
+            {
+                _DataAsBytes = await ReadChunkedBodyAsync(token).ConfigureAwait(false);
+            }
+            else
+            {
+                _DataAsBytes = Array.Empty<byte>();
+                _BodyComplete = true;
+            }
+
             return _DataAsBytes;
+        }
+
+        internal bool IsRequestBodyComplete
+        {
+            get
+            {
+                if (_BodyComplete) return true;
+                if (ChunkedTransfer) return false;
+                return ContentLength <= 0;
+            }
+        }
+
+        internal void MarkBodyComplete()
+        {
+            _BodyComplete = true;
+        }
+
+        internal void Initialize(HttpListenerContext ctx, ISerializationHelper serializer)
+        {
+            if (ctx == null) throw new ArgumentNullException(nameof(ctx));
+            if (ctx.Request == null) throw new ArgumentNullException(nameof(ctx.Request));
+            if (serializer == null) throw new ArgumentNullException(nameof(serializer));
+
+            _Serializer = serializer;
+            ListenerContext = ctx;
+            ThreadId = Thread.CurrentThread.ManagedThreadId;
+            Keepalive = ctx.Request.KeepAlive;
+            ContentLength = ctx.Request.ContentLength64;
+            Useragent = ctx.Request.UserAgent;
+            ContentType = ctx.Request.ContentType;
+
+            _Uri = new Uri(ctx.Request.Url.ToString().Trim());
+            ProtocolVersion = "HTTP/" + ctx.Request.ProtocolVersion.ToString();
+            string sourceIp = ctx.Request.RemoteEndPoint.Address.ToString();
+            int sourcePort = ctx.Request.RemoteEndPoint.Port;
+            string destinationIp = ctx.Request.LocalEndPoint.Address.ToString();
+            int destinationPort = ctx.Request.LocalEndPoint.Port;
+            string hostname = _Uri.Host;
+            Source = new SourceDetails(sourceIp, sourcePort);
+            Destination = new DestinationDetails(destinationIp, destinationPort, hostname);
+            Url = new UrlDetails(ctx.Request.Url.ToString().Trim(), ctx.Request.RawUrl.ToString().Trim());
+            if (ctx.Request.RawUrl != null
+                && ctx.Request.RawUrl.IndexOf("?", StringComparison.Ordinal) >= 0)
+            {
+                Query = new QueryDetails(ctx.Request.RawUrl.ToString().Trim());
+            }
+
+            MethodRaw = ctx.Request.HttpMethod;
+            try
+            {
+                Method = (HttpMethod)Enum.Parse(typeof(HttpMethod), ctx.Request.HttpMethod, true);
+            }
+            catch (Exception)
+            {
+                Method = HttpMethod.UNKNOWN;
+            }
+
+            Headers = ctx.Request.Headers;
+            for (int i = 0; i < Headers.Count; i++)
+            {
+                string key = Headers.GetKey(i);
+                string[] vals = Headers.GetValues(i);
+
+                if (String.IsNullOrEmpty(key)) continue;
+                if (vals == null || vals.Length < 1) continue;
+
+                if (String.Equals(key, "transfer-encoding", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    if (vals.Contains("chunked", StringComparer.InvariantCultureIgnoreCase)) ChunkedTransfer = true;
+                    if (vals.Contains("gzip", StringComparer.InvariantCultureIgnoreCase)) Gzip = true;
+                    if (vals.Contains("deflate", StringComparer.InvariantCultureIgnoreCase)) Deflate = true;
+                }
+                else if (String.Equals(key, "x-amz-content-sha256", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    if (vals.Contains("streaming", StringComparer.InvariantCultureIgnoreCase)) ChunkedTransfer = true;
+                }
+            }
+
+            Data = ctx.Request.InputStream;
+        }
+
+        internal void Initialize(WebserverSettings settings, Stream stream, Http1RequestMetadata metadata)
+        {
+            if (settings == null) throw new ArgumentNullException(nameof(settings));
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            if (!stream.CanRead) throw new IOException("Cannot read from supplied stream.");
+            if (metadata == null) throw new ArgumentNullException(nameof(metadata));
+
+            _Settings = settings;
+            OwnsDataStream = false;
+            Data = stream;
+            BuildRawRequest(metadata);
+        }
+
+        internal void ReturnToPool()
+        {
+            ResetForReuse();
+        }
+
+        /// <summary>
+        /// Reset the HTTP/1.1 request before returning it to the pool.
+        /// </summary>
+        protected override void ResetForReuse()
+        {
+            ListenerContext = null;
+            _StreamBufferSize = 65536;
+            _Uri = null;
+            _DataAsBytes = null;
+            _DataAsString = null;
+            _Serializer = null;
+            _Settings = null;
+            _BodyComplete = false;
+            _Http1Metadata = null;
+            base.ResetForReuse();
         }
 
         #endregion
 
         #region Private-Methods
 
-        private byte[] AppendBytes(byte[] orig, byte[] append)
-        {
-            if (orig == null && append == null) return null;
-
-            byte[] ret = null;
-
-            if (append == null)
-            {
-                ret = new byte[orig.Length];
-                Buffer.BlockCopy(orig, 0, ret, 0, orig.Length);
-                return ret;
-            }
-
-            if (orig == null)
-            {
-                ret = new byte[append.Length];
-                Buffer.BlockCopy(append, 0, ret, 0, append.Length);
-                return ret;
-            }
-
-            ret = new byte[orig.Length + append.Length];
-            Buffer.BlockCopy(orig, 0, ret, 0, orig.Length);
-            Buffer.BlockCopy(append, 0, ret, orig.Length, append.Length);
-            return ret;
-        }
-
         private byte[] ReadStreamFully(Stream input)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
             if (!input.CanRead) throw new InvalidOperationException("Input stream is not readable");
 
-            byte[] buffer = new byte[16 * 1024];
-            using (MemoryStream ms = new MemoryStream())
+            byte[] buffer = ArrayPool<byte>.Shared.Rent(_StreamBufferSize);
+            try
             {
-                int read;
-
-                while ((read = input.Read(buffer, 0, buffer.Length)) > 0)
+                using (MemoryStream memoryStream = new MemoryStream())
                 {
-                    ms.Write(buffer, 0, read);
+                    int read = 0;
+
+                    while ((read = input.Read(buffer, 0, buffer.Length)) > 0)
+                    {
+                        memoryStream.Write(buffer, 0, read);
+                    }
+
+                    byte[] response = memoryStream.ToArray();
+                    _BodyComplete = true;
+                    return response;
+                }
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
+            }
+        }
+
+        private byte[] ReadStreamFully(Stream input, long contentLength)
+        {
+            if (input == null) throw new ArgumentNullException(nameof(input));
+            if (!input.CanRead) throw new InvalidOperationException("Input stream is not readable");
+            if (contentLength < 1)
+            {
+                _BodyComplete = true;
+                return Array.Empty<byte>();
+            }
+
+            byte[] response = new byte[GetFixedLengthBodySize(contentLength)];
+            int offset = 0;
+
+            while (offset < response.Length)
+            {
+                int bytesRead = input.Read(response, offset, response.Length - offset);
+                if (bytesRead < 1)
+                {
+                    throw new MalformedHttpRequestException("Unexpected end of stream while reading the request body.");
                 }
 
-                byte[] ret = ms.ToArray();
-                return ret;
+                offset += bytesRead;
             }
+
+            _BodyComplete = true;
+            return response;
+        }
+
+        private async Task<byte[]> ReadStreamExactAsync(Stream input, long contentLength, CancellationToken token = default)
+        {
+            if (input == null) throw new ArgumentNullException(nameof(input));
+            if (!input.CanRead) throw new InvalidOperationException("Input stream is not readable");
+            if (contentLength < 1)
+            {
+                _BodyComplete = true;
+                return Array.Empty<byte>();
+            }
+
+            byte[] response = new byte[GetFixedLengthBodySize(contentLength)];
+            int offset = 0;
+
+            while (offset < response.Length)
+            {
+                int bytesRead = await input.ReadAsync(response, offset, response.Length - offset, token).ConfigureAwait(false);
+                if (bytesRead < 1)
+                {
+                    throw new MalformedHttpRequestException("Unexpected end of stream while reading the request body.");
+                }
+
+                offset += bytesRead;
+            }
+
+            _BodyComplete = true;
+            return response;
         }
 
         private async Task<byte[]> ReadStreamFullyAsync(Stream input, CancellationToken token = default)
@@ -413,16 +487,74 @@
             if (input == null) throw new ArgumentNullException(nameof(input));
             if (!input.CanRead) throw new InvalidOperationException("Input stream is not readable");
 
-            byte[] buffer = new byte[_StreamBufferSize];
-            using (MemoryStream ms = new MemoryStream())
+            byte[] buffer = ArrayPool<byte>.Shared.Rent(_StreamBufferSize);
+            try
             {
-                int read;
-                while ((read = await input.ReadAsync(buffer, 0, buffer.Length, token).ConfigureAwait(false)) > 0)
+                using (MemoryStream memoryStream = new MemoryStream())
                 {
-                    ms.Write(buffer, 0, read);
+                    int read = 0;
+                    while ((read = await input.ReadAsync(buffer, 0, buffer.Length, token).ConfigureAwait(false)) > 0)
+                    {
+                        memoryStream.Write(buffer, 0, read);
+                    }
+
+                    _BodyComplete = true;
+                    return memoryStream.ToArray();
                 }
-                return ms.ToArray();
             }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
+            }
+        }
+
+        private async Task<byte[]> ReadChunkedBodyAsync(CancellationToken token)
+        {
+            using (MemoryStream memoryStream = new MemoryStream())
+            {
+                while (true)
+                {
+                    Chunk chunk = await ReadChunk(token).ConfigureAwait(false);
+                    if (chunk.Data != null && chunk.Data.Length > 0)
+                    {
+                        memoryStream.Write(chunk.Data, 0, chunk.Data.Length);
+                    }
+
+                    if (chunk.IsFinal) break;
+                }
+
+                _BodyComplete = true;
+                return memoryStream.ToArray();
+            }
+        }
+
+        private void BuildRawRequest(Http1RequestMetadata metadata)
+        {
+            _Http1Metadata = metadata;
+            Source = metadata.Source;
+            Destination = metadata.Destination;
+            ThreadId = Thread.CurrentThread.ManagedThreadId;
+            Method = metadata.Method;
+            MethodRaw = metadata.MethodRaw;
+            SetUrlFactory(() => metadata.Url);
+            SetQueryFactory(() => metadata.Query);
+            SetHeadersFactory(() => metadata.Headers);
+            Protocol = HttpProtocol.Http1;
+            ProtocolVersion = metadata.ProtocolVersion;
+            Keepalive = metadata.Keepalive;
+            ChunkedTransfer = metadata.ChunkedTransfer;
+            Gzip = metadata.Gzip;
+            Deflate = metadata.Deflate;
+            Useragent = metadata.Useragent;
+            ContentType = metadata.ContentType;
+            ContentLength = metadata.ContentLength;
+        }
+
+        private int GetFixedLengthBodySize(long contentLength)
+        {
+            if (contentLength < 0) throw new ArgumentOutOfRangeException(nameof(contentLength));
+            if (contentLength > Int32.MaxValue) throw new IOException("Request body exceeds the maximum supported in-memory size.");
+            return Convert.ToInt32(contentLength, CultureInfo.InvariantCulture);
         }
 
         #endregion

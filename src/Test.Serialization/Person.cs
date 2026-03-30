@@ -3,11 +3,29 @@ namespace Test.Serialization
     using System;
     using System.Collections.Generic;
 
+    /// <summary>
+    /// Test model for serialization tests.
+    /// </summary>
     public class Person
     {
+        /// <summary>
+        /// Age of the person.
+        /// </summary>
         public int Age { get; set; } = 0;
+
+        /// <summary>
+        /// First name.
+        /// </summary>
         public string FirstName { get; set; } = null;
+
+        /// <summary>
+        /// Last name.
+        /// </summary>
         public string LastName { get; set; } = null;
+
+        /// <summary>
+        /// Serializer identifier.
+        /// </summary>
         public string Serializer { get; set; } = null;
 
         internal List<string> FirstNames = new List<string>
@@ -40,6 +58,12 @@ namespace Test.Serialization
             "Pinkman"
         };
 
+        /// <summary>
+        /// Create a random Person instance.
+        /// </summary>
+        /// <param name="rand">Random number generator.</param>
+        /// <param name="serializer">Serializer identifier to assign.</param>
+        /// <returns>A randomly populated Person.</returns>
         public static Person Random(Random rand, string serializer)
         {
             Person p = new Person();

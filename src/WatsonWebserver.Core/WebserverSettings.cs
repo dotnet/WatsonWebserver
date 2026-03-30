@@ -1,10 +1,7 @@
 ﻿namespace WatsonWebserver.Core
 {
     using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Security.Cryptography.X509Certificates;
-    using System.Text;
+    using WatsonWebserver.Core.Settings;
 
     /// <summary>
     /// Webserver settings.
@@ -57,6 +54,38 @@
                 else ret += "http://";
                 ret += Hostname + ":" + Port + "/";
                 return ret;
+            }
+        }
+
+        /// <summary>
+        /// Protocol enablement and limits.
+        /// </summary>
+        public ProtocolSettings Protocols
+        {
+            get
+            {
+                return _Protocols;
+            }
+            set
+            {
+                if (value == null) throw new ArgumentNullException(nameof(Protocols));
+                _Protocols = value;
+            }
+        }
+
+        /// <summary>
+        /// Alt-Svc advertising settings.
+        /// </summary>
+        public AltSvcSettings AltSvc
+        {
+            get
+            {
+                return _AltSvc;
+            }
+            set
+            {
+                if (value == null) throw new ArgumentNullException(nameof(AltSvc));
+                _AltSvc = value;
             }
         }
 
@@ -142,6 +171,39 @@
         }
 
         /// <summary>
+        /// Request timeout settings for API route handlers.
+        /// Set Timeout.DefaultTimeout to a positive TimeSpan to enable request timeouts.
+        /// </summary>
+        public TimeoutSettings Timeout
+        {
+            get
+            {
+                return _Timeout;
+            }
+            set
+            {
+                if (value == null) throw new ArgumentNullException(nameof(Timeout));
+                _Timeout = value;
+            }
+        }
+
+        /// <summary>
+        /// WebSocket settings.
+        /// </summary>
+        public WebSocketSettings WebSockets
+        {
+            get
+            {
+                return _WebSockets;
+            }
+            set
+            {
+                if (value == null) throw new ArgumentNullException(nameof(WebSockets));
+                _WebSockets = value;
+            }
+        }
+
+        /// <summary>
         /// When true, the machine's hostname will be used instead of the value specified in Hostname.
         /// </summary>
         public bool UseMachineHostname
@@ -163,11 +225,15 @@
 
         private string _Hostname = "localhost";
         private int _Port = 8000;
+        private ProtocolSettings _Protocols = new ProtocolSettings();
+        private AltSvcSettings _AltSvc = new AltSvcSettings();
         private IOSettings _IO = new IOSettings();
         private SslSettings _Ssl = new SslSettings();
         private AccessControlManager _AccessControl = new AccessControlManager(AccessControlMode.DefaultPermit);
         private DebugSettings _Debug = new DebugSettings();
         private HeaderSettings _Headers = new HeaderSettings();
+        private TimeoutSettings _Timeout = new TimeoutSettings();
+        private WebSocketSettings _WebSockets = new WebSocketSettings();
         private bool _UseMachineHostname = false;
 
         #endregion
@@ -207,306 +273,6 @@
         #endregion
 
         #region Private-Methods
-
-        #endregion
-
-        #region Public-Classes
-
-        /// <summary>
-        /// Input-output settings.
-        /// </summary>
-        public class IOSettings
-        {
-            /// <summary>
-            /// Buffer size to use when interacting with streams.
-            /// </summary>
-            public int StreamBufferSize
-            {
-                get
-                {
-                    return _StreamBufferSize;
-                }
-                set
-                {
-                    if (value < 1) throw new ArgumentOutOfRangeException(nameof(StreamBufferSize));
-                    _StreamBufferSize = value;
-                }
-            }
-
-            /// <summary>
-            /// Maximum number of concurrent requests.
-            /// </summary>
-            public int MaxRequests
-            {
-                get
-                {
-                    return _MaxRequests;
-                }
-                set
-                {
-                    if (value < 1) throw new ArgumentException("Maximum requests must be greater than zero.");
-                    _MaxRequests = value;
-                }
-            }
-
-            /// <summary>
-            /// Read timeout, in milliseconds.
-            /// This property is only used by WatsonWebserver.Lite.
-            /// </summary>
-            public int ReadTimeoutMs
-            {
-                get
-                {
-                    return _ReadTimeoutMs;
-                }
-                set
-                {
-                    if (value < 1) throw new ArgumentOutOfRangeException(nameof(ReadTimeoutMs));
-                    _ReadTimeoutMs = value;
-                }
-            }
-
-            /// <summary>
-            /// Maximum incoming header size, in bytes.
-            /// This property is only used by WatsonWebserver.Lite.
-            /// </summary>
-            public int MaxIncomingHeadersSize
-            {
-                get
-                {
-                    return _MaxIncomingHeadersSize;
-                }
-                set
-                {
-                    if (value < 1) throw new ArgumentOutOfRangeException(nameof(MaxIncomingHeadersSize));
-                    _MaxIncomingHeadersSize = value;
-                }
-            }
-
-            /// <summary>
-            /// Flag indicating whether or not the server requests a persistent connection.
-            /// </summary>
-            public bool EnableKeepAlive { get; set; } = false;
-
-            /// <summary>
-            /// Maximum request body size in bytes.
-            /// A value of zero or less disables this check.
-            /// Default is 0 (unlimited).
-            /// This limit applies to Content-Length validation before reading the body.
-            /// </summary>
-            public long MaxRequestBodySize
-            {
-                get
-                {
-                    return _MaxRequestBodySize;
-                }
-                set
-                {
-                    _MaxRequestBodySize = value;
-                }
-            }
-
-            /// <summary>
-            /// Maximum number of headers allowed in a request.
-            /// A value of zero or less disables this check.
-            /// Default is 64.
-            /// This property is only used by WatsonWebserver.Lite.
-            /// </summary>
-            public int MaxHeaderCount
-            {
-                get
-                {
-                    return _MaxHeaderCount;
-                }
-                set
-                {
-                    _MaxHeaderCount = value;
-                }
-            }
-
-            private int _StreamBufferSize = 65536;
-            private int _MaxRequests = 1024;
-            private int _ReadTimeoutMs = 10000;
-            private int _MaxIncomingHeadersSize = 65536;
-            private long _MaxRequestBodySize = 0;
-            private int _MaxHeaderCount = 64;
-
-            /// <summary>
-            /// Input-output settings.
-            /// </summary>
-            public IOSettings()
-            {
-
-            }
-        }
-
-        /// <summary>
-        /// SSL settings.
-        /// </summary>
-        public class SslSettings
-        {
-            /// <summary>
-            /// Enable or disable SSL.
-            /// </summary>
-            public bool Enable { get; set; } = false;
-
-            /// <summary>
-            /// Certifcate for SSL.
-            /// For WatsonWebserver, install the certificate in your operating system.  This property is not used by WatsonWebserver, only WatsonWebserver.Lite.
-            /// </summary>
-            public X509Certificate2 SslCertificate
-            {
-                get
-                {
-                    if (_SslCertificate == null)
-                    {
-                        if (!String.IsNullOrEmpty(PfxCertificateFile))
-                        {
-                            if (!String.IsNullOrEmpty(PfxCertificatePassword))
-                            {
-#if NET9_0_OR_GREATER
-                                _SslCertificate = X509CertificateLoader.LoadPkcs12FromFile(PfxCertificateFile, PfxCertificatePassword);
-#else
-                                _SslCertificate = new X509Certificate2(File.ReadAllBytes(PfxCertificateFile), PfxCertificatePassword);
-#endif
-                            }
-                            else
-                            {
-#if NET9_0_OR_GREATER
-                                _SslCertificate = X509CertificateLoader.LoadPkcs12FromFile(PfxCertificateFile, null);
-#else
-                                _SslCertificate = new X509Certificate2(File.ReadAllBytes(PfxCertificateFile));
-#endif
-                            }
-                        }
-                    }
-
-                    return _SslCertificate;
-                }
-                set
-                {
-                    _SslCertificate = value;
-                }
-            }
-
-            /// <summary>
-            /// PFX certificate filename.
-            /// For WatsonWebserver, install the certificate in your operating system.  This property is not used by WatsonWebserver, only WatsonWebserver.Lite.
-            /// </summary>
-            public string PfxCertificateFile { get; set; } = null;
-
-            /// <summary>
-            /// PFX certificate password.
-            /// For WatsonWebserver, install the certificate in your operating system.  This property is not used by WatsonWebserver, only WatsonWebserver.Lite.
-            /// </summary>
-            public string PfxCertificatePassword { get; set; } = null;
-
-            /// <summary>
-            /// Require mutual authentication.
-            /// This property is not used by WatsonWebserver, only WatsonWebserver.Lite.
-            /// </summary>
-            public bool MutuallyAuthenticate { get; set; } = false;
-
-            /// <summary>
-            /// Accept invalid certificates including self-signed and those that are unable to be verified.
-            /// This property is not used by WatsonWebserver, only WatsonWebserver.Lite.
-            /// </summary>
-            public bool AcceptInvalidAcertificates { get; set; } = true;
-
-            private X509Certificate2 _SslCertificate = null;
-
-            /// <summary>
-            /// SSL settings.
-            /// </summary>
-            public SslSettings()
-            {
-            }
-        }
-
-        /// <summary>
-        /// Header settings.
-        /// </summary>
-        public class HeaderSettings
-        {
-            /// <summary>
-            /// Automatically set content length if not already set.
-            /// </summary>
-            public bool IncludeContentLength { get; set; } = true;
-
-            /// <summary>
-            /// Headers to add to each request.
-            /// </summary>
-            public Dictionary<string, string> DefaultHeaders
-            {
-                get
-                {
-                    return _DefaultHeaders;
-                }
-                set
-                {
-                    if (value == null) _DefaultHeaders = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
-                    else _DefaultHeaders = value;
-                }
-            }
-
-            private Dictionary<string, string> _DefaultHeaders = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase)
-            {
-                { WebserverConstants.HeaderAccessControlAllowOrigin, "*" },
-                { WebserverConstants.HeaderAccessControlAllowMethods, "OPTIONS, HEAD, GET, PUT, POST, DELETE, PATCH" },
-                { WebserverConstants.HeaderAccessControlAllowHeaders, "*" },
-                { WebserverConstants.HeaderAccessControlExposeHeaders, "" },
-                { WebserverConstants.HeaderAccept, "*/*" },
-                { WebserverConstants.HeaderAcceptLanguage, "en-US, en" },
-                { WebserverConstants.HeaderAcceptCharset, "ISO-8859-1, utf-8" },
-                { WebserverConstants.HeaderCacheControl, "no-cache" },
-                { WebserverConstants.HeaderConnection, "close" },
-                { WebserverConstants.HeaderHost, "localhost:8000" }
-            };
-
-            /// <summary>
-            /// Headers that will be added to every response unless previously set.
-            /// </summary>
-            public HeaderSettings()
-            {
-
-            }
-        }
-
-        /// <summary>
-        /// Debug logging settings.
-        /// Be sure to set Events.Logger in order to receive debug messages.
-        /// </summary>
-        public class DebugSettings
-        {
-            /// <summary>
-            /// Enable or disable debug logging of access control.
-            /// </summary>
-            public bool AccessControl { get; set; } = false;
-
-            /// <summary>
-            /// Enable or disable debug logging of routing.
-            /// </summary>
-            public bool Routing { get; set; } = false;
-
-            /// <summary>
-            /// Enable or disable debug logging of requests.
-            /// </summary>
-            public bool Requests { get; set; } = false;
-
-            /// <summary>
-            /// Enable or disable debug logging of responses.
-            /// </summary>
-            public bool Responses { get; set; } = false;
-
-            /// <summary>
-            /// Debug logging settings.
-            /// Be sure to set Events.Logger in order to receive debug messages.
-            /// </summary>
-            public DebugSettings()
-            {
-
-            }
-        }
 
         #endregion
     }

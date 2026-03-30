@@ -1,5 +1,6 @@
-namespace WatsonWebserver.Core.OpenApi
+﻿namespace WatsonWebserver.Core.OpenApi
 {
+    using WatsonWebserver.Core.Routing;
     using System;
     using System.Collections.Generic;
     using System.Linq;

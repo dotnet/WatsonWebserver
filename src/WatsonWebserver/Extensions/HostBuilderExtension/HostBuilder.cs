@@ -1,5 +1,6 @@
 ﻿namespace WatsonWebserver.Extensions.HostBuilderExtension
 {
+    using WatsonWebserver.Core.Routing;
     using System;
     using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
@@ -158,7 +159,7 @@
         /// <param name="path">Route path.</param>
         /// <param name="handler">Route handler.</param>
         /// <param name="exceptionHandler">Method to invoke when handling exceptions.</param>
-        /// <param name="requiresAuthentication">Boolean to indicate if the route requires authentication.</param>
+        /// <param name="requiresAuthentication">bool indicating if the route requires authentication.</param>
         /// <returns>Host builder.</returns>
         public HostBuilder MapStaticRoute(
             HttpMethod method, 
@@ -181,7 +182,7 @@
         /// <param name="path">Route path.</param>
         /// <param name="handler">Route handler.</param>
         /// <param name="exceptionHandler">Method to invoke when handling exceptions.</param>
-        /// <param name="requiresAuthentication">Boolean to indicate if the route requires authentication.</param>
+        /// <param name="requiresAuthentication">bool indicating if the route requires authentication.</param>
         /// <returns>Host builder.</returns>
         public HostBuilder MapParameteRoute(
             HttpMethod method, 
@@ -200,7 +201,7 @@
         /// <param name="path">Route path.</param>
         /// <param name="handler">Route handler.</param>
         /// <param name="exceptionHandler">Method to invoke when handling exceptions.</param>
-        /// <param name="requiresAuthentication">Boolean to indicate if the route requires authentication.</param>
+        /// <param name="requiresAuthentication">bool indicating if the route requires authentication.</param>
         /// <returns>Host builder.</returns>
         public HostBuilder MapParameterRoute(
             HttpMethod method, 
@@ -223,7 +224,7 @@
         /// <param name="regex">Regular expression.</param>
         /// <param name="handler">Route handler.</param>
         /// <param name="exceptionHandler">Method to invoke when handling exceptions.</param>
-        /// <param name="requiresAuthentication">Boolean to indicate if the route requires authentication.</param>
+        /// <param name="requiresAuthentication">bool indicating if the route requires authentication.</param>
         /// <returns>Host builder.</returns>
         public HostBuilder MapDynamicRoute(
             HttpMethod method, 

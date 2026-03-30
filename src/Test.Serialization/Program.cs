@@ -6,11 +6,9 @@ namespace Test.Serialization
     using GetSomeInput;
     using WatsonWebserver;
     using WatsonWebserver.Core;
-    using WatsonWebserver.Lite;
-
+    
     static class Program
     {
-        static bool _UsingLite = false;
         static string _Hostname = "localhost";
         static int _Port = 8080;
         static WebserverSettings _Settings = null;
@@ -24,34 +22,14 @@ namespace Test.Serialization
 
         static void Main(string[] args)
         {
-            if (args != null && args.Length > 0)
-            {
-                foreach (string arg in args)
-                {
-                    if (arg.Equals("-lite", StringComparison.OrdinalIgnoreCase))
-                    {
-                        _UsingLite = true;
-                        break;
-                    }
-                }
-            }
 
             _Settings = new WebserverSettings
             {
                 Hostname = _Hostname,
                 Port = _Port
             };
-
-            if (_UsingLite)
-            {
-                Console.WriteLine("Initializing webserver lite");
-                _Server = new WatsonWebserver.Lite.WebserverLite(_Settings, DefaultRoute);
-            }
-            else
-            {
-                Console.WriteLine("Initializing webserver");
-                _Server = new Webserver(_Settings, DefaultRoute);
-            }
+            Console.WriteLine("Initializing webserver");
+            _Server = new WatsonWebserver.Webserver(_Settings, DefaultRoute);
 
             Console.WriteLine("Listening on " + _Settings.Prefix);
             _Server.Events.Logger = Console.WriteLine;
@@ -162,3 +140,5 @@ namespace Test.Serialization
         }
     }
 }
+
+

@@ -31,15 +31,19 @@
         {
             get
             {
+                if (_QuerystringEvaluated) return _Querystring;
+
                 if (!String.IsNullOrEmpty(_FullUrl))
                 {
-                    if (_FullUrl.Contains("?"))
+                    int queryIndex = _FullUrl.IndexOf("?", StringComparison.Ordinal);
+                    if (queryIndex >= 0 && queryIndex < (_FullUrl.Length - 1))
                     {
-                        return _FullUrl.Substring(_FullUrl.IndexOf("?") + 1, (_FullUrl.Length - _FullUrl.IndexOf("?") - 1));
+                        _Querystring = _FullUrl.Substring(queryIndex + 1, _FullUrl.Length - queryIndex - 1);
                     }
                 }
 
-                return null;
+                _QuerystringEvaluated = true;
+                return _Querystring;
             }
         }
 
@@ -56,21 +60,31 @@
                 string qs = Querystring;
                 if (!String.IsNullOrEmpty(qs))
                 {
-                    string[] queries = qs.Split(new char[] { '&' }, StringSplitOptions.RemoveEmptyEntries);
-                    if (queries.Length > 0)
+                    int queryStartIndex = 0;
+
+                    while (queryStartIndex < qs.Length)
                     {
-                        for (int i = 0; i < queries.Length; i++)
+                        int queryEndIndex = qs.IndexOf('&', queryStartIndex);
+                        if (queryEndIndex < 0) queryEndIndex = qs.Length;
+
+                        if (queryEndIndex > queryStartIndex)
                         {
-                            string[] queryParts = queries[i].Split('=');
-                            if (queryParts != null && queryParts.Length == 2)
+                            int keyValueSeparatorIndex = qs.IndexOf('=', queryStartIndex, queryEndIndex - queryStartIndex);
+                            if (keyValueSeparatorIndex >= 0)
                             {
-                                ret.Add(queryParts[0], queryParts[1]);
+                                string key = qs.Substring(queryStartIndex, keyValueSeparatorIndex - queryStartIndex);
+                                string value = keyValueSeparatorIndex < (queryEndIndex - 1)
+                                    ? qs.Substring(keyValueSeparatorIndex + 1, queryEndIndex - keyValueSeparatorIndex - 1)
+                                    : String.Empty;
+                                ret.Add(key, value);
                             }
-                            else if (queryParts != null && queryParts.Length == 1)
+                            else
                             {
-                                ret.Add(queryParts[0], null);
+                                ret.Add(qs.Substring(queryStartIndex, queryEndIndex - queryStartIndex), null);
                             }
                         }
+
+                        queryStartIndex = queryEndIndex + 1;
                     }
                 }
 
@@ -84,6 +98,8 @@
         #region Private-Members
 
         private string _FullUrl = null;
+        private string _Querystring = null;
+        private bool _QuerystringEvaluated = false;
         private NameValueCollection _Elements = null;
 
         #endregion

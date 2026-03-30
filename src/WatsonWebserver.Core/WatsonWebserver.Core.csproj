@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.0;netstandard2.1;net462;net48;net8.0;net10.0</TargetFrameworks>
-		<Version>6.6.0</Version>
-		<Description>Core library for Watson and Watson.Lite; simple, fast, async C# web servers for handling REST requests with SSL support, targeted to .NET Core, .NET Standard, and .NET Framework.</Description>
-		<PackageReleaseNotes>Stability, security, and performance improvements; IDisposable on context/request/response; directory traversal protection; request body size limits; route manager concurrency improvements; routing pipeline deduplication</PackageReleaseNotes>
+		<TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+		<Version>7.0.0</Version>
+		<Description>Core library for Watson 7.x shared semantics, routing, lifecycle, and protocol configuration targeting .NET 8 and .NET 10.</Description>
+		<PackageReleaseNotes>Watson 7.0 foundation: shared semantic pipeline extraction, protocol configuration surface, lifecycle metadata, and fail-fast protocol validation</PackageReleaseNotes>
 
 		<PackageId>Watson.Core</PackageId>
 		<Title>Watson Webserver Core</Title>
@@ -15,8 +15,8 @@
 		<RepositoryUrl>https://github.com/dotnet/WatsonWebserver</RepositoryUrl>
 		<PackageIcon>watson.png</PackageIcon>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<RepositoryType>github</RepositoryType>
-		<PackageTags>web server rest restful http https api async ssl</PackageTags>
+		<RepositoryType>git</RepositoryType>
+		<PackageTags>watson webserver web-server rest restful http http2 http3 api async routing openapi swagger</PackageTags>
 		<PackageLicenseFile>LICENSE.md</PackageLicenseFile>
 		<IncludeSymbols>True</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
@@ -45,7 +45,6 @@
 	<ItemGroup>
 		<PackageReference Include="IpMatcher" Version="1.0.5" />
 		<PackageReference Include="RegexMatcher" Version="1.0.9" />
-		<PackageReference Include="System.Text.Json" Version="8.0.5" />
 		<PackageReference Include="Timestamps" Version="1.0.11" />
 		<PackageReference Include="UrlMatcher" Version="3.0.1" />
 	</ItemGroup>
@@ -54,9 +53,6 @@
 		<None Include="Assets\watson.png">
 			<Pack>True</Pack>
 			<PackagePath>\</PackagePath>
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</None>
-		<None Include="WatsonWebserver.Core.xml">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>

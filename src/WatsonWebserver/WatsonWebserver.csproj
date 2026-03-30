@@ -1,22 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.0;netstandard2.1;net462;net48;net8.0;net10.0</TargetFrameworks>
-		<Version>6.6.0</Version>
-		<Description>Simple, fast, async C# web server for handling REST requests with SSL support, targeted to .NET Core, .NET Standard, and .NET Framework.</Description>
-		<PackageReleaseNotes>Stability, security, and performance improvements; IDisposable on context/request/response; directory traversal protection; request body size limits; route manager concurrency improvements; routing pipeline deduplication</PackageReleaseNotes>
+		<TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+		<EnablePreviewFeatures>true</EnablePreviewFeatures>
+		<Version>7.0.0</Version>
+		<Description>Simple, fast, async C# web server for handling REST requests with unified 7.x protocol architecture targeting .NET 8 and .NET 10.</Description>
+		<PackageReleaseNotes>Watson 7.0 foundation: shared semantic pipeline extraction, protocol configuration surface, lifecycle metadata, and fail-fast protocol validation</PackageReleaseNotes>
 
 		<Authors>Joel Christner</Authors>
 		<Company>Joel Christner</Company>
 		<Copyright>(c)2026 Joel Christner</Copyright>
 		<PackageProjectUrl>https://github.com/dotnet/WatsonWebserver</PackageProjectUrl>
-		<PackageLicenseUrl></PackageLicenseUrl>
 		<RepositoryUrl>https://github.com/dotnet/WatsonWebserver</RepositoryUrl>
-		<RepositoryType>Github</RepositoryType>
-		<PackageTags>web server rest restful http https api async ssl</PackageTags>
+		<RepositoryType>git</RepositoryType>
+		<PackageTags>watson webserver web-server rest restful http http2 http3 quic api async openapi swagger</PackageTags>
 		<PackageId>Watson</PackageId>
 		<Product>Watson</Product>
-		<PackageIconUrl></PackageIconUrl>
 		<PackageLicenseFile>LICENSE.md</PackageLicenseFile>
 		<PackageIcon>watson.png</PackageIcon>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
@@ -49,9 +48,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Update="WatsonWebserver.xml">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</None>
 	</ItemGroup>
 
 </Project>

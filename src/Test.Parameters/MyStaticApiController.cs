@@ -1,27 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using WatsonWebserver;
-
 namespace Test.Parameters
 {
+    using System.Threading.Tasks;
+    using WatsonWebserver;
+
+    /// <summary>
+    /// Static API controller for parameter route tests.
+    /// </summary>
     [RoutePrefix("MyStaticApi")]
     public static class MyStaticApiController
     {
-        [HttpGet("GetTest1000")]  // HttpGet("GetTest1000") -> Rename GetTestNoNumber to GetTest1000
+        /// <summary>
+        /// GET test with renamed route.
+        /// </summary>
+        [HttpGet("GetTest1000")]
         public static async Task<MyClass> GetTestNoNumber(int x, int y)
         {
             return new MyClass() { X = x * y };
         }
 
+        /// <summary>
+        /// GET test with query parameters.
+        /// </summary>
         [HttpGet]
         public static async Task<MyClass> GetTest1(int x, int y)
         {
             return new MyClass() { X = x * y };
         }
 
+        /// <summary>
+        /// GET test with HttpContext and query parameters.
+        /// </summary>
         [HttpGet]
         public static async Task<MyClass> GetTest2(HttpContext ctx, int x, int y)
         {
@@ -32,12 +40,18 @@ namespace Test.Parameters
             };
         }
 
+        /// <summary>
+        /// POST test with body deserialization.
+        /// </summary>
         [HttpPost]
         public static async Task<MyClass> PostTest1(MyClass mc)
         {
             return new MyClass() { X = mc.X * 2 };
         }
 
+        /// <summary>
+        /// POST test with HttpContext and body deserialization.
+        /// </summary>
         [HttpPost]
         public static async Task<MyClass> PostTest2(HttpContext ctx, MyClass mc)
         {
@@ -48,6 +62,9 @@ namespace Test.Parameters
             };
         }
 
+        /// <summary>
+        /// POST test with HttpContext, body deserialization, and query parameter.
+        /// </summary>
         [HttpPost]
         public static async Task<MyClass> PostTest3(HttpContext ctx, MyClass mc, int multiplier)
         {

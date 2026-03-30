@@ -9,9 +9,7 @@
 		<PackageReference Include="RestWrapper" Version="3.0.17" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\WatsonWebserver.Lite\WatsonWebserver.Lite.csproj" />
-		<ProjectReference Include="..\WatsonWebserver\WatsonWebserver.csproj" />
+	<ItemGroup>		<ProjectReference Include="..\WatsonWebserver\WatsonWebserver.csproj" />
 	</ItemGroup>
 
 </Project>

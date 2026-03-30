@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Text;
+    using WatsonWebserver.Core.WebSockets;
 
     /// <summary>
     /// Callbacks/actions to use when various events are encountered.
@@ -19,53 +20,84 @@
         /// <summary>
         /// Event to fire when a connection is received.
         /// </summary>
-        public event EventHandler<ConnectionEventArgs> ConnectionReceived = delegate { };
+        public event EventHandler<ConnectionEventArgs> ConnectionReceived;
 
         /// <summary>
         /// Event to fire when a connection is denied.
-        /// This event is not used by WatsonWebserver, only WatsonWebserver.Lite.
         /// </summary>
-        public event EventHandler<ConnectionEventArgs> ConnectionDenied = delegate { };
+        public event EventHandler<ConnectionEventArgs> ConnectionDenied;
 
         /// <summary>
         /// Event to fire  when a request is received. 
         /// </summary>
-        public event EventHandler<RequestEventArgs> RequestReceived = delegate { };
+        public event EventHandler<RequestEventArgs> RequestReceived;
 
         /// <summary>
         /// Event to fire  when a request is denied due to access control. 
         /// </summary>
-        public event EventHandler<RequestEventArgs> RequestDenied = delegate { };
+        public event EventHandler<RequestEventArgs> RequestDenied;
          
         /// <summary>
         /// Event to fire when a requestor disconnected unexpectedly.
         /// </summary>
-        public event EventHandler<RequestEventArgs> RequestorDisconnected = delegate { };
+#pragma warning disable CS0067
+        public event EventHandler<RequestEventArgs> RequestorDisconnected;
+#pragma warning restore CS0067
 
         /// <summary>
         /// Event to fire when a response is sent.
         /// </summary>
-        public event EventHandler<ResponseEventArgs> ResponseSent = delegate { };
+        public event EventHandler<ResponseEventArgs> ResponseSent;
+
+        /// <summary>
+        /// Event to fire when a response starts.
+        /// </summary>
+        public event EventHandler<ResponseEventArgs> ResponseStarting;
+
+        /// <summary>
+        /// Event to fire when a response completes.
+        /// </summary>
+        public event EventHandler<ResponseEventArgs> ResponseCompleted;
+
+        /// <summary>
+        /// Event to fire when request processing is aborted.
+        /// </summary>
+        public event EventHandler<RequestEventArgs> RequestAborted;
 
         /// <summary>
         /// Event to fire when an exception is encountered.
         /// </summary>
-        public event EventHandler<ExceptionEventArgs> ExceptionEncountered = delegate { };
+        public event EventHandler<ExceptionEventArgs> ExceptionEncountered;
 
         /// <summary>
         /// Event to fire when the server is started.
         /// </summary>
-        public event EventHandler ServerStarted = delegate { };
+        public event EventHandler ServerStarted;
 
         /// <summary>
         /// Event to fire when the server is stopped.
         /// </summary>
-        public event EventHandler ServerStopped = delegate { };
+        public event EventHandler ServerStopped;
 
         /// <summary>
         /// Event to fire when the server is being disposed.
         /// </summary>
-        public event EventHandler ServerDisposing = delegate { }; 
+        public event EventHandler ServerDisposing; 
+
+        /// <summary>
+        /// Event to fire when a WebSocket session starts.
+        /// </summary>
+        public event EventHandler<WebSocketSessionEventArgs> WebSocketSessionStarted;
+
+        /// <summary>
+        /// Event to fire when a WebSocket session ends.
+        /// </summary>
+        public event EventHandler<WebSocketSessionEventArgs> WebSocketSessionEnded;
+
+        /// <summary>
+        /// Event to fire when a WebSocket handshake fails.
+        /// </summary>
+        public event EventHandler<WebSocketHandshakeFailureEventArgs> WebSocketHandshakeFailed;
 
         #endregion
 
@@ -94,18 +126,21 @@
         /// <param name="args">Args.</param>
         public void HandleConnectionReceived(object sender, ConnectionEventArgs args)
         {
-            WrappedEventHandler(() => ConnectionReceived?.Invoke(sender, args), "ConnectionReceived", sender);
+            EventHandler<ConnectionEventArgs> handler = ConnectionReceived;
+            if (handler == null) return;
+            WrappedEventHandler(() => handler(sender, args), "ConnectionReceived");
         }
 
         /// <summary>
         /// Handle connection denied event.
-        /// This event is not used by WatsonWebserver, only WatsonWebserver.Lite.
         /// </summary>
         /// <param name="sender">Sender.</param>
         /// <param name="args">Args.</param>
         public void HandleConnectionDenied(object sender, ConnectionEventArgs args)
         {
-            WrappedEventHandler(() => ConnectionDenied?.Invoke(sender, args), "ConnectionDenied", sender);
+            EventHandler<ConnectionEventArgs> handler = ConnectionDenied;
+            if (handler == null) return;
+            WrappedEventHandler(() => handler(sender, args), "ConnectionDenied");
         }
 
         /// <summary>
@@ -115,7 +150,9 @@
         /// <param name="args">Args.</param>
         public void HandleRequestReceived(object sender, RequestEventArgs args)
         {
-            WrappedEventHandler(() => RequestReceived?.Invoke(sender, args), "RequestReceived", sender);
+            EventHandler<RequestEventArgs> handler = RequestReceived;
+            if (handler == null) return;
+            WrappedEventHandler(() => handler(sender, args), "RequestReceived");
         }
 
         /// <summary>
@@ -125,7 +162,9 @@
         /// <param name="args">Args.</param>
         public void HandleRequestDenied(object sender, RequestEventArgs args)
         {
-            WrappedEventHandler(() => RequestDenied?.Invoke(sender, args), "RequestDenied", sender);
+            EventHandler<RequestEventArgs> handler = RequestDenied;
+            if (handler == null) return;
+            WrappedEventHandler(() => handler(sender, args), "RequestDenied");
         }
 
         /// <summary>
@@ -135,7 +174,45 @@
         /// <param name="args">Args.</param>
         public void HandleResponseSent(object sender, ResponseEventArgs args)
         {
-            WrappedEventHandler(() => ResponseSent?.Invoke(sender, args), "ResponseSent", sender);
+            EventHandler<ResponseEventArgs> handler = ResponseSent;
+            if (handler == null) return;
+            WrappedEventHandler(() => handler(sender, args), "ResponseSent");
+        }
+
+        /// <summary>
+        /// Handle response starting event.
+        /// </summary>
+        /// <param name="sender">Sender.</param>
+        /// <param name="args">Args.</param>
+        public void HandleResponseStarting(object sender, ResponseEventArgs args)
+        {
+            EventHandler<ResponseEventArgs> handler = ResponseStarting;
+            if (handler == null) return;
+            WrappedEventHandler(() => handler(sender, args), "ResponseStarting");
+        }
+
+        /// <summary>
+        /// Handle response completed event.
+        /// </summary>
+        /// <param name="sender">Sender.</param>
+        /// <param name="args">Args.</param>
+        public void HandleResponseCompleted(object sender, ResponseEventArgs args)
+        {
+            EventHandler<ResponseEventArgs> handler = ResponseCompleted;
+            if (handler == null) return;
+            WrappedEventHandler(() => handler(sender, args), "ResponseCompleted");
+        }
+
+        /// <summary>
+        /// Handle request aborted event.
+        /// </summary>
+        /// <param name="sender">Sender.</param>
+        /// <param name="args">Args.</param>
+        public void HandleRequestAborted(object sender, RequestEventArgs args)
+        {
+            EventHandler<RequestEventArgs> handler = RequestAborted;
+            if (handler == null) return;
+            WrappedEventHandler(() => handler(sender, args), "RequestAborted");
         }
 
         /// <summary>
@@ -145,7 +222,9 @@
         /// <param name="args">Args.</param>
         public void HandleExceptionEncountered(object sender, ExceptionEventArgs args)
         {
-            WrappedEventHandler(() => ExceptionEncountered?.Invoke(sender, args), "ExceptionEncountered", sender);
+            EventHandler<ExceptionEventArgs> handler = ExceptionEncountered;
+            if (handler == null) return;
+            WrappedEventHandler(() => handler(sender, args), "ExceptionEncountered");
         }
 
         /// <summary>
@@ -155,7 +234,9 @@
         /// <param name="args">Args.</param>
         public void HandleServerStarted(object sender, EventArgs args)
         {
-            WrappedEventHandler(() => ServerStarted?.Invoke(sender, args), "ServerStarted", sender);
+            EventHandler handler = ServerStarted;
+            if (handler == null) return;
+            WrappedEventHandler(() => handler(sender, args), "ServerStarted");
         }
 
         /// <summary>
@@ -165,7 +246,9 @@
         /// <param name="args">Args.</param>
         public void HandleServerStopped(object sender, EventArgs args)
         {
-            WrappedEventHandler(() => ServerStopped?.Invoke(sender, args), "ServerStopped", sender);
+            EventHandler handler = ServerStopped;
+            if (handler == null) return;
+            WrappedEventHandler(() => handler(sender, args), "ServerStopped");
         }
 
         /// <summary>
@@ -175,14 +258,162 @@
         /// <param name="args">Args.</param>
         public void HandleServerDisposing(object sender, EventArgs args)
         {
-            WrappedEventHandler(() => ServerDisposing?.Invoke(sender, args), "ServerDisposing", sender);
+            EventHandler handler = ServerDisposing;
+            if (handler == null) return;
+            WrappedEventHandler(() => handler(sender, args), "ServerDisposing");
+        }
+
+        /// <summary>
+        /// Handle WebSocket session started event.
+        /// </summary>
+        /// <param name="sender">Sender.</param>
+        /// <param name="args">Args.</param>
+        public void HandleWebSocketSessionStarted(object sender, WebSocketSessionEventArgs args)
+        {
+            EventHandler<WebSocketSessionEventArgs> handler = WebSocketSessionStarted;
+            if (handler == null) return;
+            WrappedEventHandler(() => handler(sender, args), "WebSocketSessionStarted");
+        }
+
+        /// <summary>
+        /// Handle WebSocket session ended event.
+        /// </summary>
+        /// <param name="sender">Sender.</param>
+        /// <param name="args">Args.</param>
+        public void HandleWebSocketSessionEnded(object sender, WebSocketSessionEventArgs args)
+        {
+            EventHandler<WebSocketSessionEventArgs> handler = WebSocketSessionEnded;
+            if (handler == null) return;
+            WrappedEventHandler(() => handler(sender, args), "WebSocketSessionEnded");
+        }
+
+        /// <summary>
+        /// Handle WebSocket handshake failed event.
+        /// </summary>
+        /// <param name="sender">Sender.</param>
+        /// <param name="args">Args.</param>
+        public void HandleWebSocketHandshakeFailed(object sender, WebSocketHandshakeFailureEventArgs args)
+        {
+            EventHandler<WebSocketHandshakeFailureEventArgs> handler = WebSocketHandshakeFailed;
+            if (handler == null) return;
+            WrappedEventHandler(() => handler(sender, args), "WebSocketHandshakeFailed");
+        }
+
+        /// <summary>
+        /// Indicates whether any request received handlers are attached.
+        /// </summary>
+        public bool HasRequestReceivedHandlers
+        {
+            get
+            {
+                return RequestReceived != null;
+            }
+        }
+
+        /// <summary>
+        /// Indicates whether any request denied handlers are attached.
+        /// </summary>
+        public bool HasRequestDeniedHandlers
+        {
+            get
+            {
+                return RequestDenied != null;
+            }
+        }
+
+        /// <summary>
+        /// Indicates whether any request aborted handlers are attached.
+        /// </summary>
+        public bool HasRequestAbortedHandlers
+        {
+            get
+            {
+                return RequestAborted != null;
+            }
+        }
+
+        /// <summary>
+        /// Indicates whether any exception handlers are attached.
+        /// </summary>
+        public bool HasExceptionEncounteredHandlers
+        {
+            get
+            {
+                return ExceptionEncountered != null;
+            }
+        }
+
+        /// <summary>
+        /// Indicates whether any response sent handlers are attached.
+        /// </summary>
+        public bool HasResponseSentHandlers
+        {
+            get
+            {
+                return ResponseSent != null;
+            }
+        }
+
+        /// <summary>
+        /// Indicates whether any response starting handlers are attached.
+        /// </summary>
+        public bool HasResponseStartingHandlers
+        {
+            get
+            {
+                return ResponseStarting != null;
+            }
+        }
+
+        /// <summary>
+        /// Indicates whether any response completed handlers are attached.
+        /// </summary>
+        public bool HasResponseCompletedHandlers
+        {
+            get
+            {
+                return ResponseCompleted != null;
+            }
+        }
+
+        /// <summary>
+        /// Indicates whether any WebSocket session-started handlers are attached.
+        /// </summary>
+        public bool HasWebSocketSessionStartedHandlers
+        {
+            get
+            {
+                return WebSocketSessionStarted != null;
+            }
+        }
+
+        /// <summary>
+        /// Indicates whether any WebSocket session-ended handlers are attached.
+        /// </summary>
+        public bool HasWebSocketSessionEndedHandlers
+        {
+            get
+            {
+                return WebSocketSessionEnded != null;
+            }
+        }
+
+        /// <summary>
+        /// Indicates whether any WebSocket handshake-failed handlers are attached.
+        /// </summary>
+        public bool HasWebSocketHandshakeFailedHandlers
+        {
+            get
+            {
+                return WebSocketHandshakeFailed != null;
+            }
         }
 
         #endregion
 
         #region Private-Methods
 
-        private void WrappedEventHandler(Action action, string handler, object sender)
+        private void WrappedEventHandler(Action action, string handler)
         {
             if (action == null) return;
 

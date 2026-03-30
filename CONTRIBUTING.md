@@ -19,6 +19,16 @@ Please follow these guidelines when submitting pull requests (PRs):
 
 Please ensure that the code in your PR follows a style similar to that of the project.  If you find a material discrepancy between the style followed by the project and a de facto standard style given the project language and framework, please let us know so we can amend and make our code more maintainable.
 
+## Testing
+
+Before submitting a PR, please run the relevant automated validation.
+
+- Primary automated suite: `dotnet run --project src\Test.Automated\Test.Automated.csproj`
+- Mirrored xUnit validation: `powershell -ExecutionPolicy Bypass -File src\Test.XUnit\Run-Test.XUnit.ps1`
+- Detailed xUnit console output: `dotnet test src\Test.XUnit\Test.XUnit.csproj --no-build -c Debug -f net10.0 --logger "console;verbosity=detailed"`
+
+If your change affects request parsing, routing, protocol behavior, or response serialization, run both.
+
 ## Asking Questions
 
 Prior to asking questions, please review closed issues and wiki pages.  If your question is not answered in either of those places, please feel free to file an issue!  This will also help us to build out documentation.

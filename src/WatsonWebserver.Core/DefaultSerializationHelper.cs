@@ -20,6 +20,9 @@
 
         #region Private-Members
 
+        private static readonly JsonSerializerOptions _PrettyJsonSerializerOptions = CreateSerializerOptions(true);
+        private static readonly JsonSerializerOptions _CompactJsonSerializerOptions = CreateSerializerOptions(false);
+
         #endregion
 
         #region Constructors-and-Factories
@@ -49,8 +52,20 @@
         {
             if (obj == null) return null;
 
+            return JsonSerializer.Serialize(
+                obj,
+                pretty ? _PrettyJsonSerializerOptions : _CompactJsonSerializerOptions);
+        }
+
+        #endregion
+
+        #region Private-Methods
+
+        private static JsonSerializerOptions CreateSerializerOptions(bool pretty)
+        {
             JsonSerializerOptions options = new JsonSerializerOptions();
             options.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+            options.WriteIndented = pretty;
 
             // see https://github.com/dotnet/runtime/issues/43026
             options.Converters.Add(new ExceptionConverter<Exception>());
@@ -59,16 +74,8 @@
             options.Converters.Add(new DateTimeConverter());
             options.Converters.Add(new IntPtrConverter());
             options.Converters.Add(new IPAddressConverter());
-
-            if (!pretty) options.WriteIndented = false;
-            else options.WriteIndented = true;
-
-            return JsonSerializer.Serialize(obj, options);
+            return options;
         }
-
-        #endregion
-
-        #region Private-Methods
 
         #endregion
 
@@ -88,7 +95,7 @@
 
             public override void Write(Utf8JsonWriter writer, TExceptionType value, JsonSerializerOptions options)
             {
-                var serializableProperties = value.GetType()
+                IEnumerable<dynamic> serializableProperties = value.GetType()
                     .GetProperties()
                     .Select(uu => new { uu.Name, Value = uu.GetValue(value) })
                     .Where(uu => uu.Name != nameof(Exception.TargetSite));
@@ -98,7 +105,7 @@
                     serializableProperties = serializableProperties.Where(uu => uu.Value != null);
                 }
 
-                var propList = serializableProperties.ToList();
+                List<dynamic> propList = serializableProperties.ToList();
 
                 if (propList.Count == 0)
                 {
@@ -108,7 +115,7 @@
 
                 writer.WriteStartObject();
 
-                foreach (var prop in propList)
+                foreach (dynamic prop in propList)
                 {
                     writer.WritePropertyName(prop.Name);
                     JsonSerializer.Serialize(writer, prop.Value, options);
@@ -124,7 +131,7 @@
 
             public override void Write(Utf8JsonWriter writer, NameValueCollection value, JsonSerializerOptions options)
             {
-                var val = value.Keys.Cast<string>()
+                Dictionary<string, string> val = value.Keys.Cast<string>()
                     .ToDictionary(k => k, k => string.Join(", ", value.GetValues(k)));
                 System.Text.Json.JsonSerializer.Serialize(writer, val);
             }

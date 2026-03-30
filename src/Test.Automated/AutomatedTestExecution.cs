@@ -1,0 +1,38 @@
+namespace Test.Automated
+{
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+
+    /// <summary>
+    /// Executes all automated test suites.
+    /// </summary>
+    public static class AutomatedTestExecution
+    {
+        /// <summary>
+        /// Run all automated suites and collect results.
+        /// </summary>
+        /// <returns>Ordered test results.</returns>
+        [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+        [System.Runtime.Versioning.SupportedOSPlatform("linux")]
+        [System.Runtime.Versioning.SupportedOSPlatform("macos")]
+        public static async Task<IReadOnlyList<AutomatedTestResult>> RunAllAsync()
+        {
+            List<AutomatedTestResult> results = new List<AutomatedTestResult>();
+            LegacyCoverageSuite legacyCoverageSuite = new LegacyCoverageSuite();
+            OptimizationCoverageSuite optimizationCoverageSuite = new OptimizationCoverageSuite();
+            SharedProtocolGapSuite sharedProtocolGapSuite = new SharedProtocolGapSuite();
+            SharedLegacySmokeSuite sharedLegacySmokeSuite = new SharedLegacySmokeSuite();
+            SharedHttp2SmokeSuite sharedHttp2SmokeSuite = new SharedHttp2SmokeSuite();
+            SharedCoreUnitCoverageSuite sharedCoreUnitCoverageSuite = new SharedCoreUnitCoverageSuite();
+
+            results.AddRange(await legacyCoverageSuite.RunAsync().ConfigureAwait(false));
+            results.AddRange(await optimizationCoverageSuite.RunAsync().ConfigureAwait(false));
+            results.AddRange(await sharedProtocolGapSuite.RunAsync().ConfigureAwait(false));
+            results.AddRange(await sharedLegacySmokeSuite.RunAsync().ConfigureAwait(false));
+            results.AddRange(await sharedHttp2SmokeSuite.RunAsync().ConfigureAwait(false));
+            results.AddRange(await sharedCoreUnitCoverageSuite.RunAsync().ConfigureAwait(false));
+
+            return results.ToArray();
+        }
+    }
+}
