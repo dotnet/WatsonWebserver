@@ -22,6 +22,7 @@ Watson 7 is a major consumer-facing release:
 - FastAPI-like REST experience through [SwiftStack](https://github.com/jchristn/swiftstack) integration, provding a native first-class API route experience with automatic JSON serialization, typed parameter access, middleware, structured authentication, request timeouts, and health checks
 - Substantial performance improvements through hot-path optimization and removal of dependency on `http.sys`
 - Native protocol selection through `WebserverSettings.Protocols`; HTTP/1.1, HTTP/2, and HTTP/3 support
+- Native WebSocket support including hybrid REST/WebSocket routes
 - Runtime validation for unsupported protocol combinations
 - HTTP/3 runtime normalization when QUIC is unavailable
 - Alt-Svc support for advertising HTTP/3 endpoints
