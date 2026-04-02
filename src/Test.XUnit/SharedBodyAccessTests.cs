@@ -204,6 +204,60 @@ namespace Test.XUnit
 
         #endregion
 
+        #region HTTP/1.1-Mixed-Body-Access
+
+        /// <summary>
+        /// HTTP/1.1 mixed cached body access: DataAsBytes, DataAsString, then ReadBodyAsync.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http1MixedDataAsBytesDataAsStringReadBodyAsync()
+        {
+            await Test.Shared.SharedBodyAccessTests.TestHttp1MixedDataAsBytesDataAsStringReadBodyAsync();
+        }
+
+        /// <summary>
+        /// HTTP/1.1 mixed cached body access: DataAsString, ReadBodyAsync, then DataAsBytes.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http1MixedDataAsStringReadBodyAsyncDataAsBytes()
+        {
+            await Test.Shared.SharedBodyAccessTests.TestHttp1MixedDataAsStringReadBodyAsyncDataAsBytes();
+        }
+
+        /// <summary>
+        /// HTTP/1.1 mixed cached body access: ReadBodyAsync, DataAsBytes, then DataAsString.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http1MixedReadBodyAsyncDataAsBytesDataAsString()
+        {
+            await Test.Shared.SharedBodyAccessTests.TestHttp1MixedReadBodyAsyncDataAsBytesDataAsString();
+        }
+
+        /// <summary>
+        /// HTTP/1.1 mixed stream access: Data.Read then Data.ReadAsync.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http1MixedDataReadThenReadAsync()
+        {
+            await Test.Shared.SharedBodyAccessTests.TestHttp1MixedDataReadThenReadAsync();
+        }
+
+        /// <summary>
+        /// HTTP/1.1 mixed stream access: Data.ReadAsync then Data.Read.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http1MixedDataReadAsyncThenRead()
+        {
+            await Test.Shared.SharedBodyAccessTests.TestHttp1MixedDataReadAsyncThenRead();
+        }
+
+        #endregion
+
         #region HTTP/2-Body-Access-Methods
 
         /// <summary>
@@ -338,6 +392,252 @@ namespace Test.XUnit
         public async Task Http2MultiFrameBody()
         {
             await Test.Shared.SharedBodyAccessTests.TestHttp2MultiFrameBodyAsync();
+        }
+
+        #endregion
+
+        #region HTTP/2-Mixed-Body-Access
+
+        /// <summary>
+        /// HTTP/2 mixed cached body access: DataAsBytes, DataAsString, then ReadBodyAsync.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http2MixedDataAsBytesDataAsStringReadBodyAsync()
+        {
+            await Test.Shared.SharedBodyAccessTests.TestHttp2MixedDataAsBytesDataAsStringReadBodyAsync();
+        }
+
+        /// <summary>
+        /// HTTP/2 mixed cached body access: DataAsString, ReadBodyAsync, then DataAsBytes.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http2MixedDataAsStringReadBodyAsyncDataAsBytes()
+        {
+            await Test.Shared.SharedBodyAccessTests.TestHttp2MixedDataAsStringReadBodyAsyncDataAsBytes();
+        }
+
+        /// <summary>
+        /// HTTP/2 mixed cached body access: ReadBodyAsync, DataAsBytes, then DataAsString.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http2MixedReadBodyAsyncDataAsBytesDataAsString()
+        {
+            await Test.Shared.SharedBodyAccessTests.TestHttp2MixedReadBodyAsyncDataAsBytesDataAsString();
+        }
+
+        /// <summary>
+        /// HTTP/2 mixed stream access: Data.Read then Data.ReadAsync.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http2MixedDataReadThenReadAsync()
+        {
+            await Test.Shared.SharedBodyAccessTests.TestHttp2MixedDataReadThenReadAsync();
+        }
+
+        /// <summary>
+        /// HTTP/2 mixed stream access: Data.ReadAsync then Data.Read.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http2MixedDataReadAsyncThenRead()
+        {
+            await Test.Shared.SharedBodyAccessTests.TestHttp2MixedDataReadAsyncThenRead();
+        }
+
+        #endregion
+
+        #region HTTP/3-Body-Access-Methods
+
+        /// <summary>
+        /// HTTP/3 POST body read via DataAsBytes.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http3PostDataAsBytes()
+        {
+            await Test.Shared.SharedBodyAccessTests.TestHttp3PostDataAsBytesAsync();
+        }
+
+        /// <summary>
+        /// HTTP/3 POST body read via DataAsString.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http3PostDataAsString()
+        {
+            await Test.Shared.SharedBodyAccessTests.TestHttp3PostDataAsStringAsync();
+        }
+
+        /// <summary>
+        /// HTTP/3 POST body read via ReadBodyAsync.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http3PostReadBodyAsync()
+        {
+            await Test.Shared.SharedBodyAccessTests.TestHttp3PostReadBodyAsyncAsync();
+        }
+
+        /// <summary>
+        /// HTTP/3 POST body read via Data.Read.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http3PostDataStreamRead()
+        {
+            await Test.Shared.SharedBodyAccessTests.TestHttp3PostDataStreamReadAsync();
+        }
+
+        /// <summary>
+        /// HTTP/3 POST body read via Data.ReadAsync.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http3PostDataStreamReadAsync()
+        {
+            await Test.Shared.SharedBodyAccessTests.TestHttp3PostDataStreamReadAsyncAsync();
+        }
+
+        /// <summary>
+        /// HTTP/3 PUT body read via DataAsBytes.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http3PutDataAsBytes()
+        {
+            await Test.Shared.SharedBodyAccessTests.TestHttp3PutDataAsBytesAsync();
+        }
+
+        /// <summary>
+        /// HTTP/3 PUT body read via DataAsString.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http3PutDataAsString()
+        {
+            await Test.Shared.SharedBodyAccessTests.TestHttp3PutDataAsStringAsync();
+        }
+
+        /// <summary>
+        /// HTTP/3 PATCH body read via DataAsBytes.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http3PatchDataAsBytes()
+        {
+            await Test.Shared.SharedBodyAccessTests.TestHttp3PatchDataAsBytesAsync();
+        }
+
+        /// <summary>
+        /// HTTP/3 DELETE with body read via DataAsBytes.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http3DeleteWithBodyDataAsBytes()
+        {
+            await Test.Shared.SharedBodyAccessTests.TestHttp3DeleteWithBodyDataAsBytesAsync();
+        }
+
+        #endregion
+
+        #region HTTP/3-Body-Sizes
+
+        /// <summary>
+        /// HTTP/3 POST empty body via DataAsBytes.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http3EmptyBody()
+        {
+            await Test.Shared.SharedBodyAccessTests.TestHttp3EmptyBodyAsync();
+        }
+
+        /// <summary>
+        /// HTTP/3 POST large body (32KB) via DataAsBytes.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http3LargeBodyDataAsBytes()
+        {
+            await Test.Shared.SharedBodyAccessTests.TestHttp3LargeBodyDataAsBytesAsync();
+        }
+
+        /// <summary>
+        /// HTTP/3 POST large body (32KB) via Data stream read.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http3LargeBodyStreamRead()
+        {
+            await Test.Shared.SharedBodyAccessTests.TestHttp3LargeBodyStreamReadAsync();
+        }
+
+        /// <summary>
+        /// HTTP/3 POST body spanning multiple DATA frames via DataAsBytes.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http3MultiFrameBody()
+        {
+            await Test.Shared.SharedBodyAccessTests.TestHttp3MultiFrameBodyAsync();
+        }
+
+        #endregion
+
+        #region HTTP/3-Mixed-Body-Access
+
+        /// <summary>
+        /// HTTP/3 mixed cached body access: DataAsBytes, DataAsString, then ReadBodyAsync.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http3MixedDataAsBytesDataAsStringReadBodyAsync()
+        {
+            await Test.Shared.SharedBodyAccessTests.TestHttp3MixedDataAsBytesDataAsStringReadBodyAsync();
+        }
+
+        /// <summary>
+        /// HTTP/3 mixed cached body access: DataAsString, ReadBodyAsync, then DataAsBytes.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http3MixedDataAsStringReadBodyAsyncDataAsBytes()
+        {
+            await Test.Shared.SharedBodyAccessTests.TestHttp3MixedDataAsStringReadBodyAsyncDataAsBytes();
+        }
+
+        /// <summary>
+        /// HTTP/3 mixed cached body access: ReadBodyAsync, DataAsBytes, then DataAsString.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http3MixedReadBodyAsyncDataAsBytesDataAsString()
+        {
+            await Test.Shared.SharedBodyAccessTests.TestHttp3MixedReadBodyAsyncDataAsBytesDataAsString();
+        }
+
+        /// <summary>
+        /// HTTP/3 mixed stream access: Data.Read then Data.ReadAsync.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http3MixedDataReadThenReadAsync()
+        {
+            await Test.Shared.SharedBodyAccessTests.TestHttp3MixedDataReadThenReadAsync();
+        }
+
+        /// <summary>
+        /// HTTP/3 mixed stream access: Data.ReadAsync then Data.Read.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http3MixedDataReadAsyncThenRead()
+        {
+            await Test.Shared.SharedBodyAccessTests.TestHttp3MixedDataReadAsyncThenRead();
         }
 
         #endregion

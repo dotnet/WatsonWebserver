@@ -48,6 +48,13 @@ namespace Test.Automated
             await ExecuteTestAsync("HTTP/1.1 Body :: Keep-alive 10x stream reads", SharedBodyAccessTests.TestHttp1KeepAliveStreamReadsAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 Body :: Keep-alive alternating access methods", SharedBodyAccessTests.TestHttp1KeepAliveAlternatingAccessAsync).ConfigureAwait(false);
 
+            // HTTP/1.1 mixed body access
+            await ExecuteTestAsync("HTTP/1.1 Body :: Mixed cache bytes-string-async", SharedBodyAccessTests.TestHttp1MixedDataAsBytesDataAsStringReadBodyAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 Body :: Mixed cache string-async-bytes", SharedBodyAccessTests.TestHttp1MixedDataAsStringReadBodyAsyncDataAsBytes).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 Body :: Mixed cache async-bytes-string", SharedBodyAccessTests.TestHttp1MixedReadBodyAsyncDataAsBytesDataAsString).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 Body :: Mixed stream read then readasync", SharedBodyAccessTests.TestHttp1MixedDataReadThenReadAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 Body :: Mixed stream readasync then read", SharedBodyAccessTests.TestHttp1MixedDataReadAsyncThenRead).ConfigureAwait(false);
+
             // HTTP/2 body access methods
             await ExecuteTestAsync("HTTP/2 Body :: POST via DataAsBytes", SharedBodyAccessTests.TestHttp2PostDataAsBytesAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/2 Body :: POST via DataAsString", SharedBodyAccessTests.TestHttp2PostDataAsStringAsync).ConfigureAwait(false);
@@ -64,6 +71,37 @@ namespace Test.Automated
             await ExecuteTestAsync("HTTP/2 Body :: 32KB via DataAsBytes", SharedBodyAccessTests.TestHttp2LargeBodyDataAsBytesAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/2 Body :: 32KB via Data.ReadAsync", SharedBodyAccessTests.TestHttp2LargeBodyStreamReadAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/2 Body :: 48KB multi-frame via DataAsBytes", SharedBodyAccessTests.TestHttp2MultiFrameBodyAsync).ConfigureAwait(false);
+
+            // HTTP/2 mixed body access
+            await ExecuteTestAsync("HTTP/2 Body :: Mixed cache bytes-string-async", SharedBodyAccessTests.TestHttp2MixedDataAsBytesDataAsStringReadBodyAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/2 Body :: Mixed cache string-async-bytes", SharedBodyAccessTests.TestHttp2MixedDataAsStringReadBodyAsyncDataAsBytes).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/2 Body :: Mixed cache async-bytes-string", SharedBodyAccessTests.TestHttp2MixedReadBodyAsyncDataAsBytesDataAsString).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/2 Body :: Mixed stream read then readasync", SharedBodyAccessTests.TestHttp2MixedDataReadThenReadAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/2 Body :: Mixed stream readasync then read", SharedBodyAccessTests.TestHttp2MixedDataReadAsyncThenRead).ConfigureAwait(false);
+
+            // HTTP/3 body access methods
+            await ExecuteTestAsync("HTTP/3 Body :: POST via DataAsBytes", SharedBodyAccessTests.TestHttp3PostDataAsBytesAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/3 Body :: POST via DataAsString", SharedBodyAccessTests.TestHttp3PostDataAsStringAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/3 Body :: POST via ReadBodyAsync", SharedBodyAccessTests.TestHttp3PostReadBodyAsyncAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/3 Body :: POST via Data.Read", SharedBodyAccessTests.TestHttp3PostDataStreamReadAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/3 Body :: POST via Data.ReadAsync", SharedBodyAccessTests.TestHttp3PostDataStreamReadAsyncAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/3 Body :: PUT via DataAsBytes", SharedBodyAccessTests.TestHttp3PutDataAsBytesAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/3 Body :: PUT via DataAsString", SharedBodyAccessTests.TestHttp3PutDataAsStringAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/3 Body :: PATCH via DataAsBytes", SharedBodyAccessTests.TestHttp3PatchDataAsBytesAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/3 Body :: DELETE with body via DataAsBytes", SharedBodyAccessTests.TestHttp3DeleteWithBodyDataAsBytesAsync).ConfigureAwait(false);
+
+            // HTTP/3 body sizes
+            await ExecuteTestAsync("HTTP/3 Body :: Empty body", SharedBodyAccessTests.TestHttp3EmptyBodyAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/3 Body :: 32KB via DataAsBytes", SharedBodyAccessTests.TestHttp3LargeBodyDataAsBytesAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/3 Body :: 32KB via Data.ReadAsync", SharedBodyAccessTests.TestHttp3LargeBodyStreamReadAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/3 Body :: 48KB multi-frame via DataAsBytes", SharedBodyAccessTests.TestHttp3MultiFrameBodyAsync).ConfigureAwait(false);
+
+            // HTTP/3 mixed body access
+            await ExecuteTestAsync("HTTP/3 Body :: Mixed cache bytes-string-async", SharedBodyAccessTests.TestHttp3MixedDataAsBytesDataAsStringReadBodyAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/3 Body :: Mixed cache string-async-bytes", SharedBodyAccessTests.TestHttp3MixedDataAsStringReadBodyAsyncDataAsBytes).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/3 Body :: Mixed cache async-bytes-string", SharedBodyAccessTests.TestHttp3MixedReadBodyAsyncDataAsBytesDataAsString).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/3 Body :: Mixed stream read then readasync", SharedBodyAccessTests.TestHttp3MixedDataReadThenReadAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/3 Body :: Mixed stream readasync then read", SharedBodyAccessTests.TestHttp3MixedDataReadAsyncThenRead).ConfigureAwait(false);
 
             // WebSocket body access
             await ExecuteTestAsync("WebSocket Body :: Text echo", SharedBodyAccessTests.TestWebSocketTextEchoAsync).ConfigureAwait(false);
