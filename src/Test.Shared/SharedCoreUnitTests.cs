@@ -6,6 +6,7 @@ namespace Test.Shared
     using System.Net.WebSockets;
     using System.Threading;
     using System.Threading.Tasks;
+    using WatsonWebserver;
     using WatsonWebserver.Core;
     using WatsonWebserver.Core.Routing;
     using WatsonWebserver.Core.Settings;
@@ -61,6 +62,10 @@ namespace Test.Shared
             tests.Add(CreateSync("WebserverException :: Message default message", TestWebserverExceptionMessageDefaultMessage));
             tests.Add(CreateSync("WebserverException :: Data can be set", TestWebserverExceptionDataCanBeSet));
             tests.Add(CreateSync("WebserverException :: Inner exception preserved", TestWebserverExceptionInnerExceptionPreserved));
+
+            tests.Add(CreateSync("HttpRequestBase :: Query returns empty QueryDetails when factory yields null", TestQueryPropertyReturnsEmptyWhenFactoryYieldsNull));
+            tests.Add(CreateSync("HttpRequestBase :: Url returns empty UrlDetails when factory yields null", TestUrlPropertyReturnsEmptyWhenFactoryYieldsNull));
+            tests.Add(CreateSync("HttpRequestBase :: Headers returns empty collection when factory yields null", TestHeadersPropertyReturnsEmptyWhenFactoryYieldsNull));
 
             return tests.ToArray();
         }
@@ -313,6 +318,30 @@ namespace Test.Shared
             Exception inner = new InvalidOperationException("inner");
             WebserverException exception = new WebserverException(ApiResultEnum.InternalError, "outer", inner);
             AssertTrue(ReferenceEquals(inner, exception.InnerException), "Inner exception should be preserved.");
+        }
+
+        private static void TestQueryPropertyReturnsEmptyWhenFactoryYieldsNull()
+        {
+            HttpRequest request = new HttpRequest();
+            request.Query = null;
+            QueryDetails query = request.Query;
+            AssertTrue(query != null, "Query should never be null even when factory returns null.");
+        }
+
+        private static void TestUrlPropertyReturnsEmptyWhenFactoryYieldsNull()
+        {
+            HttpRequest request = new HttpRequest();
+            request.Url = null;
+            UrlDetails url = request.Url;
+            AssertTrue(url != null, "Url should never be null even when factory returns null.");
+        }
+
+        private static void TestHeadersPropertyReturnsEmptyWhenFactoryYieldsNull()
+        {
+            HttpRequest request = new HttpRequest();
+            request.Headers = null;
+            System.Collections.Specialized.NameValueCollection headers = request.Headers;
+            AssertTrue(headers != null, "Headers should never be null even when factory returns null.");
         }
 
         private static void AssertTrue(bool condition, string message)

@@ -2,9 +2,9 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net8.0;net10.0</TargetFrameworks>
-		<Version>7.0.7</Version>
+		<Version>7.0.8</Version>
 		<Description>Simple, fast, async C# web server for handling REST requests with unified 7.x protocol architecture targeting .NET 8 and .NET 10.</Description>
-		<PackageReleaseNotes>Add OpenAPI metadata overloads for Put, Delete, Patch, and Head route methods; add Invalid authentication result enum value</PackageReleaseNotes>
+		<PackageReleaseNotes>Fix null-reference in lazy Query, Url, and Headers property getters when factory delegate returns null; harden property setters against null assignment</PackageReleaseNotes>
 
 		<Authors>Joel Christner</Authors>
 		<Company>Joel Christner</Company>

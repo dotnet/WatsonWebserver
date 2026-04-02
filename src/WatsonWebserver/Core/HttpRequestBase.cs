@@ -137,7 +137,7 @@
                 {
                     if (_UrlFactory != null)
                     {
-                        _Url = _UrlFactory();
+                        _Url = _UrlFactory() ?? new UrlDetails();
                         _UrlFactory = null;
                     }
                     else
@@ -168,7 +168,7 @@
                 {
                     if (_QueryFactory != null)
                     {
-                        _Query = _QueryFactory();
+                        _Query = _QueryFactory() ?? new QueryDetails();
                         _QueryFactory = null;
                     }
                     else
@@ -181,6 +181,7 @@
             }
             set
             {
+                if (value == null) value = new QueryDetails();
                 _Query = value;
                 _QueryFactory = null;
             }
@@ -198,7 +199,7 @@
                 {
                     if (_HeadersFactory != null)
                     {
-                        _Headers = _HeadersFactory();
+                        _Headers = _HeadersFactory() ?? new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
                         _HeadersFactory = null;
                     }
                     else
