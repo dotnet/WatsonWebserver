@@ -7643,6 +7643,63 @@
             Client stream.
             </summary>
         </member>
+        <member name="T:WatsonWebserver.Http1.ContentLengthStream">
+            <summary>
+            Read-only stream wrapper that enforces a content-length bound.
+            After the specified number of bytes have been read the stream
+            returns zero (EOF) instead of blocking on the inner stream.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Http1.ContentLengthStream.#ctor(System.IO.Stream,System.Int64)">
+            <summary>
+            Instantiate the stream wrapper.
+            </summary>
+            <param name="innerStream">Inner stream to read from.</param>
+            <param name="contentLength">Maximum number of bytes to read.</param>
+        </member>
+        <member name="P:WatsonWebserver.Http1.ContentLengthStream.CanRead">
+            <inheritdoc />
+        </member>
+        <member name="P:WatsonWebserver.Http1.ContentLengthStream.CanSeek">
+            <inheritdoc />
+        </member>
+        <member name="P:WatsonWebserver.Http1.ContentLengthStream.CanWrite">
+            <inheritdoc />
+        </member>
+        <member name="P:WatsonWebserver.Http1.ContentLengthStream.Length">
+            <inheritdoc />
+        </member>
+        <member name="P:WatsonWebserver.Http1.ContentLengthStream.Position">
+            <inheritdoc />
+        </member>
+        <member name="M:WatsonWebserver.Http1.ContentLengthStream.Flush">
+            <inheritdoc />
+        </member>
+        <member name="M:WatsonWebserver.Http1.ContentLengthStream.Read(System.Byte[],System.Int32,System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:WatsonWebserver.Http1.ContentLengthStream.ReadAsync(System.Byte[],System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:WatsonWebserver.Http1.ContentLengthStream.Seek(System.Int64,System.IO.SeekOrigin)">
+            <inheritdoc />
+        </member>
+        <member name="M:WatsonWebserver.Http1.ContentLengthStream.SetLength(System.Int64)">
+            <inheritdoc />
+        </member>
+        <member name="M:WatsonWebserver.Http1.ContentLengthStream.Write(System.Byte[],System.Int32,System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="P:WatsonWebserver.Http1.ContentLengthStream.BytesRemaining">
+            <summary>
+            The number of bytes remaining before EOF.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Http1.ContentLengthStream.InnerStream">
+            <summary>
+            The inner wrapped stream.
+            </summary>
+        </member>
         <member name="T:WatsonWebserver.Http1.PrefixBufferedStream">
             <summary>
             Stream wrapper that replays prefetched bytes before delegating to the inner stream.

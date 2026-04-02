@@ -19,6 +19,7 @@
     using Timestamps;
     using WatsonWebserver.Core;
     using WatsonWebserver.Core.Http1;
+    using WatsonWebserver.Http1;
 
     /// <summary>
     /// HTTP request.
@@ -368,8 +369,16 @@
 
             _Settings = settings;
             OwnsDataStream = false;
-            Data = stream;
             BuildRawRequest(metadata);
+
+            if (!ChunkedTransfer && ContentLength >= 0)
+            {
+                Data = new ContentLengthStream(stream, ContentLength);
+            }
+            else
+            {
+                Data = stream;
+            }
         }
 
         internal void ReturnToPool()

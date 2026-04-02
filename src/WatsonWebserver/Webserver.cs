@@ -96,6 +96,12 @@
             if (handler == null) throw new ArgumentNullException(nameof(handler));
 
             Stream stream = ctx.Request?.Data;
+
+            if (stream is Http1.ContentLengthStream contentLengthStream)
+            {
+                stream = contentLengthStream.InnerStream;
+            }
+
             if (stream == null || !stream.CanWrite)
             {
                 return false;

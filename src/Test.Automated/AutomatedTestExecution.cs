@@ -24,6 +24,7 @@ namespace Test.Automated
             SharedLegacySmokeSuite sharedLegacySmokeSuite = new SharedLegacySmokeSuite();
             SharedHttp2SmokeSuite sharedHttp2SmokeSuite = new SharedHttp2SmokeSuite();
             SharedCoreUnitCoverageSuite sharedCoreUnitCoverageSuite = new SharedCoreUnitCoverageSuite();
+            SharedDataStreamSuite sharedDataStreamSuite = new SharedDataStreamSuite();
 
             results.AddRange(await legacyCoverageSuite.RunAsync().ConfigureAwait(false));
             results.AddRange(await optimizationCoverageSuite.RunAsync().ConfigureAwait(false));
@@ -31,6 +32,7 @@ namespace Test.Automated
             results.AddRange(await sharedLegacySmokeSuite.RunAsync().ConfigureAwait(false));
             results.AddRange(await sharedHttp2SmokeSuite.RunAsync().ConfigureAwait(false));
             results.AddRange(await sharedCoreUnitCoverageSuite.RunAsync().ConfigureAwait(false));
+            results.AddRange(await sharedDataStreamSuite.RunAsync().ConfigureAwait(false));
 
             return results.ToArray();
         }
