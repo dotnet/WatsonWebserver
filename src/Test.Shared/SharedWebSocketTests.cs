@@ -1712,7 +1712,7 @@ namespace Test.Shared
                     await WaitUntilAsync(() => host.Server.IsWebSocketSessionConnected(sessionId), timeout.Token).ConfigureAwait(false);
 
                     await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "client-finished", timeout.Token).ConfigureAwait(false);
-                    await WaitUntilAsync(() => !host.Server.IsWebSocketSessionConnected(sessionId), timeout.Token).ConfigureAwait(false);
+                    await WaitUntilAsync(() => CountSessions(host.Server) == 0, timeout.Token).ConfigureAwait(false);
                 }
 
                 AssertEquals(0, CountSessions(host.Server), "Expected client-initiated close to drain the websocket registry.");
