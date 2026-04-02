@@ -1674,13 +1674,13 @@ namespace Test.Automated
                 return success;
             }).ConfigureAwait(false);
 
-            await ExecuteTest("HTTP/1 Parser - Streaming SHA256 Marks Chunked", async () =>
+            await ExecuteTest("HTTP/1 Parser - Streaming SHA256 Does Not Mark Chunked", async () =>
             {
                 WebserverSettings settings = new WebserverSettings("127.0.0.1", 9999);
                 string header = "POST /upload HTTP/1.1\r\nHost: localhost\r\nx-amz-content-sha256: STREAMING-AWS4-HMAC-SHA256-PAYLOAD\r\n";
                 Http1RequestMetadata metadata = ParseHttp1RequestMetadata(settings, header);
                 Console.WriteLine($"      ChunkedTransfer: {metadata.ChunkedTransfer}");
-                return metadata.ChunkedTransfer;
+                return !metadata.ChunkedTransfer;
             }).ConfigureAwait(false);
 
             await ExecuteTest("HTTP/1 Chunk Reader - Data Then Final Chunk", async () =>

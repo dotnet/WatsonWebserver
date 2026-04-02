@@ -925,6 +925,11 @@
             Indicates whether the client requested keepalive.
             </summary>
         </member>
+        <member name="P:WatsonWebserver.Core.Http1.Http1RequestMetadata.ExpectContinue">
+            <summary>
+            Indicates whether the client sent an Expect: 100-continue header.
+            </summary>
+        </member>
         <member name="P:WatsonWebserver.Core.Http1.Http1RequestMetadata.ChunkedTransfer">
             <summary>
             Indicates whether chunked transfer encoding is in use.

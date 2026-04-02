@@ -713,6 +713,13 @@ namespace Test.Shared
                 await context.Response.Send("PUT response", context.Token).ConfigureAwait(false);
             });
 
+            server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.PUT, "/test/echo-body-put", async (HttpContextBase context) =>
+            {
+                context.Response.StatusCode = 200;
+                context.Response.ContentType = "text/plain";
+                await context.Response.Send(context.Request.DataAsString, context.Token).ConfigureAwait(false);
+            });
+
             server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.DELETE, "/test/delete", async (HttpContextBase context) =>
             {
                 context.Response.StatusCode = 200;
@@ -933,6 +940,79 @@ namespace Test.Shared
                     if (!String.Equals(echoed, body, StringComparison.Ordinal))
                     {
                         throw new InvalidOperationException("Unexpected HTTP/1.1 chunked request body response.");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Verify that a PUT request with Expect: 100-continue succeeds and the body is received.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11ExpectContinueAsync()
+        {
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, ConfigureBasicRoutes))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                {
+                    client.Timeout = TimeSpan.FromSeconds(10);
+
+                    using (HttpRequestMessage request = new HttpRequestMessage(System.Net.Http.HttpMethod.Put, new Uri(host.BaseAddress, "/test/echo-body-put")))
+                    {
+                        request.Headers.ExpectContinue = true;
+                        request.Content = new StringContent("expect-continue-body", Encoding.UTF8, "text/plain");
+
+                        HttpResponseMessage response = await client.SendAsync(request).ConfigureAwait(false);
+                        string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                        if (!response.IsSuccessStatusCode)
+                        {
+                            throw new InvalidOperationException("Expected HTTP/1.1 Expect: 100-continue PUT request to succeed, got " + (int)response.StatusCode + ".");
+                        }
+
+                        if (!String.Equals(body, "expect-continue-body", StringComparison.Ordinal))
+                        {
+                            throw new InvalidOperationException("Unexpected Expect: 100-continue response body: " + body);
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Verify that a PUT request with x-amz-content-sha256 containing streaming and Content-Length is accepted.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11AwsChunkedContentEncodingNotRejectedAsync()
+        {
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, ConfigureBasicRoutes))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                {
+                    client.Timeout = TimeSpan.FromSeconds(10);
+
+                    using (HttpRequestMessage request = new HttpRequestMessage(System.Net.Http.HttpMethod.Put, new Uri(host.BaseAddress, "/test/echo-body-put")))
+                    {
+                        request.Content = new StringContent("aws-chunked-body", Encoding.UTF8, "text/plain");
+                        request.Headers.TryAddWithoutValidation("x-amz-content-sha256", "STREAMING-AWS4-HMAC-SHA256-PAYLOAD-TRAILER");
+                        request.Headers.TryAddWithoutValidation("x-amz-decoded-content-length", "16");
+
+                        HttpResponseMessage response = await client.SendAsync(request).ConfigureAwait(false);
+                        string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                        if (!response.IsSuccessStatusCode)
+                        {
+                            throw new InvalidOperationException("Expected PUT with x-amz-content-sha256 streaming header and Content-Length to succeed, got " + (int)response.StatusCode + ".");
+                        }
+
+                        if (!String.Equals(body, "aws-chunked-body", StringComparison.Ordinal))
+                        {
+                            throw new InvalidOperationException("Unexpected response body for aws-chunked request: " + body);
+                        }
                     }
                 }
             }

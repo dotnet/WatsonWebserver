@@ -132,6 +132,11 @@ namespace WatsonWebserver.Core.Http1
         public bool Keepalive { get; set; } = false;
 
         /// <summary>
+        /// Indicates whether the client sent an Expect: 100-continue header.
+        /// </summary>
+        public bool ExpectContinue { get; set; } = false;
+
+        /// <summary>
         /// Indicates whether chunked transfer encoding is in use.
         /// </summary>
         public bool ChunkedTransfer { get; set; } = false;

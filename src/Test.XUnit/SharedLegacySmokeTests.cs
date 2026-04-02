@@ -268,5 +268,25 @@ namespace Test.XUnit
         {
             await Test.Shared.SharedLegacySmokeTests.TestHttp11NotFoundRouteAsync();
         }
+
+        /// <summary>
+        /// Verify that a PUT request with Expect: 100-continue succeeds and the body is received.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11ExpectContinuePutRequest()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11ExpectContinueAsync();
+        }
+
+        /// <summary>
+        /// Verify that a PUT request with x-amz-content-sha256 streaming header and Content-Length is accepted.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11AwsChunkedContentEncodingNotRejected()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11AwsChunkedContentEncodingNotRejectedAsync();
+        }
     }
 }

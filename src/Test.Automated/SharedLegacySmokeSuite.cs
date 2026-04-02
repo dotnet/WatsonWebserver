@@ -46,6 +46,8 @@ namespace Test.Automated
             await ExecuteTestAsync("HTTP/1.1 :: OPTIONS Preflight", SharedLegacySmokeTests.TestHttp11OptionsPreflightAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 :: Request With Many Headers", SharedLegacySmokeTests.TestHttp11RequestWithManyHeadersAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 :: Unmatched Route Returns 404", SharedLegacySmokeTests.TestHttp11NotFoundRouteAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Expect: 100-continue PUT Request", SharedLegacySmokeTests.TestHttp11ExpectContinueAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: AWS Chunked Content-Encoding Not Rejected", SharedLegacySmokeTests.TestHttp11AwsChunkedContentEncodingNotRejectedAsync).ConfigureAwait(false);
             return _Results.ToArray();
         }
 

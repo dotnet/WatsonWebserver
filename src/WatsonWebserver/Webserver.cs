@@ -598,6 +598,15 @@
             return context;
         }
 
+        private static readonly byte[] _ContinueResponseBytes = Encoding.ASCII.GetBytes("HTTP/1.1 100 Continue\r\n\r\n");
+
+        private async Task SendContinueAsync(Stream stream, CancellationToken token)
+        {
+            if (stream == null || !stream.CanWrite) return;
+            await stream.WriteAsync(_ContinueResponseBytes, 0, _ContinueResponseBytes.Length, token).ConfigureAwait(false);
+            await stream.FlushAsync(token).ConfigureAwait(false);
+        }
+
         private async Task SendBadRequestAsync(Stream stream, CancellationToken token)
         {
             if (stream == null || !stream.CanWrite) return;
@@ -724,6 +733,12 @@
                                     destinationIp,
                                     destinationPort,
                                     headerReadResult.HeaderBytes);
+
+                                if (requestMetadata.ExpectContinue)
+                                {
+                                    await SendContinueAsync(clientStream, token).ConfigureAwait(false);
+                                }
+
                                 ctx = RentHttpContext(clientStream, requestMetadata);
 
                                 await ProcessHttpContextAsync(ctx, _Header, token).ConfigureAwait(false);

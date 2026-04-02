@@ -2,9 +2,9 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net8.0;net10.0</TargetFrameworks>
-		<Version>7.0.4</Version>
+		<Version>7.0.5</Version>
 		<Description>Simple, fast, async C# web server for handling REST requests with unified 7.x protocol architecture targeting .NET 8 and .NET 10.</Description>
-		<PackageReleaseNotes>Merge Watson.Core into Watson as a single package while preserving the WatsonWebserver.Core namespace</PackageReleaseNotes>
+		<PackageReleaseNotes>Fix Expect: 100-continue support for HTTP/1.1 (RFC 9110), remove incorrect x-amz-content-sha256 chunked transfer detection</PackageReleaseNotes>
 
 		<Authors>Joel Christner</Authors>
 		<Company>Joel Christner</Company>

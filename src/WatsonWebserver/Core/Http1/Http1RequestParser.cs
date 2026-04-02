@@ -208,10 +208,9 @@ namespace WatsonWebserver.Core.Http1
                 if (ContainsTokenIgnoreCase(valueSpan, "gzip")) metadata.Gzip = true;
                 if (ContainsTokenIgnoreCase(valueSpan, "deflate")) metadata.Deflate = true;
             }
-            else if (ByteSpanEqualsIgnoreCase(nameSpan, "x-amz-content-sha256")
-                && ContainsTokenIgnoreCase(valueSpan, "streaming"))
+            else if (ByteSpanEqualsIgnoreCase(nameSpan, "expect"))
             {
-                metadata.ChunkedTransfer = true;
+                if (ContainsTokenIgnoreCase(valueSpan, "100-continue")) metadata.ExpectContinue = true;
             }
         }
 
