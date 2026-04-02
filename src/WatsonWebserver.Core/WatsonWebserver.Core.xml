@@ -5166,6 +5166,11 @@
             Dynamic route.
             </summary>
         </member>
+        <member name="F:WatsonWebserver.Core.Routing.RouteTypeEnum.WebSocket">
+            <summary>
+            WebSocket route.
+            </summary>
+        </member>
         <member name="T:WatsonWebserver.Core.Routing.RoutingGroup">
             <summary>
             Routing group.
@@ -5189,6 +5194,11 @@
         <member name="P:WatsonWebserver.Core.Routing.RoutingGroup.Dynamic">
             <summary>
             Dynamic routes.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Routing.RoutingGroup.WebSockets">
+            <summary>
+            WebSocket routes.
             </summary>
         </member>
         <member name="M:WatsonWebserver.Core.Routing.RoutingGroup.#ctor">
@@ -5853,6 +5863,94 @@
             <param name="defaultTimeout">The default timeout duration. Must be zero or positive.</param>
             <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="defaultTimeout"/> is negative.</exception>
         </member>
+        <member name="T:WatsonWebserver.Core.Settings.WebSocketSettings">
+            <summary>
+            WebSocket settings.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.Core.Settings.WebSocketSettings.MinMaxMessageSize">
+            <summary>
+            Minimum supported max-message size.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.Core.Settings.WebSocketSettings.MaxMaxMessageSize">
+            <summary>
+            Maximum supported max-message size.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.Core.Settings.WebSocketSettings.MinReceiveBufferSize">
+            <summary>
+            Minimum supported receive-buffer size.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.Core.Settings.WebSocketSettings.MaxReceiveBufferSize">
+            <summary>
+            Maximum supported receive-buffer size.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.Core.Settings.WebSocketSettings.MinCloseHandshakeTimeoutMs">
+            <summary>
+            Minimum supported close-handshake timeout in milliseconds.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.Core.Settings.WebSocketSettings.MaxCloseHandshakeTimeoutMs">
+            <summary>
+            Maximum supported close-handshake timeout in milliseconds.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.WebSocketSettings.Enable">
+            <summary>
+            Enable WebSocket support.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.WebSocketSettings.MaxMessageSize">
+            <summary>
+            Maximum supported whole-message size, in bytes.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.WebSocketSettings.ReceiveBufferSize">
+            <summary>
+            Receive buffer size, in bytes.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.WebSocketSettings.CloseHandshakeTimeoutMs">
+            <summary>
+            Close-handshake timeout, in milliseconds.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.WebSocketSettings.AllowClientSuppliedGuid">
+            <summary>
+            Allow the client to supply a session identifier through a request header.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.WebSocketSettings.ClientGuidHeaderName">
+            <summary>
+            Header name used for optional client-supplied session identifiers.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.WebSocketSettings.SupportedVersions">
+            <summary>
+            Supported WebSocket protocol versions.
+            Watson v1 currently supports version 13 only.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.WebSocketSettings.EnableHttp1">
+            <summary>
+            Enable HTTP/1.1 WebSocket upgrades.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.WebSocketSettings.EnableHttp2">
+            <summary>
+            Enable HTTP/2 WebSockets.
+            Present for forward compatibility only in v1.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.Settings.WebSocketSettings.EnableHttp3">
+            <summary>
+            Enable HTTP/3 WebSockets.
+            Present for forward compatibility only in v1.
+            </summary>
+        </member>
         <member name="T:WatsonWebserver.Core.SourceDetails">
             <summary>
             Source details.
@@ -6210,6 +6308,36 @@
             <param name="handler">Async handler.</param>
             <param name="auth">When true, register as post-authentication route.</param>
         </member>
+        <member name="M:WatsonWebserver.Core.WebserverBase.WebSocket(System.String,System.Func{WatsonWebserver.Core.HttpContextBase,WatsonWebserver.Core.WebSockets.WebSocketSession,System.Threading.Tasks.Task},System.Boolean)">
+            <summary>
+            Add a WebSocket route. Defaults to pre-authentication.
+            </summary>
+            <param name="path">URL path.</param>
+            <param name="handler">WebSocket handler.</param>
+            <param name="auth">When true, the route is registered as a post-authentication route.</param>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebserverBase.ListWebSocketSessions">
+            <summary>
+            List all known WebSocket sessions.
+            </summary>
+            <returns>Sessions.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebserverBase.IsWebSocketSessionConnected(System.Guid)">
+            <summary>
+            Determine whether a WebSocket session is currently connected.
+            </summary>
+            <param name="guid">Session identifier.</param>
+            <returns>True if connected.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebserverBase.DisconnectWebSocketSessionAsync(System.Guid,System.Net.WebSockets.WebSocketCloseStatus,System.String)">
+            <summary>
+            Disconnect a WebSocket session by identifier.
+            </summary>
+            <param name="guid">Session identifier.</param>
+            <param name="status">Close status.</param>
+            <param name="reason">Close reason.</param>
+            <returns>True if a session was found.</returns>
+        </member>
         <member name="P:WatsonWebserver.Core.WebserverBase.SupportsHttp2">
             <summary>
             Indicates whether the current transport supports HTTP/2.
@@ -6224,6 +6352,28 @@
             <summary>
             Validate the current settings against the transport capability matrix.
             </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebserverBase.WebSocketConnections">
+            <summary>
+            Access the shared WebSocket session registry.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebserverBase.IsWebSocketRequest(WatsonWebserver.Core.HttpContextBase)">
+            <summary>
+            Determine whether the request is attempting a WebSocket upgrade.
+            </summary>
+            <param name="ctx">HTTP context.</param>
+            <returns>True if the request is a WebSocket upgrade attempt.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebserverBase.ProcessWebSocketRouteAsync(WatsonWebserver.Core.HttpContextBase,WatsonWebserver.Core.WebSockets.WebSocketRoute,System.Func{WatsonWebserver.Core.HttpContextBase,WatsonWebserver.Core.WebSockets.WebSocketSession,System.Threading.Tasks.Task},System.Threading.CancellationToken)">
+            <summary>
+            Execute a matched WebSocket route.
+            </summary>
+            <param name="ctx">HTTP context.</param>
+            <param name="route">Matched route.</param>
+            <param name="handler">Route handler.</param>
+            <param name="token">Cancellation token.</param>
+            <returns>True if the route was handled.</returns>
         </member>
         <member name="M:WatsonWebserver.Core.WebserverBase.ProcessHttpContextAsync(WatsonWebserver.Core.HttpContextBase,System.String,System.Threading.CancellationToken)">
             <summary>
@@ -6456,6 +6606,21 @@
             Event to fire when the server is being disposed.
             </summary>
         </member>
+        <member name="E:WatsonWebserver.Core.WebserverEvents.WebSocketSessionStarted">
+            <summary>
+            Event to fire when a WebSocket session starts.
+            </summary>
+        </member>
+        <member name="E:WatsonWebserver.Core.WebserverEvents.WebSocketSessionEnded">
+            <summary>
+            Event to fire when a WebSocket session ends.
+            </summary>
+        </member>
+        <member name="E:WatsonWebserver.Core.WebserverEvents.WebSocketHandshakeFailed">
+            <summary>
+            Event to fire when a WebSocket handshake fails.
+            </summary>
+        </member>
         <member name="M:WatsonWebserver.Core.WebserverEvents.#ctor">
             <summary>
             Instantiate the object.
@@ -6545,6 +6710,27 @@
             <param name="sender">Sender.</param>
             <param name="args">Args.</param>
         </member>
+        <member name="M:WatsonWebserver.Core.WebserverEvents.HandleWebSocketSessionStarted(System.Object,WatsonWebserver.Core.WebSocketSessionEventArgs)">
+            <summary>
+            Handle WebSocket session started event.
+            </summary>
+            <param name="sender">Sender.</param>
+            <param name="args">Args.</param>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebserverEvents.HandleWebSocketSessionEnded(System.Object,WatsonWebserver.Core.WebSocketSessionEventArgs)">
+            <summary>
+            Handle WebSocket session ended event.
+            </summary>
+            <param name="sender">Sender.</param>
+            <param name="args">Args.</param>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebserverEvents.HandleWebSocketHandshakeFailed(System.Object,WatsonWebserver.Core.WebSocketHandshakeFailureEventArgs)">
+            <summary>
+            Handle WebSocket handshake failed event.
+            </summary>
+            <param name="sender">Sender.</param>
+            <param name="args">Args.</param>
+        </member>
         <member name="P:WatsonWebserver.Core.WebserverEvents.HasRequestReceivedHandlers">
             <summary>
             Indicates whether any request received handlers are attached.
@@ -6578,6 +6764,21 @@
         <member name="P:WatsonWebserver.Core.WebserverEvents.HasResponseCompletedHandlers">
             <summary>
             Indicates whether any response completed handlers are attached.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebserverEvents.HasWebSocketSessionStartedHandlers">
+            <summary>
+            Indicates whether any WebSocket session-started handlers are attached.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebserverEvents.HasWebSocketSessionEndedHandlers">
+            <summary>
+            Indicates whether any WebSocket session-ended handlers are attached.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebserverEvents.HasWebSocketHandshakeFailedHandlers">
+            <summary>
+            Indicates whether any WebSocket handshake-failed handlers are attached.
             </summary>
         </member>
         <member name="T:WatsonWebserver.Core.WebserverException">
@@ -6722,6 +6923,11 @@
             Set Timeout.DefaultTimeout to a positive TimeSpan to enable request timeouts.
             </summary>
         </member>
+        <member name="P:WatsonWebserver.Core.WebserverSettings.WebSockets">
+            <summary>
+            WebSocket settings.
+            </summary>
+        </member>
         <member name="P:WatsonWebserver.Core.WebserverSettings.UseMachineHostname">
             <summary>
             When true, the machine's hostname will be used instead of the value specified in Hostname.
@@ -6852,6 +7058,444 @@
             Increment sent payload bytes.
             </summary>
             <param name="len">Length.</param>
+        </member>
+        <member name="T:WatsonWebserver.Core.WebSocketHandshakeFailureEventArgs">
+            <summary>
+            Event arguments for failed WebSocket handshakes.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSocketHandshakeFailureEventArgs.Context">
+            <summary>
+            HTTP context when available.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSocketHandshakeFailureEventArgs.Reason">
+            <summary>
+            Failure reason.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSocketHandshakeFailureEventArgs.Exception">
+            <summary>
+            Exception, when one exists.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebSocketHandshakeFailureEventArgs.#ctor(WatsonWebserver.Core.HttpContextBase,System.String,System.Exception)">
+            <summary>
+            Instantiate the event arguments.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.WebSocketSessionEventArgs">
+            <summary>
+            Event arguments for WebSocket session lifecycle events.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSocketSessionEventArgs.Context">
+            <summary>
+            HTTP context associated with the session when available.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSocketSessionEventArgs.Session">
+            <summary>
+            WebSocket session.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebSocketSessionEventArgs.#ctor(WatsonWebserver.Core.HttpContextBase,WatsonWebserver.Core.WebSockets.WebSocketSession)">
+            <summary>
+            Instantiate the event arguments.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.WebSockets.WebSocketConnectionRegistry">
+            <summary>
+            Registry of active WebSocket sessions.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebSockets.WebSocketConnectionRegistry.Add(WatsonWebserver.Core.WebSockets.WebSocketSession)">
+            <summary>
+            Add or replace a session.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebSockets.WebSocketConnectionRegistry.Remove(System.Guid)">
+            <summary>
+            Remove a session.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebSockets.WebSocketConnectionRegistry.List">
+            <summary>
+            List all known sessions.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebSockets.WebSocketConnectionRegistry.IsConnected(System.Guid)">
+            <summary>
+            Determine whether the specified session is currently connected.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebSockets.WebSocketConnectionRegistry.DisconnectAsync(System.Guid,System.Net.WebSockets.WebSocketCloseStatus,System.String)">
+            <summary>
+            Disconnect a session by identifier.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.WebSockets.WebSocketHandshakeUtilities">
+            <summary>
+            Shared WebSocket handshake helpers.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.Core.WebSockets.WebSocketHandshakeUtilities.AcceptKeyGuid">
+            <summary>
+            RFC 6455 GUID used to compute the accept key.
+            </summary>
+        </member>
+        <member name="F:WatsonWebserver.Core.WebSockets.WebSocketHandshakeUtilities.SupportedVersion">
+            <summary>
+            Supported WebSocket protocol version for Watson v1.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebSockets.WebSocketHandshakeUtilities.ComputeAcceptKey(System.String)">
+            <summary>
+            Compute the RFC 6455 <c>Sec-WebSocket-Accept</c> header value.
+            </summary>
+            <param name="requestKey">Client-supplied <c>Sec-WebSocket-Key</c> header value.</param>
+            <returns>Accept key.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebSockets.WebSocketHandshakeUtilities.IsSupportedVersion(System.Collections.Generic.IEnumerable{System.String},System.String)">
+            <summary>
+            Determine whether the requested version is supported by the configured version list.
+            </summary>
+            <param name="supportedVersions">Configured versions.</param>
+            <param name="requestedVersion">Requested version.</param>
+            <returns>True if supported.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebSockets.WebSocketHandshakeUtilities.ParseSubprotocols(System.String)">
+            <summary>
+            Parse the requested subprotocol list.
+            </summary>
+            <param name="headerValue">Raw header value.</param>
+            <returns>Ordered requested subprotocols.</returns>
+        </member>
+        <member name="T:WatsonWebserver.Core.WebSockets.WebSocketMessage">
+            <summary>
+            Whole-message WebSocket payload.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSockets.WebSocketMessage.MessageType">
+            <summary>
+            Message type.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSockets.WebSocketMessage.Data">
+            <summary>
+            Message payload.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSockets.WebSocketMessage.Text">
+            <summary>
+            UTF-8 text payload when the message type is text.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSockets.WebSocketMessage.Length">
+            <summary>
+            Payload length, in bytes.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebSockets.WebSocketMessage.#ctor(System.Net.WebSockets.WebSocketMessageType,System.Byte[])">
+            <summary>
+            Instantiate the message.
+            </summary>
+            <param name="messageType">Message type.</param>
+            <param name="data">Payload.</param>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebSockets.WebSocketMessage.FromText(System.String)">
+            <summary>
+            Create a text message.
+            </summary>
+            <param name="data">UTF-8 text payload.</param>
+            <returns>Message.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebSockets.WebSocketMessage.FromBinary(System.Byte[])">
+            <summary>
+            Create a binary message.
+            </summary>
+            <param name="data">Binary payload.</param>
+            <returns>Message.</returns>
+        </member>
+        <member name="T:WatsonWebserver.Core.WebSockets.WebSocketProtocolDetector">
+            <summary>
+            Detects WebSocket upgrade attempts from HTTP request metadata.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebSockets.WebSocketProtocolDetector.IsWebSocketUpgradeRequest(WatsonWebserver.Core.HttpContextBase)">
+            <summary>
+            Determine whether the request is attempting a WebSocket upgrade.
+            </summary>
+            <param name="context">HTTP context.</param>
+            <returns>True if the request looks like a WebSocket upgrade attempt.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebSockets.WebSocketProtocolDetector.HeaderContainsToken(System.String,System.String)">
+            <summary>
+            Determine whether a comma-delimited header contains a token.
+            </summary>
+            <param name="headerValue">Header value.</param>
+            <param name="token">Token to locate.</param>
+            <returns>True if present.</returns>
+        </member>
+        <member name="T:WatsonWebserver.Core.WebSockets.WebSocketRequestDescriptor">
+            <summary>
+            Reduced immutable request metadata retained after a WebSocket upgrade.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSockets.WebSocketRequestDescriptor.Path">
+            <summary>
+            Request path without the querystring.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSockets.WebSocketRequestDescriptor.NormalizedPath">
+            <summary>
+            Normalized request path.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSockets.WebSocketRequestDescriptor.Query">
+            <summary>
+            Request query values.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSockets.WebSocketRequestDescriptor.Headers">
+            <summary>
+            Request headers captured at handshake time.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSockets.WebSocketRequestDescriptor.RequestedVersion">
+            <summary>
+            Requested WebSocket version.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSockets.WebSocketRequestDescriptor.RequestedSubprotocols">
+            <summary>
+            Requested subprotocols.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSockets.WebSocketRequestDescriptor.RemoteIp">
+            <summary>
+            Remote IP address.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSockets.WebSocketRequestDescriptor.RemotePort">
+            <summary>
+            Remote TCP port.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebSockets.WebSocketRequestDescriptor.#ctor(System.String,System.Collections.Specialized.NameValueCollection,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.String,System.Collections.Generic.IReadOnlyList{System.String},System.String,System.Int32)">
+            <summary>
+            Instantiate the descriptor.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebSockets.WebSocketRequestDescriptor.FromHttpContext(WatsonWebserver.Core.HttpContextBase)">
+            <summary>
+            Create a descriptor from an HTTP context.
+            </summary>
+            <param name="context">HTTP context.</param>
+            <returns>Descriptor.</returns>
+        </member>
+        <member name="T:WatsonWebserver.Core.WebSockets.WebSocketRoute">
+            <summary>
+            WebSocket route definition.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSockets.WebSocketRoute.GUID">
+            <summary>
+            Route identifier.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSockets.WebSocketRoute.Path">
+            <summary>
+            Route path.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSockets.WebSocketRoute.IsParameterized">
+            <summary>
+            Indicates whether the route contains parameters.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSockets.WebSocketRoute.Handler">
+            <summary>
+            Route handler.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSockets.WebSocketRoute.Metadata">
+            <summary>
+            User metadata.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebSockets.WebSocketRoute.#ctor(System.String,System.Func{WatsonWebserver.Core.HttpContextBase,WatsonWebserver.Core.WebSockets.WebSocketSession,System.Threading.Tasks.Task},System.Object)">
+            <summary>
+            Instantiate the route.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.WebSockets.WebSocketRouteManager">
+            <summary>
+            WebSocket route manager supporting static and parameterized paths.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebSockets.WebSocketRouteManager.Add(System.String,System.Func{WatsonWebserver.Core.HttpContextBase,WatsonWebserver.Core.WebSockets.WebSocketSession,System.Threading.Tasks.Task},System.Object)">
+            <summary>
+            Add a route.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebSockets.WebSocketRouteManager.GetAll">
+            <summary>
+            Retrieve all routes.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebSockets.WebSocketRouteManager.Match(System.String,System.Collections.Specialized.NameValueCollection@,WatsonWebserver.Core.WebSockets.WebSocketRoute@)">
+            <summary>
+            Match a request path to a route.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.WebSockets.WebSocketSession">
+            <summary>
+            Watson-owned WebSocket session abstraction.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSockets.WebSocketSession.Id">
+            <summary>
+            Session identifier.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSockets.WebSocketSession.IsConnected">
+            <summary>
+            Indicates whether the underlying socket is still connected.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSockets.WebSocketSession.State">
+            <summary>
+            Current socket state.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSockets.WebSocketSession.CloseStatus">
+            <summary>
+            Close status observed or requested for the session.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSockets.WebSocketSession.CloseStatusDescription">
+            <summary>
+            Close status description observed or requested for the session.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSockets.WebSocketSession.Subprotocol">
+            <summary>
+            Negotiated subprotocol, if any.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSockets.WebSocketSession.RemoteIp">
+            <summary>
+            Remote IP address.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSockets.WebSocketSession.RemotePort">
+            <summary>
+            Remote TCP port.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSockets.WebSocketSession.Request">
+            <summary>
+            Reduced immutable handshake metadata.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSockets.WebSocketSession.Metadata">
+            <summary>
+            Optional developer metadata bag.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSockets.WebSocketSession.Statistics">
+            <summary>
+            Session counters.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebSockets.WebSocketSession.#ctor(System.Net.WebSockets.WebSocket,WatsonWebserver.Core.WebSockets.WebSocketRequestDescriptor,System.Guid,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Instantiate the session.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebSockets.WebSocketSession.ReceiveAsync(System.Threading.CancellationToken)">
+            <summary>
+            Receive the next whole message, or null when the session closes.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebSockets.WebSocketSession.ReadMessagesAsync(System.Threading.CancellationToken)">
+            <summary>
+            Asynchronously enumerate received whole messages until the session closes.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebSockets.WebSocketSession.SendTextAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Send a UTF-8 text message.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebSockets.WebSocketSession.SendBinaryAsync(System.Byte[],System.Threading.CancellationToken)">
+            <summary>
+            Send a binary message.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebSockets.WebSocketSession.SendBinaryAsync(System.ArraySegment{System.Byte},System.Threading.CancellationToken)">
+            <summary>
+            Send a binary message.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebSockets.WebSocketSession.CloseAsync(System.Net.WebSockets.WebSocketCloseStatus,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Close the session.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebSockets.WebSocketSession.Dispose">
+            <summary>
+            Dispose the session.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebSockets.WebSocketSession.DisposeAsync">
+            <summary>
+            Dispose the session asynchronously.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Core.WebSockets.WebSocketSessionStatistics">
+            <summary>
+            Thread-safe WebSocket session counters.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSockets.WebSocketSessionStatistics.MessagesReceived">
+            <summary>
+            Total messages received.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSockets.WebSocketSessionStatistics.MessagesSent">
+            <summary>
+            Total messages sent.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSockets.WebSocketSessionStatistics.BytesReceived">
+            <summary>
+            Total payload bytes received.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebSockets.WebSocketSessionStatistics.BytesSent">
+            <summary>
+            Total payload bytes sent.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebSockets.WebSocketSessionStatistics.IncrementReceived(System.Int64)">
+            <summary>
+            Increment the received counters.
+            </summary>
+            <param name="bytes">Payload bytes.</param>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebSockets.WebSocketSessionStatistics.IncrementSent(System.Int64)">
+            <summary>
+            Increment the sent counters.
+            </summary>
+            <param name="bytes">Payload bytes.</param>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebSockets.WebSocketSessionStatistics.Snapshot">
+            <summary>
+            Create an immutable snapshot of the current counters.
+            </summary>
+            <returns>Snapshot.</returns>
         </member>
     </members>
 </doc>

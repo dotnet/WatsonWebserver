@@ -19,10 +19,10 @@ This project is part of the [.NET Foundation](http://www.dotnetfoundation.org/pr
 
 Watson 7 is a major consumer-facing release:
 
-- FastAPI-like REST experience through [SwiftStack](https://github.com/jchristn/swiftstack) integration, provding a native first-class API route experience with automatic JSON serialization, typed parameter access, middleware, structured authentication, request timeouts, and health checks
+- FastAPI-like REST experience through [SwiftStack](https://github.com/jchristn/swiftstack) integration, providing a native first-class API route experience with automatic JSON serialization, typed parameter access, middleware, structured authentication, request timeouts, and health checks
 - Substantial performance improvements through hot-path optimization and removal of dependency on `http.sys`
 - Native protocol selection through `WebserverSettings.Protocols`; HTTP/1.1, HTTP/2, and HTTP/3 support
-- Native WebSocket support including hybrid REST/WebSocket routes
+- Native HTTP/1.1 WebSocket support including hybrid REST/WebSocket routes
 - Runtime validation for unsupported protocol combinations
 - HTTP/3 runtime normalization when QUIC is unavailable
 - Alt-Svc support for advertising HTTP/3 endpoints
@@ -340,7 +340,7 @@ server.Routes.PreAuthentication.Static.Add(HttpMethod.GET, "/legacy", async (ctx
 
 ## Protocol Support
 
-## WebSockets
+### WebSockets
 
 Watson 7 includes native server-side WebSocket support.
 
@@ -351,6 +351,7 @@ Current scope:
 - Routing is Watson-native and works with the existing pre-auth and post-auth routing groups
 - Whole-message receive semantics are exposed through `WebSocketSession`
 - Same-path HTTP and WebSocket registration is supported
+- Aggregate `server.Statistics` counters include websocket payload bytes and active websocket connections
 
 Example:
 
@@ -419,6 +420,8 @@ Important settings:
 - `ClientGuidHeaderName`
 - `SupportedVersions`
 - `EnableHttp1`
+- `EnableHttp2`
+- `EnableHttp3`
 
 Important defaults:
 
@@ -430,6 +433,8 @@ Important defaults:
 - `ClientGuidHeaderName = "x-guid"`
 - `SupportedVersions = ["13"]`
 - `EnableHttp1 = true`
+- `EnableHttp2 = false`
+- `EnableHttp3 = false`
 
 ### TLS expectations
 
@@ -440,6 +445,7 @@ Important defaults:
 ### Current limitations
 
 - WebSocket support is HTTP/1.1-only in the current implementation
+- `WebSocketSettings.EnableHttp2` and `EnableHttp3` are present for future protocol expansion and do not enable HTTP/2 or HTTP/3 websocket runtime support today
 - No raw underlying `System.Net.WebSockets.WebSocket` is exposed publicly
 - Receive semantics are message-oriented and session-owned
 - Optional subprotocol negotiation support is not yet exposed as a public configuration surface

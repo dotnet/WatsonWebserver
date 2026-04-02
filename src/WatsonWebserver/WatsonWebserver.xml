@@ -739,6 +739,11 @@
             Indicates whether the current transport supports HTTP/3.
             </summary>
         </member>
+        <member name="M:WatsonWebserver.Webserver.ProcessWebSocketRouteAsync(WatsonWebserver.Core.HttpContextBase,WatsonWebserver.Core.WebSockets.WebSocketRoute,System.Func{WatsonWebserver.Core.HttpContextBase,WatsonWebserver.Core.WebSockets.WebSocketSession,System.Threading.Tasks.Task},System.Threading.CancellationToken)">
+            <summary>
+            Execute a matched WebSocket route.
+            </summary>
+        </member>
         <member name="M:WatsonWebserver.Webserver.#ctor(WatsonWebserver.Core.WebserverSettings,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task})">
             <summary>
             Creates a new instance of the webserver.
@@ -775,6 +780,11 @@
             <summary>
             Tear down the server and dispose of background workers.
             Do not use this object after disposal.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.WebSockets.Http1WebSocketHandshake">
+            <summary>
+            HTTP/1.1 WebSocket handshake helpers.
             </summary>
         </member>
     </members>
