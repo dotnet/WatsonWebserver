@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net8.0;net10.0</TargetFrameworks>
-		<Version>7.0.1</Version>
+		<Version>7.0.2</Version>
 		<Description>Core library for Watson 7.x shared semantics, routing, lifecycle, and protocol configuration targeting .NET 8 and .NET 10.</Description>
 		<PackageReleaseNotes>Watson 7.0 foundation: shared semantic pipeline extraction, protocol configuration surface, lifecycle metadata, and fail-fast protocol validation</PackageReleaseNotes>
 
