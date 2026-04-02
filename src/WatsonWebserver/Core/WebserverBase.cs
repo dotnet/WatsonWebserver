@@ -322,6 +322,21 @@
         }
 
         /// <summary>
+        /// Add a PUT API route without automatic body deserialization, with OpenAPI metadata.
+        /// </summary>
+        /// <param name="path">URL path.</param>
+        /// <param name="handler">Async handler.</param>
+        /// <param name="openApi">Action to configure OpenAPI metadata.</param>
+        /// <param name="auth">When true, register as post-authentication route.</param>
+        public void Put(string path, Func<ApiRequest, Task<object>> handler, Action<OpenApi.OpenApiRouteMetadata> openApi, bool auth = false)
+        {
+            OpenApi.OpenApiRouteMetadata metadata = new OpenApi.OpenApiRouteMetadata();
+            openApi?.Invoke(metadata);
+            RoutingGroup group = auth ? Routes.PostAuthentication : Routes.PreAuthentication;
+            group.Put(path, handler, Serializer, Middleware, Settings, openApiMetadata: metadata);
+        }
+
+        /// <summary>
         /// Add a PUT API route with automatic body deserialization.
         /// </summary>
         /// <typeparam name="T">Request body type.</typeparam>
@@ -335,6 +350,22 @@
         }
 
         /// <summary>
+        /// Add a PUT API route with automatic body deserialization and OpenAPI metadata.
+        /// </summary>
+        /// <typeparam name="T">Request body type.</typeparam>
+        /// <param name="path">URL path.</param>
+        /// <param name="handler">Async handler.</param>
+        /// <param name="openApi">Action to configure OpenAPI metadata.</param>
+        /// <param name="auth">When true, register as post-authentication route.</param>
+        public void Put<T>(string path, Func<ApiRequest, Task<object>> handler, Action<OpenApi.OpenApiRouteMetadata> openApi, bool auth = false) where T : class
+        {
+            OpenApi.OpenApiRouteMetadata metadata = new OpenApi.OpenApiRouteMetadata();
+            openApi?.Invoke(metadata);
+            RoutingGroup group = auth ? Routes.PostAuthentication : Routes.PreAuthentication;
+            group.Put<T>(path, handler, Serializer, Middleware, Settings, openApiMetadata: metadata);
+        }
+
+        /// <summary>
         /// Add a PATCH API route without automatic body deserialization.
         /// </summary>
         /// <param name="path">URL path.</param>
@@ -344,6 +375,21 @@
         {
             RoutingGroup group = auth ? Routes.PostAuthentication : Routes.PreAuthentication;
             group.Patch(path, handler, Serializer, Middleware, Settings);
+        }
+
+        /// <summary>
+        /// Add a PATCH API route without automatic body deserialization, with OpenAPI metadata.
+        /// </summary>
+        /// <param name="path">URL path.</param>
+        /// <param name="handler">Async handler.</param>
+        /// <param name="openApi">Action to configure OpenAPI metadata.</param>
+        /// <param name="auth">When true, register as post-authentication route.</param>
+        public void Patch(string path, Func<ApiRequest, Task<object>> handler, Action<OpenApi.OpenApiRouteMetadata> openApi, bool auth = false)
+        {
+            OpenApi.OpenApiRouteMetadata metadata = new OpenApi.OpenApiRouteMetadata();
+            openApi?.Invoke(metadata);
+            RoutingGroup group = auth ? Routes.PostAuthentication : Routes.PreAuthentication;
+            group.Patch(path, handler, Serializer, Middleware, Settings, openApiMetadata: metadata);
         }
 
         /// <summary>
@@ -360,6 +406,22 @@
         }
 
         /// <summary>
+        /// Add a PATCH API route with automatic body deserialization and OpenAPI metadata.
+        /// </summary>
+        /// <typeparam name="T">Request body type.</typeparam>
+        /// <param name="path">URL path.</param>
+        /// <param name="handler">Async handler.</param>
+        /// <param name="openApi">Action to configure OpenAPI metadata.</param>
+        /// <param name="auth">When true, register as post-authentication route.</param>
+        public void Patch<T>(string path, Func<ApiRequest, Task<object>> handler, Action<OpenApi.OpenApiRouteMetadata> openApi, bool auth = false) where T : class
+        {
+            OpenApi.OpenApiRouteMetadata metadata = new OpenApi.OpenApiRouteMetadata();
+            openApi?.Invoke(metadata);
+            RoutingGroup group = auth ? Routes.PostAuthentication : Routes.PreAuthentication;
+            group.Patch<T>(path, handler, Serializer, Middleware, Settings, openApiMetadata: metadata);
+        }
+
+        /// <summary>
         /// Add a DELETE API route without automatic body deserialization.
         /// </summary>
         /// <param name="path">URL path.</param>
@@ -369,6 +431,21 @@
         {
             RoutingGroup group = auth ? Routes.PostAuthentication : Routes.PreAuthentication;
             group.Delete(path, handler, Serializer, Middleware, Settings);
+        }
+
+        /// <summary>
+        /// Add a DELETE API route without automatic body deserialization, with OpenAPI metadata.
+        /// </summary>
+        /// <param name="path">URL path.</param>
+        /// <param name="handler">Async handler.</param>
+        /// <param name="openApi">Action to configure OpenAPI metadata.</param>
+        /// <param name="auth">When true, register as post-authentication route.</param>
+        public void Delete(string path, Func<ApiRequest, Task<object>> handler, Action<OpenApi.OpenApiRouteMetadata> openApi, bool auth = false)
+        {
+            OpenApi.OpenApiRouteMetadata metadata = new OpenApi.OpenApiRouteMetadata();
+            openApi?.Invoke(metadata);
+            RoutingGroup group = auth ? Routes.PostAuthentication : Routes.PreAuthentication;
+            group.Delete(path, handler, Serializer, Middleware, Settings, openApiMetadata: metadata);
         }
 
         /// <summary>
@@ -385,6 +462,22 @@
         }
 
         /// <summary>
+        /// Add a DELETE API route with automatic body deserialization and OpenAPI metadata.
+        /// </summary>
+        /// <typeparam name="T">Request body type.</typeparam>
+        /// <param name="path">URL path.</param>
+        /// <param name="handler">Async handler.</param>
+        /// <param name="openApi">Action to configure OpenAPI metadata.</param>
+        /// <param name="auth">When true, register as post-authentication route.</param>
+        public void Delete<T>(string path, Func<ApiRequest, Task<object>> handler, Action<OpenApi.OpenApiRouteMetadata> openApi, bool auth = false) where T : class
+        {
+            OpenApi.OpenApiRouteMetadata metadata = new OpenApi.OpenApiRouteMetadata();
+            openApi?.Invoke(metadata);
+            RoutingGroup group = auth ? Routes.PostAuthentication : Routes.PreAuthentication;
+            group.Delete<T>(path, handler, Serializer, Middleware, Settings, openApiMetadata: metadata);
+        }
+
+        /// <summary>
         /// Add a HEAD API route.
         /// </summary>
         /// <param name="path">URL path.</param>
@@ -397,6 +490,21 @@
         }
 
         /// <summary>
+        /// Add a HEAD API route with OpenAPI metadata.
+        /// </summary>
+        /// <param name="path">URL path.</param>
+        /// <param name="handler">Async handler.</param>
+        /// <param name="openApi">Action to configure OpenAPI metadata.</param>
+        /// <param name="auth">When true, register as post-authentication route.</param>
+        public void Head(string path, Func<ApiRequest, Task<object>> handler, Action<OpenApi.OpenApiRouteMetadata> openApi, bool auth = false)
+        {
+            OpenApi.OpenApiRouteMetadata metadata = new OpenApi.OpenApiRouteMetadata();
+            openApi?.Invoke(metadata);
+            RoutingGroup group = auth ? Routes.PostAuthentication : Routes.PreAuthentication;
+            group.Head(path, handler, Serializer, Middleware, Settings, openApiMetadata: metadata);
+        }
+
+        /// <summary>
         /// Add an OPTIONS API route.
         /// </summary>
         /// <param name="path">URL path.</param>
@@ -406,6 +514,21 @@
         {
             RoutingGroup group = auth ? Routes.PostAuthentication : Routes.PreAuthentication;
             group.Options(path, handler, Serializer, Middleware, Settings);
+        }
+
+        /// <summary>
+        /// Add an OPTIONS API route with OpenAPI metadata.
+        /// </summary>
+        /// <param name="path">URL path.</param>
+        /// <param name="handler">Async handler.</param>
+        /// <param name="openApi">Action to configure OpenAPI metadata.</param>
+        /// <param name="auth">When true, register as post-authentication route.</param>
+        public void Options(string path, Func<ApiRequest, Task<object>> handler, Action<OpenApi.OpenApiRouteMetadata> openApi, bool auth = false)
+        {
+            OpenApi.OpenApiRouteMetadata metadata = new OpenApi.OpenApiRouteMetadata();
+            openApi?.Invoke(metadata);
+            RoutingGroup group = auth ? Routes.PostAuthentication : Routes.PreAuthentication;
+            group.Options(path, handler, Serializer, Middleware, Settings, openApiMetadata: metadata);
         }
 
         /// <summary>

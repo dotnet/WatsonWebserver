@@ -2,9 +2,9 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net8.0;net10.0</TargetFrameworks>
-		<Version>7.0.6</Version>
+		<Version>7.0.7</Version>
 		<Description>Simple, fast, async C# web server for handling REST requests with unified 7.x protocol architecture targeting .NET 8 and .NET 10.</Description>
-		<PackageReleaseNotes>Fix Request.Data stream hanging when read with standard EOF loop pattern; stream now returns EOF after ContentLength bytes</PackageReleaseNotes>
+		<PackageReleaseNotes>Add OpenAPI metadata overloads for Put, Delete, Patch, and Head route methods; add Invalid authentication result enum value</PackageReleaseNotes>
 
 		<Authors>Joel Christner</Authors>
 		<Company>Joel Christner</Company>

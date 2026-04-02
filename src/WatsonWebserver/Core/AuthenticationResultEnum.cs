@@ -23,6 +23,11 @@ namespace WatsonWebserver.Core
         /// <summary>
         /// Authentication failed due to insufficient permissions.
         /// </summary>
-        PermissionDenied
+        PermissionDenied,
+
+        /// <summary>
+        /// The request contained invalid or missing authentication material.
+        /// </summary>
+        Invalid
     }
 }

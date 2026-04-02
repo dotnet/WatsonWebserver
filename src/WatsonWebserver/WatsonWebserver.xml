@@ -271,6 +271,11 @@
             Authentication failed due to insufficient permissions.
             </summary>
         </member>
+        <member name="F:WatsonWebserver.Core.AuthenticationResultEnum.Invalid">
+            <summary>
+            The request contained invalid or missing authentication material.
+            </summary>
+        </member>
         <member name="T:WatsonWebserver.Core.AuthorizationDetails">
             <summary>
             Authorization details.
@@ -6254,6 +6259,15 @@
             <param name="handler">Async handler.</param>
             <param name="auth">When true, register as post-authentication route.</param>
         </member>
+        <member name="M:WatsonWebserver.Core.WebserverBase.Put(System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},System.Action{WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata},System.Boolean)">
+            <summary>
+            Add a PUT API route without automatic body deserialization, with OpenAPI metadata.
+            </summary>
+            <param name="path">URL path.</param>
+            <param name="handler">Async handler.</param>
+            <param name="openApi">Action to configure OpenAPI metadata.</param>
+            <param name="auth">When true, register as post-authentication route.</param>
+        </member>
         <member name="M:WatsonWebserver.Core.WebserverBase.Put``1(System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},System.Boolean)">
             <summary>
             Add a PUT API route with automatic body deserialization.
@@ -6263,12 +6277,31 @@
             <param name="handler">Async handler.</param>
             <param name="auth">When true, register as post-authentication route.</param>
         </member>
+        <member name="M:WatsonWebserver.Core.WebserverBase.Put``1(System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},System.Action{WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata},System.Boolean)">
+            <summary>
+            Add a PUT API route with automatic body deserialization and OpenAPI metadata.
+            </summary>
+            <typeparam name="T">Request body type.</typeparam>
+            <param name="path">URL path.</param>
+            <param name="handler">Async handler.</param>
+            <param name="openApi">Action to configure OpenAPI metadata.</param>
+            <param name="auth">When true, register as post-authentication route.</param>
+        </member>
         <member name="M:WatsonWebserver.Core.WebserverBase.Patch(System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},System.Boolean)">
             <summary>
             Add a PATCH API route without automatic body deserialization.
             </summary>
             <param name="path">URL path.</param>
             <param name="handler">Async handler.</param>
+            <param name="auth">When true, register as post-authentication route.</param>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebserverBase.Patch(System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},System.Action{WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata},System.Boolean)">
+            <summary>
+            Add a PATCH API route without automatic body deserialization, with OpenAPI metadata.
+            </summary>
+            <param name="path">URL path.</param>
+            <param name="handler">Async handler.</param>
+            <param name="openApi">Action to configure OpenAPI metadata.</param>
             <param name="auth">When true, register as post-authentication route.</param>
         </member>
         <member name="M:WatsonWebserver.Core.WebserverBase.Patch``1(System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},System.Boolean)">
@@ -6280,12 +6313,31 @@
             <param name="handler">Async handler.</param>
             <param name="auth">When true, register as post-authentication route.</param>
         </member>
+        <member name="M:WatsonWebserver.Core.WebserverBase.Patch``1(System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},System.Action{WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata},System.Boolean)">
+            <summary>
+            Add a PATCH API route with automatic body deserialization and OpenAPI metadata.
+            </summary>
+            <typeparam name="T">Request body type.</typeparam>
+            <param name="path">URL path.</param>
+            <param name="handler">Async handler.</param>
+            <param name="openApi">Action to configure OpenAPI metadata.</param>
+            <param name="auth">When true, register as post-authentication route.</param>
+        </member>
         <member name="M:WatsonWebserver.Core.WebserverBase.Delete(System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},System.Boolean)">
             <summary>
             Add a DELETE API route without automatic body deserialization.
             </summary>
             <param name="path">URL path.</param>
             <param name="handler">Async handler.</param>
+            <param name="auth">When true, register as post-authentication route.</param>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebserverBase.Delete(System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},System.Action{WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata},System.Boolean)">
+            <summary>
+            Add a DELETE API route without automatic body deserialization, with OpenAPI metadata.
+            </summary>
+            <param name="path">URL path.</param>
+            <param name="handler">Async handler.</param>
+            <param name="openApi">Action to configure OpenAPI metadata.</param>
             <param name="auth">When true, register as post-authentication route.</param>
         </member>
         <member name="M:WatsonWebserver.Core.WebserverBase.Delete``1(System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},System.Boolean)">
@@ -6297,6 +6349,16 @@
             <param name="handler">Async handler.</param>
             <param name="auth">When true, register as post-authentication route.</param>
         </member>
+        <member name="M:WatsonWebserver.Core.WebserverBase.Delete``1(System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},System.Action{WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata},System.Boolean)">
+            <summary>
+            Add a DELETE API route with automatic body deserialization and OpenAPI metadata.
+            </summary>
+            <typeparam name="T">Request body type.</typeparam>
+            <param name="path">URL path.</param>
+            <param name="handler">Async handler.</param>
+            <param name="openApi">Action to configure OpenAPI metadata.</param>
+            <param name="auth">When true, register as post-authentication route.</param>
+        </member>
         <member name="M:WatsonWebserver.Core.WebserverBase.Head(System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},System.Boolean)">
             <summary>
             Add a HEAD API route.
@@ -6305,12 +6367,30 @@
             <param name="handler">Async handler.</param>
             <param name="auth">When true, register as post-authentication route.</param>
         </member>
+        <member name="M:WatsonWebserver.Core.WebserverBase.Head(System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},System.Action{WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata},System.Boolean)">
+            <summary>
+            Add a HEAD API route with OpenAPI metadata.
+            </summary>
+            <param name="path">URL path.</param>
+            <param name="handler">Async handler.</param>
+            <param name="openApi">Action to configure OpenAPI metadata.</param>
+            <param name="auth">When true, register as post-authentication route.</param>
+        </member>
         <member name="M:WatsonWebserver.Core.WebserverBase.Options(System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},System.Boolean)">
             <summary>
             Add an OPTIONS API route.
             </summary>
             <param name="path">URL path.</param>
             <param name="handler">Async handler.</param>
+            <param name="auth">When true, register as post-authentication route.</param>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebserverBase.Options(System.String,System.Func{WatsonWebserver.Core.ApiRequest,System.Threading.Tasks.Task{System.Object}},System.Action{WatsonWebserver.Core.OpenApi.OpenApiRouteMetadata},System.Boolean)">
+            <summary>
+            Add an OPTIONS API route with OpenAPI metadata.
+            </summary>
+            <param name="path">URL path.</param>
+            <param name="handler">Async handler.</param>
+            <param name="openApi">Action to configure OpenAPI metadata.</param>
             <param name="auth">When true, register as post-authentication route.</param>
         </member>
         <member name="M:WatsonWebserver.Core.WebserverBase.WebSocket(System.String,System.Func{WatsonWebserver.Core.HttpContextBase,WatsonWebserver.Core.WebSockets.WebSocketSession,System.Threading.Tasks.Task},System.Boolean)">
