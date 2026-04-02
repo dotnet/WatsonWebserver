@@ -6,17 +6,13 @@ This file provides repository-specific guidance for AI coding agents working in 
 
 Watson 7 is a transport-owning HTTP server with support for HTTP/1.1, HTTP/2, and HTTP/3.
 
-The repository currently ships two primary packages:
-
-- `Watson` - the concrete server implementation and protocol transports
-- `Watson.Core` - shared abstractions, routing, OpenAPI, health checks, settings, serialization, and API-route support
+The repository ships a single `Watson` package. The `WatsonWebserver.Core` namespace within that package contains the shared abstractions, routing, OpenAPI, health checks, settings, serialization, and API-route support.
 
 This repository no longer uses `http.sys` as its primary server model.
 
 ## Solution Layout
 
-- `src/WatsonWebserver/` - concrete server implementation
-- `src/WatsonWebserver.Core/` - shared core types and routing pipeline
+- `src/WatsonWebserver/` - server implementation (concrete types at root, shared core types under `Core/`)
 - `src/Test.Automated/` - console-based automated integration suite
 - `src/Test.XUnit/` - xUnit mirror over the shared automated coverage
 - `src/Test.Benchmark/` - benchmark harness for Watson 6, WatsonLite 6, Watson 7, and Kestrel
@@ -26,7 +22,7 @@ This repository no longer uses `http.sys` as its primary server model.
 
 ### Shared request pipeline
 
-`WatsonWebserver.Core` owns the common semantics:
+The `WatsonWebserver.Core` namespace (under `src/WatsonWebserver/Core/`) owns the common semantics:
 
 - `WebserverBase`
 - `HttpContextBase`
@@ -75,8 +71,7 @@ Within a routing group, matching order is:
 
 When updating docs or examples, assume:
 
-- `Watson` is the main package consumers install
-- `Watson.Core` is a dependency package and extension surface
+- `Watson` is the single package consumers install (there is no separate `Watson.Core` package as of v7.0.4)
 - HTTP/1.1 is enabled by default
 - HTTP/2 and HTTP/3 require explicit configuration
 - Alt-Svc is explicit and off by default
@@ -156,8 +151,8 @@ server.Serializer = new DefaultSerializationHelper();
 
 If you change API-route serialization behavior, check both:
 
-- `src/WatsonWebserver.Core/Routing/ApiRouteHandler.cs`
-- `src/WatsonWebserver.Core/Routing/ApiResponseProcessor.cs`
+- `src/WatsonWebserver/Core/Routing/ApiRouteHandler.cs`
+- `src/WatsonWebserver/Core/Routing/ApiResponseProcessor.cs`
 
 ### Structured authentication
 
@@ -313,15 +308,15 @@ dotnet run --project src\Test.Benchmark\Test.Benchmark.csproj -c Debug -f net10.
 
 ## Key files
 
-- `src/WatsonWebserver.Core/WebserverBase.cs`
-- `src/WatsonWebserver.Core/WebserverSettings.cs`
-- `src/WatsonWebserver.Core/Settings/`
-- `src/WatsonWebserver.Core/ApiRequest.cs`
-- `src/WatsonWebserver.Core/RequestParameters.cs`
-- `src/WatsonWebserver.Core/Routing/ApiRouteHandler.cs`
-- `src/WatsonWebserver.Core/Routing/ApiResponseProcessor.cs`
-- `src/WatsonWebserver.Core/Health/WebserverHealthExtensions.cs`
-- `src/WatsonWebserver.Core/OpenApi/`
+- `src/WatsonWebserver/Core/WebserverBase.cs`
+- `src/WatsonWebserver/Core/WebserverSettings.cs`
+- `src/WatsonWebserver/Core/Settings/`
+- `src/WatsonWebserver/Core/ApiRequest.cs`
+- `src/WatsonWebserver/Core/RequestParameters.cs`
+- `src/WatsonWebserver/Core/Routing/ApiRouteHandler.cs`
+- `src/WatsonWebserver/Core/Routing/ApiResponseProcessor.cs`
+- `src/WatsonWebserver/Core/Health/WebserverHealthExtensions.cs`
+- `src/WatsonWebserver/Core/OpenApi/`
 - `src/WatsonWebserver/Webserver.cs`
 - `src/Test.RestApi/Program.cs`
 - `src/Test.Automated/ApiRouteIntegrationTests.cs`

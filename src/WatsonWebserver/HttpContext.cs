@@ -122,7 +122,7 @@
         /// <summary>
         /// Reset the HTTP/1.1 context before returning it to the pool.
         /// </summary>
-        protected override void ResetForReuse()
+        protected internal override void ResetForReuse()
         {
             base.ResetForReuse();
         }

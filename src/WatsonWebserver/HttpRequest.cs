@@ -380,7 +380,7 @@
         /// <summary>
         /// Reset the HTTP/1.1 request before returning it to the pool.
         /// </summary>
-        protected override void ResetForReuse()
+        protected internal override void ResetForReuse()
         {
             ListenerContext = null;
             _StreamBufferSize = 65536;

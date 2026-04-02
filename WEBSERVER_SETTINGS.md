@@ -4,11 +4,11 @@
 
 Source of truth:
 
-- `src/WatsonWebserver.Core/WebserverSettings.cs`
-- `src/WatsonWebserver.Core/Settings/ProtocolSettings.cs`
-- `src/WatsonWebserver.Core/Settings/AltSvcSettings.cs`
-- `src/WatsonWebserver.Core/Settings/TimeoutSettings.cs`
-- `src/WatsonWebserver.Core/Settings/*`
+- `src/WatsonWebserver/Core/WebserverSettings.cs`
+- `src/WatsonWebserver/Core/Settings/ProtocolSettings.cs`
+- `src/WatsonWebserver/Core/Settings/AltSvcSettings.cs`
+- `src/WatsonWebserver/Core/Settings/TimeoutSettings.cs`
+- `src/WatsonWebserver/Core/Settings/*`
 
 ## Basic Usage
 
@@ -198,7 +198,7 @@ Behavior:
 
 File:
 
-- `src/WatsonWebserver.Core/Settings/ProtocolSettings.cs`
+- `src/WatsonWebserver/Core/Settings/ProtocolSettings.cs`
 
 ### `EnableHttp1`
 
@@ -279,7 +279,7 @@ Validation:
 
 File:
 
-- `src/WatsonWebserver.Core/Http2/Http2Settings.cs`
+- `src/WatsonWebserver/Core/Http2/Http2Settings.cs`
 
 ### `HeaderTableSize`
 
@@ -332,7 +332,7 @@ Default:
 
 File:
 
-- `src/WatsonWebserver.Core/Http3/Http3Settings.cs`
+- `src/WatsonWebserver/Core/Http3/Http3Settings.cs`
 
 ### `MaxFieldSectionSize`
 
@@ -376,7 +376,7 @@ Default:
 
 File:
 
-- `src/WatsonWebserver.Core/Settings/AltSvcSettings.cs`
+- `src/WatsonWebserver/Core/Settings/AltSvcSettings.cs`
 
 ### `Enabled`
 
@@ -433,7 +433,7 @@ Validation:
 
 File:
 
-- `src/WatsonWebserver.Core/Settings/IOSettings.cs`
+- `src/WatsonWebserver/Core/Settings/IOSettings.cs`
 
 ### `Http1`
 
@@ -527,7 +527,7 @@ Meaning:
 
 File:
 
-- `src/WatsonWebserver.Core/Settings/Http1IOSettings.cs`
+- `src/WatsonWebserver/Core/Settings/Http1IOSettings.cs`
 
 These settings exist to control HTTP/1.1-specific retention and cache behavior without cluttering `Settings.IO`.
 
@@ -586,7 +586,7 @@ Meaning:
 
 File:
 
-- `src/WatsonWebserver.Core/Settings/SslSettings.cs`
+- `src/WatsonWebserver/Core/Settings/SslSettings.cs`
 
 ### `Enable`
 
@@ -635,7 +635,7 @@ Note:
 
 File:
 
-- `src/WatsonWebserver.Core/Settings/HeaderSettings.cs`
+- `src/WatsonWebserver/Core/Settings/HeaderSettings.cs`
 
 ### `IncludeContentLength`
 
@@ -668,7 +668,7 @@ Setter behavior:
 
 File:
 
-- `src/WatsonWebserver.Core/Settings/DebugSettings.cs`
+- `src/WatsonWebserver/Core/Settings/DebugSettings.cs`
 
 All debug flags default to `false`.
 
@@ -696,8 +696,8 @@ Important:
 
 Files:
 
-- `src/WatsonWebserver.Core/AccessControlManager.cs`
-- `src/WatsonWebserver.Core/AccessControlMode.cs`
+- `src/WatsonWebserver/Core/AccessControlManager.cs`
+- `src/WatsonWebserver/Core/AccessControlMode.cs`
 
 ### `Mode`
 
@@ -738,7 +738,7 @@ Validation:
 
 File:
 
-- `src/WatsonWebserver.Core/Settings/TimeoutSettings.cs`
+- `src/WatsonWebserver/Core/Settings/TimeoutSettings.cs`
 
 ### `DefaultTimeout`
 
@@ -822,4 +822,4 @@ settings.AccessControl.PermitList.Add("192.168.1.0", "255.255.255.0");
 - HTTP/3 requires TLS and runtime QUIC support
 - HTTP/2 cleartext requires explicit prior-knowledge enablement
 - wildcard hosts (`*` and `+`) force `UseMachineHostname`
-- `Watson` consumers usually configure `WebserverSettings` through the `Watson` package; `Watson.Core` exposes the shared settings types and abstractions
+- `Watson` consumers configure `WebserverSettings` through the `Watson` package; the `WatsonWebserver.Core` namespace contains the shared settings types and abstractions

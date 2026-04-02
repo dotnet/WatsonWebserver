@@ -64,7 +64,7 @@ These are low-risk, high-impact changes targeting the current hot path. No archi
 
 - **Status**: [ ] Not started / [ ] In progress / [x] Benchmarked / [ ] Kept / [x] Discarded
 - **Priority**: Highest
-- **Files**: `src/WatsonWebserver.Core/Http1/Http1ChunkReader.cs` (lines ~29, ~92)
+- **Files**: `src/WatsonWebserver/Core/Http1/Http1ChunkReader.cs` (lines ~29, ~92)
 - **Problem**: Reads chunk size lines one byte at a time: `byte[] buffer = new byte[1]` in a loop. Each iteration is a separate syscall (kernel transition) AND a `byte[]` allocation. For a chunk header like `1A2B\r\n`, that is 6 syscalls and 6 allocations where 1 of each would suffice.
 - **Fix**: Read into a pooled buffer (e.g., 128 bytes from `ArrayPool`), scan for `\r\n` in the buffer. Parse the hex chunk size from the buffered data. Same pattern already used in `Http1HeaderReader`.
 - **Kestrel comparison**: Kestrel reads chunks from the `PipeReader` buffer — zero extra syscalls.
@@ -89,7 +89,7 @@ These are low-risk, high-impact changes targeting the current hot path. No archi
 
 - **Status**: [ ] Not started / [ ] In progress / [x] Benchmarked / [x] Kept / [ ] Discarded
 - **Priority**: High
-- **Files**: `src/WatsonWebserver.Core/UrlDetails.cs` (line ~139, ~162), `src/WatsonWebserver.Core/Routing/StaticRouteManager.cs` (line ~20, ~170)
+- **Files**: `src/WatsonWebserver/Core/UrlDetails.cs` (line ~139, ~162), `src/WatsonWebserver/Core/Routing/StaticRouteManager.cs` (line ~20, ~170)
 - **Problem**: `UrlDetails.NormalizedRawWithoutQuery` lowercases and normalizes the path per request. Then `StaticRouteManager` normalizes route paths *again* under a `ReaderWriterLockSlim` on every lookup. Double normalization plus lock acquisition on every request.
 - **Fix**:
   - Normalize the URL path once in `UrlDetails` and reuse the result everywhere.
@@ -117,7 +117,7 @@ These are low-risk, high-impact changes targeting the current hot path. No archi
 
 - **Status**: [ ] Not started / [ ] In progress / [x] Benchmarked / [ ] Kept / [ ] Discarded
 - **Priority**: High
-- **Files**: `src/WatsonWebserver.Core/DefaultSerializationHelper.cs` (line ~45)
+- **Files**: `src/WatsonWebserver/Core/DefaultSerializationHelper.cs` (line ~45)
 - **Problem**: `new JsonSerializerOptions()` is created on every `SerializeJson()` call. The options object builds internal reflection caches that are discarded each time. Microsoft documents this as a major performance anti-pattern with 10-100x overhead.
 - **Fix**: One `private static readonly JsonSerializerOptions` field, initialized once. Use it in all serialization calls.
 - **Kestrel comparison**: N/A (Kestrel doesn't serialize JSON itself), but this is a .NET best practice.
@@ -198,7 +198,7 @@ These require more design work but deliver significant improvements.
 
 - **Status**: [ ] Not started / [ ] In progress / [x] Benchmarked / [ ] Kept / [ ] Discarded
 - **Priority**: High
-- **Files**: `src/WatsonWebserver/Webserver.cs` (line ~569), `src/WatsonWebserver/HttpContext.cs`, `src/WatsonWebserver.Core/HttpContextBase.cs`, `src/WatsonWebserver.Core/HttpRequestBase.cs`, `src/WatsonWebserver.Core/HttpResponseBase.cs`
+- **Files**: `src/WatsonWebserver/Webserver.cs` (line ~569), `src/WatsonWebserver/HttpContext.cs`, `src/WatsonWebserver/Core/HttpContextBase.cs`, `src/WatsonWebserver/Core/HttpRequestBase.cs`, `src/WatsonWebserver/Core/HttpResponseBase.cs`
 - **Problem**: Every request in the keep-alive loop allocates `new HttpContext` → `new HttpRequest` → `new HttpResponse`, plus their internal lazy fields (Timestamp, Guid, CancellationTokenSource, ConnectionMetadata, StreamMetadata, closure factories via `SetConnectionFactory`/`SetStreamFactory`).
 - **Fix**:
   1. Add `IReset` interface (or `Reset()` method) to `HttpContext`, `HttpRequest`, `HttpResponse`.
@@ -290,7 +290,7 @@ Lower individual impact, but cumulative effect is meaningful. Implement after Ph
 ### 10. Replace `string.Split()` in URL/query parsing with `Span<T>`-based tokenization
 
 - **Status**: [ ] Not started / [ ] In progress / [x] Benchmarked / [ ] Kept / [ ] Discarded
-- **Files**: `src/WatsonWebserver.Core/QueryDetails.cs`, `src/WatsonWebserver.Core/UrlDetails.cs`
+- **Files**: `src/WatsonWebserver/Core/QueryDetails.cs`, `src/WatsonWebserver/Core/UrlDetails.cs`
 - **Problem**: `rawUrl.Split(new char[] { '/' }, ...)` allocates the `char[]` separator, the `string[]` result, and each substring.
 - **Fix**: Use `ReadOnlySpan<char>.IndexOf('/')` in a loop. Allocate only the final results needed.
 
@@ -325,7 +325,7 @@ Lower individual impact, but cumulative effect is meaningful. Implement after Ph
 ### 12. Replace `NameValueCollection` with struct-based header collection
 
 - **Status**: [ ] Not started / [ ] In progress / [x] Benchmarked / [ ] Kept / [ ] Discarded
-- **Files**: `src/WatsonWebserver.Core/Http1/Http1RequestMetadata.cs`, header-related types
+- **Files**: `src/WatsonWebserver/Core/Http1/Http1RequestMetadata.cs`, header-related types
 - **Problem**: `NameValueCollection` uses `ArrayList` internally and allocates strings for every key/value. For HTTP/1.1, the lazy `HeaderSlice` path defers this cost, so urgency is lower. Primary benefit is for HTTP/2/3 and header-heavy workloads.
 - **Fix**: Custom header collection with known-header slots (Content-Type, Content-Length, Host, etc.) as `StringValues` fields. Small dictionary only for uncommon headers.
 

@@ -17,7 +17,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\WatsonWebserver.Core\WatsonWebserver.Core.csproj" />
+		<ProjectReference Include="..\WatsonWebserver\WatsonWebserver.csproj" />
 		<ProjectReference Include="..\Test.Shared\Test.Shared.csproj" />
 	</ItemGroup>
 

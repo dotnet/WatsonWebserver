@@ -45,14 +45,14 @@ Still best read as open, incomplete, or only partially evidenced by the reposito
 ## Phase 1: Core Types (WatsonWebserver.Core)
 
 ### 1.1 Add `RequestParameters` to Core
-- [x] Create `src/WatsonWebserver.Core/RequestParameters.cs`
+- [x] Create `src/WatsonWebserver/Core/RequestParameters.cs`
 - [x] Port `SwiftStack.Rest.RequestParameters` (typed accessors: `GetInt`, `GetBool`, `GetGuid`, `GetEnum<T>`, `TryGetValue<T>`, etc.)
 - [x] Namespace: `WatsonWebserver.Core`
 - [x] Wraps `NameValueCollection` (same as SwiftStack)
 - [x] Unit-testable in isolation (no Watson dependency)
 
 ### 1.2 Add `ApiRequest` to Core
-- [x] Create `src/WatsonWebserver.Core/ApiRequest.cs`
+- [x] Create `src/WatsonWebserver/Core/ApiRequest.cs`
 - [x] Equivalent to SwiftStack's `AppRequest`, renamed to fit Watson naming
 - [x] Properties:
   - `HttpContextBase Http` -- full access to raw context
@@ -67,11 +67,11 @@ Still best read as open, incomplete, or only partially evidenced by the reposito
 - [x] Constructor takes `HttpContextBase`, `ISerializationHelper`, `object data`, `CancellationToken`
 
 ### 1.3 Add `ApiErrorResponse` and `ApiResultEnum` to Core
-- [x] Create `src/WatsonWebserver.Core/ApiResultEnum.cs`
+- [x] Create `src/WatsonWebserver/Core/ApiResultEnum.cs`
   - Port enum values: `Success(200)`, `Created(201)`, `BadRequest(400)`, `NotAuthorized(401)`, `NotFound(404)`, `Conflict(409)`, `SlowDown(429)`, `RequestTimeout(408)`, `DeserializationError(400)`, `InternalError(500)`
-- [x] Create `src/WatsonWebserver.Core/ApiErrorResponse.cs`
+- [x] Create `src/WatsonWebserver/Core/ApiErrorResponse.cs`
   - Properties: `Error`, `StatusCode` (computed), `Description` (computed), `Message`, `Data`
-- [x] Create `src/WatsonWebserver.Core/WebserverException.cs`
+- [x] Create `src/WatsonWebserver/Core/WebserverException.cs`
   - Replaces `SwiftStackException`; same behavior: takes `ApiResultEnum`, optional message, auto-maps to HTTP status code
   - Thrown from route handlers to trigger structured error responses
 
@@ -82,11 +82,11 @@ Still best read as open, incomplete, or only partially evidenced by the reposito
 - [x] Must be replaceable (user provides their own serializer implementation)
 
 ### 1.5 Add Authentication Result Types
-- [x] Create `src/WatsonWebserver.Core/AuthenticationResultEnum.cs`
+- [x] Create `src/WatsonWebserver/Core/AuthenticationResultEnum.cs`
   - Values: `Success`, `NotFound`, `Expired`, `PermissionDenied`
-- [x] Create `src/WatsonWebserver.Core/AuthorizationResultEnum.cs`
+- [x] Create `src/WatsonWebserver/Core/AuthorizationResultEnum.cs`
   - Values: `Permitted`, `DeniedImplicit`, `DeniedExplicit`
-- [x] Create `src/WatsonWebserver.Core/AuthResult.cs`
+- [x] Create `src/WatsonWebserver/Core/AuthResult.cs`
   - Properties: `AuthenticationResult`, `AuthorizationResult`, `Metadata`
 
 ---
@@ -94,9 +94,9 @@ Still best read as open, incomplete, or only partially evidenced by the reposito
 ## Phase 2: Middleware Pipeline (WatsonWebserver.Core)
 
 ### 2.1 Add Middleware Delegate and Pipeline
-- [x] Create `src/WatsonWebserver.Core/Middleware/MiddlewareDelegate.cs`
+- [x] Create `src/WatsonWebserver/Core/Middleware/MiddlewareDelegate.cs`
   - Signature: `delegate Task MiddlewareDelegate(HttpContextBase context, Func<Task> next, CancellationToken token)`
-- [x] Create `src/WatsonWebserver.Core/Middleware/MiddlewarePipeline.cs`
+- [x] Create `src/WatsonWebserver/Core/Middleware/MiddlewarePipeline.cs`
   - Port from SwiftStack: ordered list, `Add()`, `HasMiddleware`, `Execute(ctx, terminalHandler, token)`
   - Thread-safe registration (middleware registered before start, immutable after)
 
@@ -113,7 +113,7 @@ Still best read as open, incomplete, or only partially evidenced by the reposito
 This is the core of the FastAPI-like experience. The goal is to add `.Get()`, `.Post<T>()`, etc. methods that accept `Func<ApiRequest, Task<object>>` handlers directly on the route groups.
 
 ### 3.1 Add Response Processing Logic
-- [x] Create `src/WatsonWebserver.Core/Routing/ApiResponseProcessor.cs`
+- [x] Create `src/WatsonWebserver/Core/Routing/ApiResponseProcessor.cs`
   - Port `ProcessResult` from SwiftStack's `RestApp`
   - Handles: `null` -> 204, `string` -> text/plain, primitives -> text/plain, objects -> JSON serialization
   - Handles tuple returns `(object, int)` for custom status codes
@@ -121,7 +121,7 @@ This is the core of the FastAPI-like experience. The goal is to add `.Get()`, `.
   - Takes `ISerializationHelper` for JSON serialization
 
 ### 3.2 Add API Route Handler Wrapper
-- [x] Create `src/WatsonWebserver.Core/Routing/ApiRouteHandler.cs`
+- [x] Create `src/WatsonWebserver/Core/Routing/ApiRouteHandler.cs`
   - Internal class that wraps `Func<ApiRequest, Task<object>>` into `Func<HttpContextBase, Task>`
   - Handles body deserialization (generic `<T>` variant and no-body variant)
   - Constructs `ApiRequest` from `HttpContextBase`
@@ -130,7 +130,7 @@ This is the core of the FastAPI-like experience. The goal is to add `.Get()`, `.
   - Integrates with `MiddlewarePipeline` if middleware registered
 
 ### 3.3 Add API Route Methods to RoutingGroup
-- [x] Add extension methods in `src/WatsonWebserver.Core/Routing/RoutingGroupApiExtensions.cs`
+- [x] Add extension methods in `src/WatsonWebserver/Core/Routing/RoutingGroupApiExtensions.cs`
 - [x] Methods on `RoutingGroup`:
   ```
   // No-body routes (GET, DELETE, HEAD, OPTIONS)
@@ -178,7 +178,7 @@ This is the core of the FastAPI-like experience. The goal is to add `.Get()`, `.
 ## Phase 4: Timeout Support (WatsonWebserver.Core)
 
 ### 4.1 Add Timeout Settings
-- [x] Create `src/WatsonWebserver.Core/Settings/TimeoutSettings.cs`
+- [x] Create `src/WatsonWebserver/Core/Settings/TimeoutSettings.cs`
   - Property: `TimeSpan DefaultTimeout` (default: `TimeSpan.Zero` = disabled)
 - [x] Add `TimeoutSettings Timeout` property to `WebserverSettings`
 
@@ -193,12 +193,12 @@ This is the core of the FastAPI-like experience. The goal is to add `.Get()`, `.
 ## Phase 5: Health Check Support (WatsonWebserver.Core)
 
 ### 5.1 Add Health Check Types
-- [x] Create `src/WatsonWebserver.Core/Health/HealthStatusEnum.cs` -- `Healthy`, `Degraded`, `Unhealthy`
-- [x] Create `src/WatsonWebserver.Core/Health/HealthCheckResult.cs` -- `Status`, `Description`, `Data`
-- [x] Create `src/WatsonWebserver.Core/Health/HealthCheckSettings.cs` -- `Path` (default `/health`), `RequireAuthentication`, `CustomCheck` delegate
+- [x] Create `src/WatsonWebserver/Core/Health/HealthStatusEnum.cs` -- `Healthy`, `Degraded`, `Unhealthy`
+- [x] Create `src/WatsonWebserver/Core/Health/HealthCheckResult.cs` -- `Status`, `Description`, `Data`
+- [x] Create `src/WatsonWebserver/Core/Health/HealthCheckSettings.cs` -- `Path` (default `/health`), `RequireAuthentication`, `CustomCheck` delegate
 
 ### 5.2 Add Health Check Extension
-- [x] Create `src/WatsonWebserver.Core/Health/WebserverHealthExtensions.cs`
+- [x] Create `src/WatsonWebserver/Core/Health/WebserverHealthExtensions.cs`
 - [x] Extension method on `WebserverBase`: `UseHealthCheck(Action<HealthCheckSettings> configure = null)`
 - [x] Registers a parameter route at the configured path
 - [x] Returns 200 for Healthy/Degraded, 503 for Unhealthy
@@ -210,7 +210,7 @@ This is the core of the FastAPI-like experience. The goal is to add `.Get()`, `.
 Watson Core already has `OpenApi/` with route metadata, document generation, and Swagger UI. This phase wires it into the API route registration.
 
 ### 6.1 Verify Existing OpenAPI Support
-- [x] Audit `src/WatsonWebserver.Core/OpenApi/` for compatibility with the new API route methods
+- [x] Audit `src/WatsonWebserver/Core/OpenApi/` for compatibility with the new API route methods
 - [x] Ensure `OpenApiRouteMetadata` fluent builder works with the new registration flow
 - [x] Ensure `OpenApiDocumentGenerator` can consume route info from parameter routes
 

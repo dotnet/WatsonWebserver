@@ -10,7 +10,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\WatsonWebserver.Core\WatsonWebserver.Core.csproj" />		<ProjectReference Include="..\WatsonWebserver\WatsonWebserver.csproj" />
+		<ProjectReference Include="..\WatsonWebserver\WatsonWebserver.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

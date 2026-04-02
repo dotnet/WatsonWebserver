@@ -2,7 +2,15 @@
 
 ## Current Version
 
-`v7.0.0`
+`v7.0.4`
+
+## v7.0.4
+
+- Merged `Watson.Core` into the `Watson` package as a single assembly
+- The `WatsonWebserver.Core` namespace is preserved for backward compatibility
+- Core source files now live under `src/WatsonWebserver/Core/`
+- Consumers install only the `Watson` NuGet package; there is no longer a separate `Watson.Core` package
+- Existing `using WatsonWebserver.Core;` statements require no changes
 
 ## v7.0.0
 

@@ -247,16 +247,16 @@ Implement the feature in Watson 7-native folders.
 
 ### New Folders
 
-- `src/WatsonWebserver.Core/WebSockets/`
+- `src/WatsonWebserver/Core/WebSockets/`
 - `src/WatsonWebserver/WebSockets/`
 - `src/Test.Shared/WebSockets/`
 
 ### Core Files
 
-- `src/WatsonWebserver.Core/Settings/WebSocketSettings.cs`
-- `src/WatsonWebserver.Core/WebSockets/WebSocketMessage.cs`
-- `src/WatsonWebserver.Core/WebSockets/WebSocketSessionStatistics.cs`
-- `src/WatsonWebserver.Core/WebSockets/WebSocketHandshakeUtilities.cs`
+- `src/WatsonWebserver/Core/Settings/WebSocketSettings.cs`
+- `src/WatsonWebserver/Core/WebSockets/WebSocketMessage.cs`
+- `src/WatsonWebserver/Core/WebSockets/WebSocketSessionStatistics.cs`
+- `src/WatsonWebserver/Core/WebSockets/WebSocketHandshakeUtilities.cs`
 
 ### Watson Implementation Files
 
@@ -276,10 +276,10 @@ Implement the feature in Watson 7-native folders.
 
 ### Existing Files Expected To Change
 
-- `src/WatsonWebserver.Core/WebserverSettings.cs`
-- `src/WatsonWebserver.Core/WebserverBase.cs`
-- `src/WatsonWebserver.Core/WebserverEvents.cs`
-- `src/WatsonWebserver.Core/Routing/...`
+- `src/WatsonWebserver/Core/WebserverSettings.cs`
+- `src/WatsonWebserver/Core/WebserverBase.cs`
+- `src/WatsonWebserver/Core/WebserverEvents.cs`
+- `src/WatsonWebserver/Core/Routing/...`
 - `src/WatsonWebserver/Webserver.cs`
 - `README.md`
 - `TESTING.md`
@@ -291,13 +291,13 @@ Implement the feature in Watson 7-native folders.
 ### 1.1 Settings
 
 - [x] Add `WebSocketSettings`
-  Note: Implemented in `src/WatsonWebserver.Core/Settings/WebSocketSettings.cs`
+  Note: Implemented in `src/WatsonWebserver/Core/Settings/WebSocketSettings.cs`
 - [x] Add `Settings.WebSockets` to `WebserverSettings`
-  Note: Added to `src/WatsonWebserver.Core/WebserverSettings.cs`
+  Note: Added to `src/WatsonWebserver/Core/WebserverSettings.cs`
 - [x] Clamp numeric values to safe ranges
   Note: Implemented for `MaxMessageSize`, `ReceiveBufferSize`, and `CloseHandshakeTimeoutMs`
 - [x] Enforce `SupportedVersions` validation
-  Note: `src/WatsonWebserver.Core/WebserverSettingsValidator.cs` currently rejects anything other than version `13`
+  Note: `src/WatsonWebserver/Core/WebserverSettingsValidator.cs` currently rejects anything other than version `13`
 - [x] Document that v1 supports only WebSocket version `13`
   Note: Documented in code comments and enforced by validation
 - [x] Default `AllowClientSuppliedGuid` to `false`
@@ -305,13 +305,13 @@ Implement the feature in Watson 7-native folders.
 ### 1.2 Session Model
 
 - [x] Add `WebSocketSession`
-  Note: Implemented in `src/WatsonWebserver.Core/WebSockets/WebSocketSession.cs` to keep the public surface in `WatsonWebserver.Core`
+  Note: Implemented in `src/WatsonWebserver/Core/WebSockets/WebSocketSession.cs` to keep the public surface in `WatsonWebserver.Core`
 - [x] Add server-generated session ID creation
   Note: `WebSocketSession` generates a new `Guid` when one is not supplied by the transport
 - [x] Add optional client-supplied GUID override behind explicit opt-in
   Note: `src/WatsonWebserver/Webserver.cs` honors `Settings.WebSockets.AllowClientSuppliedGuid`
 - [x] Add reduced immutable handshake metadata needed after upgrade
-  Note: Implemented in `src/WatsonWebserver.Core/WebSockets/WebSocketRequestDescriptor.cs`
+  Note: Implemented in `src/WatsonWebserver/Core/WebSockets/WebSocketRequestDescriptor.cs`
 - [x] Add developer metadata bag
 - [x] Add session statistics counters
 - [x] Add per-session send gate
@@ -327,9 +327,9 @@ Implementation notes:
 ### 1.3 Message Delivery Layer
 
 - [x] Add `WebSocketMessage` type for whole-message delivery
-  Note: Implemented in `src/WatsonWebserver.Core/WebSockets/WebSocketMessage.cs`
+  Note: Implemented in `src/WatsonWebserver/Core/WebSockets/WebSocketMessage.cs`
 - [x] Implement Watson-owned receive loop on top of framework `WebSocket`
-  Note: Implemented in `ReceiveAsync()` / `ReadMessagesAsync()` in `src/WatsonWebserver.Core/WebSockets/WebSocketSession.cs`
+  Note: Implemented in `ReceiveAsync()` / `ReadMessagesAsync()` in `src/WatsonWebserver/Core/WebSockets/WebSocketSession.cs`
 - [x] Enforce `MaxMessageSize`
   Note: Oversized messages now close the session and are covered in shared tests
 - [x] Reassemble messages from framework receive calls into complete text or binary messages
@@ -344,13 +344,13 @@ Implementation notes:
 ### 1.4 Registry
 
 - [x] Add connection registry keyed by `Guid`
-  Note: Implemented in `src/WatsonWebserver.Core/WebSockets/WebSocketConnectionRegistry.cs`
+  Note: Implemented in `src/WatsonWebserver/Core/WebSockets/WebSocketConnectionRegistry.cs`
 - [x] Add `ListWebSocketSessions()`
-  Note: Added to `src/WatsonWebserver.Core/WebserverBase.cs`
+  Note: Added to `src/WatsonWebserver/Core/WebserverBase.cs`
 - [x] Add `IsWebSocketSessionConnected(Guid)`
-  Note: Added to `src/WatsonWebserver.Core/WebserverBase.cs`
+  Note: Added to `src/WatsonWebserver/Core/WebserverBase.cs`
 - [x] Add disconnect-by-guid support
-  Note: Added to `src/WatsonWebserver.Core/WebserverBase.cs` backed by the shared registry
+  Note: Added to `src/WatsonWebserver/Core/WebserverBase.cs` backed by the shared registry
 - [x] Ensure cleanup on disconnect, exception, and server shutdown
   Note: Covered for graceful close, disconnect-by-guid, handler exception, abrupt client abort, failed handshake, oversized-message rejection, and server stop
 
@@ -359,7 +359,7 @@ Implementation notes:
 ### 2.1 Route Manager
 
 - [x] Add `WebSocketRouteManager` to each `RoutingGroup`
-  Note: Implemented in `src/WatsonWebserver.Core/WebSockets/WebSocketRouteManager.cs` and attached to `RoutingGroup`
+  Note: Implemented in `src/WatsonWebserver/Core/WebSockets/WebSocketRouteManager.cs` and attached to `RoutingGroup`
 - [x] Support static and parameterized WebSocket paths
 - [x] Preserve routing-group placement for pre-auth and post-auth execution
   Note: Shared tests cover both pre-auth and post-auth websocket routes
@@ -370,9 +370,9 @@ Implementation notes:
 ### 2.2 Protocol-Aware Dispatch
 
 - [x] Add protocol detection before normal HTTP route dispatch
-  Note: Integrated into `ProcessRoutingGroupAsync` in `src/WatsonWebserver.Core/WebserverBase.cs`
+  Note: Integrated into `ProcessRoutingGroupAsync` in `src/WatsonWebserver/Core/WebserverBase.cs`
 - [x] Detect HTTP/1.1 WebSocket initiation from request metadata
-  Note: Implemented in `src/WatsonWebserver.Core/WebSockets/WebSocketProtocolDetector.cs`
+  Note: Implemented in `src/WatsonWebserver/Core/WebSockets/WebSocketProtocolDetector.cs`
 - [x] Route upgrade attempts to `WebSocketRouteManager` before `Static`, `Content`, `Parameter`, and `Dynamic`
   Note: Matching now occurs before the normal route managers inside each routing group
 - [x] Ensure non-WebSocket requests bypass WebSocket route matching cheaply
@@ -385,11 +385,11 @@ Implementation notes:
 ### 2.3 Public Surface
 
 - [x] Add `server.WebSocket(...)` registration API
-  Note: Added to `src/WatsonWebserver.Core/WebserverBase.cs`
+  Note: Added to `src/WatsonWebserver/Core/WebserverBase.cs`
 - [x] Add session enumeration and disconnect APIs at server level
-  Note: Added to `src/WatsonWebserver.Core/WebserverBase.cs`
+  Note: Added to `src/WatsonWebserver/Core/WebserverBase.cs`
 - [x] Add observability-only WebSocket event hooks
-  Note: Added to `src/WatsonWebserver.Core/WebserverEvents.cs`
+  Note: Added to `src/WatsonWebserver/Core/WebserverEvents.cs`
 - [x] Do not add a global per-message callback
   Note: The websocket surface remains route/session-owned; no global per-message API was introduced
 

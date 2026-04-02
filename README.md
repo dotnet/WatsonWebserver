@@ -7,9 +7,6 @@ Watson 7 is a simple, fast, async C# web server for building REST APIs and HTTP 
 | Package | NuGet Version | Downloads |
 |---|---|---|
 | Watson | [![NuGet Version](https://img.shields.io/nuget/v/Watson.svg?style=flat)](https://www.nuget.org/packages/Watson/) | [![NuGet](https://img.shields.io/nuget/dt/Watson.svg)](https://www.nuget.org/packages/Watson) |
-| Watson.Core | [![NuGet Version](https://img.shields.io/nuget/v/Watson.Core.svg?style=flat)](https://www.nuget.org/packages/Watson.Core/) | [![NuGet](https://img.shields.io/nuget/dt/Watson.Core.svg)](https://www.nuget.org/packages/Watson.Core) |
-
-Special thanks to @DamienDennehy for allowing use of the `Watson.Core` package name in NuGet.
 
 ## .NET Foundation
 
@@ -57,13 +54,7 @@ In summary:
 dotnet add package Watson
 ```
 
-For normal server consumption, install `Watson` only. It depends on `Watson.Core` and NuGet will restore that dependency automatically.
-
-Install `Watson.Core` directly only if you are building extensions, shared components, or tooling on top of the common abstractions without taking a direct dependency on the server package:
-
-```powershell
-dotnet add package Watson.Core
-```
+The `Watson` package contains everything needed for both server usage and extension development. The `WatsonWebserver.Core` namespace provides the shared abstractions, routing, and extensibility surface within the same package.
 
 ## Quick Start
 
@@ -904,7 +895,7 @@ static async Task DefaultRoute(HttpContextBase ctx)
 
 ## OpenAPI / Swagger
 
-OpenAPI support is built in. No extra package is required beyond `Watson` or `Watson.Core`.
+OpenAPI support is built in. No extra package is required beyond `Watson`.
 
 ### Enable OpenAPI
 
@@ -1027,7 +1018,7 @@ For more detail, refer to [TESTING.md](TESTING.md).
 
 ## Special Thanks
 
-Thanks to the contributors who have helped improve Watson Webserver:
+Thanks to the contributors who have helped improve Watson Webserver, and to @DamienDennehy for allowing use of the `Watson.Core` package name in NuGet:
 
 - @notesjor @shdwp @Tutch @GeoffMcGrath @jurkovic-nikola @joreg @Job79 @at1993 @MartyIX
 - @pocsuka @orinem @deathbull @binozo @panboy75 @iain-cyborn @gamerhost31 @lucafabbri

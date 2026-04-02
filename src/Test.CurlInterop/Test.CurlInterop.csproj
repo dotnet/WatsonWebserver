@@ -9,7 +9,6 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\WatsonWebserver\WatsonWebserver.csproj" />
-		<ProjectReference Include="..\WatsonWebserver.Core\WatsonWebserver.Core.csproj" />
 	</ItemGroup>
 
 </Project>

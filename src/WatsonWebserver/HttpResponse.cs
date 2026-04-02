@@ -418,7 +418,7 @@
         /// <summary>
         /// Reset the HTTP/1.1 response before returning it to the pool.
         /// </summary>
-        protected override void ResetForReuse()
+        protected internal override void ResetForReuse()
         {
             if (_Data != null)
             {

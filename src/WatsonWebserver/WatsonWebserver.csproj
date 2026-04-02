@@ -1,10 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>net8.0;net10.0</TargetFrameworks>
-		<Version>7.0.3</Version>
+		<Version>7.0.4</Version>
 		<Description>Simple, fast, async C# web server for handling REST requests with unified 7.x protocol architecture targeting .NET 8 and .NET 10.</Description>
-		<PackageReleaseNotes>Watson 7.0 foundation: shared semantic pipeline extraction, protocol configuration surface, lifecycle metadata, and fail-fast protocol validation</PackageReleaseNotes>
+		<PackageReleaseNotes>Merge Watson.Core into Watson as a single package while preserving the WatsonWebserver.Core namespace</PackageReleaseNotes>
 
 		<Authors>Joel Christner</Authors>
 		<Company>Joel Christner</Company>
@@ -43,10 +43,16 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\WatsonWebserver.Core\WatsonWebserver.Core.csproj" />
+		<Content Include="Core\Assets\watson.ico">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="IpMatcher" Version="1.0.5" />
+		<PackageReference Include="RegexMatcher" Version="1.0.9" />
+		<PackageReference Include="Timestamps" Version="1.0.11" />
+		<PackageReference Include="UrlMatcher" Version="3.0.1" />
 	</ItemGroup>
 
 </Project>
