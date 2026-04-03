@@ -2,6 +2,7 @@
 {
     using WatsonWebserver.Core.Routing;
     using System;
+    using System.Diagnostics;
     using System.IO;
     using System.Net;
     using System.Text.Json;
@@ -199,6 +200,9 @@
         private Func<ConnectionMetadata> _ConnectionFactory = null;
         private Func<StreamMetadata> _StreamFactory = null;
         private Guid _Guid = Guid.Empty;
+        private DateTime _TimingStartUtc = DateTime.MinValue;
+        private long _TimingStartTicks = 0;
+        private bool _TimingStarted = false;
         private bool _Disposed = false;
 
         #endregion
@@ -288,6 +292,9 @@
             RouteType = RouteTypeEnum.Default;
             Route = null;
             _Guid = Guid.Empty;
+            _TimingStartUtc = DateTime.MinValue;
+            _TimingStartTicks = 0;
+            _TimingStarted = false;
             RequestAborted = false;
             Response = null;
             Metadata = null;
@@ -318,6 +325,34 @@
             if (factory == null) throw new ArgumentNullException(nameof(factory));
             _StreamFactory = factory;
             _Stream = null;
+        }
+
+        /// <summary>
+        /// Start request timing using a monotonic clock for elapsed time calculations.
+        /// </summary>
+        protected internal void StartTiming()
+        {
+            if (_TimingStarted) return;
+
+            _TimingStartUtc = DateTime.UtcNow;
+            _TimingStartTicks = Stopwatch.GetTimestamp();
+            _TimingStarted = true;
+            Timestamp.Start = _TimingStartUtc;
+        }
+
+        /// <summary>
+        /// Complete request timing using the monotonic elapsed time.
+        /// </summary>
+        protected internal void CompleteTiming()
+        {
+            if (!_TimingStarted) StartTiming();
+
+            Timestamp.End = _TimingStartUtc.AddMilliseconds(GetElapsedMilliseconds(_TimingStartTicks, Stopwatch.GetTimestamp()));
+        }
+
+        private static double GetElapsedMilliseconds(long startTicks, long endTicks)
+        {
+            return (endTicks - startTicks) * 1000d / Stopwatch.Frequency;
         }
 
         #endregion

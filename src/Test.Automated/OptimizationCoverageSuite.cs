@@ -35,6 +35,7 @@ namespace Test.Automated
             await ExecuteTestAsync("Routing :: Static Route Snapshots Remain Readable During Concurrent Mutation", SharedOptimizationSmokeTests.TestStaticRouteSnapshotsAsync).ConfigureAwait(false);
             await ExecuteTestAsync("Serialization :: Default Helper Preserves Pretty And Compact JSON", SharedOptimizationSmokeTests.TestDefaultSerializationHelperAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 :: Cached Response Headers Preserve Dynamic Fields", SharedOptimizationSmokeTests.TestHttp1CachedHeadersAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Context Timing Starts At Request Entry", SharedOptimizationSmokeTests.TestContextTimestampStartsAtRequestEntryAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 :: Keep-Alive Pooling Resets Request State", SharedOptimizationSmokeTests.TestHttp1KeepAlivePoolingAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 :: Stream Send Preserves Direct Passthrough Body", SharedOptimizationSmokeTests.TestHttp1StreamSendAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/2 :: Lazy Header Materialization Stays Coherent", SharedOptimizationSmokeTests.TestHttp2LazyHeaderMaterializationAsync).ConfigureAwait(false);

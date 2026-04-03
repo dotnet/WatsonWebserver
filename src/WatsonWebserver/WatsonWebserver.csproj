@@ -2,9 +2,9 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net8.0;net10.0</TargetFrameworks>
-		<Version>7.0.8</Version>
+		<Version>7.0.9</Version>
 		<Description>Simple, fast, async C# web server for handling REST requests with unified 7.x protocol architecture targeting .NET 8 and .NET 10.</Description>
-		<PackageReleaseNotes>Fix null-reference in lazy Query, Url, and Headers property getters when factory delegate returns null; harden property setters against null assignment</PackageReleaseNotes>
+		<PackageReleaseNotes>Fix request timing to start at request entry and use monotonic elapsed-time measurement; add regression coverage for context timing and pooled HTTP/1.1 request state</PackageReleaseNotes>
 
 		<Authors>Joel Christner</Authors>
 		<Company>Joel Christner</Company>

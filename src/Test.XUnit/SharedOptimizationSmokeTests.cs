@@ -40,6 +40,16 @@ namespace Test.XUnit
         }
 
         /// <summary>
+        /// Verify HTTP/1.1 context timing starts at request entry.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http1ContextTimingStartsAtRequestEntry()
+        {
+            await Test.Shared.SharedOptimizationSmokeTests.TestContextTimestampStartsAtRequestEntryAsync();
+        }
+
+        /// <summary>
         /// Verify HTTP/1.1 stream send preserves direct passthrough body content.
         /// </summary>
         /// <returns>Task.</returns>

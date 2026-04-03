@@ -4,6 +4,7 @@
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Collections.Specialized;
+    using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using System.Net;
@@ -154,8 +155,8 @@
                 _ResponseSent = value;
                 if (value)
                 {
-                    ResponseStarted = true;
-                    ResponseCompleted = true;
+                    if (!ResponseStarted) MarkResponseStarted();
+                    if (!ResponseCompleted) MarkResponseCompleted();
                 }
             }
         }
@@ -166,6 +167,9 @@
 
         private NameValueCollection _Headers = new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
         private NameValueCollection _Trailers = new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
+        private DateTime _TimingStartUtc = DateTime.MinValue;
+        private long _TimingStartTicks = 0;
+        private bool _TimingStarted = false;
         private bool _Disposed = false;
         private bool _ResponseSent = false;
 
@@ -216,6 +220,9 @@
             ResponseStarted = false;
             ResponseCompleted = false;
             _ResponseSent = false;
+            _TimingStartUtc = DateTime.MinValue;
+            _TimingStartTicks = 0;
+            _TimingStarted = false;
             _Disposed = false;
         }
 
@@ -290,6 +297,14 @@
         /// </summary>
         protected void MarkResponseStarted()
         {
+            if (!_TimingStarted)
+            {
+                _TimingStartUtc = DateTime.UtcNow;
+                _TimingStartTicks = Stopwatch.GetTimestamp();
+                _TimingStarted = true;
+                Timestamp.Start = _TimingStartUtc;
+            }
+
             ResponseStarted = true;
         }
 
@@ -298,13 +313,21 @@
         /// </summary>
         protected void MarkResponseCompleted()
         {
+            if (!_TimingStarted) MarkResponseStarted();
+
             ResponseStarted = true;
             ResponseCompleted = true;
+            Timestamp.End = _TimingStartUtc.AddMilliseconds(GetElapsedMilliseconds(_TimingStartTicks, Stopwatch.GetTimestamp()));
         }
 
         #endregion
 
         #region Private-Methods
+
+        private static double GetElapsedMilliseconds(long startTicks, long endTicks)
+        {
+            return (endTicks - startTicks) * 1000d / Stopwatch.Frequency;
+        }
 
         private string GetStatusDescription(int statusCode)
         {

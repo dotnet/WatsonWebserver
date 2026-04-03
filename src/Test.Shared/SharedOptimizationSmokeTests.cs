@@ -171,6 +171,50 @@ namespace Test.Shared
         }
 
         /// <summary>
+        /// Verify context timing starts at request entry even if first read after handler work.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestContextTimestampStartsAtRequestEntryAsync()
+        {
+            TaskCompletionSource<double> observedElapsedMs = new TaskCompletionSource<double>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, server =>
+            {
+                ConfigureTimingRoutes(server);
+                server.Events.ResponseSent += (sender, args) =>
+                {
+                    if (args != null
+                        && args.Url != null
+                        && args.Url.EndsWith("/timing", StringComparison.Ordinal))
+                    {
+                        observedElapsedMs.TrySetResult(args.TotalMs);
+                    }
+                };
+            }))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                {
+                    HttpResponseMessage response = await client.GetAsync(new Uri(host.BaseAddress, "/timing")).ConfigureAwait(false);
+                    _ = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                }
+
+                Task completed = await Task.WhenAny(observedElapsedMs.Task, Task.Delay(5000)).ConfigureAwait(false);
+                if (!ReferenceEquals(completed, observedElapsedMs.Task))
+                {
+                    throw new InvalidOperationException("Timed request did not emit a response event.");
+                }
+
+                double elapsedMs = await observedElapsedMs.Task.ConfigureAwait(false);
+                if (elapsedMs < 150)
+                {
+                    throw new InvalidOperationException("Context timing should include handler delay even when first read late.");
+                }
+            }
+        }
+
+        /// <summary>
         /// Verify HTTP/1.1 keep-alive pooling resets request state between requests.
         /// </summary>
         /// <returns>Task.</returns>
@@ -312,6 +356,19 @@ namespace Test.Shared
                 context.Response.StatusCode = 200;
                 context.Response.ContentType = "text/plain";
                 await context.Response.Send(context.Request.ContentLength, context.Request.Data, context.Token).ConfigureAwait(false);
+            });
+        }
+
+        private static void ConfigureTimingRoutes(Webserver server)
+        {
+            if (server == null) throw new ArgumentNullException(nameof(server));
+
+            server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.GET, "/timing", async (HttpContextBase context) =>
+            {
+                await Task.Delay(250).ConfigureAwait(false);
+                context.Response.StatusCode = 200;
+                context.Response.ContentType = "text/plain";
+                await context.Response.Send("timed", context.Token).ConfigureAwait(false);
             });
         }
 

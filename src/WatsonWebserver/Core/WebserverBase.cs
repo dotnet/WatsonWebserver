@@ -661,6 +661,7 @@
             if (ctx == null) throw new ArgumentNullException(nameof(ctx));
             if (String.IsNullOrEmpty(header)) throw new ArgumentNullException(nameof(header));
 
+            ctx.StartTiming();
             string requestPath = ctx.Request.Url.RawWithoutQuery;
             string normalizedRequestPath = ctx.Request.Url.NormalizedRawWithoutQuery;
 
@@ -858,7 +859,7 @@
                 {
                 }
 
-                ctx.Timestamp.End = DateTime.UtcNow;
+                ctx.CompleteTiming();
 
                 bool emitResponseStarting = ctx.Response.ResponseStarted && Events.HasResponseStartingHandlers;
                 bool emitResponseSent = Events.HasResponseSentHandlers;

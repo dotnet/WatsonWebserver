@@ -2574,6 +2574,16 @@
             </summary>
             <param name="factory">Factory.</param>
         </member>
+        <member name="M:WatsonWebserver.Core.HttpContextBase.StartTiming">
+            <summary>
+            Start request timing using a monotonic clock for elapsed time calculations.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.HttpContextBase.CompleteTiming">
+            <summary>
+            Complete request timing using the monotonic elapsed time.
+            </summary>
+        </member>
         <member name="T:WatsonWebserver.Core.HttpHeaderField">
             <summary>
             Header field helper used to defer request header collection materialization.

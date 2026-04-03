@@ -2,7 +2,13 @@
 
 ## Current Version
 
-`v7.0.4`
+`v7.0.9`
+
+## v7.0.9
+
+- Fixed request timing so `HttpContextBase.Timestamp` starts at request entry instead of first lazy access
+- Switched request/response elapsed timing to monotonic stopwatch-based measurement to avoid wall-clock skew spikes
+- Added regression coverage for context timing and retained coverage for pooled HTTP/1.1 request-state reset
 
 ## v7.0.4
 
