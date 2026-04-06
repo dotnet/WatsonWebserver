@@ -8031,158 +8031,6 @@
             </summary>
             <param name="disposing">Disposing.</param>
         </member>
-        <member name="T:WatsonWebserver.Http3.Http3ConnectionSession">
-            <summary>
-            Minimal HTTP/3 server connection session.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.Http3.Http3ConnectionSession.#ctor(WatsonWebserver.Core.WebserverSettings,WatsonWebserver.Core.WebserverEvents,System.Net.Quic.QuicConnection,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.CancellationToken,System.Threading.Tasks.Task})">
-            <summary>
-            Instantiate the session.
-            </summary>
-            <param name="settings">Server settings.</param>
-            <param name="events">Server events.</param>
-            <param name="connection">QUIC connection.</param>
-            <param name="processContext">Shared request processor.</param>
-        </member>
-        <member name="M:WatsonWebserver.Http3.Http3ConnectionSession.RunAsync(System.Threading.CancellationToken)">
-            <summary>
-            Run the session.
-            </summary>
-            <param name="token">Cancellation token.</param>
-            <returns>Task.</returns>
-        </member>
-        <member name="T:WatsonWebserver.Http3.Http3Context">
-            <summary>
-            HTTP/3 request context.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.Http3.Http3Context.#ctor(WatsonWebserver.Core.WebserverSettings,WatsonWebserver.Http3.Http3Request,WatsonWebserver.Http3.Http3Response,System.Func{WatsonWebserver.Core.ConnectionMetadata},System.Func{WatsonWebserver.Core.StreamMetadata})">
-            <summary>
-            Instantiate the context.
-            </summary>
-            <param name="settings">Server settings.</param>
-            <param name="request">HTTP/3 request.</param>
-            <param name="response">HTTP/3 response.</param>
-            <param name="connectionMetadataFactory">Connection metadata factory.</param>
-            <param name="streamMetadataFactory">Stream metadata factory.</param>
-        </member>
-        <member name="T:WatsonWebserver.Http3.Http3Request">
-            <summary>
-            HTTP/3 request.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Http3.Http3Request.Data">
-            <summary>
-            The request body as a stream.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Http3.Http3Request.DataAsBytes">
-            <summary>
-            The request body as a byte array. Reads and caches the full body from the stream on first access.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Http3.Http3Request.DataAsString">
-            <summary>
-            The request body as a UTF-8 string. Reads and caches the full body from the stream on first access.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.Http3.Http3Request.#ctor">
-            <summary>
-            Instantiate.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.Http3.Http3Request.ReadChunk(System.Threading.CancellationToken)">
-            <summary>
-            Read a chunk from the request body. Not supported for HTTP/3 requests.
-            </summary>
-            <param name="token">Cancellation token.</param>
-            <returns>Never returns; always throws.</returns>
-            <exception cref="T:System.InvalidOperationException">Always thrown. HTTP/3 does not expose HTTP/1.1 chunked transfer-encoding semantics.</exception>
-        </member>
-        <member name="M:WatsonWebserver.Http3.Http3Request.HeaderExists(System.String)">
-            <summary>
-            Check if a header exists in the request.
-            </summary>
-            <param name="key">Header name.</param>
-            <returns>True if the header exists.</returns>
-        </member>
-        <member name="M:WatsonWebserver.Http3.Http3Request.QuerystringExists(System.String)">
-            <summary>
-            Check if a querystring parameter exists in the request URL.
-            </summary>
-            <param name="key">Querystring key.</param>
-            <returns>True if the querystring parameter exists.</returns>
-        </member>
-        <member name="M:WatsonWebserver.Http3.Http3Request.RetrieveHeaderValue(System.String)">
-            <summary>
-            Retrieve the value of a request header.
-            </summary>
-            <param name="key">Header name.</param>
-            <returns>The header value, or null if not found.</returns>
-        </member>
-        <member name="M:WatsonWebserver.Http3.Http3Request.RetrieveQueryValue(System.String)">
-            <summary>
-            Retrieve the value of a querystring parameter, URL-decoded.
-            </summary>
-            <param name="key">Querystring key.</param>
-            <returns>The URL-decoded value, or null if not found.</returns>
-        </member>
-        <member name="T:WatsonWebserver.Http3.Http3Response">
-            <summary>
-            HTTP/3 response.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Http3.Http3Response.DataAsString">
-            <summary>
-            Response body as string.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Http3.Http3Response.DataAsBytes">
-            <summary>
-            Response body as bytes.
-            </summary>
-        </member>
-        <member name="P:WatsonWebserver.Http3.Http3Response.Data">
-            <summary>
-            Response body stream.
-            </summary>
-        </member>
-        <member name="M:WatsonWebserver.Http3.Http3Response.#ctor(WatsonWebserver.Core.HttpRequestBase,WatsonWebserver.Core.WebserverSettings,System.Net.Quic.QuicStream)">
-            <summary>
-            Instantiate the response.
-            </summary>
-            <param name="request">Associated request.</param>
-            <param name="settings">Server settings.</param>
-            <param name="stream">HTTP/3 request stream.</param>
-        </member>
-        <member name="M:WatsonWebserver.Http3.Http3Response.Send(System.Threading.CancellationToken)">
-            <inheritdoc />
-        </member>
-        <member name="M:WatsonWebserver.Http3.Http3Response.Send(System.Int64,System.Threading.CancellationToken)">
-            <inheritdoc />
-        </member>
-        <member name="M:WatsonWebserver.Http3.Http3Response.Send(System.String,System.Threading.CancellationToken)">
-            <inheritdoc />
-        </member>
-        <member name="M:WatsonWebserver.Http3.Http3Response.Send(System.Byte[],System.Threading.CancellationToken)">
-            <inheritdoc />
-        </member>
-        <member name="M:WatsonWebserver.Http3.Http3Response.Send(System.Int64,System.IO.Stream,System.Threading.CancellationToken)">
-            <inheritdoc />
-        </member>
-        <member name="M:WatsonWebserver.Http3.Http3Response.SendChunk(System.Byte[],System.Boolean,System.Threading.CancellationToken)">
-            <inheritdoc />
-        </member>
-        <member name="M:WatsonWebserver.Http3.Http3Response.SendEvent(WatsonWebserver.Core.ServerSentEvent,System.Boolean,System.Threading.CancellationToken)">
-            <inheritdoc />
-        </member>
-        <member name="M:WatsonWebserver.Http3.Http3Response.Dispose(System.Boolean)">
-            <summary>
-            Dispose of response resources.
-            </summary>
-            <param name="disposing">Disposing.</param>
-        </member>
         <member name="T:WatsonWebserver.HttpContext">
             <summary>
             HTTP context including both request and response.
@@ -8271,6 +8119,170 @@
         <member name="M:WatsonWebserver.HttpRequest.QuerystringExists(System.String)">
             <summary>
             Determine if a querystring entry exists.
+            </summary>
+            <param name="key">Querystring key.</param>
+            <returns>True if exists.</returns>
+        </member>
+        <member name="M:WatsonWebserver.HttpRequest.RetrieveHeaderValue(System.String)">
+            <summary>
+            Retrieve a header (or querystring) value.
+            </summary>
+            <param name="key">Key.</param>
+            <returns>Value.</returns>
+        </member>
+        <member name="M:WatsonWebserver.HttpRequest.RetrieveQueryValue(System.String)">
+            <summary>
+            Retrieve a querystring value.
+            </summary>
+            <param name="key">Key.</param>
+            <returns>Value.</returns>
+        </member>
+        <member name="M:WatsonWebserver.HttpRequest.ReadBodyAsync(System.Threading.CancellationToken)">
+            <summary>
+            Asynchronously read the entire request body.
+            After calling this method, DataAsBytes and DataAsString return cached data with zero blocking.
+            </summary>
+            <param name="token">Cancellation token.</param>
+            <returns>The request body as a byte array, or null if no body is present.</returns>
+        </member>
+        <member name="M:WatsonWebserver.HttpRequest.ResetForReuse">
+            <summary>
+            Reset the HTTP/1.1 request before returning it to the pool.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.HttpResponse">
+            <summary>
+            HTTP response.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.HttpResponse.DataAsString">
+            <summary>
+            Retrieve the response body sent using a Send() or SendAsync() method.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.HttpResponse.DataAsBytes">
+            <summary>
+            Retrieve the response body sent using a Send() or SendAsync() method.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.HttpResponse.Data">
+            <summary>
+            Response data stream sent to the requestor.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.HttpResponse.#ctor">
+            <summary>
+            Instantiate the object.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.HttpResponse.Send(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:WatsonWebserver.HttpResponse.Send(System.Int64,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:WatsonWebserver.HttpResponse.Send(System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:WatsonWebserver.HttpResponse.Send(System.Byte[],System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:WatsonWebserver.HttpResponse.Send(System.Int64,System.IO.Stream,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:WatsonWebserver.HttpResponse.SendChunk(System.Byte[],System.Boolean,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:WatsonWebserver.HttpResponse.SendEvent(WatsonWebserver.Core.ServerSentEvent,System.Boolean,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:WatsonWebserver.HttpResponse.Dispose(System.Boolean)">
+            <summary>
+            Dispose of resources.
+            </summary>
+            <param name="disposing">Disposing.</param>
+        </member>
+        <member name="M:WatsonWebserver.HttpResponse.ResetForReuse">
+            <summary>
+            Reset the HTTP/1.1 response before returning it to the pool.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.Webserver">
+            <summary>
+            Watson webserver.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Webserver.IsListening">
+            <summary>
+            Indicates whether or not the server is listening.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Webserver.RequestCount">
+            <summary>
+            Number of requests being serviced currently.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Webserver.SupportsHttp2">
+            <summary>
+            Indicates whether the current transport supports HTTP/2.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Webserver.SupportsHttp3">
+            <summary>
+            Indicates whether the current transport supports HTTP/3.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Webserver.ProcessWebSocketRouteAsync(WatsonWebserver.Core.HttpContextBase,WatsonWebserver.Core.WebSockets.WebSocketRoute,System.Func{WatsonWebserver.Core.HttpContextBase,WatsonWebserver.Core.WebSockets.WebSocketSession,System.Threading.Tasks.Task},System.Threading.CancellationToken)">
+            <summary>
+            Execute a matched WebSocket route.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Webserver.#ctor(WatsonWebserver.Core.WebserverSettings,System.Func{WatsonWebserver.Core.HttpContextBase,System.Threading.Tasks.Task})">
+            <summary>
+            Creates a new instance of the webserver.
+            If you do not provide a settings object, default settings will be used, which will cause the webserver to listen on http://localhost:8000, and send events to the console.
+            </summary>
+            <param name="settings">Webserver settings.</param>
+            <param name="defaultRoute">Method used when a request is received and no matching routes are found.  Commonly used as the 404 handler when routes are used.</param>
+        </member>
+        <member name="M:WatsonWebserver.Webserver.Dispose">
+            <summary>
+            Tear down the server and dispose of background workers.
+            Do not use this object after disposal.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Webserver.Start(System.Threading.CancellationToken)">
+            <summary>
+            Start accepting new connections.
+            </summary>
+            <param name="token">Cancellation token useful for canceling the server.</param>
+        </member>
+        <member name="M:WatsonWebserver.Webserver.StartAsync(System.Threading.CancellationToken)">
+            <summary>
+            Start accepting new connections.
+            </summary>
+            <param name="token">Cancellation token useful for canceling the server.</param>
+            <returns>Task.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Webserver.Stop">
+            <summary>
+            Stop accepting new connections.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Webserver.Dispose(System.Boolean)">
+            <summary>
+            Tear down the server and dispose of background workers.
+            Do not use this object after disposal.
+            </summary>
+        </member>
+        <member name="T:WatsonWebserver.WebSockets.Http1WebSocketHandshake">
+            <summary>
+            HTTP/1.1 WebSocket handshake helpers.
+            </summary>
+        </member>
+    </members>
+</doc>
+ts.
             </summary>
             <param name="key">Querystring key.</param>
             <returns>True if exists.</returns>

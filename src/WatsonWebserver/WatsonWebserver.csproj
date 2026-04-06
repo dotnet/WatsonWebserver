@@ -1,10 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net8.0;net10.0</TargetFrameworks>
-		<Version>7.0.9</Version>
-		<Description>Simple, fast, async C# web server for handling REST requests with unified 7.x protocol architecture targeting .NET 8 and .NET 10.</Description>
-		<PackageReleaseNotes>Fix request timing to start at request entry and use monotonic elapsed-time measurement; add regression coverage for context timing and pooled HTTP/1.1 request state</PackageReleaseNotes>
+		<TargetFrameworks>netstandard2.1;net8.0;net10.0</TargetFrameworks>
+		<LangVersion>latest</LangVersion>
+		<Version>7.0.10</Version>
+		<Description>Simple, fast, async C# web server for handling REST requests with unified 7.x protocol architecture targeting .NET Standard 2.1, .NET 8, and .NET 10.</Description>
+		<PackageReleaseNotes>Add netstandard2.1 target for broader runtime compatibility; HTTP/3 and QUIC features require .NET 8 or later</PackageReleaseNotes>
 
 		<Authors>Joel Christner</Authors>
 		<Company>Joel Christner</Company>
@@ -53,6 +54,11 @@
 		<PackageReference Include="RegexMatcher" Version="1.0.9" />
 		<PackageReference Include="Timestamps" Version="1.0.11" />
 		<PackageReference Include="UrlMatcher" Version="3.0.1" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+		<PackageReference Include="System.Text.Json" Version="8.0.5" />
+		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 	</ItemGroup>
 
 </Project>

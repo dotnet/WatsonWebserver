@@ -62,12 +62,29 @@
             if (stream == null) throw new ArgumentNullException(nameof(stream));
 
             byte[] bytes = new byte[Http2Constants.ClientConnectionPrefaceBytes.Length];
+#if NET8_0_OR_GREATER
             await stream.ReadExactlyAsync(bytes, cancellationToken).ConfigureAwait(false);
+#else
+            await ReadExactlyFallbackAsync(stream, bytes, cancellationToken).ConfigureAwait(false);
+#endif
 
             if (!IsClientPreface(bytes))
             {
                 throw new Http2ProtocolException(Http2ErrorCode.ProtocolError, "The received client connection preface is not valid HTTP/2.");
             }
         }
+
+#if !NET8_0_OR_GREATER
+        private static async Task ReadExactlyFallbackAsync(Stream stream, byte[] buffer, CancellationToken cancellationToken)
+        {
+            int offset = 0;
+            while (offset < buffer.Length)
+            {
+                int bytesRead = await stream.ReadAsync(buffer, offset, buffer.Length - offset, cancellationToken).ConfigureAwait(false);
+                if (bytesRead < 1) throw new System.IO.EndOfStreamException("Unexpected end of stream.");
+                offset += bytesRead;
+            }
+        }
+#endif
     }
 }

@@ -820,7 +820,18 @@ namespace WatsonWebserver.Http2
                     waitTask = _SendWindowSignal.Task;
                 }
 
+#if NET8_0_OR_GREATER
                 await waitTask.WaitAsync(token).ConfigureAwait(false);
+#else
+                Task cancelTask = Task.Delay(Timeout.Infinite, token);
+                Task completedTask = await Task.WhenAny(waitTask, cancelTask).ConfigureAwait(false);
+                if (completedTask == cancelTask)
+                {
+                    token.ThrowIfCancellationRequested();
+                }
+
+                await waitTask.ConfigureAwait(false);
+#endif
             }
         }
 

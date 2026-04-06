@@ -31,7 +31,14 @@ namespace WatsonWebserver.Core.WebSockets
             if (String.IsNullOrWhiteSpace(requestKey)) throw new ArgumentNullException(nameof(requestKey));
 
             byte[] bytes = Encoding.ASCII.GetBytes(requestKey.Trim() + AcceptKeyGuid);
+#if NET8_0_OR_GREATER
             return Convert.ToBase64String(SHA1.HashData(bytes));
+#else
+            using (SHA1 sha1 = SHA1.Create())
+            {
+                return Convert.ToBase64String(sha1.ComputeHash(bytes));
+            }
+#endif
         }
 
         /// <summary>

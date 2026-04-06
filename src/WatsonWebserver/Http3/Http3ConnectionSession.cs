@@ -1,3 +1,4 @@
+#if NET8_0_OR_GREATER
 namespace WatsonWebserver.Http3
 {
     using System;
@@ -729,4 +730,4 @@ namespace WatsonWebserver.Http3
         }
     }
 }
-
+#endif

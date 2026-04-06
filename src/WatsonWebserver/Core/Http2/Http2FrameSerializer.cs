@@ -57,7 +57,11 @@
             if (stream == null) throw new ArgumentNullException(nameof(stream));
 
             byte[] bytes = new byte[Http2Constants.FrameHeaderLength];
+#if NET8_0_OR_GREATER
             await stream.ReadExactlyAsync(bytes, cancellationToken).ConfigureAwait(false);
+#else
+            await ReadExactlyFallbackAsync(stream, bytes, cancellationToken).ConfigureAwait(false);
+#endif
             return ParseFrameHeader(bytes);
         }
 
@@ -73,7 +77,11 @@
 
             Http2FrameHeader header = await ReadFrameHeaderAsync(stream, cancellationToken).ConfigureAwait(false);
             byte[] payload = new byte[header.Length];
+#if NET8_0_OR_GREATER
             if (payload.Length > 0) await stream.ReadExactlyAsync(payload, cancellationToken).ConfigureAwait(false);
+#else
+            if (payload.Length > 0) await ReadExactlyFallbackAsync(stream, payload, cancellationToken).ConfigureAwait(false);
+#endif
             return new Http2RawFrame(header, payload);
         }
 
@@ -313,5 +321,18 @@
 
             return goAwayFrame;
         }
+
+#if !NET8_0_OR_GREATER
+        private static async Task ReadExactlyFallbackAsync(Stream stream, byte[] buffer, CancellationToken cancellationToken)
+        {
+            int offset = 0;
+            while (offset < buffer.Length)
+            {
+                int bytesRead = await stream.ReadAsync(buffer, offset, buffer.Length - offset, cancellationToken).ConfigureAwait(false);
+                if (bytesRead < 1) throw new EndOfStreamException("Unexpected end of stream.");
+                offset += bytesRead;
+            }
+        }
+#endif
     }
 }

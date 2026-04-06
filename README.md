@@ -56,6 +56,16 @@ dotnet add package Watson
 
 The `Watson` package contains everything needed for both server usage and extension development. The `WatsonWebserver.Core` namespace provides the shared abstractions, routing, and extensibility surface within the same package.
 
+### Supported Frameworks
+
+| Target | HTTP/1.1 | HTTP/2 | HTTP/3 |
+|---|---|---|---|
+| .NET Standard 2.1 | Yes | Yes | No (QUIC unavailable) |
+| .NET 8 | Yes | Yes | Yes (where QUIC runtime is available) |
+| .NET 10 | Yes | Yes | Yes (where QUIC runtime is available) |
+
+On `netstandard2.1`, HTTP/3 is gracefully disabled at startup. All other features — routing, API routes, middleware, WebSockets, OpenAPI, health checks, and HTTP/2 — work without restriction.
+
 ## Quick Start
 
 ```csharp

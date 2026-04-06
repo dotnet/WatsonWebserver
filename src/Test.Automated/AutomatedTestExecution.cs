@@ -26,6 +26,7 @@ namespace Test.Automated
             SharedCoreUnitCoverageSuite sharedCoreUnitCoverageSuite = new SharedCoreUnitCoverageSuite();
             SharedDataStreamSuite sharedDataStreamSuite = new SharedDataStreamSuite();
             SharedBodyAccessSuite sharedBodyAccessSuite = new SharedBodyAccessSuite();
+            SharedRouteMethodParitySuite sharedRouteMethodParitySuite = new SharedRouteMethodParitySuite();
 
             results.AddRange(await legacyCoverageSuite.RunAsync().ConfigureAwait(false));
             results.AddRange(await optimizationCoverageSuite.RunAsync().ConfigureAwait(false));
@@ -35,6 +36,7 @@ namespace Test.Automated
             results.AddRange(await sharedCoreUnitCoverageSuite.RunAsync().ConfigureAwait(false));
             results.AddRange(await sharedDataStreamSuite.RunAsync().ConfigureAwait(false));
             results.AddRange(await sharedBodyAccessSuite.RunAsync().ConfigureAwait(false));
+            results.AddRange(await sharedRouteMethodParitySuite.RunAsync().ConfigureAwait(false));
 
             return results.ToArray();
         }

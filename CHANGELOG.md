@@ -2,7 +2,16 @@
 
 ## Current Version
 
-`v7.0.9`
+`v7.0.10`
+
+## v7.0.10
+
+- Added `netstandard2.1` target for broader runtime compatibility (e.g. Unity, Xamarin, older .NET Core 3.x hosts)
+- HTTP/3 and QUIC features require .NET 8 or later; on `netstandard2.1` they are gracefully unavailable
+- Added conditional polyfills for `Stream.ReadExactlyAsync`, `SHA1.HashData`, `FrozenDictionary`, `Task.WaitAsync`, `IThreadPoolWorkItem`, and `SslProtocols.Tls13` on older target frameworks
+- Added `System.Text.Json` and `Microsoft.CSharp` package references for the `netstandard2.1` target
+- Added cross-protocol route method parity test suite covering GET, POST, PUT, DELETE, PATCH, HEAD, and OPTIONS across HTTP/1.1, HTTP/2, and HTTP/3 for static routes, parameter routes, dynamic (regex) routes, content routes, and API routes
+- Added `netstandard2.1` compatibility unit tests validating runtime detection, protocol normalization, SHA1 handshake fallback, static route manager dictionary fallback, and server construction
 
 ## v7.0.9
 

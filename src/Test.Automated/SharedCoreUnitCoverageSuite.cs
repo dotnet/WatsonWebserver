@@ -24,6 +24,7 @@ namespace Test.Automated
             await ExecuteTestsAsync(SharedRequestParametersTests.GetTests()).ConfigureAwait(false);
             await ExecuteTestsAsync(SharedMiddlewarePipelineTests.GetTests()).ConfigureAwait(false);
             await ExecuteTestsAsync(SharedWebSocketTests.GetTests()).ConfigureAwait(false);
+            await ExecuteTestsAsync(SharedNetstandard21CompatTests.GetTests()).ConfigureAwait(false);
 
             return _Results.ToArray();
         }

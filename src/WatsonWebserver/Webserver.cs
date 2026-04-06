@@ -9,7 +9,9 @@
     using System.Net;
     using System.Net.Security;
     using System.Net.WebSockets;
+#if NET8_0_OR_GREATER
     using System.Net.Quic;
+#endif
     using System.Net.Sockets;
     using System.Reflection;
     using System.Security.Authentication;
@@ -17,17 +19,21 @@
     using System.Threading;
     using System.Threading.Tasks;
     using System.Text.Json.Serialization;
+    using System.Runtime.InteropServices;
+#if NET8_0_OR_GREATER
     using System.Runtime.Versioning;
+#endif
     using WatsonWebserver.Http1;
     using WatsonWebserver.Http2;
+#if NET8_0_OR_GREATER
     using WatsonWebserver.Http3;
+#endif
     using WatsonWebserver.WebSockets;
     using WatsonWebserver.Core;
     using WatsonWebserver.Core.Http1;
     using WatsonWebserver.Core.Http2;
     using WatsonWebserver.Core.Http3;
     using WatsonWebserver.Core.WebSockets;
-    using System.Runtime.InteropServices;
     using System.Text;
     using NetWebSocket = System.Net.WebSockets.WebSocket;
 
@@ -78,7 +84,11 @@
         {
             get
             {
+#if NET8_0_OR_GREATER
                 return Http3RuntimeDetector.Detect().IsAvailable;
+#else
+                return false;
+#endif
             }
         }
 
@@ -180,7 +190,9 @@
 
         private readonly string _Header = "[Webserver] ";
         private TcpListener _TcpListener = null;
+#if NET8_0_OR_GREATER
         private QuicListener _QuicListener = null;
+#endif
         private int _RequestCount = 0;
         private SemaphoreSlim _RequestSemaphore = null;
         private bool _IsListening = false;
@@ -188,7 +200,9 @@
         private CancellationTokenSource _TokenSource = new CancellationTokenSource();
         private CancellationToken _Token;
         private Task _AcceptConnections = null;
+#if NET8_0_OR_GREATER
         private Task _AcceptQuicConnections = null;
+#endif
         private readonly ConcurrentBag<HttpContext> _HttpContextPool = new ConcurrentBag<HttpContext>();
         private readonly ConcurrentBag<HttpRequest> _HttpRequestPool = new ConcurrentBag<HttpRequest>();
         private readonly ConcurrentBag<HttpResponse> _HttpResponsePool = new ConcurrentBag<HttpResponse>();
@@ -256,11 +270,13 @@
             _TcpListener = new TcpListener(ResolveBindIpAddress(Settings.Hostname), Settings.Port);
             _TcpListener.Start();
 
-            if (Settings.Protocols.EnableHttp3 && (OperatingSystem.IsWindows() || OperatingSystem.IsLinux() || OperatingSystem.IsMacOS()))
+#if NET8_0_OR_GREATER
+            if (Settings.Protocols.EnableHttp3 && IsSupportedQuicPlatform())
             {
                 _QuicListener = BuildQuicListenerAsync(_Token).GetAwaiter().GetResult();
                 _AcceptQuicConnections = StartQuicAcceptLoop();
             }
+#endif
 
             _IsListening = true;
 
@@ -311,11 +327,13 @@
                 _IsListening = false;
             }
 
-            if (_QuicListener != null && (OperatingSystem.IsWindows() || OperatingSystem.IsLinux() || OperatingSystem.IsMacOS()))
+#if NET8_0_OR_GREATER
+            if (_QuicListener != null && IsSupportedQuicPlatform())
             {
                 _QuicListener.DisposeAsync().AsTask().GetAwaiter().GetResult();
                 _QuicListener = null;
             }
+#endif
 
             if (_TokenSource != null && !_TokenSource.IsCancellationRequested)
             {
@@ -331,7 +349,16 @@
 
         private void NormalizeProtocolSettingsForCurrentRuntime()
         {
+#if NET8_0_OR_GREATER
             Http3RuntimeAvailability availability = Http3RuntimeDetector.Detect();
+#else
+            Http3RuntimeAvailability availability = new Http3RuntimeAvailability
+            {
+                AssemblyPresent = false,
+                IsAvailable = false,
+                Message = "HTTP/3 requires .NET 8 or later."
+            };
+#endif
             WebserverSettingsValidator.NormalizeForRuntime(Settings, availability, Events.Logger);
         }
 
@@ -361,11 +388,15 @@
                 }
 
                 _TcpListener = null;
+#if NET8_0_OR_GREATER
                 _QuicListener = null;
+#endif
                 Settings = null;
                 DisposeTokenSource();
                 _AcceptConnections = null;
+#if NET8_0_OR_GREATER
                 _AcceptQuicConnections = null;
+#endif
             }
         }
 
@@ -391,11 +422,13 @@
 
         private async Task StartTransportLoopsAsync()
         {
-            if (Settings.Protocols.EnableHttp3 && (OperatingSystem.IsWindows() || OperatingSystem.IsLinux() || OperatingSystem.IsMacOS()))
+#if NET8_0_OR_GREATER
+            if (Settings.Protocols.EnableHttp3 && IsSupportedQuicPlatform())
             {
                 _QuicListener = await BuildQuicListenerAsync(_Token).ConfigureAwait(false);
                 _AcceptQuicConnections = StartQuicAcceptLoop();
             }
+#endif
 
             _AcceptConnections = Task.Run(() => AcceptConnections(_Token), _Token);
             Events.HandleServerStarted(this, EventArgs.Empty);
@@ -410,15 +443,30 @@
 
                 while (_IsListening)
                 {
+#if NET8_0_OR_GREATER
                     TcpClient tcpClient = await _TcpListener.AcceptTcpClientAsync(token).ConfigureAwait(false);
                     ThreadPool.UnsafeQueueUserWorkItem(new ClientConnectionWorkItem(this, tcpClient, token), preferLocal: false);
+#else
+                    using (CancellationTokenRegistration registration = token.Register(static state => ((TcpListener)state).Stop(), _TcpListener))
+                    {
+                        TcpClient tcpClient = await _TcpListener.AcceptTcpClientAsync().ConfigureAwait(false);
+                        ThreadPool.QueueUserWorkItem(state =>
+                        {
+                            (Webserver server, TcpClient client, CancellationToken ct) = ((Webserver, TcpClient, CancellationToken))state;
+                            _ = server.HandleClientConnectionAsync(client, ct);
+                        }, (this, tcpClient, token));
+                    }
+#endif
                 }
 
                 #endregion
             }
             catch (Exception e)
             {
-                Events.HandleExceptionEncountered(this, new ExceptionEventArgs(null, e));
+                if (!token.IsCancellationRequested)
+                {
+                    Events.HandleExceptionEncountered(this, new ExceptionEventArgs(null, e));
+                }
             }
             finally
             {
@@ -427,6 +475,7 @@
             }
         }
 
+#if NET8_0_OR_GREATER
         [SupportedOSPlatform("windows")]
         [SupportedOSPlatform("linux")]
         [SupportedOSPlatform("macos")]
@@ -460,8 +509,9 @@
             connectionOptions.IdleTimeout = TimeSpan.FromMilliseconds(Settings.Protocols.IdleTimeoutMs);
             connectionOptions.DefaultCloseErrorCode = 0;
             connectionOptions.DefaultStreamErrorCode = 0;
-            return ValueTask.FromResult(connectionOptions);
+            return new ValueTask<QuicServerConnectionOptions>(connectionOptions);
         }
+#endif
 
         private void CloseActiveWebSocketSessions()
         {
@@ -491,6 +541,7 @@
             }
         }
 
+#if NET8_0_OR_GREATER
         [SupportedOSPlatform("windows")]
         [SupportedOSPlatform("linux")]
         [SupportedOSPlatform("macos")]
@@ -568,6 +619,7 @@
                 await quicConnection.DisposeAsync().ConfigureAwait(false);
             }
         }
+#endif
 
         private async Task<ClientStreamContext> BuildClientStreamAsync(TcpClient tcpClient, CancellationToken token)
         {
@@ -587,7 +639,11 @@
             SslServerAuthenticationOptions authenticationOptions = new SslServerAuthenticationOptions();
             authenticationOptions.ServerCertificate = Settings.Ssl.SslCertificate;
             authenticationOptions.ClientCertificateRequired = Settings.Ssl.MutuallyAuthenticate;
+#if NET8_0_OR_GREATER
             authenticationOptions.EnabledSslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13;
+#else
+            authenticationOptions.EnabledSslProtocols = SslProtocols.Tls12;
+#endif
             authenticationOptions.CertificateRevocationCheckMode = X509RevocationMode.NoCheck;
 
             if (Settings.Protocols.EnableHttp2)
@@ -999,6 +1055,7 @@
             return addresses.First();
         }
 
+#if NET8_0_OR_GREATER
         private readonly struct ClientConnectionWorkItem : IThreadPoolWorkItem
         {
             private readonly Webserver _Server;
@@ -1039,6 +1096,19 @@
                 _ = _Server.HandleQuicConnectionAsync(_QuicConnection, _Token);
             }
         }
+
+        private static bool IsSupportedQuicPlatform()
+        {
+            return RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                || RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+                || RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+        }
+#else
+        private static bool IsSupportedQuicPlatform()
+        {
+            return false;
+        }
+#endif
 
         #endregion
     }

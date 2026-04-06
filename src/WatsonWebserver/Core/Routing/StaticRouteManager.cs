@@ -1,7 +1,9 @@
 namespace WatsonWebserver.Core.Routing
 {
     using System;
+#if NET8_0_OR_GREATER
     using System.Collections.Frozen;
+#endif
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using WatsonWebserver.Core;
@@ -17,8 +19,13 @@ namespace WatsonWebserver.Core.Routing
         private readonly object _Sync = new object();
         private readonly List<StaticRoute> _Routes = new List<StaticRoute>();
         private IReadOnlyList<StaticRoute> _RouteSnapshot = Array.Empty<StaticRoute>();
+#if NET8_0_OR_GREATER
         private FrozenDictionary<HttpMethod, FrozenDictionary<string, StaticRoute>> _RouteMap =
             FrozenDictionary<HttpMethod, FrozenDictionary<string, StaticRoute>>.Empty;
+#else
+        private Dictionary<HttpMethod, Dictionary<string, StaticRoute>> _RouteMap =
+            new Dictionary<HttpMethod, Dictionary<string, StaticRoute>>();
+#endif
 
         #endregion
 
@@ -175,7 +182,11 @@ namespace WatsonWebserver.Core.Routing
 
         private StaticRoute GetRouteInternal(HttpMethod method, string normalizedPath)
         {
+#if NET8_0_OR_GREATER
             FrozenDictionary<string, StaticRoute> routesByPath = null;
+#else
+            Dictionary<string, StaticRoute> routesByPath = null;
+#endif
             if (!_RouteMap.TryGetValue(method, out routesByPath) || routesByPath == null)
             {
                 return null;
@@ -209,6 +220,7 @@ namespace WatsonWebserver.Core.Routing
                 routesByPath[route.Path] = route;
             }
 
+#if NET8_0_OR_GREATER
             Dictionary<HttpMethod, FrozenDictionary<string, StaticRoute>> frozenByMethod = new Dictionary<HttpMethod, FrozenDictionary<string, StaticRoute>>();
             foreach (KeyValuePair<HttpMethod, Dictionary<string, StaticRoute>> entry in routeMap)
             {
@@ -217,6 +229,10 @@ namespace WatsonWebserver.Core.Routing
 
             _RouteSnapshot = _Routes.ToArray();
             _RouteMap = frozenByMethod.ToFrozenDictionary();
+#else
+            _RouteSnapshot = _Routes.ToArray();
+            _RouteMap = routeMap;
+#endif
         }
 
         #endregion
