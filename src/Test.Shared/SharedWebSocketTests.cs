@@ -40,7 +40,6 @@ namespace Test.Shared
                 new SharedNamedTestCase("WebSocket :: HTTP/1.1 loopback text echo succeeds", TestHttp11TextEchoAsync),
                 new SharedNamedTestCase("WebSocket :: Same-path HTTP and WebSocket dispatch by upgrade", TestSamePathDispatchAsync),
                 new SharedNamedTestCase("WebSocket :: Queryless websocket requests survive observability event materialization", TestQuerylessWebSocketWithObservabilityHandlersAsync),
-                new SharedNamedTestCase("HTTP :: Queryless requests survive observability event materialization", TestQuerylessHttpWithObservabilityHandlersAsync),
                 new SharedNamedTestCase("WebSocket :: Exception event materialization survives queryless websocket failures", TestQuerylessWebSocketExceptionEventMaterializationAsync),
                 new SharedNamedTestCase("WebSocket :: Session enumeration and disconnect API work", TestSessionEnumerationAndDisconnectAsync),
                 new SharedNamedTestCase("WebSocket :: Post-auth route sees authentication metadata", TestPostAuthWebSocketRouteAsync),
@@ -74,7 +73,8 @@ namespace Test.Shared
                 new SharedNamedTestCase("WebSocket :: Mixed text and binary traffic work on one session", TestMixedTextAndBinaryTrafficAsync),
                 new SharedNamedTestCase("WebSocket :: Server initiated close reaches the client cleanly", TestServerInitiatedCloseAsync),
                 new SharedNamedTestCase("WebSocket :: Client initiated close drains the session registry", TestClientInitiatedCloseAsync),
-                new SharedNamedTestCase("WebSocket :: Concurrent many-session traffic works", TestConcurrentManySessionTrafficAsync)
+                new SharedNamedTestCase("WebSocket :: Concurrent many-session traffic works", TestConcurrentManySessionTrafficAsync),
+                new SharedNamedTestCase("HTTP :: Queryless requests survive observability event materialization", TestQuerylessHttpWithObservabilityHandlersAsync)
             };
         }
 

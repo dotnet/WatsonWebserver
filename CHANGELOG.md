@@ -2,7 +2,12 @@
 
 ## Current Version
 
-`v7.0.10`
+`v7.0.11`
+
+## v7.0.11
+
+- Suppressed CA1416 platform compatibility warnings on QUIC call sites that are already guarded by runtime detection
+- Fixed test ordering so the HTTP observability test no longer runs in the middle of the WebSocket test group
 
 ## v7.0.10
 

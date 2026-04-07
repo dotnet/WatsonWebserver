@@ -271,11 +271,13 @@
             _TcpListener.Start();
 
 #if NET8_0_OR_GREATER
+#pragma warning disable CA1416 // Platform compatibility — guarded by IsSupportedQuicPlatform()
             if (Settings.Protocols.EnableHttp3 && IsSupportedQuicPlatform())
             {
                 _QuicListener = BuildQuicListenerAsync(_Token).GetAwaiter().GetResult();
                 _AcceptQuicConnections = StartQuicAcceptLoop();
             }
+#pragma warning restore CA1416
 #endif
 
             _IsListening = true;
@@ -328,11 +330,13 @@
             }
 
 #if NET8_0_OR_GREATER
+#pragma warning disable CA1416 // Platform compatibility — guarded by IsSupportedQuicPlatform()
             if (_QuicListener != null && IsSupportedQuicPlatform())
             {
                 _QuicListener.DisposeAsync().AsTask().GetAwaiter().GetResult();
                 _QuicListener = null;
             }
+#pragma warning restore CA1416
 #endif
 
             if (_TokenSource != null && !_TokenSource.IsCancellationRequested)
@@ -423,11 +427,13 @@
         private async Task StartTransportLoopsAsync()
         {
 #if NET8_0_OR_GREATER
+#pragma warning disable CA1416 // Platform compatibility — guarded by IsSupportedQuicPlatform()
             if (Settings.Protocols.EnableHttp3 && IsSupportedQuicPlatform())
             {
                 _QuicListener = await BuildQuicListenerAsync(_Token).ConfigureAwait(false);
                 _AcceptQuicConnections = StartQuicAcceptLoop();
             }
+#pragma warning restore CA1416
 #endif
 
             _AcceptConnections = Task.Run(() => AcceptConnections(_Token), _Token);
