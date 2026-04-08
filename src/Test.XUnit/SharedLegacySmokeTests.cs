@@ -230,6 +230,66 @@ namespace Test.XUnit
         }
 
         /// <summary>
+        /// Verify a custom exception route can override the default response shape when a route throws.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11CustomExceptionRouteSendsResponse()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11CustomExceptionRouteSendsResponseAsync();
+        }
+
+        /// <summary>
+        /// Verify Watson falls back to the stock HTML 500 page when a custom exception route returns without sending.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11CustomExceptionRouteNoSendFallsBackToDefault500()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11CustomExceptionRouteNoSendFallsBackToDefault500Async();
+        }
+
+        /// <summary>
+        /// Verify Watson falls back to the stock HTML 500 page when a custom exception route throws.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11CustomExceptionRouteThrowFallsBackToDefault500()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11CustomExceptionRouteThrowFallsBackToDefault500Async();
+        }
+
+        /// <summary>
+        /// Verify exceptions from <c>PreRouting</c> flow through the configured exception route.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11PreRoutingExceptionUsesCustomExceptionRoute()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11PreRoutingExceptionUsesCustomExceptionRouteAsync();
+        }
+
+        /// <summary>
+        /// Verify exceptions from <c>AuthenticateRequest</c> flow through the configured exception route.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11AuthenticateRequestExceptionUsesCustomExceptionRoute()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11AuthenticateRequestExceptionUsesCustomExceptionRouteAsync();
+        }
+
+        /// <summary>
+        /// Verify exceptions from <c>AuthenticateApiRequest</c> flow through the configured exception route.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11AuthenticateApiRequestExceptionUsesCustomExceptionRoute()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11AuthenticateApiRequestExceptionUsesCustomExceptionRouteAsync();
+        }
+
+        /// <summary>
         /// Verify an empty HTTP/1.1 POST body is handled without failing.
         /// </summary>
         /// <returns>Task.</returns>

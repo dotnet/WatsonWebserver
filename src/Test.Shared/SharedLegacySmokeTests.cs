@@ -13,6 +13,8 @@ namespace Test.Shared
     /// </summary>
     public static class SharedLegacySmokeTests
     {
+        private const string Default500BodyFragment = "There's a problem here, but it's on me, not you.";
+
         /// <summary>
         /// Verify a basic HTTP/1.1 GET request succeeds against a low-level route.
         /// </summary>
@@ -591,6 +593,175 @@ namespace Test.Shared
         }
 
         /// <summary>
+        /// Verify a custom exception route can override the default response shape when a route throws.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11CustomExceptionRouteSendsResponseAsync()
+        {
+            await TestExceptionRouteScenarioAsync(
+                "/error/test",
+                server =>
+                {
+                    server.Routes.Exception = async (HttpContextBase context, Exception exception) =>
+                    {
+                        context.Response.StatusCode = 503;
+                        context.Response.ContentType = WebserverConstants.ContentTypeJson;
+                        await context.Response.Send("{\"error\":\"custom-exception-route\"}", context.Token).ConfigureAwait(false);
+                    };
+                },
+                503,
+                WebserverConstants.ContentTypeJson,
+                "custom-exception-route",
+                false).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Verify Watson falls back to the stock HTML 500 page when a custom exception route returns without sending.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11CustomExceptionRouteNoSendFallsBackToDefault500Async()
+        {
+            await TestExceptionRouteScenarioAsync(
+                "/error/test",
+                server =>
+                {
+                    server.Routes.Exception = async (HttpContextBase context, Exception exception) =>
+                    {
+                        await Task.CompletedTask.ConfigureAwait(false);
+                    };
+                },
+                500,
+                WebserverConstants.ContentTypeHtml,
+                Default500BodyFragment,
+                true).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Verify Watson falls back to the stock HTML 500 page when a custom exception route throws.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11CustomExceptionRouteThrowFallsBackToDefault500Async()
+        {
+            await TestExceptionRouteScenarioAsync(
+                "/error/test",
+                server =>
+                {
+                    server.Routes.Exception = async (HttpContextBase context, Exception exception) =>
+                    {
+                        await Task.Yield();
+                        throw new InvalidOperationException("Exception route failure.");
+                    };
+                },
+                500,
+                WebserverConstants.ContentTypeHtml,
+                Default500BodyFragment,
+                true).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Verify exceptions from <c>PreRouting</c> flow through the configured exception route.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11PreRoutingExceptionUsesCustomExceptionRouteAsync()
+        {
+            await TestExceptionRouteScenarioAsync(
+                "/throw/prerouting",
+                server =>
+                {
+                    server.Routes.PreRouting = async (HttpContextBase context) =>
+                    {
+                        if (String.Equals(context.Request.Url.RawWithoutQuery, "/throw/prerouting", StringComparison.Ordinal))
+                        {
+                            throw new InvalidOperationException("PreRouting failure.");
+                        }
+
+                        await Task.CompletedTask.ConfigureAwait(false);
+                    };
+
+                    server.Routes.Exception = async (HttpContextBase context, Exception exception) =>
+                    {
+                        context.Response.StatusCode = 502;
+                        context.Response.ContentType = WebserverConstants.ContentTypeJson;
+                        await context.Response.Send("{\"phase\":\"prerouting\"}", context.Token).ConfigureAwait(false);
+                    };
+                },
+                502,
+                WebserverConstants.ContentTypeJson,
+                "prerouting",
+                false).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Verify exceptions from <c>AuthenticateRequest</c> flow through the configured exception route.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11AuthenticateRequestExceptionUsesCustomExceptionRouteAsync()
+        {
+            await TestExceptionRouteScenarioAsync(
+                "/throw/authenticate-request",
+                server =>
+                {
+                    server.Routes.AuthenticateRequest = async (HttpContextBase context) =>
+                    {
+                        if (String.Equals(context.Request.Url.RawWithoutQuery, "/throw/authenticate-request", StringComparison.Ordinal))
+                        {
+                            throw new InvalidOperationException("AuthenticateRequest failure.");
+                        }
+
+                        await Task.CompletedTask.ConfigureAwait(false);
+                    };
+
+                    server.Routes.Exception = async (HttpContextBase context, Exception exception) =>
+                    {
+                        context.Response.StatusCode = 504;
+                        context.Response.ContentType = WebserverConstants.ContentTypeJson;
+                        await context.Response.Send("{\"phase\":\"authenticate-request\"}", context.Token).ConfigureAwait(false);
+                    };
+                },
+                504,
+                WebserverConstants.ContentTypeJson,
+                "authenticate-request",
+                false).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Verify exceptions from <c>AuthenticateApiRequest</c> flow through the configured exception route.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11AuthenticateApiRequestExceptionUsesCustomExceptionRouteAsync()
+        {
+            await TestExceptionRouteScenarioAsync(
+                "/throw/authenticate-api-request",
+                server =>
+                {
+                    server.Routes.AuthenticateApiRequest = (HttpContextBase context) =>
+                    {
+                        if (String.Equals(context.Request.Url.RawWithoutQuery, "/throw/authenticate-api-request", StringComparison.Ordinal))
+                        {
+                            throw new InvalidOperationException("AuthenticateApiRequest failure.");
+                        }
+
+                        return Task.FromResult(new AuthResult
+                        {
+                            AuthenticationResult = AuthenticationResultEnum.Success,
+                            AuthorizationResult = AuthorizationResultEnum.Permitted
+                        });
+                    };
+
+                    server.Routes.Exception = async (HttpContextBase context, Exception exception) =>
+                    {
+                        context.Response.StatusCode = 505;
+                        context.Response.ContentType = WebserverConstants.ContentTypeJson;
+                        await context.Response.Send("{\"phase\":\"authenticate-api-request\"}", context.Token).ConfigureAwait(false);
+                    };
+                },
+                505,
+                WebserverConstants.ContentTypeJson,
+                "authenticate-api-request",
+                false).ConfigureAwait(false);
+        }
+
+        /// <summary>
         /// Verify an empty HTTP/1.1 POST body is handled without failing.
         /// </summary>
         /// <returns>Task.</returns>
@@ -912,6 +1083,45 @@ namespace Test.Shared
             return client;
         }
 
+        private static async Task TestExceptionRouteScenarioAsync(
+            string relativePath,
+            Action<Webserver> configureScenario,
+            int expectedStatusCode,
+            string expectedMediaType,
+            string expectedBodyFragment,
+            bool expectDefault500Body)
+        {
+            if (String.IsNullOrEmpty(relativePath)) throw new ArgumentNullException(nameof(relativePath));
+            if (configureScenario == null) throw new ArgumentNullException(nameof(configureScenario));
+            if (String.IsNullOrEmpty(expectedMediaType)) throw new ArgumentNullException(nameof(expectedMediaType));
+            if (String.IsNullOrEmpty(expectedBodyFragment)) throw new ArgumentNullException(nameof(expectedBodyFragment));
+
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, server =>
+            {
+                ConfigureBasicRoutes(server);
+                configureScenario(server);
+            }))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                {
+                    client.Timeout = TimeSpan.FromSeconds(10);
+
+                    await AssertExceptionResponseAsync(
+                        client,
+                        host.BaseAddress,
+                        relativePath,
+                        expectedStatusCode,
+                        expectedMediaType,
+                        expectedBodyFragment,
+                        expectDefault500Body).ConfigureAwait(false);
+
+                    await AssertServerHealthyAsync(client, host.BaseAddress).ConfigureAwait(false);
+                }
+            }
+        }
+
         private static async Task TestChunkedRequestBodyAsync(string relativePath, string body, string contentType)
         {
             if (String.IsNullOrEmpty(relativePath)) throw new ArgumentNullException(nameof(relativePath));
@@ -942,6 +1152,57 @@ namespace Test.Shared
                         throw new InvalidOperationException("Unexpected HTTP/1.1 chunked request body response.");
                     }
                 }
+            }
+        }
+
+        private static async Task AssertExceptionResponseAsync(
+            HttpClient client,
+            Uri baseAddress,
+            string relativePath,
+            int expectedStatusCode,
+            string expectedMediaType,
+            string expectedBodyFragment,
+            bool expectDefault500Body)
+        {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+            if (baseAddress == null) throw new ArgumentNullException(nameof(baseAddress));
+            if (String.IsNullOrEmpty(relativePath)) throw new ArgumentNullException(nameof(relativePath));
+            if (String.IsNullOrEmpty(expectedMediaType)) throw new ArgumentNullException(nameof(expectedMediaType));
+            if (String.IsNullOrEmpty(expectedBodyFragment)) throw new ArgumentNullException(nameof(expectedBodyFragment));
+
+            HttpResponseMessage response = await client.GetAsync(new Uri(baseAddress, relativePath)).ConfigureAwait(false);
+            string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            string mediaType = response.Content.Headers.ContentType?.MediaType;
+            bool hasDefault500Body = body.Contains(Default500BodyFragment, StringComparison.Ordinal);
+
+            if ((int)response.StatusCode != expectedStatusCode)
+            {
+                throw new InvalidOperationException(
+                    "Expected exception-route scenario to return "
+                    + expectedStatusCode.ToString()
+                    + ", got "
+                    + ((int)response.StatusCode).ToString()
+                    + ".");
+            }
+
+            if (!String.Equals(mediaType, expectedMediaType, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException(
+                    "Expected exception-route scenario content type "
+                    + expectedMediaType
+                    + ", got "
+                    + (mediaType ?? "<null>")
+                    + ".");
+            }
+
+            if (!body.Contains(expectedBodyFragment, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException("Expected exception-route scenario response body fragment was not present.");
+            }
+
+            if (expectDefault500Body != hasDefault500Body)
+            {
+                throw new InvalidOperationException("Unexpected stock Watson 500 page body behavior.");
             }
         }
 
@@ -1015,6 +1276,20 @@ namespace Test.Shared
                         }
                     }
                 }
+            }
+        }
+
+        private static async Task AssertServerHealthyAsync(HttpClient client, Uri baseAddress)
+        {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+            if (baseAddress == null) throw new ArgumentNullException(nameof(baseAddress));
+
+            HttpResponseMessage response = await client.GetAsync(new Uri(baseAddress, "/test/get")).ConfigureAwait(false);
+            string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode || !String.Equals(body, "GET response", StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException("Server did not remain healthy for the next request.");
             }
         }
 

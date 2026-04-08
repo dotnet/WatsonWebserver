@@ -42,6 +42,12 @@ namespace Test.Automated
             await ExecuteTestAsync("HTTP/1.1 :: Server-Sent Events Edge Cases", SharedLegacySmokeTests.TestHttp11ServerSentEventsEdgeCasesAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 :: Double-Send Response Handling", SharedLegacySmokeTests.TestHttp11DoubleSendResponseAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 :: Exception In Route Handler Returns 500", SharedLegacySmokeTests.TestHttp11ExceptionInRouteHandlerAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Custom Exception Route Sends Response", SharedLegacySmokeTests.TestHttp11CustomExceptionRouteSendsResponseAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Custom Exception Route No-Send Falls Back To Default 500", SharedLegacySmokeTests.TestHttp11CustomExceptionRouteNoSendFallsBackToDefault500Async).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Custom Exception Route Throw Falls Back To Default 500", SharedLegacySmokeTests.TestHttp11CustomExceptionRouteThrowFallsBackToDefault500Async).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: PreRouting Exception Uses Custom Exception Route", SharedLegacySmokeTests.TestHttp11PreRoutingExceptionUsesCustomExceptionRouteAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: AuthenticateRequest Exception Uses Custom Exception Route", SharedLegacySmokeTests.TestHttp11AuthenticateRequestExceptionUsesCustomExceptionRouteAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: AuthenticateApiRequest Exception Uses Custom Exception Route", SharedLegacySmokeTests.TestHttp11AuthenticateApiRequestExceptionUsesCustomExceptionRouteAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 :: Empty POST Body", SharedLegacySmokeTests.TestHttp11EmptyPostBodyAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 :: OPTIONS Preflight", SharedLegacySmokeTests.TestHttp11OptionsPreflightAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 :: Request With Many Headers", SharedLegacySmokeTests.TestHttp11RequestWithManyHeadersAsync).ConfigureAwait(false);
