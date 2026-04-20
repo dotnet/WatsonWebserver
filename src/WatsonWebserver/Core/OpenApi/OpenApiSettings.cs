@@ -74,6 +74,13 @@ namespace WatsonWebserver.Core.OpenApi
         public Dictionary<string, OpenApiSecurityScheme> SecuritySchemes { get; set; } = new Dictionary<string, OpenApiSecurityScheme>();
 
         /// <summary>
+        /// Reusable component schemas emitted under <c>components.schemas</c>.
+        /// Keys are the schema names; values are the schema metadata used by
+        /// <see cref="OpenApiSchemaMetadata.CreateRef(string)"/> references.
+        /// </summary>
+        public Dictionary<string, OpenApiSchemaMetadata> Schemas { get; set; } = new Dictionary<string, OpenApiSchemaMetadata>();
+
+        /// <summary>
         /// Global security requirements that apply to all operations.
         /// </summary>
         public List<Dictionary<string, List<string>>> Security { get; set; } = new List<Dictionary<string, List<string>>>();

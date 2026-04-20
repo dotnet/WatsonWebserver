@@ -125,6 +125,23 @@ namespace WatsonWebserver.Core.OpenApi
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string Pattern { get; set; } = null;
 
+        /// <summary>
+        /// Composition: the value must validate against exactly one of the listed schemas.
+        /// When set, sibling schemas are commonly <c>$ref</c> entries pointing at
+        /// component schemas registered in <c>components.schemas</c>.
+        /// </summary>
+        [JsonPropertyName("oneOf")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public List<OpenApiSchemaMetadata> OneOf { get; set; } = null;
+
+        /// <summary>
+        /// Optional discriminator metadata describing which property selects the
+        /// active branch in a polymorphic composition such as <see cref="OneOf"/>.
+        /// </summary>
+        [JsonPropertyName("discriminator")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public OpenApiDiscriminatorMetadata Discriminator { get; set; } = null;
+
         #endregion
 
         #region Constructors-and-Factories
@@ -215,6 +232,44 @@ namespace WatsonWebserver.Core.OpenApi
         public static OpenApiSchemaMetadata Boolean()
         {
             return Create("boolean");
+        }
+
+        /// <summary>
+        /// Create a polymorphic schema where the value must validate against
+        /// exactly one of the supplied branch schemas.
+        /// </summary>
+        /// <param name="schemas">Branch schemas. Must contain at least one non-null entry.</param>
+        /// <returns>OpenApiSchemaMetadata.</returns>
+        public static OpenApiSchemaMetadata CreateOneOf(params OpenApiSchemaMetadata[] schemas)
+        {
+            if (schemas == null || schemas.Length == 0)
+                throw new ArgumentException("At least one branch schema is required.", nameof(schemas));
+
+            List<OpenApiSchemaMetadata> branches = new List<OpenApiSchemaMetadata>();
+            for (int i = 0; i < schemas.Length; i++)
+            {
+                if (schemas[i] == null) throw new ArgumentException("Branch schemas cannot be null.", nameof(schemas));
+                branches.Add(schemas[i]);
+            }
+
+            return new OpenApiSchemaMetadata
+            {
+                OneOf = branches
+            };
+        }
+
+        /// <summary>
+        /// Attach a discriminator to this schema and return the schema instance for chaining.
+        /// </summary>
+        /// <param name="propertyName">Discriminator property name. Required.</param>
+        /// <param name="mapping">Optional mapping from discriminator values to schema references.</param>
+        /// <returns>This schema instance.</returns>
+        public OpenApiSchemaMetadata WithDiscriminator(string propertyName, Dictionary<string, string> mapping = null)
+        {
+            if (string.IsNullOrEmpty(propertyName)) throw new ArgumentNullException(nameof(propertyName));
+
+            Discriminator = new OpenApiDiscriminatorMetadata(propertyName, mapping);
+            return this;
         }
 
         #endregion

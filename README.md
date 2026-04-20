@@ -952,6 +952,68 @@ server.Routes.PreAuthentication.Static.Add(
             OpenApiSchemaMetadata.CreateArray(OpenApiSchemaMetadata.CreateRef("User")))));
 ```
 
+### Reusable component schemas
+
+Register reusable schemas under `OpenApiSettings.Schemas`. They are emitted at
+`components.schemas` and can be referenced from any route schema via
+`OpenApiSchemaMetadata.CreateRef("Name")`.
+
+```csharp
+server.UseOpenApi(openApi =>
+{
+    openApi.Schemas["Cat"] = new OpenApiSchemaMetadata
+    {
+        Type = "object",
+        Properties = new Dictionary<string, OpenApiSchemaMetadata>
+        {
+            ["kind"] = new OpenApiSchemaMetadata { Type = "string", Enum = new List<object> { "cat" } },
+            ["whiskers"] = OpenApiSchemaMetadata.String()
+        },
+        Required = new List<string> { "kind", "whiskers" }
+    };
+
+    openApi.Schemas["Dog"] = new OpenApiSchemaMetadata
+    {
+        Type = "object",
+        Properties = new Dictionary<string, OpenApiSchemaMetadata>
+        {
+            ["kind"] = new OpenApiSchemaMetadata { Type = "string", Enum = new List<object> { "dog" } },
+            ["breed"] = OpenApiSchemaMetadata.String()
+        },
+        Required = new List<string> { "kind", "breed" }
+    };
+});
+```
+
+### Polymorphic schemas with `oneOf` and a discriminator
+
+Use `OpenApiSchemaMetadata.CreateOneOf(...)` to describe a value that may be one
+of several shapes, and `WithDiscriminator(...)` to declare which property
+selects the active branch. This lets client generators produce true polymorphic
+types instead of a flattened union.
+
+```csharp
+OpenApiSchemaMetadata animalSchema = OpenApiSchemaMetadata
+    .CreateOneOf(
+        OpenApiSchemaMetadata.CreateRef("Cat"),
+        OpenApiSchemaMetadata.CreateRef("Dog"))
+    .WithDiscriminator("kind", new Dictionary<string, string>
+    {
+        ["cat"] = "#/components/schemas/Cat",
+        ["dog"] = "#/components/schemas/Dog"
+    });
+
+server.Routes.PreAuthentication.Static.Add(
+    HttpMethod.GET,
+    "/api/animals/{id}",
+    GetAnimalHandler,
+    openApiMetadata: OpenApiRouteMetadata.Create("Get an animal", "Animals")
+        .WithResponse(200, OpenApiResponseMetadata.Json("Animal", animalSchema)));
+```
+
+The generated schema emits `oneOf` with `$ref` branches plus a
+`discriminator` block carrying `propertyName` and the optional `mapping`.
+
 ## Hostname Handling
 
 `WebserverSettings.UseMachineHostname` controls the host value Watson uses when composing response host metadata.

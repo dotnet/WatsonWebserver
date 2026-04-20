@@ -218,6 +218,18 @@
                 components["securitySchemes"] = schemes;
             }
 
+            if (settings.Schemas != null && settings.Schemas.Count > 0)
+            {
+                Dictionary<string, object> schemas = new Dictionary<string, object>();
+                foreach (KeyValuePair<string, OpenApiSchemaMetadata> kvp in settings.Schemas)
+                {
+                    if (kvp.Value == null) continue;
+                    schemas[kvp.Key] = BuildSchema(kvp.Value);
+                }
+                if (schemas.Count > 0)
+                    components["schemas"] = schemas;
+            }
+
             return components;
         }
 
@@ -619,6 +631,30 @@
 
             if (!String.IsNullOrEmpty(schema.Pattern))
                 schemaObj["pattern"] = schema.Pattern;
+
+            if (schema.OneOf != null && schema.OneOf.Count > 0)
+            {
+                List<object> branches = new List<object>();
+                foreach (OpenApiSchemaMetadata branch in schema.OneOf)
+                {
+                    if (branch == null) continue;
+                    branches.Add(BuildSchema(branch));
+                }
+                if (branches.Count > 0)
+                    schemaObj["oneOf"] = branches;
+            }
+
+            if (schema.Discriminator != null && !String.IsNullOrEmpty(schema.Discriminator.PropertyName))
+            {
+                Dictionary<string, object> discriminator = new Dictionary<string, object>
+                {
+                    ["propertyName"] = schema.Discriminator.PropertyName
+                };
+                if (schema.Discriminator.Mapping != null && schema.Discriminator.Mapping.Count > 0)
+                    discriminator["mapping"] = schema.Discriminator.Mapping;
+
+                schemaObj["discriminator"] = discriminator;
+            }
 
             return schemaObj;
         }

@@ -3336,6 +3336,39 @@
             The email address of the contact.
             </summary>
         </member>
+        <member name="T:WatsonWebserver.Core.OpenApi.OpenApiDiscriminatorMetadata">
+            <summary>
+            OpenAPI discriminator metadata used to indicate the property that
+            distinguishes between sibling schemas in a polymorphic composition
+            such as <c>oneOf</c>, <c>anyOf</c>, or <c>allOf</c>.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiDiscriminatorMetadata.PropertyName">
+            <summary>
+            Name of the JSON property used as the discriminator.
+            Required when a discriminator is present.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiDiscriminatorMetadata.Mapping">
+            <summary>
+            Optional mapping from discriminator values to schema references.
+            Keys are the literal values that may appear in <see cref="P:WatsonWebserver.Core.OpenApi.OpenApiDiscriminatorMetadata.PropertyName"/>;
+            values are component schema references such as
+            <c>#/components/schemas/Cat</c>.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiDiscriminatorMetadata.#ctor">
+            <summary>
+            Instantiate the object.
+            </summary>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiDiscriminatorMetadata.#ctor(System.String,System.Collections.Generic.Dictionary{System.String,System.String})">
+            <summary>
+            Instantiate the object with a property name and an optional mapping.
+            </summary>
+            <param name="propertyName">Discriminator property name.</param>
+            <param name="mapping">Optional mapping from discriminator values to schema references.</param>
+        </member>
         <member name="T:WatsonWebserver.Core.OpenApi.OpenApiDocumentGenerator">
             <summary>
             Generates OpenAPI 3.0 specification documents from WatsonWebserver routes.
@@ -3986,6 +4019,19 @@
             Regular expression pattern for string validation.
             </summary>
         </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata.OneOf">
+            <summary>
+            Composition: the value must validate against exactly one of the listed schemas.
+            When set, sibling schemas are commonly <c>$ref</c> entries pointing at
+            component schemas registered in <c>components.schemas</c>.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata.Discriminator">
+            <summary>
+            Optional discriminator metadata describing which property selects the
+            active branch in a polymorphic composition such as <see cref="P:WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata.OneOf"/>.
+            </summary>
+        </member>
         <member name="M:WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata.#ctor">
             <summary>
             Instantiate the object.
@@ -4039,6 +4085,22 @@
             Create a boolean schema.
             </summary>
             <returns>OpenApiSchemaMetadata.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata.CreateOneOf(WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata[])">
+            <summary>
+            Create a polymorphic schema where the value must validate against
+            exactly one of the supplied branch schemas.
+            </summary>
+            <param name="schemas">Branch schemas. Must contain at least one non-null entry.</param>
+            <returns>OpenApiSchemaMetadata.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata.WithDiscriminator(System.String,System.Collections.Generic.Dictionary{System.String,System.String})">
+            <summary>
+            Attach a discriminator to this schema and return the schema instance for chaining.
+            </summary>
+            <param name="propertyName">Discriminator property name. Required.</param>
+            <param name="mapping">Optional mapping from discriminator values to schema references.</param>
+            <returns>This schema instance.</returns>
         </member>
         <member name="T:WatsonWebserver.Core.OpenApi.OpenApiSecurityScheme">
             <summary>
@@ -4202,6 +4264,13 @@
         <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSettings.SecuritySchemes">
             <summary>
             Security definitions for the API.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSettings.Schemas">
+            <summary>
+            Reusable component schemas emitted under <c>components.schemas</c>.
+            Keys are the schema names; values are the schema metadata used by
+            <see cref="M:WatsonWebserver.Core.OpenApi.OpenApiSchemaMetadata.CreateRef(System.String)"/> references.
             </summary>
         </member>
         <member name="P:WatsonWebserver.Core.OpenApi.OpenApiSettings.Security">

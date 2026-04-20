@@ -2,7 +2,15 @@
 
 ## Current Version
 
-`v7.0.11`
+`v7.0.12`
+
+## v7.0.12
+
+- Added OpenAPI schema composition support: `OpenApiSchemaMetadata.OneOf`, `OpenApiSchemaMetadata.Discriminator`, `OpenApiSchemaMetadata.CreateOneOf(...)`, and `OpenApiSchemaMetadata.WithDiscriminator(...)`
+- Added `OpenApiDiscriminatorMetadata` modeling `propertyName` and an optional `mapping`
+- Added `OpenApiSettings.Schemas` for registering reusable component schemas emitted under `components.schemas`
+- Updated `OpenApiDocumentGenerator` to emit `oneOf`, `discriminator`, and `components.schemas`; the `$ref` short-circuit in `BuildSchema` is preserved for OpenAPI 3.0 compatibility
+- Added shared `Test.Shared.SharedOpenApiCompositionTests` covering metadata helpers, component schema registration, `oneOf` with `$ref` branches, discriminator with and without mapping, scalar field regression, and `$ref` short-circuit; wired into `Test.Automated` and `Test.XUnit`
 
 ## v7.0.11
 
