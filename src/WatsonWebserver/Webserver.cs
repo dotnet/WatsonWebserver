@@ -385,11 +385,7 @@
 
                 Events.HandleServerDisposing(this, EventArgs.Empty);
 
-                if (_RequestSemaphore != null)
-                {
-                    _RequestSemaphore.Dispose();
-                    _RequestSemaphore = null;
-                }
+                DisposeRequestSemaphore();
 
                 _TcpListener = null;
 #if NET8_0_OR_GREATER
@@ -419,9 +415,37 @@
 
         private void DisposeRequestSemaphore()
         {
-            if (_RequestSemaphore == null) return;
-            _RequestSemaphore.Dispose();
-            _RequestSemaphore = null;
+            SemaphoreSlim requestSemaphore = Interlocked.Exchange(ref _RequestSemaphore, null);
+            if (requestSemaphore == null) return;
+            requestSemaphore.Dispose();
+        }
+
+        private static async Task<bool> TryAcquireRequestSlotAsync(SemaphoreSlim requestSemaphore, CancellationToken token)
+        {
+            if (requestSemaphore == null) return false;
+
+            try
+            {
+                await requestSemaphore.WaitAsync(token).ConfigureAwait(false);
+                return true;
+            }
+            catch (ObjectDisposedException)
+            {
+                return false;
+            }
+        }
+
+        private static void ReleaseRequestSlot(SemaphoreSlim requestSemaphore)
+        {
+            if (requestSemaphore == null) return;
+
+            try
+            {
+                requestSemaphore.Release();
+            }
+            catch (ObjectDisposedException)
+            {
+            }
         }
 
         private async Task StartTransportLoopsAsync()
@@ -584,11 +608,12 @@
         private async Task HandleQuicConnectionAsync(QuicConnection quicConnection, CancellationToken token)
         {
             if (quicConnection == null) throw new ArgumentNullException(nameof(quicConnection));
+            SemaphoreSlim requestSemaphore = Volatile.Read(ref _RequestSemaphore);
             bool connectionSlotAcquired = false;
 
             try
             {
-                await _RequestSemaphore.WaitAsync(token).ConfigureAwait(false);
+                if (!await TryAcquireRequestSlotAsync(requestSemaphore, token).ConfigureAwait(false)) return;
                 connectionSlotAcquired = true;
 
                 Events.HandleConnectionReceived(this, new ConnectionEventArgs(HttpProtocol.Http3, Guid.NewGuid(), quicConnection.RemoteEndPoint.Address.ToString(), quicConnection.RemoteEndPoint.Port));
@@ -611,7 +636,7 @@
             {
                 if (connectionSlotAcquired)
                 {
-                    try { _RequestSemaphore.Release(); } catch (ObjectDisposedException) { }
+                    ReleaseRequestSlot(requestSemaphore);
                 }
 
                 try
@@ -714,11 +739,12 @@
             HttpContext ctx = null;
             Stream clientStream = null;
             ClientStreamContext streamContext = null;
+            SemaphoreSlim requestSemaphore = Volatile.Read(ref _RequestSemaphore);
             bool connectionSlotAcquired = false;
 
             try
             {
-                await _RequestSemaphore.WaitAsync(token).ConfigureAwait(false);
+                if (!await TryAcquireRequestSlotAsync(requestSemaphore, token).ConfigureAwait(false)) return;
                 connectionSlotAcquired = true;
 
                 tcpClient.NoDelay = true;
@@ -848,7 +874,7 @@
             {
                 if (connectionSlotAcquired)
                 {
-                    try { _RequestSemaphore.Release(); } catch (ObjectDisposedException) { }
+                    ReleaseRequestSlot(requestSemaphore);
                 }
 
                 try

@@ -3,9 +3,9 @@
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.1;net8.0;net10.0</TargetFrameworks>
 		<LangVersion>latest</LangVersion>
-		<Version>7.0.12</Version>
+		<Version>7.0.13</Version>
 		<Description>Simple, fast, async C# web server for handling REST requests with unified 7.x protocol architecture targeting .NET Standard 2.1, .NET 8, and .NET 10.</Description>
-		<PackageReleaseNotes>OpenAPI schema composition: emit oneOf, discriminator, and reusable components.schemas via OpenApiSettings.Schemas, OpenApiSchemaMetadata.CreateOneOf, and WithDiscriminator</PackageReleaseNotes>
+		<PackageReleaseNotes>Fixed a shutdown race where disposing the server during active connection teardown could trigger an unobserved Task NullReferenceException while releasing the request semaphore.</PackageReleaseNotes>
 
 		<Authors>Joel Christner</Authors>
 		<Company>Joel Christner</Company>

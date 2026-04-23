@@ -3,6 +3,8 @@ namespace Test.Shared
     using System;
     using System.Collections.Generic;
     using System.Collections.Specialized;
+    using System.Net;
+    using System.Net.Sockets;
     using System.Net.WebSockets;
     using System.Threading;
     using System.Threading.Tasks;
@@ -56,6 +58,7 @@ namespace Test.Shared
             tests.Add(CreateSync("WebSocketRouteManager :: Parameter routes populate path values", TestWebSocketRouteManagerParameterizedRoute));
             tests.Add(CreateSync("WebSocketConnectionRegistry :: Connected lookup and removal work", TestWebSocketConnectionRegistryOperations));
             tests.Add(CreateSync("WebserverBase :: WebSocket registration lands in selected routing group", TestWebserverBaseWebSocketRegistration));
+            tests.Add(CreateAsync("Webserver :: Dispose during active connection shutdown does not emit unobserved task exception", TestDisposeDuringActiveConnectionShutdownDoesNotEmitUnobservedTaskExceptionAsync));
 
             tests.Add(CreateSync("WebserverException :: Status code maps from result", TestWebserverExceptionStatusCodeMapsFromResult));
             tests.Add(CreateSync("WebserverException :: Message custom message", TestWebserverExceptionMessageCustomMessage));
@@ -80,6 +83,14 @@ namespace Test.Shared
                 action();
                 return Task.CompletedTask;
             });
+        }
+
+        private static SharedNamedTestCase CreateAsync(string name, Func<Task> func)
+        {
+            if (String.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name));
+            if (func == null) throw new ArgumentNullException(nameof(func));
+
+            return new SharedNamedTestCase(name, func);
         }
 
         private static void TestApiErrorResponseStatusCodeDerivedFromError()
@@ -342,6 +353,86 @@ namespace Test.Shared
             request.Headers = null;
             System.Collections.Specialized.NameValueCollection headers = request.Headers;
             AssertTrue(headers != null, "Headers should never be null even when factory returns null.");
+        }
+
+        private static async Task TestDisposeDuringActiveConnectionShutdownDoesNotEmitUnobservedTaskExceptionAsync()
+        {
+            Exception unobservedException = null;
+            EventHandler<UnobservedTaskExceptionEventArgs> unobservedHandler = delegate (object sender, UnobservedTaskExceptionEventArgs args)
+            {
+                args.SetObserved();
+                Interlocked.CompareExchange(ref unobservedException, args.Exception, null);
+            };
+
+            TaskScheduler.UnobservedTaskException += unobservedHandler;
+
+            try
+            {
+                for (int iteration = 0; iteration < 3; iteration++)
+                {
+                    await RunActiveConnectionDisposeCycleAsync().ConfigureAwait(false);
+                    await ForceTaskFinalizationAsync().ConfigureAwait(false);
+                }
+            }
+            finally
+            {
+                TaskScheduler.UnobservedTaskException -= unobservedHandler;
+                await ForceTaskFinalizationAsync().ConfigureAwait(false);
+            }
+
+            AssertTrue(unobservedException == null, "Unexpected unobserved task exception while disposing active connections: " + unobservedException);
+        }
+
+        private static async Task RunActiveConnectionDisposeCycleAsync()
+        {
+            int port = GetAvailablePort();
+            WebserverSettings settings = new WebserverSettings("127.0.0.1", port, false);
+            settings.IO.MaxRequests = 16;
+            settings.IO.ReadTimeoutMs = 60000;
+            settings.Protocols.IdleTimeoutMs = 60000;
+
+            Webserver server = new Webserver(settings, ctx => Task.CompletedTask);
+            List<TcpClient> clients = new List<TcpClient>();
+
+            try
+            {
+                server.Start();
+
+                for (int i = 0; i < 64; i++)
+                {
+                    TcpClient client = new TcpClient();
+                    await client.ConnectAsync("127.0.0.1", port).ConfigureAwait(false);
+                    clients.Add(client);
+                }
+
+                await Task.Delay(100).ConfigureAwait(false);
+            }
+            finally
+            {
+                server.Dispose();
+
+                for (int i = 0; i < clients.Count; i++)
+                {
+                    clients[i].Dispose();
+                }
+            }
+        }
+
+        private static async Task ForceTaskFinalizationAsync()
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+            await Task.Delay(100).ConfigureAwait(false);
+        }
+
+        private static int GetAvailablePort()
+        {
+            using (TcpListener listener = new TcpListener(IPAddress.Loopback, 0))
+            {
+                listener.Start();
+                return ((IPEndPoint)listener.LocalEndpoint).Port;
+            }
         }
 
         private static void AssertTrue(bool condition, string message)

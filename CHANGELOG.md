@@ -2,7 +2,13 @@
 
 ## Current Version
 
-`v7.0.12`
+`v7.0.13`
+
+## v7.0.13
+
+- Fixed issue `#192`, a shutdown race where disposing the server during active connection teardown could trigger an unobserved task `NullReferenceException` while releasing `_RequestSemaphore`
+- Captured the request semaphore per connection so shutdown can safely dispose and null the shared field without breaking in-flight `finally` blocks
+- Added regression coverage for disposing the server while idle TCP connections are still unwinding
 
 ## v7.0.12
 
