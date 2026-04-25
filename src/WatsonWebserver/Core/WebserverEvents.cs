@@ -40,9 +40,7 @@
         /// <summary>
         /// Event to fire when a requestor disconnected unexpectedly.
         /// </summary>
-#pragma warning disable CS0067
         public event EventHandler<RequestEventArgs> RequestorDisconnected;
-#pragma warning restore CS0067
 
         /// <summary>
         /// Event to fire when a response is sent.
@@ -165,6 +163,18 @@
             EventHandler<RequestEventArgs> handler = RequestDenied;
             if (handler == null) return;
             WrappedEventHandler(() => handler(sender, args), "RequestDenied");
+        }
+
+        /// <summary>
+        /// Handle requestor disconnected event.
+        /// </summary>
+        /// <param name="sender">Sender.</param>
+        /// <param name="args">Args.</param>
+        public void HandleRequestorDisconnected(object sender, RequestEventArgs args)
+        {
+            EventHandler<RequestEventArgs> handler = RequestorDisconnected;
+            if (handler == null) return;
+            WrappedEventHandler(() => handler(sender, args), "RequestorDisconnected");
         }
 
         /// <summary>
@@ -318,6 +328,17 @@
             get
             {
                 return RequestDenied != null;
+            }
+        }
+
+        /// <summary>
+        /// Indicates whether any requestor disconnected handlers are attached.
+        /// </summary>
+        public bool HasRequestorDisconnectedHandlers
+        {
+            get
+            {
+                return RequestorDisconnected != null;
             }
         }
 

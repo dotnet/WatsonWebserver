@@ -3,9 +3,9 @@
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.1;net8.0;net10.0</TargetFrameworks>
 		<LangVersion>latest</LangVersion>
-		<Version>7.0.13</Version>
+		<Version>7.0.14</Version>
 		<Description>Simple, fast, async C# web server for handling REST requests with unified 7.x protocol architecture targeting .NET Standard 2.1, .NET 8, and .NET 10.</Description>
-		<PackageReleaseNotes>Fixed a shutdown race where disposing the server during active connection teardown could trigger an unobserved Task NullReferenceException while releasing the request semaphore.</PackageReleaseNotes>
+		<PackageReleaseNotes>Fixed HTTP/1.1 disconnect detection so client disconnects raise abort and disconnect events correctly, avoid false response-sent telemetry, and added regression coverage for large-response disconnect handling.</PackageReleaseNotes>
 
 		<Authors>Joel Christner</Authors>
 		<Company>Joel Christner</Company>

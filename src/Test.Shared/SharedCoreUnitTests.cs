@@ -3,13 +3,17 @@ namespace Test.Shared
     using System;
     using System.Collections.Generic;
     using System.Collections.Specialized;
+    using System.IO;
     using System.Net;
     using System.Net.Sockets;
     using System.Net.WebSockets;
+    using System.Reflection;
+    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using WatsonWebserver;
     using WatsonWebserver.Core;
+    using WatsonWebserver.Core.Http1;
     using WatsonWebserver.Core.Routing;
     using WatsonWebserver.Core.Settings;
     using WatsonWebserver.Core.WebSockets;
@@ -59,6 +63,10 @@ namespace Test.Shared
             tests.Add(CreateSync("WebSocketConnectionRegistry :: Connected lookup and removal work", TestWebSocketConnectionRegistryOperations));
             tests.Add(CreateSync("WebserverBase :: WebSocket registration lands in selected routing group", TestWebserverBaseWebSocketRegistration));
             tests.Add(CreateAsync("Webserver :: Dispose during active connection shutdown does not emit unobserved task exception", TestDisposeDuringActiveConnectionShutdownDoesNotEmitUnobservedTaskExceptionAsync));
+            tests.Add(CreateSync("WebserverBase :: Disconnect transport classifier matches expected exceptions", TestWebserverBaseDisconnectTransportFailureClassification));
+            tests.Add(CreateSync("WebserverBase :: MarkRequestTerminated with disconnect raises abort and disconnect once", TestWebserverBaseMarkRequestTerminatedWithDisconnect));
+            tests.Add(CreateSync("WebserverBase :: MarkRequestTerminated without disconnect omits disconnect event", TestWebserverBaseMarkRequestTerminatedWithoutDisconnect));
+            tests.Add(CreateSync("WebserverBase :: WasRequestTerminated recognizes abort, cancellation, and transport failure", TestWebserverBaseWasRequestTerminatedRecognizesTerminationState));
 
             tests.Add(CreateSync("WebserverException :: Status code maps from result", TestWebserverExceptionStatusCodeMapsFromResult));
             tests.Add(CreateSync("WebserverException :: Message custom message", TestWebserverExceptionMessageCustomMessage));
@@ -69,6 +77,10 @@ namespace Test.Shared
             tests.Add(CreateSync("HttpRequestBase :: Query returns empty QueryDetails when factory yields null", TestQueryPropertyReturnsEmptyWhenFactoryYieldsNull));
             tests.Add(CreateSync("HttpRequestBase :: Url returns empty UrlDetails when factory yields null", TestUrlPropertyReturnsEmptyWhenFactoryYieldsNull));
             tests.Add(CreateSync("HttpRequestBase :: Headers returns empty collection when factory yields null", TestHeadersPropertyReturnsEmptyWhenFactoryYieldsNull));
+            tests.Add(CreateAsync("HttpResponse :: Send(byte[]) failure preserves unsent state", TestHttpResponseSendByteArrayFailurePreservesUnsentStateAsync));
+            tests.Add(CreateAsync("HttpResponse :: Send(stream) failure preserves unsent state", TestHttpResponseSendStreamFailurePreservesUnsentStateAsync));
+            tests.Add(CreateAsync("HttpResponse :: SendChunk final failure preserves unsent state", TestHttpResponseSendChunkFinalFailurePreservesUnsentStateAsync));
+            tests.Add(CreateAsync("HttpResponse :: SendEvent final failure preserves unsent state", TestHttpResponseSendEventFinalFailurePreservesUnsentStateAsync));
 
             return tests.ToArray();
         }
@@ -355,6 +367,88 @@ namespace Test.Shared
             AssertTrue(headers != null, "Headers should never be null even when factory returns null.");
         }
 
+        private static async Task TestHttpResponseSendByteArrayFailurePreservesUnsentStateAsync()
+        {
+            using (ThrowOnNthWriteStream outputStream = new ThrowOnNthWriteStream(1))
+            {
+                HttpResponse response = CreateHttp1Response(outputStream);
+                byte[] payload = Encoding.UTF8.GetBytes("payload");
+                bool sendResult = await response.Send(payload, CancellationToken.None).ConfigureAwait(false);
+
+                AssertTrue(!sendResult, "Expected Send(byte[]) to report failure when the transport write throws.");
+                AssertTrue(response.ResponseStarted, "Response should be marked started before a byte-array send failure is observed.");
+                AssertTrue(!response.ResponseSent, "ResponseSent should remain false when Send(byte[]) fails.");
+                AssertTrue(!response.ResponseCompleted, "ResponseCompleted should remain false when Send(byte[]) fails.");
+                AssertTrue(GetTransportFailure(response), "Transport failure should be recorded for Send(byte[]) failures.");
+                AssertTrue(GetFailureException(response) is IOException, "The Send(byte[]) failure exception should be preserved.");
+            }
+        }
+
+        private static async Task TestHttpResponseSendStreamFailurePreservesUnsentStateAsync()
+        {
+            using (ThrowOnNthWriteStream outputStream = new ThrowOnNthWriteStream(2))
+            using (MemoryStream payloadStream = new MemoryStream(Encoding.UTF8.GetBytes("stream-payload")))
+            {
+                HttpResponse response = CreateHttp1Response(outputStream);
+                bool sendResult = await response.Send(payloadStream.Length, payloadStream, CancellationToken.None).ConfigureAwait(false);
+
+                AssertTrue(!sendResult, "Expected Send(stream) to report failure when the body write throws.");
+                AssertTrue(response.ResponseStarted, "Response should be marked started before a stream send failure is observed.");
+                AssertTrue(!response.ResponseSent, "ResponseSent should remain false when Send(stream) fails.");
+                AssertTrue(!response.ResponseCompleted, "ResponseCompleted should remain false when Send(stream) fails.");
+                AssertTrue(GetTransportFailure(response), "Transport failure should be recorded for Send(stream) failures.");
+                AssertTrue(GetFailureException(response) is IOException, "The Send(stream) failure exception should be preserved.");
+            }
+        }
+
+        private static async Task TestHttpResponseSendChunkFinalFailurePreservesUnsentStateAsync()
+        {
+            using (ThrowOnNthWriteStream outputStream = new ThrowOnNthWriteStream(3))
+            {
+                HttpResponse response = CreateHttp1Response(outputStream);
+                response.StatusCode = 200;
+                response.ContentType = "text/plain";
+                response.ChunkedTransfer = true;
+
+                bool firstSendResult = await response.SendChunk(Encoding.UTF8.GetBytes("chunk-one"), false, CancellationToken.None).ConfigureAwait(false);
+                bool finalSendResult = await response.SendChunk(Encoding.UTF8.GetBytes("chunk-two"), true, CancellationToken.None).ConfigureAwait(false);
+
+                AssertTrue(firstSendResult, "Expected the initial chunk send to succeed before the final write failure is injected.");
+                AssertTrue(!finalSendResult, "Expected the final chunk send to report failure when the transport write throws.");
+                AssertTrue(response.ResponseStarted, "Response should remain marked started after a final chunk failure.");
+                AssertTrue(!response.ResponseSent, "ResponseSent should remain false when the final chunk send fails.");
+                AssertTrue(!response.ResponseCompleted, "ResponseCompleted should remain false when the final chunk send fails.");
+                AssertTrue(GetTransportFailure(response), "Transport failure should be recorded for final chunk send failures.");
+                AssertTrue(GetFailureException(response) is IOException, "The final chunk failure exception should be preserved.");
+            }
+        }
+
+        private static async Task TestHttpResponseSendEventFinalFailurePreservesUnsentStateAsync()
+        {
+            using (ThrowOnNthWriteStream outputStream = new ThrowOnNthWriteStream(3))
+            {
+                HttpResponse response = CreateHttp1Response(outputStream);
+                response.ServerSentEvents = true;
+                response.StatusCode = 200;
+
+                ServerSentEvent firstEvent = new ServerSentEvent();
+                firstEvent.Data = "event-one";
+                bool firstSendResult = await response.SendEvent(firstEvent, false, CancellationToken.None).ConfigureAwait(false);
+
+                ServerSentEvent finalEvent = new ServerSentEvent();
+                finalEvent.Data = "event-two";
+                bool finalSendResult = await response.SendEvent(finalEvent, true, CancellationToken.None).ConfigureAwait(false);
+
+                AssertTrue(firstSendResult, "Expected the initial server-sent event send to succeed before the final write failure is injected.");
+                AssertTrue(!finalSendResult, "Expected the final server-sent event send to report failure when the transport write throws.");
+                AssertTrue(response.ResponseStarted, "Response should remain marked started after a final server-sent event failure.");
+                AssertTrue(!response.ResponseSent, "ResponseSent should remain false when the final server-sent event send fails.");
+                AssertTrue(!response.ResponseCompleted, "ResponseCompleted should remain false when the final server-sent event send fails.");
+                AssertTrue(GetTransportFailure(response), "Transport failure should be recorded for final server-sent event send failures.");
+                AssertTrue(GetFailureException(response) is IOException, "The final server-sent event failure exception should be preserved.");
+            }
+        }
+
         private static async Task TestDisposeDuringActiveConnectionShutdownDoesNotEmitUnobservedTaskExceptionAsync()
         {
             Exception unobservedException = null;
@@ -364,6 +458,7 @@ namespace Test.Shared
                 Interlocked.CompareExchange(ref unobservedException, args.Exception, null);
             };
 
+            await ForceTaskFinalizationAsync().ConfigureAwait(false);
             TaskScheduler.UnobservedTaskException += unobservedHandler;
 
             try
@@ -381,6 +476,80 @@ namespace Test.Shared
             }
 
             AssertTrue(unobservedException == null, "Unexpected unobserved task exception while disposing active connections: " + unobservedException);
+        }
+
+        private static void TestWebserverBaseDisconnectTransportFailureClassification()
+        {
+            using (Webserver server = CreateTestWebserver())
+            {
+                AssertTrue(InvokeIsDisconnectTransportFailure(server, new IOException("io failure")), "IOException should be classified as a disconnect transport failure.");
+                AssertTrue(InvokeIsDisconnectTransportFailure(server, new ObjectDisposedException("socket")), "ObjectDisposedException should be classified as a disconnect transport failure.");
+                AssertTrue(InvokeIsDisconnectTransportFailure(server, new SocketException((int)SocketError.ConnectionReset)), "SocketException should be classified as a disconnect transport failure.");
+                AssertTrue(InvokeIsDisconnectTransportFailure(server, new InvalidOperationException("wrapped", new IOException("inner io failure"))), "Wrapped IOException should be classified as a disconnect transport failure.");
+                AssertTrue(!InvokeIsDisconnectTransportFailure(server, null), "Null should not be classified as a disconnect transport failure.");
+                AssertTrue(!InvokeIsDisconnectTransportFailure(server, new InvalidOperationException("not a disconnect")), "Non-transport exceptions should not be classified as disconnect transport failures.");
+            }
+        }
+
+        private static void TestWebserverBaseMarkRequestTerminatedWithDisconnect()
+        {
+            using (Webserver server = CreateTestWebserver())
+            using (HttpContext ctx = CreateMinimalHttpContext())
+            {
+                int requestAbortedCount = 0;
+                int requestorDisconnectedCount = 0;
+
+                server.Events.RequestAborted += delegate { Interlocked.Increment(ref requestAbortedCount); };
+                server.Events.RequestorDisconnected += delegate { Interlocked.Increment(ref requestorDisconnectedCount); };
+
+                InvokeMarkRequestTerminated(server, ctx, true);
+                InvokeMarkRequestTerminated(server, ctx, true);
+
+                AssertTrue(ctx.RequestAborted, "RequestAborted should be set when the request is terminated.");
+                AssertTrue(ctx.Token.IsCancellationRequested, "Request token should be cancelled when the request is terminated.");
+                AssertEquals(1, requestAbortedCount, "RequestAborted should fire exactly once for a terminated request.");
+                AssertEquals(1, requestorDisconnectedCount, "RequestorDisconnected should fire exactly once for a disconnect-terminated request.");
+            }
+        }
+
+        private static void TestWebserverBaseMarkRequestTerminatedWithoutDisconnect()
+        {
+            using (Webserver server = CreateTestWebserver())
+            using (HttpContext ctx = CreateMinimalHttpContext())
+            {
+                int requestAbortedCount = 0;
+                int requestorDisconnectedCount = 0;
+
+                server.Events.RequestAborted += delegate { Interlocked.Increment(ref requestAbortedCount); };
+                server.Events.RequestorDisconnected += delegate { Interlocked.Increment(ref requestorDisconnectedCount); };
+
+                InvokeMarkRequestTerminated(server, ctx, false);
+                InvokeMarkRequestTerminated(server, ctx, false);
+
+                AssertTrue(ctx.RequestAborted, "RequestAborted should still be set for non-disconnect termination.");
+                AssertTrue(ctx.Token.IsCancellationRequested, "Request token should still be cancelled for non-disconnect termination.");
+                AssertEquals(1, requestAbortedCount, "RequestAborted should fire exactly once for non-disconnect termination.");
+                AssertEquals(0, requestorDisconnectedCount, "RequestorDisconnected should not fire when termination is not classified as a disconnect.");
+            }
+        }
+
+        private static void TestWebserverBaseWasRequestTerminatedRecognizesTerminationState()
+        {
+            using (Webserver server = CreateTestWebserver())
+            using (HttpContext transportFailureContext = CreateMinimalHttpContext())
+            using (HttpContext cancellationContext = CreateMinimalHttpContext())
+            using (HttpContext abortedContext = CreateMinimalHttpContext())
+            using (HttpContext healthyContext = CreateMinimalHttpContext())
+            {
+                GetMarkTransportFailureMethod().Invoke(transportFailureContext.Response, new object[] { new IOException("synthetic transport failure") });
+                cancellationContext.TokenSource.Cancel();
+                abortedContext.RequestAborted = true;
+
+                AssertTrue(InvokeWasRequestTerminated(server, transportFailureContext), "Transport failure should count as request termination.");
+                AssertTrue(InvokeWasRequestTerminated(server, cancellationContext), "Token cancellation should count as request termination.");
+                AssertTrue(InvokeWasRequestTerminated(server, abortedContext), "RequestAborted should count as request termination.");
+                AssertTrue(!InvokeWasRequestTerminated(server, healthyContext), "Healthy context should not be treated as request termination.");
+            }
         }
 
         private static async Task RunActiveConnectionDisposeCycleAsync()
@@ -433,6 +602,116 @@ namespace Test.Shared
                 listener.Start();
                 return ((IPEndPoint)listener.LocalEndpoint).Port;
             }
+        }
+
+        private static HttpResponse CreateHttp1Response(Stream outputStream)
+        {
+            if (outputStream == null) throw new ArgumentNullException(nameof(outputStream));
+
+            WebserverSettings settings = new WebserverSettings("127.0.0.1", 0, false);
+            Http1RequestMetadata metadata = new Http1RequestMetadata
+            {
+                Method = HttpMethod.GET,
+                MethodRaw = "GET",
+                RawUrl = "/unit-test",
+                ProtocolVersion = "HTTP/1.1",
+                Headers = new NameValueCollection(StringComparer.InvariantCultureIgnoreCase),
+                Source = new SourceDetails { IpAddress = "127.0.0.1", Port = 12345 },
+                Destination = new DestinationDetails { IpAddress = "127.0.0.1", Port = 8080 }
+            };
+
+            HttpRequest request = new HttpRequest(settings, new MemoryStream(Array.Empty<byte>(), writable: false), metadata);
+            HttpResponse response = new HttpResponse();
+
+            MethodInfo initializeMethod = typeof(HttpResponse).GetMethod(
+                "Initialize",
+                BindingFlags.Instance | BindingFlags.NonPublic,
+                null,
+                new[] { typeof(HttpRequestBase), typeof(WebserverSettings), typeof(WebserverEvents), typeof(Stream), typeof(int) },
+                null);
+
+            if (initializeMethod == null)
+            {
+                throw new InvalidOperationException("Unable to locate the internal HttpResponse.Initialize method required for unit coverage.");
+            }
+
+            initializeMethod.Invoke(response, new object[] { request, settings, new WebserverEvents(), outputStream, 4096 });
+            return response;
+        }
+
+        private static Webserver CreateTestWebserver()
+        {
+            return new Webserver(new WebserverSettings("127.0.0.1", 0, false), ctx => Task.CompletedTask);
+        }
+
+        private static HttpContext CreateMinimalHttpContext()
+        {
+            HttpRequest request = new HttpRequest();
+            request.Source = new SourceDetails("127.0.0.1", 12345);
+            request.Method = HttpMethod.GET;
+            request.Url = new UrlDetails { Full = "http://127.0.0.1/test/disconnect?example=true", RawWithQuery = "/test/disconnect?example=true" };
+            request.Query = new QueryDetails("http://127.0.0.1/test/disconnect?example=true");
+            request.Headers = new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
+
+            HttpContext ctx = new HttpContext();
+            ctx.Request = request;
+            ctx.Response = CreateHttp1Response(new MemoryStream());
+            ctx.TokenSource = new CancellationTokenSource();
+            return ctx;
+        }
+
+        private static void InvokeMarkRequestTerminated(Webserver server, HttpContextBase ctx, bool requestorDisconnected)
+        {
+            MethodInfo method = typeof(WebserverBase).GetMethod("MarkRequestTerminated", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (method == null) throw new InvalidOperationException("Unable to locate MarkRequestTerminated on WebserverBase.");
+            method.Invoke(server, new object[] { ctx, requestorDisconnected });
+        }
+
+        private static bool InvokeWasRequestTerminated(Webserver server, HttpContextBase ctx)
+        {
+            MethodInfo method = typeof(WebserverBase).GetMethod("WasRequestTerminated", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (method == null) throw new InvalidOperationException("Unable to locate WasRequestTerminated on WebserverBase.");
+            return (bool)method.Invoke(server, new object[] { ctx });
+        }
+
+        private static bool InvokeIsDisconnectTransportFailure(Webserver server, Exception exception)
+        {
+            MethodInfo method = typeof(WebserverBase).GetMethod("IsDisconnectTransportFailure", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (method == null) throw new InvalidOperationException("Unable to locate IsDisconnectTransportFailure on WebserverBase.");
+            return (bool)method.Invoke(server, new object[] { exception });
+        }
+
+        private static MethodInfo GetMarkTransportFailureMethod()
+        {
+            MethodInfo method = typeof(HttpResponseBase).GetMethod("MarkTransportFailure", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (method == null) throw new InvalidOperationException("Unable to locate MarkTransportFailure on HttpResponseBase.");
+            return method;
+        }
+
+        private static bool GetTransportFailure(HttpResponse response)
+        {
+            if (response == null) throw new ArgumentNullException(nameof(response));
+
+            PropertyInfo property = typeof(HttpResponseBase).GetProperty("TransportFailure", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (property == null)
+            {
+                throw new InvalidOperationException("Unable to read HttpResponseBase.TransportFailure for unit coverage.");
+            }
+
+            return (bool)property.GetValue(response);
+        }
+
+        private static Exception GetFailureException(HttpResponse response)
+        {
+            if (response == null) throw new ArgumentNullException(nameof(response));
+
+            PropertyInfo property = typeof(HttpResponseBase).GetProperty("FailureException", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (property == null)
+            {
+                throw new InvalidOperationException("Unable to read HttpResponseBase.FailureException for unit coverage.");
+            }
+
+            return property.GetValue(response) as Exception;
         }
 
         private static void AssertTrue(bool condition, string message)
@@ -520,6 +799,80 @@ namespace Test.Shared
 
             public override Task SendAsync(ArraySegment<byte> buffer, WebSocketMessageType messageType, bool endOfMessage, CancellationToken cancellationToken)
             {
+                return Task.CompletedTask;
+            }
+        }
+
+        private sealed class ThrowOnNthWriteStream : Stream
+        {
+            private readonly int _ThrowOnWriteCall;
+            private readonly MemoryStream _Inner = new MemoryStream();
+            private int _WriteCallCount = 0;
+
+            public ThrowOnNthWriteStream(int throwOnWriteCall)
+            {
+                if (throwOnWriteCall < 1) throw new ArgumentOutOfRangeException(nameof(throwOnWriteCall));
+                _ThrowOnWriteCall = throwOnWriteCall;
+            }
+
+            public override bool CanRead => false;
+
+            public override bool CanSeek => false;
+
+            public override bool CanWrite => true;
+
+            public override long Length => _Inner.Length;
+
+            public override long Position
+            {
+                get
+                {
+                    return _Inner.Position;
+                }
+                set
+                {
+                    throw new NotSupportedException();
+                }
+            }
+
+            public override void Flush()
+            {
+            }
+
+            public override Task FlushAsync(CancellationToken cancellationToken)
+            {
+                return Task.CompletedTask;
+            }
+
+            public override int Read(byte[] buffer, int offset, int count)
+            {
+                throw new NotSupportedException();
+            }
+
+            public override long Seek(long offset, SeekOrigin origin)
+            {
+                throw new NotSupportedException();
+            }
+
+            public override void SetLength(long value)
+            {
+                throw new NotSupportedException();
+            }
+
+            public override void Write(byte[] buffer, int offset, int count)
+            {
+                int currentWriteCall = Interlocked.Increment(ref _WriteCallCount);
+                if (currentWriteCall == _ThrowOnWriteCall)
+                {
+                    throw new IOException("Synthetic transport failure.");
+                }
+
+                _Inner.Write(buffer, offset, count);
+            }
+
+            public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+            {
+                Write(buffer, offset, count);
                 return Task.CompletedTask;
             }
         }

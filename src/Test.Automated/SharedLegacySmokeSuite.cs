@@ -31,6 +31,7 @@ namespace Test.Automated
             await ExecuteTestAsync("HTTP/1.1 :: Header Echo Request", SharedLegacySmokeTests.TestHttp11HeaderEchoAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 :: Chunked Transfer Response", SharedLegacySmokeTests.TestHttp11ChunkedTransferEncodingAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 :: Chunked Edge-Case Response", SharedLegacySmokeTests.TestHttp11ChunkedEdgeCasesAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Chunked Response Observability", SharedLegacySmokeTests.TestHttp11ChunkedResponseObservabilityAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 :: Chunked Request Body Via DataAsBytes", SharedLegacySmokeTests.TestHttp11ChunkedRequestBodyDataAsBytesAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 :: Chunked Request Body Via DataAsString", SharedLegacySmokeTests.TestHttp11ChunkedRequestBodyDataAsStringAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 :: Chunked Request Body Via ReadBodyAsync", SharedLegacySmokeTests.TestHttp11ChunkedRequestBodyReadBodyAsync).ConfigureAwait(false);
@@ -40,6 +41,8 @@ namespace Test.Automated
             await ExecuteTestAsync("HTTP/1.1 :: Data Preservation Hello CRLF", SharedLegacySmokeTests.TestHttp11DataPreservationHelloCrLfAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 :: Server-Sent Events", SharedLegacySmokeTests.TestHttp11ServerSentEventsAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 :: Server-Sent Events Edge Cases", SharedLegacySmokeTests.TestHttp11ServerSentEventsEdgeCasesAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Server-Sent Events Observability", SharedLegacySmokeTests.TestHttp11ServerSentEventsObservabilityAsync).ConfigureAwait(false);
+            await ExecuteTestAsync("HTTP/1.1 :: Disconnect During Large Response", SharedLegacySmokeTests.TestHttp11DisconnectDuringLargeResponseAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 :: Double-Send Response Handling", SharedLegacySmokeTests.TestHttp11DoubleSendResponseAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 :: Exception In Route Handler Returns 500", SharedLegacySmokeTests.TestHttp11ExceptionInRouteHandlerAsync).ConfigureAwait(false);
             await ExecuteTestAsync("HTTP/1.1 :: Custom Exception Route Sends Response", SharedLegacySmokeTests.TestHttp11CustomExceptionRouteSendsResponseAsync).ConfigureAwait(false);

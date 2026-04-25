@@ -3106,6 +3106,22 @@
             Mark the response as completed.
             </summary>
         </member>
+        <member name="M:WatsonWebserver.Core.HttpResponseBase.MarkTransportFailure(System.Exception)">
+            <summary>
+            Record a transport-level response failure.
+            </summary>
+            <param name="exception">Failure exception.</param>
+        </member>
+        <member name="P:WatsonWebserver.Core.HttpResponseBase.TransportFailure">
+            <summary>
+            Indicates whether a transport-level response failure occurred.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.HttpResponseBase.FailureException">
+            <summary>
+            The most recent transport-level response failure, if any.
+            </summary>
+        </member>
         <member name="T:WatsonWebserver.Core.IHostBuilder`2">
             <summary>
             Host builder interface.
@@ -6564,6 +6580,27 @@
             <param name="potentialName">The name to sanitize.</param>
             <returns>A valid hostname, or null if the string contains no valid characters.</returns>
         </member>
+        <member name="M:WatsonWebserver.Core.WebserverBase.MarkRequestTerminated(WatsonWebserver.Core.HttpContextBase,System.Boolean)">
+            <summary>
+            Mark a request as terminated and emit the corresponding observability events.
+            </summary>
+            <param name="ctx">Request context.</param>
+            <param name="requestorDisconnected">Indicates whether the peer disconnected unexpectedly.</param>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebserverBase.WasRequestTerminated(WatsonWebserver.Core.HttpContextBase)">
+            <summary>
+            Determine whether a response was interrupted by request termination rather than a missing handler send.
+            </summary>
+            <param name="ctx">Request context.</param>
+            <returns>True if the request has already terminated.</returns>
+        </member>
+        <member name="M:WatsonWebserver.Core.WebserverBase.IsDisconnectTransportFailure(System.Exception)">
+            <summary>
+            Determine whether a transport failure represents a lost client connection.
+            </summary>
+            <param name="exception">Transport failure exception.</param>
+            <returns>True if the failure is disconnect-like.</returns>
+        </member>
         <member name="T:WatsonWebserver.Core.WebserverConfigurationException">
             <summary>
             Exception thrown when the server configuration is incoherent.
@@ -6818,6 +6855,13 @@
             <param name="sender">Sender.</param>
             <param name="args">Args.</param>
         </member>
+        <member name="M:WatsonWebserver.Core.WebserverEvents.HandleRequestorDisconnected(System.Object,WatsonWebserver.Core.RequestEventArgs)">
+            <summary>
+            Handle requestor disconnected event.
+            </summary>
+            <param name="sender">Sender.</param>
+            <param name="args">Args.</param>
+        </member>
         <member name="M:WatsonWebserver.Core.WebserverEvents.HandleResponseSent(System.Object,WatsonWebserver.Core.ResponseEventArgs)">
             <summary>
             Handle response sent event.
@@ -6903,6 +6947,11 @@
         <member name="P:WatsonWebserver.Core.WebserverEvents.HasRequestDeniedHandlers">
             <summary>
             Indicates whether any request denied handlers are attached.
+            </summary>
+        </member>
+        <member name="P:WatsonWebserver.Core.WebserverEvents.HasRequestorDisconnectedHandlers">
+            <summary>
+            Indicates whether any requestor disconnected handlers are attached.
             </summary>
         </member>
         <member name="P:WatsonWebserver.Core.WebserverEvents.HasRequestAbortedHandlers">

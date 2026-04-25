@@ -285,17 +285,17 @@
                         _OutputStream.Close();
                         if (_Response != null) _Response.Close();
                     }
+
+                    MarkResponseCompleted();
+                    ResponseSent = true;
                 }
 
                 return true;
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                MarkTransportFailure(e);
                 return false;
-            }
-            finally
-            {
-                if (isFinal) ResponseSent = true;
             }
         }
 
@@ -330,17 +330,17 @@
                         _OutputStream.Close();
                         if (_Response != null) _Response.Close();
                     }
+
+                    MarkResponseCompleted();
+                    ResponseSent = true;
                 }
 
                 return true;
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                MarkTransportFailure(e);
                 return false;
-            }
-            finally
-            {
-                if (isFinal) ResponseSent = true;
             }
         }
 
@@ -606,8 +606,9 @@
                 ResponseSent = true;
                 return true;
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                MarkTransportFailure(e);
                 if (_Data != null)
                 {
                     try { _Data.Dispose(); } catch { }
@@ -666,8 +667,9 @@
                 ResponseSent = true;
                 return true;
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                MarkTransportFailure(e);
                 return false;
             }
         }

@@ -8,8 +8,10 @@
     using System;
     using System.Collections.Generic;
     using System.Collections.Specialized;
+    using System.IO;
     using System.Linq;
     using System.Net;
+    using System.Net.Sockets;
     using System.Reflection;
     using System.Text;
     using System.Text.Json.Serialization;
@@ -711,7 +713,10 @@
 
                     await Routes.Preflight(ctx).ConfigureAwait(false);
                     if (!ctx.Response.ResponseSent)
+                    {
+                        if (WasRequestTerminated(ctx)) return;
                         throw new InvalidOperationException("Preflight route for " + ctx.Request.Method.ToString() + " " + requestPath + " did not send a response to the HTTP request.");
+                    }
                     return;
                 }
 
@@ -798,7 +803,10 @@
                     ctx.RouteType = RouteTypeEnum.Default;
                     await Routes.Default(ctx).ConfigureAwait(false);
                     if (!ctx.Response.ResponseSent)
+                    {
+                        if (WasRequestTerminated(ctx)) return;
                         throw new InvalidOperationException("Default route for " + ctx.Request.Method.ToString() + " " + ctx.Request.Url.RawWithoutQuery + " did not send a response to the HTTP request.");
+                    }
                     return;
                 }
 
@@ -808,11 +816,7 @@
             }
             catch (OperationCanceledException)
             {
-                ctx.RequestAborted = true;
-                if (Events.HasRequestAbortedHandlers)
-                {
-                    Events.HandleRequestAborted(this, new RequestEventArgs(ctx));
-                }
+                MarkRequestTerminated(ctx, ctx?.DisconnectDetected == true);
                 throw;
             }
             catch (MalformedHttpRequestException e)
@@ -846,9 +850,16 @@
             }
             finally
             {
+                if (ctx.Response.TransportFailure)
+                {
+                    MarkRequestTerminated(ctx, IsDisconnectTransportFailure(ctx.Response.FailureException));
+                }
+
                 try
                 {
-                    if (!ctx.Response.ResponseSent)
+                    if (!ctx.Response.ResponseSent
+                        && !ctx.Response.TransportFailure
+                        && !ctx.RequestAborted)
                     {
                         ctx.Response.StatusCode = 500;
                         ctx.Response.ContentType = DefaultPages.Pages[500].ContentType;
@@ -862,7 +873,7 @@
                 ctx.CompleteTiming();
 
                 bool emitResponseStarting = ctx.Response.ResponseStarted && Events.HasResponseStartingHandlers;
-                bool emitResponseSent = Events.HasResponseSentHandlers;
+                bool emitResponseSent = ctx.Response.ResponseSent && Events.HasResponseSentHandlers;
                 bool emitResponseCompleted = ctx.Response.ResponseCompleted && Events.HasResponseCompletedHandlers;
 
                 if (emitResponseStarting || emitResponseSent || emitResponseCompleted)
@@ -975,7 +986,10 @@
                     }
 
                     if (!ctx.Response.ResponseSent)
+                    {
+                        if (WasRequestTerminated(ctx)) return true;
                         throw new InvalidOperationException(authPhase + " static route for " + ctx.Request.Method.ToString() + " " + requestPath + " did not send a response to the HTTP request.");
+                    }
                     return true;
                 }
             }
@@ -1005,7 +1019,10 @@
                     }
 
                     if (!ctx.Response.ResponseSent)
+                    {
+                        if (WasRequestTerminated(ctx)) return true;
                         throw new InvalidOperationException(authPhase + " content route for " + ctx.Request.Method.ToString() + " " + requestPath + " did not send a response to the HTTP request.");
+                    }
                     return true;
                 }
             }
@@ -1038,7 +1055,10 @@
                     }
 
                     if (!ctx.Response.ResponseSent)
+                    {
+                        if (WasRequestTerminated(ctx)) return true;
                         throw new InvalidOperationException(authPhase + " parameter route for " + ctx.Request.Method.ToString() + " " + requestPath + " did not send a response to the HTTP request.");
+                    }
                     return true;
                 }
             }
@@ -1069,7 +1089,10 @@
                     }
 
                     if (!ctx.Response.ResponseSent)
+                    {
+                        if (WasRequestTerminated(ctx)) return true;
                         throw new InvalidOperationException(authPhase + " dynamic route for " + ctx.Request.Method.ToString() + " " + requestPath + " did not send a response to the HTTP request.");
+                    }
                     return true;
                 }
             }
@@ -1144,6 +1167,66 @@
             }
 
             return sanitized;
+        }
+
+        /// <summary>
+        /// Mark a request as terminated and emit the corresponding observability events.
+        /// </summary>
+        /// <param name="ctx">Request context.</param>
+        /// <param name="requestorDisconnected">Indicates whether the peer disconnected unexpectedly.</param>
+        protected void MarkRequestTerminated(HttpContextBase ctx, bool requestorDisconnected)
+        {
+            if (ctx == null) return;
+
+            if (requestorDisconnected)
+            {
+                ctx.DisconnectDetected = true;
+            }
+
+            ctx.RequestAborted = true;
+            ctx.CancelRequestToken();
+
+            if (!ctx.RequestAbortedEventRaised && Events.HasRequestAbortedHandlers)
+            {
+                ctx.RequestAbortedEventRaised = true;
+                Events.HandleRequestAborted(this, new RequestEventArgs(ctx));
+            }
+
+            if (ctx.DisconnectDetected
+                && !ctx.RequestorDisconnectedEventRaised
+                && Events.HasRequestorDisconnectedHandlers)
+            {
+                ctx.RequestorDisconnectedEventRaised = true;
+                Events.HandleRequestorDisconnected(this, new RequestEventArgs(ctx));
+            }
+        }
+
+        /// <summary>
+        /// Determine whether a response was interrupted by request termination rather than a missing handler send.
+        /// </summary>
+        /// <param name="ctx">Request context.</param>
+        /// <returns>True if the request has already terminated.</returns>
+        protected bool WasRequestTerminated(HttpContextBase ctx)
+        {
+            if (ctx == null) return false;
+            if (ctx.RequestAborted) return true;
+            if (ctx.DisconnectDetected) return true;
+            if (ctx.Response != null && ctx.Response.TransportFailure) return true;
+            return ctx.Token.IsCancellationRequested;
+        }
+
+        /// <summary>
+        /// Determine whether a transport failure represents a lost client connection.
+        /// </summary>
+        /// <param name="exception">Transport failure exception.</param>
+        /// <returns>True if the failure is disconnect-like.</returns>
+        protected bool IsDisconnectTransportFailure(Exception exception)
+        {
+            if (exception == null) return false;
+            if (exception is SocketException) return true;
+            if (exception is ObjectDisposedException) return true;
+            if (exception is IOException) return true;
+            return exception.InnerException != null && IsDisconnectTransportFailure(exception.InnerException);
         }
         #endregion
     }

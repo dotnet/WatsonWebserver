@@ -834,8 +834,9 @@
                                 }
 
                                 ctx = RentHttpContext(clientStream, requestMetadata);
+                                ctx.TokenSource = CancellationTokenSource.CreateLinkedTokenSource(token);
 
-                                await ProcessHttpContextAsync(ctx, _Header, token).ConfigureAwait(false);
+                                await ProcessHttpContextAsync(ctx, _Header, ctx.Token).ConfigureAwait(false);
                                 keepAlive = ShouldKeepConnectionOpen(ctx);
                                 firstRequest = false;
                             }
@@ -845,8 +846,13 @@
                                 Events.HandleExceptionEncountered(this, new ExceptionEventArgs(ctx, e));
                                 break;
                             }
-                            catch (IOException)
+                            catch (IOException e)
                             {
+                                if (ctx != null)
+                                {
+                                    MarkRequestTerminated(ctx, IsDisconnectTransportFailure(e));
+                                }
+
                                 break;
                             }
                             finally

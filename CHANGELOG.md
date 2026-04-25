@@ -2,7 +2,13 @@
 
 ## Current Version
 
-`v7.0.13`
+`v7.0.14`
+
+## v7.0.14
+
+- Fixed HTTP/1.1 disconnect detection so transport aborts mark the active request aborted, raise `RequestAborted`, and raise the existing `RequestorDisconnected` event
+- Corrected response observability so failed HTTP/1.1 sends no longer emit a false `ResponseSent` signal and chunked/SSE finalization no longer marks failed sends as successful
+- Added shared regression coverage for a client disconnect during a large HTTP/1.1 response and wired it into both `Test.XUnit` and `Test.Automated`
 
 ## v7.0.13
 

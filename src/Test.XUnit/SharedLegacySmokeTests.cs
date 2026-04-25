@@ -120,6 +120,16 @@ namespace Test.XUnit
         }
 
         /// <summary>
+        /// Verify successful chunked responses still emit the expected observability events exactly once.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11ChunkedResponseObservability()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11ChunkedResponseObservabilityAsync();
+        }
+
+        /// <summary>
         /// Verify a chunked HTTP/1.1 request body is read correctly through <c>DataAsBytes</c>.
         /// </summary>
         /// <returns>Task.</returns>
@@ -207,6 +217,26 @@ namespace Test.XUnit
         public async Task Http11ServerSentEventsEdgeCases()
         {
             await Test.Shared.SharedLegacySmokeTests.TestHttp11ServerSentEventsEdgeCasesAsync();
+        }
+
+        /// <summary>
+        /// Verify successful server-sent events still emit the expected observability events exactly once.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11ServerSentEventsObservability()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11ServerSentEventsObservabilityAsync();
+        }
+
+        /// <summary>
+        /// Verify a client disconnect during a large HTTP/1.1 response is classified without emitting false success telemetry.
+        /// </summary>
+        /// <returns>Task.</returns>
+        [Fact]
+        public async Task Http11DisconnectDuringLargeResponse()
+        {
+            await Test.Shared.SharedLegacySmokeTests.TestHttp11DisconnectDuringLargeResponseAsync();
         }
 
         /// <summary>

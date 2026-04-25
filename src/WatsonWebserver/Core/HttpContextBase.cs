@@ -204,6 +204,9 @@
         private long _TimingStartTicks = 0;
         private bool _TimingStarted = false;
         private bool _Disposed = false;
+        private bool _DisconnectDetected = false;
+        private bool _RequestAbortedEventRaised = false;
+        private bool _RequestorDisconnectedEventRaised = false;
 
         #endregion
 
@@ -296,6 +299,9 @@
             _TimingStartTicks = 0;
             _TimingStarted = false;
             RequestAborted = false;
+            _DisconnectDetected = false;
+            _RequestAbortedEventRaised = false;
+            _RequestorDisconnectedEventRaised = false;
             Response = null;
             Metadata = null;
             _Disposed = false;
@@ -348,6 +354,55 @@
             if (!_TimingStarted) StartTiming();
 
             Timestamp.End = _TimingStartUtc.AddMilliseconds(GetElapsedMilliseconds(_TimingStartTicks, Stopwatch.GetTimestamp()));
+        }
+
+        internal bool DisconnectDetected
+        {
+            get
+            {
+                return _DisconnectDetected;
+            }
+            set
+            {
+                _DisconnectDetected = value;
+            }
+        }
+
+        internal bool RequestAbortedEventRaised
+        {
+            get
+            {
+                return _RequestAbortedEventRaised;
+            }
+            set
+            {
+                _RequestAbortedEventRaised = value;
+            }
+        }
+
+        internal bool RequestorDisconnectedEventRaised
+        {
+            get
+            {
+                return _RequestorDisconnectedEventRaised;
+            }
+            set
+            {
+                _RequestorDisconnectedEventRaised = value;
+            }
+        }
+
+        internal void CancelRequestToken()
+        {
+            if (_TokenSource == null || _TokenSource.IsCancellationRequested) return;
+
+            try
+            {
+                _TokenSource.Cancel();
+            }
+            catch (ObjectDisposedException)
+            {
+            }
         }
 
         private static double GetElapsedMilliseconds(long startTicks, long endTicks)

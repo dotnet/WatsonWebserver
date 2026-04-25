@@ -172,6 +172,8 @@
         private bool _TimingStarted = false;
         private bool _Disposed = false;
         private bool _ResponseSent = false;
+        private bool _TransportFailure = false;
+        private Exception _FailureException = null;
 
         #endregion
 
@@ -220,6 +222,8 @@
             ResponseStarted = false;
             ResponseCompleted = false;
             _ResponseSent = false;
+            _TransportFailure = false;
+            _FailureException = null;
             _TimingStartUtc = DateTime.MinValue;
             _TimingStartTicks = 0;
             _TimingStarted = false;
@@ -318,6 +322,38 @@
             ResponseStarted = true;
             ResponseCompleted = true;
             Timestamp.End = _TimingStartUtc.AddMilliseconds(GetElapsedMilliseconds(_TimingStartTicks, Stopwatch.GetTimestamp()));
+        }
+
+        /// <summary>
+        /// Record a transport-level response failure.
+        /// </summary>
+        /// <param name="exception">Failure exception.</param>
+        protected void MarkTransportFailure(Exception exception)
+        {
+            _TransportFailure = true;
+            _FailureException = exception;
+        }
+
+        /// <summary>
+        /// Indicates whether a transport-level response failure occurred.
+        /// </summary>
+        internal bool TransportFailure
+        {
+            get
+            {
+                return _TransportFailure;
+            }
+        }
+
+        /// <summary>
+        /// The most recent transport-level response failure, if any.
+        /// </summary>
+        internal Exception FailureException
+        {
+            get
+            {
+                return _FailureException;
+            }
         }
 
         #endregion

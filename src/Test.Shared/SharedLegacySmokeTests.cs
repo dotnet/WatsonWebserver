@@ -1,7 +1,10 @@
 namespace Test.Shared
 {
     using System;
+    using System.IO;
+    using System.Net.Sockets;
     using System.Text;
+    using System.Threading;
     using System.Net.Http;
     using System.Threading.Tasks;
     using WatsonWebserver;
@@ -377,6 +380,305 @@ namespace Test.Shared
         }
 
         /// <summary>
+        /// Verify successful HTTP/1.1 chunked responses still emit the expected observability signals exactly once.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11ChunkedResponseObservabilityAsync()
+        {
+            const string requestPath = "/test/chunked-observable";
+
+            TaskCompletionSource<bool> firstSendResultSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            TaskCompletionSource<bool> finalSendResultSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            TaskCompletionSource<(bool RequestAborted, bool TokenCancelled)> postRoutingStateSource = new TaskCompletionSource<(bool RequestAborted, bool TokenCancelled)>(TaskCreationOptions.RunContinuationsAsynchronously);
+            int responseStartingCount = 0;
+            int responseSentCount = 0;
+            int responseCompletedCount = 0;
+            int requestAbortedCount = 0;
+            int requestorDisconnectedCount = 0;
+
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, server =>
+            {
+                ConfigureBasicRoutes(server);
+
+                server.Routes.PostRouting = async (HttpContextBase context) =>
+                {
+                    if (String.Equals(context.Request.Url.RawWithoutQuery, requestPath, StringComparison.Ordinal))
+                    {
+                        postRoutingStateSource.TrySetResult((context.RequestAborted, context.Token.IsCancellationRequested));
+                    }
+
+                    await Task.CompletedTask.ConfigureAwait(false);
+                };
+
+                server.Events.RequestAborted += (sender, args) =>
+                {
+                    Interlocked.Increment(ref requestAbortedCount);
+                };
+
+                server.Events.RequestorDisconnected += (sender, args) =>
+                {
+                    Interlocked.Increment(ref requestorDisconnectedCount);
+                };
+
+                server.Events.ResponseStarting += (sender, args) =>
+                {
+                    Interlocked.Increment(ref responseStartingCount);
+                };
+
+                server.Events.ResponseSent += (sender, args) =>
+                {
+                    Interlocked.Increment(ref responseSentCount);
+                };
+
+                server.Events.ResponseCompleted += (sender, args) =>
+                {
+                    Interlocked.Increment(ref responseCompletedCount);
+                };
+
+                server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.GET, requestPath, async (HttpContextBase context) =>
+                {
+                    context.Response.StatusCode = 200;
+                    context.Response.ContentType = "text/plain";
+                    context.Response.ChunkedTransfer = true;
+
+                    bool firstSendResult = await context.Response.SendChunk(Encoding.UTF8.GetBytes("chunk observable one\n"), false, context.Token).ConfigureAwait(false);
+                    firstSendResultSource.TrySetResult(firstSendResult);
+
+                    bool finalSendResult = await context.Response.SendChunk(Encoding.UTF8.GetBytes("chunk observable two\n"), true, context.Token).ConfigureAwait(false);
+                    finalSendResultSource.TrySetResult(finalSendResult);
+                });
+            }))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                {
+                    client.Timeout = TimeSpan.FromSeconds(10);
+
+                    HttpResponseMessage response = await client.GetAsync(new Uri(host.BaseAddress, requestPath)).ConfigureAwait(false);
+                    string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        throw new InvalidOperationException("Expected observable HTTP/1.1 chunked response to succeed.");
+                    }
+
+                    if (!body.Contains("chunk observable one", StringComparison.Ordinal)
+                        || !body.Contains("chunk observable two", StringComparison.Ordinal))
+                    {
+                        throw new InvalidOperationException("Unexpected observable HTTP/1.1 chunked response body.");
+                    }
+
+                    if (response.Headers.TransferEncodingChunked != true)
+                    {
+                        throw new InvalidOperationException("Expected observable HTTP/1.1 chunked response to advertise chunked transfer encoding.");
+                    }
+                }
+
+                bool firstSendResult = await WaitForTaskAsync(firstSendResultSource.Task, 10000, "Observable chunked response did not complete the first send.").ConfigureAwait(false);
+                bool finalSendResult = await WaitForTaskAsync(finalSendResultSource.Task, 10000, "Observable chunked response did not complete the final send.").ConfigureAwait(false);
+                (bool RequestAborted, bool TokenCancelled) postRoutingState = await WaitForTaskAsync(postRoutingStateSource.Task, 10000, "Observable chunked response did not reach PostRouting.").ConfigureAwait(false);
+
+                if (!firstSendResult || !finalSendResult)
+                {
+                    throw new InvalidOperationException("Expected observable HTTP/1.1 chunked sends to succeed.");
+                }
+
+                if (postRoutingState.RequestAborted || postRoutingState.TokenCancelled)
+                {
+                    throw new InvalidOperationException("Successful observable HTTP/1.1 chunked response should not be marked aborted or cancelled.");
+                }
+
+                if (Volatile.Read(ref requestAbortedCount) != 0)
+                {
+                    throw new InvalidOperationException("RequestAborted should not fire for a successful observable HTTP/1.1 chunked response.");
+                }
+
+                if (Volatile.Read(ref requestorDisconnectedCount) != 0)
+                {
+                    throw new InvalidOperationException("RequestorDisconnected should not fire for a successful observable HTTP/1.1 chunked response.");
+                }
+
+                if (Volatile.Read(ref responseStartingCount) != 1)
+                {
+                    throw new InvalidOperationException("Expected ResponseStarting to fire exactly once for a successful observable HTTP/1.1 chunked response.");
+                }
+
+                if (Volatile.Read(ref responseSentCount) != 1)
+                {
+                    throw new InvalidOperationException("Expected ResponseSent to fire exactly once for a successful observable HTTP/1.1 chunked response.");
+                }
+
+                if (Volatile.Read(ref responseCompletedCount) != 1)
+                {
+                    throw new InvalidOperationException("Expected ResponseCompleted to fire exactly once for a successful observable HTTP/1.1 chunked response.");
+                }
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                {
+                    await AssertServerHealthyAsync(client, host.BaseAddress).ConfigureAwait(false);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Verify an HTTP/1.1 chunked response disconnect on the final chunk emits abort/disconnect telemetry without false success signals.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11ChunkedDisconnectDuringFinalChunkAsync()
+        {
+            const string requestPath = "/test/chunked-disconnect-final";
+            byte[] finalChunkPayload = Encoding.UTF8.GetBytes(new string('z', 512 * 1024));
+
+            TaskCompletionSource<bool> firstSendResultSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            TaskCompletionSource<bool> finalSendResultSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            TaskCompletionSource<(bool RequestAborted, bool TokenCancelled)> postRoutingStateSource = new TaskCompletionSource<(bool RequestAborted, bool TokenCancelled)>(TaskCreationOptions.RunContinuationsAsynchronously);
+            TaskCompletionSource<bool> requestAbortedObserved = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            TaskCompletionSource<bool> requestorDisconnectedObserved = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            int responseStartingCount = 0;
+            int responseSentCount = 0;
+            int responseCompletedCount = 0;
+            int requestAbortedCount = 0;
+            int requestorDisconnectedCount = 0;
+
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, server =>
+            {
+                ConfigureBasicRoutes(server);
+
+                server.Routes.PostRouting = async (HttpContextBase context) =>
+                {
+                    if (String.Equals(context.Request.Url.RawWithoutQuery, requestPath, StringComparison.Ordinal))
+                    {
+                        postRoutingStateSource.TrySetResult((context.RequestAborted, context.Token.IsCancellationRequested));
+                    }
+
+                    await Task.CompletedTask.ConfigureAwait(false);
+                };
+
+                server.Events.RequestAborted += (sender, args) =>
+                {
+                    Interlocked.Increment(ref requestAbortedCount);
+                    requestAbortedObserved.TrySetResult(true);
+                };
+
+                server.Events.RequestorDisconnected += (sender, args) =>
+                {
+                    Interlocked.Increment(ref requestorDisconnectedCount);
+                    requestorDisconnectedObserved.TrySetResult(true);
+                };
+
+                server.Events.ResponseStarting += (sender, args) =>
+                {
+                    Interlocked.Increment(ref responseStartingCount);
+                };
+
+                server.Events.ResponseSent += (sender, args) =>
+                {
+                    Interlocked.Increment(ref responseSentCount);
+                };
+
+                server.Events.ResponseCompleted += (sender, args) =>
+                {
+                    Interlocked.Increment(ref responseCompletedCount);
+                };
+
+                server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.GET, requestPath, async (HttpContextBase context) =>
+                {
+                    context.Response.StatusCode = 200;
+                    context.Response.ContentType = "text/plain";
+                    context.Response.ChunkedTransfer = true;
+
+                    bool firstSendResult = await context.Response.SendChunk(Encoding.UTF8.GetBytes("chunk before disconnect\n"), false, context.Token).ConfigureAwait(false);
+                    firstSendResultSource.TrySetResult(firstSendResult);
+
+                    await Task.Delay(200).ConfigureAwait(false);
+
+                    bool finalSendResult = await context.Response.SendChunk(finalChunkPayload, true, context.Token).ConfigureAwait(false);
+                    finalSendResultSource.TrySetResult(finalSendResult);
+                });
+            }))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+
+                using (TcpClient client = new TcpClient())
+                {
+                    await client.ConnectAsync("127.0.0.1", host.Port).ConfigureAwait(false);
+                    client.NoDelay = true;
+
+                    NetworkStream stream = client.GetStream();
+                    byte[] requestBytes = Encoding.ASCII.GetBytes(
+                        "GET " + requestPath + " HTTP/1.1\r\n" +
+                        "Host: 127.0.0.1\r\n" +
+                        "Connection: close\r\n" +
+                        "\r\n");
+
+                    await stream.WriteAsync(requestBytes, 0, requestBytes.Length).ConfigureAwait(false);
+                    await stream.FlushAsync().ConfigureAwait(false);
+
+                    string partialResponse = await ReadUntilContainsAsync(stream, "chunk before disconnect", TimeSpan.FromSeconds(10)).ConfigureAwait(false);
+                    if (!partialResponse.Contains("chunk before disconnect", StringComparison.Ordinal))
+                    {
+                        throw new InvalidOperationException("Expected to receive the first chunk before aborting the client transport.");
+                    }
+
+                    client.Client.LingerState = new LingerOption(true, 0);
+                }
+
+                bool firstSendResult = await WaitForTaskAsync(firstSendResultSource.Task, 10000, "Chunked disconnect scenario did not complete the first send.").ConfigureAwait(false);
+                bool finalSendResult = await WaitForTaskAsync(finalSendResultSource.Task, 10000, "Chunked disconnect scenario did not complete the final send.").ConfigureAwait(false);
+                (bool RequestAborted, bool TokenCancelled) postRoutingState = await WaitForTaskAsync(postRoutingStateSource.Task, 10000, "Chunked disconnect scenario did not reach PostRouting.").ConfigureAwait(false);
+
+                if (!firstSendResult)
+                {
+                    throw new InvalidOperationException("Expected the first chunk send to succeed before the client disconnected.");
+                }
+
+                if (finalSendResult)
+                {
+                    throw new InvalidOperationException("Expected the final chunk send to fail after the client reset the socket.");
+                }
+
+                if (!postRoutingState.RequestAborted || !postRoutingState.TokenCancelled)
+                {
+                    throw new InvalidOperationException("Expected the chunked disconnect request to be marked aborted and have its request token cancelled before PostRouting.");
+                }
+
+                await WaitForTaskAsync(requestAbortedObserved.Task, 10000, "Chunked disconnect scenario did not emit RequestAborted after the final chunk send failed.").ConfigureAwait(false);
+                await WaitForTaskAsync(requestorDisconnectedObserved.Task, 10000, "Chunked disconnect scenario did not emit RequestorDisconnected after the final chunk send failed.").ConfigureAwait(false);
+
+                if (Volatile.Read(ref requestAbortedCount) != 1)
+                {
+                    throw new InvalidOperationException("Expected RequestAborted to fire exactly once for the chunked disconnect response.");
+                }
+
+                if (Volatile.Read(ref requestorDisconnectedCount) != 1)
+                {
+                    throw new InvalidOperationException("Expected RequestorDisconnected to fire exactly once for the chunked disconnect response.");
+                }
+
+                if (Volatile.Read(ref responseStartingCount) != 1)
+                {
+                    throw new InvalidOperationException("Expected ResponseStarting to fire exactly once for the chunked disconnect response.");
+                }
+
+                if (Volatile.Read(ref responseSentCount) != 0)
+                {
+                    throw new InvalidOperationException("ResponseSent should not fire when the client disconnects before the final chunk is written.");
+                }
+
+                if (Volatile.Read(ref responseCompletedCount) != 0)
+                {
+                    throw new InvalidOperationException("ResponseCompleted should not fire when the client disconnects before the final chunk is written.");
+                }
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                {
+                    await AssertServerHealthyAsync(client, host.BaseAddress).ConfigureAwait(false);
+                }
+            }
+        }
+
+        /// <summary>
         /// Verify a chunked HTTP/1.1 request body is read correctly through <c>DataAsBytes</c>.
         /// </summary>
         /// <returns>Task.</returns>
@@ -543,6 +845,462 @@ namespace Test.Shared
                     {
                         throw new InvalidOperationException("Unexpected HTTP/1.1 server-sent events edge-case body.");
                     }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Verify successful HTTP/1.1 server-sent events still emit the expected observability signals exactly once.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11ServerSentEventsObservabilityAsync()
+        {
+            const string requestPath = "/test/sse-observable";
+
+            TaskCompletionSource<bool> firstSendResultSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            TaskCompletionSource<bool> finalSendResultSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            TaskCompletionSource<(bool RequestAborted, bool TokenCancelled)> postRoutingStateSource = new TaskCompletionSource<(bool RequestAborted, bool TokenCancelled)>(TaskCreationOptions.RunContinuationsAsynchronously);
+            int responseStartingCount = 0;
+            int responseSentCount = 0;
+            int responseCompletedCount = 0;
+            int requestAbortedCount = 0;
+            int requestorDisconnectedCount = 0;
+
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, server =>
+            {
+                ConfigureBasicRoutes(server);
+
+                server.Routes.PostRouting = async (HttpContextBase context) =>
+                {
+                    if (String.Equals(context.Request.Url.RawWithoutQuery, requestPath, StringComparison.Ordinal))
+                    {
+                        postRoutingStateSource.TrySetResult((context.RequestAborted, context.Token.IsCancellationRequested));
+                    }
+
+                    await Task.CompletedTask.ConfigureAwait(false);
+                };
+
+                server.Events.RequestAborted += (sender, args) =>
+                {
+                    Interlocked.Increment(ref requestAbortedCount);
+                };
+
+                server.Events.RequestorDisconnected += (sender, args) =>
+                {
+                    Interlocked.Increment(ref requestorDisconnectedCount);
+                };
+
+                server.Events.ResponseStarting += (sender, args) =>
+                {
+                    Interlocked.Increment(ref responseStartingCount);
+                };
+
+                server.Events.ResponseSent += (sender, args) =>
+                {
+                    Interlocked.Increment(ref responseSentCount);
+                };
+
+                server.Events.ResponseCompleted += (sender, args) =>
+                {
+                    Interlocked.Increment(ref responseCompletedCount);
+                };
+
+                server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.GET, requestPath, async (HttpContextBase context) =>
+                {
+                    context.Response.ServerSentEvents = true;
+                    context.Response.StatusCode = 200;
+
+                    ServerSentEvent firstEvent = new ServerSentEvent();
+                    firstEvent.Id = "1";
+                    firstEvent.Data = "observable event one";
+                    bool firstSendResult = await context.Response.SendEvent(firstEvent, false, context.Token).ConfigureAwait(false);
+                    firstSendResultSource.TrySetResult(firstSendResult);
+
+                    ServerSentEvent finalEvent = new ServerSentEvent();
+                    finalEvent.Id = "2";
+                    finalEvent.Data = "observable event two";
+                    bool finalSendResult = await context.Response.SendEvent(finalEvent, true, context.Token).ConfigureAwait(false);
+                    finalSendResultSource.TrySetResult(finalSendResult);
+                });
+            }))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                {
+                    client.Timeout = TimeSpan.FromSeconds(10);
+
+                    HttpResponseMessage response = await client.GetAsync(new Uri(host.BaseAddress, requestPath)).ConfigureAwait(false);
+                    string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    string contentType = response.Content.Headers.ContentType?.ToString() ?? String.Empty;
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        throw new InvalidOperationException("Expected observable HTTP/1.1 server-sent events response to succeed.");
+                    }
+
+                    if (!body.Contains("data: observable event one", StringComparison.Ordinal)
+                        || !body.Contains("data: observable event two", StringComparison.Ordinal))
+                    {
+                        throw new InvalidOperationException("Unexpected observable HTTP/1.1 server-sent events body.");
+                    }
+
+                    if (!contentType.Contains("text/event-stream", StringComparison.Ordinal))
+                    {
+                        throw new InvalidOperationException("Expected observable HTTP/1.1 server-sent events content type.");
+                    }
+                }
+
+                bool firstSendResult = await WaitForTaskAsync(firstSendResultSource.Task, 10000, "Observable server-sent events response did not complete the first send.").ConfigureAwait(false);
+                bool finalSendResult = await WaitForTaskAsync(finalSendResultSource.Task, 10000, "Observable server-sent events response did not complete the final send.").ConfigureAwait(false);
+                (bool RequestAborted, bool TokenCancelled) postRoutingState = await WaitForTaskAsync(postRoutingStateSource.Task, 10000, "Observable server-sent events response did not reach PostRouting.").ConfigureAwait(false);
+
+                if (!firstSendResult || !finalSendResult)
+                {
+                    throw new InvalidOperationException("Expected observable HTTP/1.1 server-sent events sends to succeed.");
+                }
+
+                if (postRoutingState.RequestAborted || postRoutingState.TokenCancelled)
+                {
+                    throw new InvalidOperationException("Successful observable HTTP/1.1 server-sent events response should not be marked aborted or cancelled.");
+                }
+
+                if (Volatile.Read(ref requestAbortedCount) != 0)
+                {
+                    throw new InvalidOperationException("RequestAborted should not fire for a successful observable HTTP/1.1 server-sent events response.");
+                }
+
+                if (Volatile.Read(ref requestorDisconnectedCount) != 0)
+                {
+                    throw new InvalidOperationException("RequestorDisconnected should not fire for a successful observable HTTP/1.1 server-sent events response.");
+                }
+
+                if (Volatile.Read(ref responseStartingCount) != 1)
+                {
+                    throw new InvalidOperationException("Expected ResponseStarting to fire exactly once for a successful observable HTTP/1.1 server-sent events response.");
+                }
+
+                if (Volatile.Read(ref responseSentCount) != 1)
+                {
+                    throw new InvalidOperationException("Expected ResponseSent to fire exactly once for a successful observable HTTP/1.1 server-sent events response.");
+                }
+
+                if (Volatile.Read(ref responseCompletedCount) != 1)
+                {
+                    throw new InvalidOperationException("Expected ResponseCompleted to fire exactly once for a successful observable HTTP/1.1 server-sent events response.");
+                }
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                {
+                    await AssertServerHealthyAsync(client, host.BaseAddress).ConfigureAwait(false);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Verify an HTTP/1.1 server-sent events disconnect on the final event emits abort/disconnect telemetry without false success signals.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11ServerSentEventsDisconnectDuringFinalEventAsync()
+        {
+            const string requestPath = "/test/sse-disconnect-final";
+            string finalEventData = new string('z', 512 * 1024);
+
+            TaskCompletionSource<bool> firstSendResultSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            TaskCompletionSource<bool> finalSendResultSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            TaskCompletionSource<(bool RequestAborted, bool TokenCancelled)> postRoutingStateSource = new TaskCompletionSource<(bool RequestAborted, bool TokenCancelled)>(TaskCreationOptions.RunContinuationsAsynchronously);
+            TaskCompletionSource<bool> requestAbortedObserved = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            TaskCompletionSource<bool> requestorDisconnectedObserved = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            int responseStartingCount = 0;
+            int responseSentCount = 0;
+            int responseCompletedCount = 0;
+            int requestAbortedCount = 0;
+            int requestorDisconnectedCount = 0;
+
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, server =>
+            {
+                ConfigureBasicRoutes(server);
+
+                server.Routes.PostRouting = async (HttpContextBase context) =>
+                {
+                    if (String.Equals(context.Request.Url.RawWithoutQuery, requestPath, StringComparison.Ordinal))
+                    {
+                        postRoutingStateSource.TrySetResult((context.RequestAborted, context.Token.IsCancellationRequested));
+                    }
+
+                    await Task.CompletedTask.ConfigureAwait(false);
+                };
+
+                server.Events.RequestAborted += (sender, args) =>
+                {
+                    Interlocked.Increment(ref requestAbortedCount);
+                    requestAbortedObserved.TrySetResult(true);
+                };
+
+                server.Events.RequestorDisconnected += (sender, args) =>
+                {
+                    Interlocked.Increment(ref requestorDisconnectedCount);
+                    requestorDisconnectedObserved.TrySetResult(true);
+                };
+
+                server.Events.ResponseStarting += (sender, args) =>
+                {
+                    Interlocked.Increment(ref responseStartingCount);
+                };
+
+                server.Events.ResponseSent += (sender, args) =>
+                {
+                    Interlocked.Increment(ref responseSentCount);
+                };
+
+                server.Events.ResponseCompleted += (sender, args) =>
+                {
+                    Interlocked.Increment(ref responseCompletedCount);
+                };
+
+                server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.GET, requestPath, async (HttpContextBase context) =>
+                {
+                    context.Response.ServerSentEvents = true;
+                    context.Response.StatusCode = 200;
+
+                    ServerSentEvent firstEvent = new ServerSentEvent();
+                    firstEvent.Id = "1";
+                    firstEvent.Data = "disconnect event one";
+                    bool firstSendResult = await context.Response.SendEvent(firstEvent, false, context.Token).ConfigureAwait(false);
+                    firstSendResultSource.TrySetResult(firstSendResult);
+
+                    await Task.Delay(200).ConfigureAwait(false);
+
+                    ServerSentEvent finalEvent = new ServerSentEvent();
+                    finalEvent.Id = "2";
+                    finalEvent.Data = finalEventData;
+                    bool finalSendResult = await context.Response.SendEvent(finalEvent, true, context.Token).ConfigureAwait(false);
+                    finalSendResultSource.TrySetResult(finalSendResult);
+                });
+            }))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+
+                using (TcpClient client = new TcpClient())
+                {
+                    await client.ConnectAsync("127.0.0.1", host.Port).ConfigureAwait(false);
+                    client.NoDelay = true;
+
+                    NetworkStream stream = client.GetStream();
+                    byte[] requestBytes = Encoding.ASCII.GetBytes(
+                        "GET " + requestPath + " HTTP/1.1\r\n" +
+                        "Host: 127.0.0.1\r\n" +
+                        "Connection: close\r\n" +
+                        "\r\n");
+
+                    await stream.WriteAsync(requestBytes, 0, requestBytes.Length).ConfigureAwait(false);
+                    await stream.FlushAsync().ConfigureAwait(false);
+
+                    string partialResponse = await ReadUntilContainsAsync(stream, "data: disconnect event one", TimeSpan.FromSeconds(10)).ConfigureAwait(false);
+                    if (!partialResponse.Contains("data: disconnect event one", StringComparison.Ordinal))
+                    {
+                        throw new InvalidOperationException("Expected to receive the first server-sent event before aborting the client transport.");
+                    }
+
+                    client.Client.LingerState = new LingerOption(true, 0);
+                }
+
+                bool firstSendResult = await WaitForTaskAsync(firstSendResultSource.Task, 10000, "Server-sent events disconnect scenario did not complete the first send.").ConfigureAwait(false);
+                bool finalSendResult = await WaitForTaskAsync(finalSendResultSource.Task, 10000, "Server-sent events disconnect scenario did not complete the final send.").ConfigureAwait(false);
+                (bool RequestAborted, bool TokenCancelled) postRoutingState = await WaitForTaskAsync(postRoutingStateSource.Task, 10000, "Server-sent events disconnect scenario did not reach PostRouting.").ConfigureAwait(false);
+
+                if (!firstSendResult)
+                {
+                    throw new InvalidOperationException("Expected the first server-sent event send to succeed before the client disconnected.");
+                }
+
+                if (finalSendResult)
+                {
+                    throw new InvalidOperationException("Expected the final server-sent event send to fail after the client reset the socket.");
+                }
+
+                if (!postRoutingState.RequestAborted || !postRoutingState.TokenCancelled)
+                {
+                    throw new InvalidOperationException("Expected the server-sent events disconnect request to be marked aborted and have its request token cancelled before PostRouting.");
+                }
+
+                await WaitForTaskAsync(requestAbortedObserved.Task, 10000, "Server-sent events disconnect scenario did not emit RequestAborted after the final event send failed.").ConfigureAwait(false);
+                await WaitForTaskAsync(requestorDisconnectedObserved.Task, 10000, "Server-sent events disconnect scenario did not emit RequestorDisconnected after the final event send failed.").ConfigureAwait(false);
+
+                if (Volatile.Read(ref requestAbortedCount) != 1)
+                {
+                    throw new InvalidOperationException("Expected RequestAborted to fire exactly once for the server-sent events disconnect response.");
+                }
+
+                if (Volatile.Read(ref requestorDisconnectedCount) != 1)
+                {
+                    throw new InvalidOperationException("Expected RequestorDisconnected to fire exactly once for the server-sent events disconnect response.");
+                }
+
+                if (Volatile.Read(ref responseStartingCount) != 1)
+                {
+                    throw new InvalidOperationException("Expected ResponseStarting to fire exactly once for the server-sent events disconnect response.");
+                }
+
+                if (Volatile.Read(ref responseSentCount) != 0)
+                {
+                    throw new InvalidOperationException("ResponseSent should not fire when the client disconnects before the final server-sent event is written.");
+                }
+
+                if (Volatile.Read(ref responseCompletedCount) != 0)
+                {
+                    throw new InvalidOperationException("ResponseCompleted should not fire when the client disconnects before the final server-sent event is written.");
+                }
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                {
+                    await AssertServerHealthyAsync(client, host.BaseAddress).ConfigureAwait(false);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Verify a client disconnect during a large HTTP/1.1 response is classified as an abort/disconnect without emitting a false success signal.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestHttp11DisconnectDuringLargeResponseAsync()
+        {
+            const string requestPath = "/test/disconnect-large";
+            const int responseLength = 512 * 1024;
+
+            TaskCompletionSource<bool> sendResultSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            TaskCompletionSource<(bool RequestAborted, bool TokenCancelled)> postRoutingStateSource = new TaskCompletionSource<(bool RequestAborted, bool TokenCancelled)>(TaskCreationOptions.RunContinuationsAsynchronously);
+            TaskCompletionSource<bool> requestAbortedObserved = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            TaskCompletionSource<bool> requestorDisconnectedObserved = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            int responseStartingCount = 0;
+            int responseSentCount = 0;
+            int responseCompletedCount = 0;
+            int requestAbortedCount = 0;
+            int requestorDisconnectedCount = 0;
+
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, server =>
+            {
+                ConfigureBasicRoutes(server);
+
+                server.Routes.PostRouting = async (HttpContextBase context) =>
+                {
+                    if (String.Equals(context.Request.Url.RawWithoutQuery, requestPath, StringComparison.Ordinal))
+                    {
+                        postRoutingStateSource.TrySetResult((context.RequestAborted, context.Token.IsCancellationRequested));
+                    }
+
+                    await Task.CompletedTask.ConfigureAwait(false);
+                };
+
+                server.Events.RequestAborted += (sender, args) =>
+                {
+                    Interlocked.Increment(ref requestAbortedCount);
+                    requestAbortedObserved.TrySetResult(true);
+                };
+
+                server.Events.RequestorDisconnected += (sender, args) =>
+                {
+                    Interlocked.Increment(ref requestorDisconnectedCount);
+                    requestorDisconnectedObserved.TrySetResult(true);
+                };
+
+                server.Events.ResponseStarting += (sender, args) =>
+                {
+                    Interlocked.Increment(ref responseStartingCount);
+                };
+
+                server.Events.ResponseSent += (sender, args) =>
+                {
+                    Interlocked.Increment(ref responseSentCount);
+                };
+
+                server.Events.ResponseCompleted += (sender, args) =>
+                {
+                    Interlocked.Increment(ref responseCompletedCount);
+                };
+
+                server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.GET, requestPath, async (HttpContextBase context) =>
+                {
+                    context.Response.StatusCode = 200;
+                    context.Response.ContentType = "application/octet-stream";
+
+                    using (Stream payload = new ThrottledPayloadStream(responseLength, 8192, 25))
+                    {
+                        bool sendResult = await context.Response.Send(responseLength, payload, context.Token).ConfigureAwait(false);
+                        sendResultSource.TrySetResult(sendResult);
+                    }
+                });
+            }))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+
+                using (TcpClient client = new TcpClient())
+                {
+                    await client.ConnectAsync("127.0.0.1", host.Port).ConfigureAwait(false);
+                    client.NoDelay = true;
+
+                    NetworkStream stream = client.GetStream();
+                    byte[] requestBytes = Encoding.ASCII.GetBytes(
+                        "GET " + requestPath + " HTTP/1.1\r\n" +
+                        "Host: 127.0.0.1\r\n" +
+                        "Connection: close\r\n" +
+                        "\r\n");
+
+                    await stream.WriteAsync(requestBytes, 0, requestBytes.Length).ConfigureAwait(false);
+                    await stream.FlushAsync().ConfigureAwait(false);
+
+                    int bytesRead = await ReadAtLeastAsync(stream, 4096, TimeSpan.FromSeconds(10)).ConfigureAwait(false);
+                    if (bytesRead < 4096)
+                    {
+                        throw new InvalidOperationException("Expected to receive a partial HTTP/1.1 response before aborting the client transport.");
+                    }
+
+                    client.Client.LingerState = new LingerOption(true, 0);
+                }
+
+                bool sendResult = await WaitForTaskAsync(sendResultSource.Task, 10000, "Large-response disconnect scenario did not complete the server send path.").ConfigureAwait(false);
+                (bool RequestAborted, bool TokenCancelled) postRoutingState = await WaitForTaskAsync(postRoutingStateSource.Task, 10000, "Disconnect scenario did not reach PostRouting with the final context state.").ConfigureAwait(false);
+                await WaitForTaskAsync(requestAbortedObserved.Task, 10000, "Disconnect scenario did not emit RequestAborted.").ConfigureAwait(false);
+                await WaitForTaskAsync(requestorDisconnectedObserved.Task, 10000, "Disconnect scenario did not emit RequestorDisconnected.").ConfigureAwait(false);
+
+                if (sendResult)
+                {
+                    throw new InvalidOperationException("Expected the large HTTP/1.1 response send to fail after the client reset the socket.");
+                }
+
+                if (!postRoutingState.RequestAborted || !postRoutingState.TokenCancelled)
+                {
+                    throw new InvalidOperationException("Expected the disconnected request context to be marked RequestAborted and have its request token cancelled before PostRouting.");
+                }
+
+                if (Volatile.Read(ref requestAbortedCount) != 1)
+                {
+                    throw new InvalidOperationException("Expected RequestAborted to fire exactly once for the disconnected response.");
+                }
+
+                if (Volatile.Read(ref requestorDisconnectedCount) != 1)
+                {
+                    throw new InvalidOperationException("Expected RequestorDisconnected to fire exactly once for the disconnected response.");
+                }
+
+                if (Volatile.Read(ref responseStartingCount) != 1)
+                {
+                    throw new InvalidOperationException("Expected ResponseStarting to fire exactly once for the partially-sent response.");
+                }
+
+                if (Volatile.Read(ref responseSentCount) != 0)
+                {
+                    throw new InvalidOperationException("ResponseSent should not fire when the client disconnects before the response finishes sending.");
+                }
+
+                if (Volatile.Read(ref responseCompletedCount) != 0)
+                {
+                    throw new InvalidOperationException("ResponseCompleted should not fire when the client disconnects before the response finishes sending.");
+                }
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                {
+                    await AssertServerHealthyAsync(client, host.BaseAddress).ConfigureAwait(false);
                 }
             }
         }
@@ -1293,6 +2051,77 @@ namespace Test.Shared
             }
         }
 
+        private static async Task<T> WaitForTaskAsync<T>(Task<T> task, int timeoutMs, string timeoutMessage)
+        {
+            if (task == null) throw new ArgumentNullException(nameof(task));
+            if (timeoutMs < 1) throw new ArgumentOutOfRangeException(nameof(timeoutMs));
+            if (String.IsNullOrEmpty(timeoutMessage)) throw new ArgumentNullException(nameof(timeoutMessage));
+
+            Task completedTask = await Task.WhenAny(task, Task.Delay(timeoutMs)).ConfigureAwait(false);
+            if (!ReferenceEquals(completedTask, task))
+            {
+                throw new InvalidOperationException(timeoutMessage);
+            }
+
+            return await task.ConfigureAwait(false);
+        }
+
+        private static async Task<int> ReadAtLeastAsync(NetworkStream stream, int minimumBytes, TimeSpan timeout)
+        {
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            if (minimumBytes < 1) throw new ArgumentOutOfRangeException(nameof(minimumBytes));
+            if (timeout <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(timeout));
+
+            byte[] buffer = new byte[Math.Min(8192, minimumBytes)];
+            int totalRead = 0;
+
+            using (CancellationTokenSource timeoutSource = new CancellationTokenSource(timeout))
+            {
+                while (totalRead < minimumBytes)
+                {
+                    int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length, timeoutSource.Token).ConfigureAwait(false);
+                    if (bytesRead < 1)
+                    {
+                        break;
+                    }
+
+                    totalRead += bytesRead;
+                }
+            }
+
+            return totalRead;
+        }
+
+        private static async Task<string> ReadUntilContainsAsync(NetworkStream stream, string expectedFragment, TimeSpan timeout)
+        {
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            if (String.IsNullOrEmpty(expectedFragment)) throw new ArgumentNullException(nameof(expectedFragment));
+            if (timeout <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(timeout));
+
+            byte[] buffer = new byte[1024];
+            using (MemoryStream capture = new MemoryStream())
+            using (CancellationTokenSource timeoutSource = new CancellationTokenSource(timeout))
+            {
+                while (true)
+                {
+                    int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length, timeoutSource.Token).ConfigureAwait(false);
+                    if (bytesRead < 1)
+                    {
+                        break;
+                    }
+
+                    capture.Write(buffer, 0, bytesRead);
+                    string currentText = Encoding.UTF8.GetString(capture.GetBuffer(), 0, checked((int)capture.Length));
+                    if (currentText.Contains(expectedFragment, StringComparison.Ordinal))
+                    {
+                        return currentText;
+                    }
+                }
+
+                return Encoding.UTF8.GetString(capture.ToArray());
+            }
+        }
+
         private static async Task TestBodyEchoAsync(string body)
         {
             if (body == null) throw new ArgumentNullException(nameof(body));
@@ -1317,6 +2146,97 @@ namespace Test.Shared
                         throw new InvalidOperationException("Unexpected HTTP/1.1 echo response body.");
                     }
                 }
+            }
+        }
+
+        private sealed class ThrottledPayloadStream : Stream
+        {
+            private readonly long _Length;
+            private readonly int _MaxChunkSize;
+            private readonly int _DelayPerReadMs;
+            private long _Position = 0;
+
+            public ThrottledPayloadStream(long length, int maxChunkSize, int delayPerReadMs)
+            {
+                if (length < 0) throw new ArgumentOutOfRangeException(nameof(length));
+                if (maxChunkSize < 1) throw new ArgumentOutOfRangeException(nameof(maxChunkSize));
+                if (delayPerReadMs < 0) throw new ArgumentOutOfRangeException(nameof(delayPerReadMs));
+
+                _Length = length;
+                _MaxChunkSize = maxChunkSize;
+                _DelayPerReadMs = delayPerReadMs;
+            }
+
+            public override bool CanRead => true;
+
+            public override bool CanSeek => false;
+
+            public override bool CanWrite => false;
+
+            public override long Length => _Length;
+
+            public override long Position
+            {
+                get
+                {
+                    return _Position;
+                }
+                set
+                {
+                    throw new NotSupportedException();
+                }
+            }
+
+            public override void Flush()
+            {
+            }
+
+            public override int Read(byte[] buffer, int offset, int count)
+            {
+                return ReadCore(buffer, offset, count);
+            }
+
+            public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+            {
+                if (_DelayPerReadMs > 0)
+                {
+                    await Task.Delay(_DelayPerReadMs, cancellationToken).ConfigureAwait(false);
+                }
+
+                return ReadCore(buffer, offset, count);
+            }
+
+            public override long Seek(long offset, SeekOrigin origin)
+            {
+                throw new NotSupportedException();
+            }
+
+            public override void SetLength(long value)
+            {
+                throw new NotSupportedException();
+            }
+
+            public override void Write(byte[] buffer, int offset, int count)
+            {
+                throw new NotSupportedException();
+            }
+
+            private int ReadCore(byte[] buffer, int offset, int count)
+            {
+                if (buffer == null) throw new ArgumentNullException(nameof(buffer));
+                if (offset < 0) throw new ArgumentOutOfRangeException(nameof(offset));
+                if (count < 0) throw new ArgumentOutOfRangeException(nameof(count));
+                if ((buffer.Length - offset) < count) throw new ArgumentException("The supplied buffer is too small.");
+                if (_Position >= _Length) return 0;
+
+                int bytesToRead = (int)Math.Min(Math.Min(count, _MaxChunkSize), _Length - _Position);
+                for (int i = 0; i < bytesToRead; i++)
+                {
+                    buffer[offset + i] = (byte)('a' + (int)((_Position + i) % 26));
+                }
+
+                _Position += bytesToRead;
+                return bytesToRead;
             }
         }
     }
