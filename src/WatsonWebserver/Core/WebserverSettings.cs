@@ -204,6 +204,24 @@
         }
 
         /// <summary>
+        /// Telemetry and instrumentation settings.
+        /// Controls metric and trace emission, forwarded-header resolution for the client address, and
+        /// the optional in-process Prometheus scrape endpoint.
+        /// </summary>
+        public TelemetrySettings Telemetry
+        {
+            get
+            {
+                return _Telemetry;
+            }
+            set
+            {
+                if (value == null) throw new ArgumentNullException(nameof(Telemetry));
+                _Telemetry = value;
+            }
+        }
+
+        /// <summary>
         /// When true, the machine's hostname will be used instead of the value specified in Hostname.
         /// </summary>
         public bool UseMachineHostname
@@ -234,6 +252,7 @@
         private HeaderSettings _Headers = new HeaderSettings();
         private TimeoutSettings _Timeout = new TimeoutSettings();
         private WebSocketSettings _WebSockets = new WebSocketSettings();
+        private TelemetrySettings _Telemetry = new TelemetrySettings();
         private bool _UseMachineHostname = false;
 
         #endregion

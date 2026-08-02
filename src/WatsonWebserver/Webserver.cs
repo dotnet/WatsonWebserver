@@ -385,6 +385,8 @@
 
                 Events.HandleServerDisposing(this, EventArgs.Empty);
 
+                DisposeTelemetry();
+
                 DisposeRequestSemaphore();
 
                 _TcpListener = null;

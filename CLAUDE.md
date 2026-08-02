@@ -289,6 +289,30 @@ Important:
 - the repo intentionally handles graceful degradation when QUIC is unavailable
 - Alt-Svc integration is explicit
 
+## Telemetry
+
+Watson emits standardized telemetry through the BCL (`System.Diagnostics.Metrics.Meter` and
+`ActivitySource`, both named `Watson`) with no dependency on any collector. A host subscribes by name.
+
+- `WebserverTelemetry` (`Core/Telemetry/WebserverTelemetry.cs`) owns the meter and activity source and
+  is reachable as `WebserverBase.Telemetry`. Configure behavior through `Settings.Telemetry`
+  (`Core/Settings/TelemetrySettings.cs`).
+- Contract strings live in `Core/Telemetry/WatsonTelemetryNames.cs` and are treated as public API.
+- The four core HTTP metrics use OpenTelemetry semantic-convention names and label sets; everything
+  else is under `watson.*`.
+- Cardinality rule: `http.route` is always the route **template** (from `ctx.Route`), never the raw
+  path. High-cardinality detail belongs on the span, never on a metric label.
+- Per-request duration, active-requests, body sizes, and the server span are recorded inline in
+  `WebserverBase.ProcessHttpContextAsync`. Connection/stream/exception/WebSocket metrics are wired to
+  the existing `WebserverEvents` and `WebserverStatistics` surface inside `WebserverTelemetry`, so the
+  transport hot paths are untouched.
+- The optional Prometheus endpoint (`Settings.Telemetry.Prometheus`) is served on the existing
+  listener via interception in `ProcessHttpContextAsync`, so it opens no extra port. It is backed by a
+  `MeterListener` in `PrometheusScrapeCollector`.
+- `System.Diagnostics.DiagnosticSource` (8.0.1) is referenced for the `netstandard2.1` target only.
+- User-facing usage/consumption guide and metric catalog: `TELEMETRY.md`. The original implementation
+  plan and design notes are archived at `archive/TELEMETRY_IMPLEMENTATION_PLAN.md`.
+
 ## Testing commands
 
 Use these commands unless the task requires a narrower scope:

@@ -29,6 +29,21 @@ namespace Test.Shared
         /// <param name="configureRoutes">Route configuration callback.</param>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="configureRoutes"/> is null.</exception>
         public LoopbackServerHost(bool enableTls, bool enableHttp2, bool enableHttp3, Action<Webserver> configureRoutes)
+            : this(enableTls, enableHttp2, enableHttp3, configureRoutes, null)
+        {
+        }
+
+        /// <summary>
+        /// Instantiate the host with an optional settings-configuration callback invoked before the
+        /// server is constructed.
+        /// </summary>
+        /// <param name="enableTls">Enable TLS.</param>
+        /// <param name="enableHttp2">Enable HTTP/2.</param>
+        /// <param name="enableHttp3">Enable HTTP/3.</param>
+        /// <param name="configureRoutes">Route configuration callback.</param>
+        /// <param name="configureSettings">Optional callback to mutate settings before construction.</param>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="configureRoutes"/> is null.</exception>
+        public LoopbackServerHost(bool enableTls, bool enableHttp2, bool enableHttp3, Action<Webserver> configureRoutes, Action<WebserverSettings> configureSettings)
         {
             if (configureRoutes == null) throw new ArgumentNullException(nameof(configureRoutes));
 
@@ -48,6 +63,8 @@ namespace Test.Shared
                 _Certificate = LoopbackCertificateFactory.Create("localhost");
                 settings.Ssl.SslCertificate = _Certificate;
             }
+
+            configureSettings?.Invoke(settings);
 
             _Server = new Webserver(settings, DefaultRouteAsync);
             configureRoutes(_Server);

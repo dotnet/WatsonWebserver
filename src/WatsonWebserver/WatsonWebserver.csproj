@@ -3,9 +3,9 @@
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.1;net8.0;net10.0</TargetFrameworks>
 		<LangVersion>latest</LangVersion>
-		<Version>7.0.15</Version>
+		<Version>7.1.0</Version>
 		<Description>Simple, fast, async C# web server for handling REST requests with unified 7.x protocol architecture targeting .NET Standard 2.1, .NET 8, and .NET 10.</Description>
-		<PackageReleaseNotes>Fixed active request cancellation for caller disconnects so HTTP/1.1 socket disconnects, HTTP/2 RST_STREAM frames, and HTTP/3 response-side stream closures cancel the per-request token and raise abort/disconnect events while handlers are still running.</PackageReleaseNotes>
+		<PackageReleaseNotes>Added standardized OpenTelemetry-shaped telemetry: a "Watson" Meter and ActivitySource emit HTTP server metrics (http.server.request.duration, active_requests, request/response body size) and per-request Server spans with W3C context propagation, plus watson.* metrics for connections, routing, auth, exceptions, and WebSockets. Configure via Settings.Telemetry. Includes forwarded-header (X-Forwarded-For) client-address resolution for spans and an optional in-process Prometheus scrape endpoint served on the existing listener (no extra port).</PackageReleaseNotes>
 
 		<Authors>Joel Christner</Authors>
 		<Company>Joel Christner</Company>
@@ -13,7 +13,7 @@
 		<PackageProjectUrl>https://github.com/dotnet/WatsonWebserver</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/dotnet/WatsonWebserver</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
-		<PackageTags>watson webserver web-server rest restful http http2 http3 quic api async openapi swagger</PackageTags>
+		<PackageTags>watson webserver web-server rest restful http http2 http3 quic api async openapi swagger telemetry opentelemetry metrics tracing observability prometheus</PackageTags>
 		<PackageId>Watson</PackageId>
 		<Product>Watson</Product>
 		<PackageLicenseFile>LICENSE.md</PackageLicenseFile>
@@ -59,6 +59,7 @@
 	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
 		<PackageReference Include="System.Text.Json" Version="10.0.5" />
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+		<PackageReference Include="System.Diagnostics.DiagnosticSource" Version="8.0.1" />
 	</ItemGroup>
 
 </Project>

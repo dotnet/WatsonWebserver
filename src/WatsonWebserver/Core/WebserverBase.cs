@@ -4,6 +4,7 @@
     using WatsonWebserver.Core.Middleware;
     using WatsonWebserver.Core.OpenApi;
     using WatsonWebserver.Core.Routing;
+    using WatsonWebserver.Core.Telemetry;
     using WatsonWebserver.Core.WebSockets;
     using System;
     using System.Collections.Generic;
@@ -150,6 +151,20 @@
             }
         }
 
+        /// <summary>
+        /// Telemetry emitter that owns the Watson meter and activity source.
+        /// Configure behavior through Settings.Telemetry before starting the server.
+        /// </summary>
+        [JsonIgnore]
+        public WebserverTelemetry Telemetry
+        {
+            get
+            {
+                if (_Telemetry == null) _Telemetry = new WebserverTelemetry(_Settings.Telemetry, _Events, () => _Statistics);
+                return _Telemetry;
+            }
+        }
+
         #endregion
 
         #region Private-Members
@@ -162,6 +177,7 @@
         private ISerializationHelper _Serializer = new DefaultSerializationHelper();
         private MiddlewarePipeline _Middleware = new MiddlewarePipeline();
         private WebSocketConnectionRegistry _WebSocketConnections = new WebSocketConnectionRegistry();
+        private WebserverTelemetry _Telemetry = null;
 
         #endregion
 
@@ -179,6 +195,7 @@
 
             _Settings = settings;
             _Routes = new WebserverRoutes(_Settings, defaultRoute);
+            _Telemetry = new WebserverTelemetry(_Settings.Telemetry, _Events, () => _Statistics);
         }
 
         /// <summary>
@@ -195,6 +212,7 @@
 
             _Settings = new WebserverSettings(hostname, port, ssl);
             _Routes = new WebserverRoutes(_Settings, defaultRoute);
+            _Telemetry = new WebserverTelemetry(_Settings.Telemetry, _Events, () => _Statistics);
         }
 
         #endregion
@@ -614,6 +632,19 @@
         }
 
         /// <summary>
+        /// Dispose of the telemetry emitter, if one has been created.
+        /// </summary>
+        protected void DisposeTelemetry()
+        {
+            WebserverTelemetry telemetry = _Telemetry;
+            _Telemetry = null;
+            if (telemetry != null)
+            {
+                try { telemetry.Dispose(); } catch (Exception) { }
+            }
+        }
+
+        /// <summary>
         /// Access the shared WebSocket session registry.
         /// </summary>
         protected WebSocketConnectionRegistry WebSocketConnections
@@ -666,6 +697,19 @@
             ctx.StartTiming();
             string requestPath = ctx.Request.Url.RawWithoutQuery;
             string normalizedRequestPath = ctx.Request.Url.NormalizedRawWithoutQuery;
+
+            if (Telemetry.PrometheusEnabled
+                && ctx.Request.Method == HttpMethod.GET
+                && IsTelemetryScrapePath(requestPath))
+            {
+                ctx.Response.StatusCode = 200;
+                ctx.Response.ContentType = "text/plain; version=0.0.4; charset=utf-8";
+                await ctx.Response.Send(Telemetry.RenderPrometheus(), token).ConfigureAwait(false);
+                return;
+            }
+
+            System.Diagnostics.Activity telemetrySpan = Telemetry.StartServerSpan(ctx);
+            Telemetry.OnRequestStarted(ctx);
 
             if (Events.HasRequestReceivedHandlers)
             {
@@ -745,6 +789,7 @@
                 if (Routes.AuthenticateApiRequest != null)
                 {
                     AuthResult authResult = await Routes.AuthenticateApiRequest(ctx).ConfigureAwait(false);
+                    Telemetry.RecordAuth("api", authResult);
                     if (authResult == null || !authResult.IsPermitted())
                     {
                         ctx.Response.StatusCode = 401;
@@ -772,6 +817,7 @@
                 else if (Routes.AuthenticateRequest != null)
                 {
                     await Routes.AuthenticateRequest(ctx).ConfigureAwait(false);
+                    Telemetry.RecordAuth("legacy", null);
                     if (ctx.Response.ResponseSent)
                     {
                         if (Settings.Debug.Routing)
@@ -810,17 +856,20 @@
                     return;
                 }
 
+                Telemetry.RecordRouteUnmatched(ctx.Request.Method);
                 ctx.Response.StatusCode = 404;
                 ctx.Response.ContentType = DefaultPages.Pages[404].ContentType;
                 await SendDefaultResponseAsync(ctx, token).ConfigureAwait(false);
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException oce)
             {
+                Telemetry.RecordSpanException(telemetrySpan, oce);
                 MarkRequestTerminated(ctx, ctx?.DisconnectDetected == true);
                 throw;
             }
             catch (MalformedHttpRequestException e)
             {
+                Telemetry.RecordSpanException(telemetrySpan, e);
                 ctx.Response.StatusCode = 400;
                 ctx.Response.ContentType = DefaultPages.Pages[400].ContentType;
                 await SendDefaultResponseAsync(ctx, token).ConfigureAwait(false);
@@ -832,6 +881,7 @@
             }
             catch (Exception e)
             {
+                Telemetry.RecordSpanException(telemetrySpan, e);
                 if (Routes.Exception != null)
                 {
                     await Routes.Exception(ctx, e).ConfigureAwait(false);
@@ -871,6 +921,9 @@
                 }
 
                 ctx.CompleteTiming();
+
+                Telemetry.OnRequestFinished(ctx, telemetrySpan, ctx.Timestamp.TotalMs.Value);
+                telemetrySpan?.Dispose();
 
                 bool emitResponseStarting = ctx.Response.ResponseStarted && Events.HasResponseStartingHandlers;
                 bool emitResponseSent = ctx.Response.ResponseSent && Events.HasResponseSentHandlers;
@@ -912,6 +965,17 @@
         #endregion
 
         #region Private-Members
+
+        private bool IsTelemetryScrapePath(string requestPath)
+        {
+            if (String.IsNullOrEmpty(requestPath)) return false;
+            string configured = Telemetry.PrometheusPath;
+            if (String.IsNullOrEmpty(configured)) return false;
+
+            string left = requestPath.Length > 1 ? requestPath.TrimEnd('/') : requestPath;
+            string right = configured.Length > 1 ? configured.TrimEnd('/') : configured;
+            return String.Equals(left, right, StringComparison.OrdinalIgnoreCase);
+        }
 
         private async Task SendDefaultResponseAsync(HttpContextBase ctx, CancellationToken token)
         {
@@ -974,6 +1038,7 @@
 
                     ctx.RouteType = RouteTypeEnum.Static;
                     ctx.Route = staticRoute;
+                    Telemetry.RecordRouteMatch(ctx.RouteType, ctx.Route);
 
                     try
                     {
@@ -1007,6 +1072,7 @@
 
                     ctx.RouteType = RouteTypeEnum.Content;
                     ctx.Route = contentRoute;
+                    Telemetry.RecordRouteMatch(ctx.RouteType, ctx.Route);
 
                     try
                     {
@@ -1043,6 +1109,7 @@
 
                     ctx.RouteType = RouteTypeEnum.Parameter;
                     ctx.Route = parameterRoute;
+                    Telemetry.RecordRouteMatch(ctx.RouteType, ctx.Route);
 
                     try
                     {
@@ -1077,6 +1144,7 @@
 
                     ctx.RouteType = RouteTypeEnum.Dynamic;
                     ctx.Route = dynamicRoute;
+                    Telemetry.RecordRouteMatch(ctx.RouteType, ctx.Route);
 
                     try
                     {

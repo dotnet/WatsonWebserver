@@ -37,6 +37,7 @@ namespace Test.XUnit
             tests.AddRange(Test.Shared.SharedWebSocketClientTests.GetTests());
             tests.AddRange(Test.Shared.SharedNetstandard21CompatTests.GetTests());
             tests.AddRange(Test.Shared.SharedOpenApiCompositionTests.GetTests());
+            tests.AddRange(Test.Shared.SharedTelemetryTests.GetTests());
 
             for (int i = 0; i < tests.Count; i++)
             {

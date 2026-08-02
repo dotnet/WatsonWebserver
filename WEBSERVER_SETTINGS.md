@@ -165,6 +165,18 @@ Validation:
 
 - throws if set to `null`
 
+### `Telemetry`
+
+Nested `TelemetrySettings` controlling metric and trace emission, forwarded-header client-address resolution, and the optional in-process Prometheus scrape endpoint. See [TelemetrySettings](#telemetrysettings).
+
+Default:
+
+- non-null `TelemetrySettings` instance
+
+Validation:
+
+- throws if set to `null`
+
 ### `UseMachineHostname`
 
 When `true`, Watson uses the machine hostname instead of the literal `Hostname` value for relevant host metadata behavior.
@@ -814,6 +826,167 @@ settings.IO.Http1.StatusLineCacheSize = 64;
 WebserverSettings settings = new WebserverSettings("0.0.0.0", 8080);
 settings.AccessControl.Mode = AccessControlMode.DefaultDeny;
 settings.AccessControl.PermitList.Add("192.168.1.0", "255.255.255.0");
+```
+
+## TelemetrySettings
+
+Controls the metrics and traces Watson emits and how the span resolves the client address. Watson
+emits through a `Meter` and `ActivitySource` (both named `Watson` by default); a host subscribes by
+name. Emission is a near-zero-cost no-op when nothing is listening.
+
+### `Enable`
+
+Master switch. When `false`, Watson skips all metric and trace emission before any tag work.
+
+Default:
+
+- `true`
+
+### `MeterName`
+
+Meter name a metrics host subscribes to. Treat as a stable contract.
+
+Default:
+
+- `Watson`
+
+Validation:
+
+- throws if set to `null` or empty
+
+### `ActivitySourceName`
+
+Activity source name a trace host subscribes to. Treat as a stable contract.
+
+Default:
+
+- `Watson`
+
+Validation:
+
+- throws if set to `null` or empty
+
+### `EnableMetrics`
+
+Enables the metric instruments.
+
+Default:
+
+- `true`
+
+### `EnableTraces`
+
+Enables the per-request `Server` span.
+
+Default:
+
+- `true`
+
+### `PropagateContext`
+
+Adopt an inbound W3C trace context (`traceparent`/`tracestate`) as the span's parent.
+
+Default:
+
+- `true`
+
+### `CaptureRequestBodySize` / `CaptureResponseBodySize`
+
+Record the request and response body-size metrics and span attributes.
+
+Default:
+
+- `true`
+
+### `CaptureContentType`
+
+Stamp the normalized request and response media type on the span.
+
+Default:
+
+- `true`
+
+### `CaptureWebSocketMetrics`
+
+Record WebSocket session and handshake metrics.
+
+Default:
+
+- `true`
+
+### `RecordExceptionEvents`
+
+Attach an `exception` span event on failure.
+
+Default:
+
+- `true`
+
+### `TrustForwardedHeaders`
+
+Resolve the span's `client.address` from a forwarded header instead of the raw socket peer. Leave off
+on internet-facing listeners; enable only behind a known proxy declared in `TrustedProxies`. Affects
+span attributes only, never a security decision.
+
+Default:
+
+- `false`
+
+### `ForwardedForHeader`
+
+Header carrying the client-chain IP list.
+
+Default:
+
+- `X-Forwarded-For`
+
+Validation:
+
+- throws if set to `null` or empty
+
+### `ForwardedProtoHeader`
+
+Header carrying the client-visible scheme, used to override `url.scheme` when the request is trusted.
+
+Default:
+
+- `X-Forwarded-Proto`
+
+Validation:
+
+- throws if set to `null` or empty
+
+### `TrustedProxies`
+
+`IpMatcher.Matcher` allow-list of proxies permitted to set forwarded headers. When empty, only the
+nearest hop is trusted.
+
+Default:
+
+- empty `Matcher`
+
+### `ForwardLimit`
+
+Maximum trusted proxy hops to walk when resolving the client address.
+
+Default:
+
+- `1` (clamped to a minimum of `0`)
+
+### `Prometheus`
+
+Nested `TelemetryPrometheusSettings` for the optional in-process scrape endpoint. The endpoint is
+served on the existing Watson listener, so it opens no additional port and cannot create a listener
+port conflict.
+
+- `Prometheus.Enable` — enable the endpoint. Default `false`.
+- `Prometheus.Path` — path at which the endpoint is served. Default `/metrics`; always begins with `/`.
+
+```csharp
+WebserverSettings settings = new WebserverSettings("127.0.0.1", 8080);
+settings.Telemetry.Prometheus.Enable = true;      // served at /metrics on the main listener
+settings.Telemetry.TrustForwardedHeaders = true;  // resolve client.address behind a proxy
+settings.Telemetry.TrustedProxies.Add("10.0.0.0", "255.0.0.0");
 ```
 
 ## Notes

@@ -2,7 +2,7 @@
 
 ## Current Version
 
-`v7.0.15`
+`v7.1.0`
 
 ## Unreleased
 
@@ -11,6 +11,18 @@
 - Added exhaustive shared websocket-client coverage in `Test.Shared`, wired into both `Test.XUnit` and `Test.Automated`, and extended server/client interop validation through that suite
 - Updated `Test.WebsocketClient` to exercise `WatsonWebSocketClient` instead of raw `ClientWebSocket`
 - Expanded `README.md` and `MIGRATING_FROM_WATSONWEBSOCKET.md` so WatsonWebsocket client migrations now have first-class documentation alongside the server guidance
+
+## v7.1.0
+
+- Added standardized, OpenTelemetry-shaped telemetry emitted through a `Watson` `Meter` and `ActivitySource`; a host (Radiant, the OpenTelemetry SDK, Prometheus, or any listener) subscribes by name with no dependency taken by Watson on any collector
+- Added the four OpenTelemetry HTTP server metrics (`http.server.request.duration`, `http.server.active_requests`, `http.server.request.body.size`, `http.server.response.body.size`) with label sets matching the OpenTelemetry HTTP semantic conventions
+- Added `watson.*` metrics for connections, routing (match/unmatched by route type and template), authentication outcomes, aborts/disconnects, server exceptions, received/sent bytes, uptime/up, active HTTP/2 and HTTP/3 streams, and WebSocket sessions/handshakes
+- Added a per-request `Server` span with W3C context propagation (`traceparent`/`tracestate`), bidirectional body-size and content-type attributes, and exception events
+- Added forwarded-header (`X-Forwarded-For` / `X-Forwarded-Proto`) client-address resolution for spans, gated by `Settings.Telemetry.TrustForwardedHeaders` and a trusted-proxy allow-list; the raw socket peer is always recorded separately as `network.peer.address`
+- Added an optional in-process Prometheus scrape endpoint served on the existing Watson listener at a configurable path (`Settings.Telemetry.Prometheus`), so it opens no additional port and cannot create a listener port conflict; disabled by default
+- Added `WebserverSettings.Telemetry` (`TelemetrySettings`) and `WebserverBase.Telemetry` (`WebserverTelemetry`); metrics that mirror the existing events and statistics surface are wired to it without touching the transport hot paths
+- Added shared telemetry coverage (`SharedTelemetryTests`) exercised through `MeterListener`/`ActivityListener`, wired into both `Test.Automated` and `Test.XUnit`
+- Added a `System.Diagnostics.DiagnosticSource` (8.0.1) package reference for the `netstandard2.1` target, where `Meter`/`ActivitySource` are not in-box
 
 ## v7.0.15
 

@@ -26,6 +26,7 @@ Watson 7 is a major consumer-facing release:
 - Alt-Svc support for advertising HTTP/3 endpoints
 - Shared request and response semantics across protocols
 - Built-in OpenAPI 3.0 document generation and Swagger UI
+- Standardized OpenTelemetry-shaped metrics and traces (added in 7.1) that any collector subscribes to by name; see [Observability and Telemetry](#observability-and-telemetry)
 - Expanded automated coverage through `Test.Automated` and `Test.XUnit`
 
 Refer to [CHANGELOG.md](CHANGELOG.md) for the full release history.
@@ -1083,6 +1084,79 @@ To expose Watson externally:
 - Configure URL ACLs or certificate bindings when your OS requires them
 
 On Windows, `netsh http show urlacl` and `netsh http add urlacl ...` are commonly needed when binding outside localhost.
+
+## Observability and Telemetry
+
+Watson emits standardized metrics and traces through the .NET base class library: a `Meter` and an
+`ActivitySource`, both named `Watson`. Watson only emits; it never collects. A host subscribes to those
+two names and owns the export pipeline, so the same instrumentation feeds Radiant, the OpenTelemetry
+SDK, Prometheus, or a unit test's `MeterListener`. Watson takes no dependency on any of them. When
+nothing is subscribed, emission is a near-zero-cost no-op.
+
+The two names a consumer needs are both `Watson` (overridable via `Settings.Telemetry.MeterName` and
+`ActivitySourceName`). Subscribe with a collector — for example, the OpenTelemetry SDK:
+
+```csharp
+Sdk.CreateMeterProviderBuilder().AddMeter("Watson")./* exporter */.Build();
+Sdk.CreateTracerProviderBuilder().AddSource("Watson")./* exporter */.Build();
+```
+
+or [Radiant](https://github.com/jchristn/Radiant):
+
+```csharp
+settings.Sources.AddMeter("Watson");
+settings.Sources.AddActivitySource("Watson");
+```
+
+### What is emitted
+
+The four core HTTP metrics use the OpenTelemetry HTTP semantic-convention names and label sets, so
+they render on stock dashboards: `http.server.request.duration`, `http.server.active_requests`,
+`http.server.request.body.size`, and `http.server.response.body.size`. Everything else Watson measures
+lives under a `watson.*` namespace — connections, route matches (by route type and template),
+unmatched requests, authentication outcomes, aborts and disconnects, server exceptions, received/sent
+bytes, uptime, and active HTTP/2 and HTTP/3 streams and WebSocket sessions.
+
+Each request also produces a `Server` span. When an inbound `traceparent` header is present, Watson
+adopts it as the parent so the request joins a distributed trace. The span carries the method, route
+template, status code, scheme, protocol version, and — bidirectionally — request and response body
+size and content type. High-cardinality detail (the raw path, the client address, the user agent)
+lives on the span, never on a metric label. The one rule that keeps metrics healthy: `http.route` is
+always the route **template** (`/users/{id}`), never the raw path.
+
+### Client address behind a proxy
+
+By default the span's `client.address` is the socket peer, and the raw peer is always recorded as
+`network.peer.address`. Behind a reverse proxy or load balancer, turn on forwarded-header resolution
+and declare the proxies you trust:
+
+```csharp
+server.Settings.Telemetry.TrustForwardedHeaders = true;
+server.Settings.Telemetry.TrustedProxies.Add("10.0.0.0", "255.0.0.0");
+```
+
+Resolution walks `X-Forwarded-For` from the nearest hop over trusted proxies up to
+`Settings.Telemetry.ForwardLimit`. It affects only span attributes and never a security decision, and
+it stays off until you opt in — an internet-facing listener never trusts a client-supplied source IP
+by accident.
+
+### Optional in-process Prometheus endpoint
+
+When no external collector is present, Watson can serve a Prometheus scrape endpoint itself. It is
+served on the **existing** Watson listener at a configurable path, so it opens no additional port and
+cannot create a listener port conflict. It is disabled by default:
+
+```csharp
+server.Settings.Telemetry.Prometheus.Enable = true;   // served at /metrics on the main listener
+server.Settings.Telemetry.Prometheus.Path = "/metrics";
+```
+
+A scraper then reads `http://<host>:<port>/metrics` and sees the exporter-derived series names —
+`http_server_request_duration_seconds`, `http_server_active_requests`, `watson_server_up`, and the
+rest of the `watson_*` family. For anything beyond a single process, prefer an external OpenTelemetry
+Collector and treat this endpoint as a zero-infrastructure convenience.
+
+The full metric catalog, attribute keys, and design notes live in [TELEMETRY.md](TELEMETRY.md).
 
 ## Operational Notes
 

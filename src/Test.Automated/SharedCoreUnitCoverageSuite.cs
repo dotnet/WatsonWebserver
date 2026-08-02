@@ -27,6 +27,7 @@ namespace Test.Automated
             await ExecuteTestsAsync(SharedWebSocketClientTests.GetTests()).ConfigureAwait(false);
             await ExecuteTestsAsync(SharedNetstandard21CompatTests.GetTests()).ConfigureAwait(false);
             await ExecuteTestsAsync(SharedOpenApiCompositionTests.GetTests()).ConfigureAwait(false);
+            await ExecuteTestsAsync(SharedTelemetryTests.GetTests()).ConfigureAwait(false);
 
             return _Results.ToArray();
         }
