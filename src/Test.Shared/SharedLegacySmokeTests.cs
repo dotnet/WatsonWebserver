@@ -2042,13 +2042,48 @@ namespace Test.Shared
             if (client == null) throw new ArgumentNullException(nameof(client));
             if (baseAddress == null) throw new ArgumentNullException(nameof(baseAddress));
 
-            HttpResponseMessage response = await client.GetAsync(new Uri(baseAddress, "/test/get")).ConfigureAwait(false);
-            string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            // A route that returned a 500 may have closed its keep-alive connection. The follow-up
+            // health probe can therefore land on a pooled connection the server has already torn
+            // down, surfacing as a transient transport reset. Retry with a fresh connection before
+            // treating the server as unhealthy.
+            const int maxAttempts = 3;
 
-            if (!response.IsSuccessStatusCode || !String.Equals(body, "GET response", StringComparison.Ordinal))
+            for (int attempt = 1; ; attempt++)
             {
-                throw new InvalidOperationException("Server did not remain healthy for the next request.");
+                try
+                {
+                    HttpResponseMessage response = await client.GetAsync(new Uri(baseAddress, "/test/get")).ConfigureAwait(false);
+                    string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                    if (!response.IsSuccessStatusCode || !String.Equals(body, "GET response", StringComparison.Ordinal))
+                    {
+                        throw new InvalidOperationException("Server did not remain healthy for the next request.");
+                    }
+
+                    return;
+                }
+                catch (Exception ex) when (attempt < maxAttempts && IsTransientConnectionReset(ex))
+                {
+                    await Task.Delay(150).ConfigureAwait(false);
+                }
             }
+        }
+
+        private static bool IsTransientConnectionReset(Exception ex)
+        {
+            Exception current = ex;
+
+            while (current != null)
+            {
+                if (current is System.Net.Sockets.SocketException || current is System.IO.IOException || current is HttpRequestException)
+                {
+                    return true;
+                }
+
+                current = current.InnerException;
+            }
+
+            return false;
         }
 
         private static async Task<T> WaitForTaskAsync<T>(Task<T> task, int timeoutMs, string timeoutMessage)

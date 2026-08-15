@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Touchstone.Core" Version="0.1.12" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\WatsonWebserver\WatsonWebserver.csproj" />
     <ProjectReference Include="..\Watson.Clients\Watson.Clients.csproj" />
   </ItemGroup>

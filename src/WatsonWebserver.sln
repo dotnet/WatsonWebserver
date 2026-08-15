@@ -55,6 +55,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.WebsocketClient", "Tes
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Watson.Clients", "Watson.Clients\Watson.Clients.csproj", "{F86942C6-0339-4FCD-85DA-98FF5F6C2B35}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Nunit", "Test.Nunit\Test.Nunit.csproj", "{FB24CD6E-93A8-4D07-A570-E82B7836DD56}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -377,6 +379,18 @@ Global
 		{F86942C6-0339-4FCD-85DA-98FF5F6C2B35}.Release|x64.Build.0 = Release|Any CPU
 		{F86942C6-0339-4FCD-85DA-98FF5F6C2B35}.Release|x86.ActiveCfg = Release|Any CPU
 		{F86942C6-0339-4FCD-85DA-98FF5F6C2B35}.Release|x86.Build.0 = Release|Any CPU
+		{FB24CD6E-93A8-4D07-A570-E82B7836DD56}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB24CD6E-93A8-4D07-A570-E82B7836DD56}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB24CD6E-93A8-4D07-A570-E82B7836DD56}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{FB24CD6E-93A8-4D07-A570-E82B7836DD56}.Debug|x64.Build.0 = Debug|Any CPU
+		{FB24CD6E-93A8-4D07-A570-E82B7836DD56}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FB24CD6E-93A8-4D07-A570-E82B7836DD56}.Debug|x86.Build.0 = Debug|Any CPU
+		{FB24CD6E-93A8-4D07-A570-E82B7836DD56}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB24CD6E-93A8-4D07-A570-E82B7836DD56}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB24CD6E-93A8-4D07-A570-E82B7836DD56}.Release|x64.ActiveCfg = Release|Any CPU
+		{FB24CD6E-93A8-4D07-A570-E82B7836DD56}.Release|x64.Build.0 = Release|Any CPU
+		{FB24CD6E-93A8-4D07-A570-E82B7836DD56}.Release|x86.ActiveCfg = Release|Any CPU
+		{FB24CD6E-93A8-4D07-A570-E82B7836DD56}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

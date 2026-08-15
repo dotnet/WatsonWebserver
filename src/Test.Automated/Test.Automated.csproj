@@ -8,11 +8,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Remove="ApiRouteIntegrationTests.cs" />
+		<PackageReference Include="Touchstone.Cli" Version="0.1.12" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\WatsonWebserver\WatsonWebserver.csproj" />
 		<ProjectReference Include="..\Test.Shared\Test.Shared.csproj" />
 	</ItemGroup>
 

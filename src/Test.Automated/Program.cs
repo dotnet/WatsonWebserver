@@ -1,29 +1,30 @@
 namespace Test.Automated
 {
     using System;
+    using System.Runtime.Versioning;
     using System.Threading.Tasks;
+    using Test.Shared;
+    using Touchstone.Cli;
 
     /// <summary>
-    /// Entry point for the automated console test runner.
-    /// When running under xUnit, the test SDK provides the entry point.
-    /// This class is used only when running the project directly as a console application.
+    /// Console entry point for the Touchstone CLI test runner. Executes every suite defined by the
+    /// shared source of truth (<see cref="WatsonTestSuites"/>) and returns a process exit code of 0
+    /// when all tests pass and 1 when any test fails.
     /// </summary>
+    [SupportedOSPlatform("windows")]
+    [SupportedOSPlatform("linux")]
+    [SupportedOSPlatform("macos")]
     internal static class Program
     {
         /// <summary>
-        /// Execute the automated test suites.
+        /// Execute the shared test suites through the Touchstone console runner.
         /// </summary>
-        /// <param name="args">Command line arguments.</param>
+        /// <param name="args">Command line arguments. Supports "--results &lt;path&gt;" to export JSON.</param>
         /// <returns>Process exit code.</returns>
-        [System.Runtime.Versioning.SupportedOSPlatform("windows")]
-        [System.Runtime.Versioning.SupportedOSPlatform("linux")]
-        [System.Runtime.Versioning.SupportedOSPlatform("macos")]
-        public static async Task Main(string[] args)
+        public static async Task<int> Main(string[] args)
         {
             string resultsPath = ParseResultsPath(args);
-            AutomatedConsoleRunner runner = new AutomatedConsoleRunner(resultsPath);
-            AutomatedRunSummary summary = await runner.RunAsync().ConfigureAwait(false);
-            Environment.Exit(summary.FailedCount > 0 ? 1 : 0);
+            return await ConsoleRunner.RunAsync(WatsonTestSuites.All, resultsPath: resultsPath).ConfigureAwait(false);
         }
 
         private static string ParseResultsPath(string[] args)

@@ -1,4 +1,4 @@
-namespace Test.Automated
+namespace Test.Shared
 {
     using System;
     using System.Collections.Generic;
@@ -19,7 +19,6 @@ namespace Test.Automated
     using System.Runtime.Versioning;
     using System.Threading;
     using System.Threading.Tasks;
-    using Test.Shared;
     using WatsonWebserver;
     using WatsonWebserver.Core;
     using WatsonWebserver.Core.Hpack;

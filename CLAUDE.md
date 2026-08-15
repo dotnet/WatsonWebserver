@@ -13,10 +13,19 @@ This repository no longer uses `http.sys` as its primary server model.
 ## Solution Layout
 
 - `src/WatsonWebserver/` - server implementation (concrete types at root, shared core types under `Core/`)
-- `src/Test.Automated/` - console-based automated integration suite
-- `src/Test.XUnit/` - xUnit mirror over the shared automated coverage
+- `src/Test.Shared/` - **single source of truth** for all automated tests; `WatsonTestSuites.All` exposes every case as a runner-agnostic Touchstone `TestSuiteDescriptor`
+- `src/Test.Automated/` - Touchstone CLI runner (`Touchstone.Cli`) over `WatsonTestSuites.All`
+- `src/Test.XUnit/` - Touchstone xUnit adapter (`Touchstone.XunitAdapter`) over `WatsonTestSuites.All`
+- `src/Test.Nunit/` - Touchstone NUnit adapter (`Touchstone.NunitAdapter`) over `WatsonTestSuites.All`
 - `src/Test.Benchmark/` - benchmark harness for Watson 6, WatsonLite 6, Watson 7, and Kestrel
-- `src/Test.*` - sample and feature-specific projects
+- `src/Test.*` - interactive/sample and feature-specific console projects
+
+### Adding or changing tests
+
+All test cases live in `src/Test.Shared/` and are registered in `src/Test.Shared/WatsonTestSuites.cs`. Add
+coverage there (a new case in an existing suite, or a new suite). The three runners (Test.Automated,
+Test.XUnit, Test.Nunit) consume `WatsonTestSuites.All` and require no per-runner edits. Never add test
+logic directly to a runner project.
 
 ## Core Architecture
 
@@ -319,14 +328,17 @@ Use these commands unless the task requires a narrower scope:
 
 ```powershell
 dotnet build src\WatsonWebserver.sln -c Debug
-dotnet run --project src\Test.Automated\Test.Automated.csproj -c Debug -f net10.0
+dotnet run --project src\Test.Automated\Test.Automated.csproj -c Debug -f net10.0 -- --results results.json
 dotnet test src\Test.XUnit\Test.XUnit.csproj -c Debug -f net10.0
+dotnet test src\Test.Nunit\Test.Nunit.csproj -c Debug -f net10.0
 dotnet run --project src\Test.Benchmark\Test.Benchmark.csproj -c Debug -f net10.0 -- --targets Watson7 --protocols http1,http2,http3 --scenarios hello,json
 ```
 
-`Test.Automated` is the main integration suite.
+All three test runners execute the same shared suite defined in `Test.Shared/WatsonTestSuites.cs`.
 
-`Test.XUnit` mirrors the automated coverage for `dotnet test`.
+`Test.Automated` is the Touchstone CLI runner (exit code 0 on all-pass, 1 on any failure; `--results <path>` exports JSON).
+
+`Test.XUnit` and `Test.Nunit` are the Touchstone xUnit and NUnit adapters for `dotnet test`.
 
 `Test.Benchmark` is for throughput, latency, and allocation validation, not correctness.
 
@@ -343,8 +355,9 @@ dotnet run --project src\Test.Benchmark\Test.Benchmark.csproj -c Debug -f net10.
 - `src/WatsonWebserver/Core/OpenApi/`
 - `src/WatsonWebserver/Webserver.cs`
 - `src/Test.RestApi/Program.cs`
-- `src/Test.Automated/ApiRouteIntegrationTests.cs`
-- `src/Test.Automated/LegacyCoverageSuite.cs`
+- `src/Test.Shared/WatsonTestSuites.cs`
+- `src/Test.Shared/SharedApiRouteTests.cs`
+- `src/Test.Shared/LegacyCoverageSuite.cs`
 - `src/Test.Benchmark/`
 
 ## Coding rules
