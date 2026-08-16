@@ -3,9 +3,9 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.1;net462;net48;net8.0;net10.0</TargetFrameworks>
     <LangVersion>latest</LangVersion>
-    <Version>7.0.14</Version>
+    <Version>7.0.15</Version>
     <Description>Async-first WebSocket client for Watson 7 with whole-message receive semantics, direct ClientWebSocket access, and interop with the Watson webserver WebSocket surface.</Description>
-    <PackageReleaseNotes>Initial Watson.Clients package with WatsonWebSocketClient, whole-message receive APIs, raw ClientWebSocket access, exhaustive shared client coverage, and Watson 7 interop validation.</PackageReleaseNotes>
+    <PackageReleaseNotes>Dependency servicing refresh (no public API changes): Microsoft.Bcl.AsyncInterfaces 10.0.0 -&gt; 10.0.11 and System.Buffers 4.6.0 -&gt; 4.6.1 for the net462/net48 targets.</PackageReleaseNotes>
     <Authors>Joel Christner</Authors>
     <Company>Joel Christner</Company>
     <Copyright>(c)2026 Joel Christner</Copyright>
@@ -43,8 +43,8 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net462' Or '$(TargetFramework)' == 'net48'">
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.0" />
-    <PackageReference Include="System.Buffers" Version="4.6.0" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.11" />
+    <PackageReference Include="System.Buffers" Version="4.6.1" />
   </ItemGroup>
 
 </Project>

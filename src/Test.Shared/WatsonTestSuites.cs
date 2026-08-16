@@ -94,6 +94,9 @@ namespace Test.Shared
             cases.Add(Case(suiteId, "API :: GET extracts path and query parameters", SharedApiRouteTests.TestGetExtractsParametersAsync));
             cases.Add(Case(suiteId, "API :: POST deserializes typed body", SharedApiRouteTests.TestPostDeserializesBodyAsync));
             cases.Add(Case(suiteId, "API :: POST raw body access", SharedApiRouteTests.TestPostRawBodyAsync));
+            cases.Add(Case(suiteId, "API :: POST malformed JSON returns 400", SharedApiRouteTests.TestPostMalformedJsonReturns400Async));
+            cases.Add(Case(suiteId, "API :: POST empty body deserializes to null model", SharedApiRouteTests.TestPostEmptyBodyTypedRouteAsync));
+            cases.Add(Case(suiteId, "API :: POST unknown JSON fields are ignored", SharedApiRouteTests.TestPostUnknownFieldsIgnoredAsync));
             cases.Add(Case(suiteId, "API :: PUT with typed body", SharedApiRouteTests.TestPutWorksAsync));
             cases.Add(Case(suiteId, "API :: PATCH with typed body", SharedApiRouteTests.TestPatchWorksAsync));
             cases.Add(Case(suiteId, "API :: DELETE with parameter", SharedApiRouteTests.TestDeleteWorksAsync));
@@ -101,6 +104,7 @@ namespace Test.Shared
             cases.Add(Case(suiteId, "API :: Null return yields empty 200", SharedApiRouteTests.TestNullReturnEmptyResponseAsync));
             cases.Add(Case(suiteId, "API :: Explicit status code preserved", SharedApiRouteTests.TestExplicitStatusCodeReturnAsync));
             cases.Add(Case(suiteId, "API :: WebserverException returns structured error", SharedApiRouteTests.TestWebserverExceptionReturnsStructuredErrorAsync));
+            cases.Add(Case(suiteId, "API :: Unhandled exception returns 500 InternalError", SharedApiRouteTests.TestUnhandledExceptionReturns500Async));
             cases.Add(Case(suiteId, "API :: Unmatched route returns 401 with auth enabled", SharedApiRouteTests.TestUnmatchedRouteReturns401Async));
             cases.Add(Case(suiteId, "API :: Timed-out handler returns 408", SharedApiRouteTests.TestTimeoutReturns408Async));
             cases.Add(Case(suiteId, "API :: Protected route returns 401 without token", SharedApiRouteTests.TestProtectedRouteReturns401WithoutTokenAsync));

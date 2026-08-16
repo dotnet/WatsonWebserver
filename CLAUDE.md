@@ -318,7 +318,7 @@ Watson emits standardized telemetry through the BCL (`System.Diagnostics.Metrics
 - The optional Prometheus endpoint (`Settings.Telemetry.Prometheus`) is served on the existing
   listener via interception in `ProcessHttpContextAsync`, so it opens no extra port. It is backed by a
   `MeterListener` in `PrometheusScrapeCollector`.
-- `System.Diagnostics.DiagnosticSource` (8.0.1) is referenced for the `netstandard2.1` target only.
+- `System.Diagnostics.DiagnosticSource` (10.0.11) is referenced for the `netstandard2.1` target only.
 - User-facing usage/consumption guide and metric catalog: `TELEMETRY.md`. The original implementation
   plan and design notes are archived at `archive/TELEMETRY_IMPLEMENTATION_PLAN.md`.
 

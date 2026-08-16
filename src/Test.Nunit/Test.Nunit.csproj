@@ -8,13 +8,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
 		<PackageReference Include="Touchstone.NunitAdapter" Version="0.1.12" />
-		<PackageReference Include="NUnit" Version="4.3.2" />
-		<PackageReference Include="NUnit.Analyzers" Version="4.7.0">
+		<PackageReference Include="NUnit" Version="4.6.1" />
+		<PackageReference Include="NUnit.Analyzers" Version="4.14.0">
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
-		<PackageReference Include="NUnit3TestAdapter" Version="5.0.0">
+		<PackageReference Include="NUnit3TestAdapter" Version="6.2.0">
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
 	</ItemGroup>

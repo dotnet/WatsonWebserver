@@ -2,7 +2,14 @@
 
 ## Current Version
 
-`v7.1.0`
+`v7.1.1`
+
+## v7.1.1
+
+- Refreshed shipping dependencies with no public API changes: `System.Text.Json` 10.0.5 -> 10.0.11 and `System.Diagnostics.DiagnosticSource` 8.0.1 -> 10.0.11 for the `netstandard2.1` target, picking up upstream security and reliability servicing on the API-route serialization path
+- Refreshed `Watson.Clients` dependencies (net462/net48 targets): `Microsoft.Bcl.AsyncInterfaces` 10.0.0 -> 10.0.11 and `System.Buffers` 4.6.0 -> 4.6.1
+- Updated test/tooling dependencies (RestWrapper, Inputty, Newtonsoft.Json, Microsoft.Playwright, Microsoft.NET.Test.Sdk, NUnit + adapter, xUnit visual-studio runner) to current releases and adapted `Test.Routing` to RestWrapper's `SendAsync` API
+- Added negative and edge API-route coverage in `Test.Shared`: malformed JSON body returns HTTP 400, unhandled handler exception returns HTTP 500 `InternalError`, empty typed body deserializes to a null model, and unknown JSON fields are ignored
 
 ## Unreleased
 

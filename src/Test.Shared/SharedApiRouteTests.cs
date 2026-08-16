@@ -198,6 +198,77 @@ namespace Test.Shared
         }
 
         /// <summary>
+        /// Verify a malformed JSON request body on a typed route yields a structured HTTP 400
+        /// rather than crashing the handler. Exercises the System.Text.Json deserialization path.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static Task TestPostMalformedJsonReturns400Async()
+        {
+            return RunAsync(async delegate (HttpClient client)
+            {
+                StringContent content = new StringContent("{ this is not valid json", Encoding.UTF8, "application/json");
+                HttpResponseMessage response = await client.PostAsync("/items", content).ConfigureAwait(false);
+                string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                // DeserializationError maps to HTTP 400. The enum name is intentionally not asserted:
+                // ApiResultEnum.DeserializationError and ApiResultEnum.BadRequest share value 400, so the
+                // serialized name is ambiguous; the status code is the stable contract.
+                AssertStatus(HttpStatusCode.BadRequest, response.StatusCode, body);
+                AssertContains(body, "400");
+            });
+        }
+
+        /// <summary>
+        /// Verify an unhandled (non-Webserver) exception thrown from an API handler produces a
+        /// structured HTTP 500 InternalError response rather than an unstructured failure.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static Task TestUnhandledExceptionReturns500Async()
+        {
+            return RunAsync(async delegate (HttpClient client)
+            {
+                HttpResponseMessage response = await client.GetAsync("/throw").ConfigureAwait(false);
+                string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                AssertStatus(HttpStatusCode.InternalServerError, response.StatusCode, body);
+                AssertContains(body, "InternalError");
+            });
+        }
+
+        /// <summary>
+        /// Verify an empty request body on a typed POST route deserializes to a null model and the
+        /// handler still completes successfully (no deserialization is attempted for an empty body).
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static Task TestPostEmptyBodyTypedRouteAsync()
+        {
+            return RunAsync(async delegate (HttpClient client)
+            {
+                StringContent content = new StringContent(String.Empty, Encoding.UTF8, "application/json");
+                HttpResponseMessage response = await client.PostAsync("/items", content).ConfigureAwait(false);
+                string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                AssertStatus(HttpStatusCode.Created, response.StatusCode, body);
+                AssertContains(body, "Created");
+            });
+        }
+
+        /// <summary>
+        /// Verify a valid JSON body carrying unknown properties still deserializes the known members
+        /// (unknown members are ignored by default) and the typed route succeeds.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static Task TestPostUnknownFieldsIgnoredAsync()
+        {
+            return RunAsync(async delegate (HttpClient client)
+            {
+                StringContent content = new StringContent("{\"Name\":\"Widget\",\"Unknown\":42,\"Nested\":{\"X\":1}}", Encoding.UTF8, "application/json");
+                HttpResponseMessage response = await client.PostAsync("/items", content).ConfigureAwait(false);
+                string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                AssertStatus(HttpStatusCode.Created, response.StatusCode, body);
+                AssertContains(body, "Widget");
+            });
+        }
+
+        /// <summary>
         /// Verify unmatched routes still enforce API authentication behavior.
         /// </summary>
         /// <returns>Task.</returns>
@@ -401,6 +472,11 @@ namespace Test.Shared
             server.Get("/error", async (req) =>
             {
                 throw new WebserverException(ApiResultEnum.NotFound, "Item not found");
+            });
+
+            server.Get("/throw", async (req) =>
+            {
+                throw new InvalidOperationException("Unhandled handler failure");
             });
 
             server.Get("/slow", async (req) =>

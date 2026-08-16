@@ -27,7 +27,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Inputty" Version="1.0.5" />
+		<PackageReference Include="Inputty" Version="1.0.13" />
 	</ItemGroup>
 
 </Project>

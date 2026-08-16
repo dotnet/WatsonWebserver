@@ -144,7 +144,7 @@ namespace Test
 
                 using (RestRequest req = new RestRequest(url))
                 {
-                    using (RestResponse resp = req.Send())
+                    using (RestResponse resp = req.SendAsync().GetAwaiter().GetResult())
                     {
                         Console.WriteLine("Received response: " + resp.StatusCode);
                         Task.Delay(1000).Wait();
