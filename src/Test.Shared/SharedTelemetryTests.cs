@@ -31,6 +31,7 @@ namespace Test.Shared
             List<SharedNamedTestCase> tests = new List<SharedNamedTestCase>();
             tests.Add(new SharedNamedTestCase("Telemetry :: Request metrics and span", TestRequestMetricsAndSpanAsync));
             tests.Add(new SharedNamedTestCase("Telemetry :: Forwarded client address", TestForwardedClientAddressAsync));
+            tests.Add(new SharedNamedTestCase("Telemetry :: Forwarded trusted proxy chain", TestForwardedTrustedProxyChainAsync));
             tests.Add(new SharedNamedTestCase("Telemetry :: Prometheus endpoint scrape", TestPrometheusEndpointAsync));
             tests.Add(new SharedNamedTestCase("Telemetry :: Disabled emits nothing", TestDisabledEmitsNothingAsync));
             tests.Add(new SharedNamedTestCase("Telemetry :: Error path span and exception metric", TestErrorPathAsync));
@@ -102,6 +103,38 @@ namespace Test.Shared
                 Activity span = FindSpanWithRoute(untrustedSpans, "/users/{id}");
                 AssertTrue(span != null, "Expected a server span for the untrusted case.");
                 AssertTrue(GetTag(span, "client.address") == "127.0.0.1", "Expected the forwarded header to be ignored when trust is off.");
+            }
+        }
+
+        private static async Task TestForwardedTrustedProxyChainAsync()
+        {
+            string trustedSource = NewSourceName();
+            string untrustedSource = NewSourceName();
+            ConcurrentBag<Activity> trustedSpans = new ConcurrentBag<Activity>();
+            ConcurrentBag<Activity> untrustedSpans = new ConcurrentBag<Activity>();
+
+            using (ActivityListener activityListener = BuildActivityListener(trustedSpans, trustedSource))
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, ConfigureUserRoute, NameAnd(trustedSource, EnableTrustedProxyChain)))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+                await SendWithForwardedForAsync(host, "203.0.113.9, 10.25.1.10").ConfigureAwait(false);
+                await WaitUntilAsync(delegate { return FindSpanWithRoute(trustedSpans, "/users/{id}") != null; }, 5000).ConfigureAwait(false);
+
+                Activity span = FindSpanWithRoute(trustedSpans, "/users/{id}");
+                AssertTrue(span != null, "Expected a server span for the trusted proxy-chain case.");
+                AssertTrue(GetTag(span, "client.address") == "203.0.113.9", "Expected the client address before the trusted proxy hop.");
+            }
+
+            using (ActivityListener activityListener = BuildActivityListener(untrustedSpans, untrustedSource))
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, ConfigureUserRoute, NameAnd(untrustedSource, EnableTrustedProxyChain)))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+                await SendWithForwardedForAsync(host, "203.0.113.9, 198.51.100.10").ConfigureAwait(false);
+                await WaitUntilAsync(delegate { return FindSpanWithRoute(untrustedSpans, "/users/{id}") != null; }, 5000).ConfigureAwait(false);
+
+                Activity span = FindSpanWithRoute(untrustedSpans, "/users/{id}");
+                AssertTrue(span != null, "Expected a server span for the untrusted proxy-chain case.");
+                AssertTrue(GetTag(span, "client.address") == "198.51.100.10", "Expected traversal to stop at the untrusted proxy hop.");
             }
         }
 
@@ -352,6 +385,13 @@ namespace Test.Shared
         private static void EnableForwardedHeaders(WebserverSettings settings)
         {
             settings.Telemetry.TrustForwardedHeaders = true;
+        }
+
+        private static void EnableTrustedProxyChain(WebserverSettings settings)
+        {
+            settings.Telemetry.TrustForwardedHeaders = true;
+            settings.Telemetry.ForwardLimit = 2;
+            settings.Telemetry.TrustedProxies.Add("10.25.0.0", "255.255.0.0");
         }
 
         private static void EnablePrometheus(WebserverSettings settings)

@@ -92,10 +92,10 @@
             switch (Mode)
             {
                 case AccessControlMode.DefaultDeny:
-                    return PermitList.MatchExists(ip);
+                    return TryMatch(PermitList, ip);
 
                 case AccessControlMode.DefaultPermit:
-                    if (DenyList.MatchExists(ip)) return false;
+                    if (TryMatch(DenyList, ip)) return false;
                     return true;
 
                 default:
@@ -106,7 +106,21 @@
         #endregion
 
         #region Private-Methods
-        
+
+        private static bool TryMatch(Matcher matcher, string ip)
+        {
+            if (matcher == null) return false;
+
+            try
+            {
+                return matcher.MatchExists(ip);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
         #endregion
     }
 }

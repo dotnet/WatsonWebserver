@@ -5,7 +5,7 @@
 		<LangVersion>latest</LangVersion>
 		<Version>7.1.1</Version>
 		<Description>Simple, fast, async C# web server for handling REST requests with unified 7.x protocol architecture targeting .NET Standard 2.1, .NET 8, and .NET 10.</Description>
-		<PackageReleaseNotes>Dependency servicing refresh (no public API changes): System.Text.Json 10.0.5 -&gt; 10.0.11 and System.Diagnostics.DiagnosticSource 8.0.1 -&gt; 10.0.11 for the netstandard2.1 target, picking up upstream security and reliability fixes on the API-route serialization path.</PackageReleaseNotes>
+		<PackageReleaseNotes>Dependency servicing refresh (no public API changes): IpMatcher 1.0.5 -&gt; 1.0.6, System.Text.Json 10.0.5 -&gt; 10.0.11, and System.Diagnostics.DiagnosticSource 8.0.1 -&gt; 10.0.11, picking up upstream security and reliability fixes.</PackageReleaseNotes>
 
 		<Authors>Joel Christner</Authors>
 		<Company>Joel Christner</Company>
@@ -50,7 +50,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="IpMatcher" Version="1.0.5" />
+		<PackageReference Include="IpMatcher" Version="1.0.6" />
 		<PackageReference Include="RegexMatcher" Version="1.0.9" />
 		<PackageReference Include="Timestamps" Version="1.0.12" />
 		<PackageReference Include="UrlMatcher" Version="3.0.2" />

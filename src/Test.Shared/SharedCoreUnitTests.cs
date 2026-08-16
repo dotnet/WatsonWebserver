@@ -47,6 +47,9 @@ namespace Test.Shared
             tests.Add(CreateSync("AuthResult :: IsPermitted false when denied explicit", TestAuthResultDeniedExplicit));
             tests.Add(CreateSync("AuthResult :: Metadata propagated", TestAuthResultMetadataPropagated));
 
+            tests.Add(CreateSync("AccessControlManager :: Permit and deny lists match IPv4 CIDR", TestAccessControlManagerPermitAndDenyListsMatchIpv4Cidr));
+            tests.Add(CreateSync("AccessControlManager :: IPv4 rules do not throw for IPv6 callers", TestAccessControlManagerIpv4RulesDoNotThrowForIpv6Callers));
+
             tests.Add(CreateSync("TimeoutSettings :: Default is zero", TestTimeoutSettingsDefaultIsZero));
             tests.Add(CreateSync("TimeoutSettings :: Constructor sets timeout", TestTimeoutSettingsConstructorSetsTimeout));
             tests.Add(CreateSync("TimeoutSettings :: Negative timeout throws", TestTimeoutSettingsNegativeTimeoutThrows));
@@ -157,6 +160,34 @@ namespace Test.Shared
         {
             AuthResult result = new AuthResult { Metadata = "metadata" };
             AssertTrue(result.Metadata != null, "Metadata should be retained.");
+        }
+
+        private static void TestAccessControlManagerPermitAndDenyListsMatchIpv4Cidr()
+        {
+            AccessControlManager defaultDeny = new AccessControlManager(AccessControlMode.DefaultDeny);
+            defaultDeny.PermitList.Add("192.168.50.0", "255.255.255.0");
+
+            AssertTrue(defaultDeny.Permit("192.168.50.42"), "Default-deny mode should permit addresses inside the permit-list CIDR.");
+            AssertTrue(!defaultDeny.Permit("192.168.51.42"), "Default-deny mode should reject addresses outside the permit-list CIDR.");
+
+            AccessControlManager defaultPermit = new AccessControlManager(AccessControlMode.DefaultPermit);
+            defaultPermit.DenyList.Add("10.10.0.0", "255.255.0.0");
+
+            AssertTrue(!defaultPermit.Permit("10.10.12.34"), "Default-permit mode should reject addresses inside the deny-list CIDR.");
+            AssertTrue(defaultPermit.Permit("10.11.12.34"), "Default-permit mode should allow addresses outside the deny-list CIDR.");
+        }
+
+        private static void TestAccessControlManagerIpv4RulesDoNotThrowForIpv6Callers()
+        {
+            AccessControlManager defaultPermit = new AccessControlManager(AccessControlMode.DefaultPermit);
+            defaultPermit.DenyList.Add("10.10.0.0", "255.255.0.0");
+
+            AssertTrue(defaultPermit.Permit("2001:db8::1"), "An IPv6 caller should not match an IPv4 deny-list rule.");
+
+            AccessControlManager defaultDeny = new AccessControlManager(AccessControlMode.DefaultDeny);
+            defaultDeny.PermitList.Add("10.10.0.0", "255.255.0.0");
+
+            AssertTrue(!defaultDeny.Permit("2001:db8::1"), "An IPv6 caller should not match an IPv4 permit-list rule.");
         }
 
         private static void TestTimeoutSettingsDefaultIsZero()

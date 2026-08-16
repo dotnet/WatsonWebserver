@@ -14,7 +14,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="RestWrapper" Version="3.2.0" />
+		<PackageReference Include="RestWrapper" Version="3.3.0" />
 	</ItemGroup>
 
 	<ItemGroup>
