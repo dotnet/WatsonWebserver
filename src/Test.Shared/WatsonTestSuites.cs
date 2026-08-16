@@ -3,7 +3,6 @@ namespace Test.Shared
     using System;
     using System.Collections.Generic;
     using System.Runtime.Versioning;
-    using System.Text;
     using System.Threading.Tasks;
     using Touchstone.Core;
 
@@ -76,7 +75,7 @@ namespace Test.Shared
                 suites.Add(OptimizationSuite());
                 suites.Add(RouteMethodparitySuite());
                 suites.Add(ProtocolGapSuite());
-                suites.Add(LegacyCoverageAggregateSuite());
+                suites.Add(LegacyCoverageSuite());
 
                 return suites;
             }
@@ -328,16 +327,38 @@ namespace Test.Shared
             return new TestSuiteDescriptor(suiteId, "Protocol Gap Coverage", cases);
         }
 
-        private static TestSuiteDescriptor LegacyCoverageAggregateSuite()
+        private static TestSuiteDescriptor LegacyCoverageSuite()
         {
             const string suiteId = "LegacyCoverage";
-            List<TestCaseDescriptor> cases = new List<TestCaseDescriptor>();
 
-            cases.Add(new TestCaseDescriptor(
-                suiteId,
-                "FullAutomatedCoverage",
-                "Comprehensive Automated Coverage (HTTP/1.1, HTTP/2, HTTP/3, TLS, wire protocol)",
-                RunLegacyCoverageAsync));
+            // The comprehensive suite runs a large number of assertions across shared server
+            // lifecycles (HTTP/1.1, HTTP/2, HTTP/3, TLS, and raw wire protocol). It is executed once
+            // via LegacyCoverageResults; here each recorded assertion is projected into its own
+            // Touchstone case so every runner reports it individually.
+            IReadOnlyList<AutomatedTestResult> results = LegacyCoverageResults.Results;
+            List<TestCaseDescriptor> cases = new List<TestCaseDescriptor>();
+            HashSet<string> usedCaseIds = new HashSet<string>(StringComparer.Ordinal);
+
+            for (int i = 0; i < results.Count; i++)
+            {
+                AutomatedTestResult result = results[i];
+                string caseId = MakeUniqueCaseId(usedCaseIds, result.TestName);
+                cases.Add(new TestCaseDescriptor(
+                    suiteId,
+                    caseId,
+                    result.TestName,
+                    delegate (System.Threading.CancellationToken token)
+                    {
+                        if (!result.Passed)
+                        {
+                            throw new Exception(String.IsNullOrEmpty(result.ErrorMessage)
+                                ? "Comprehensive coverage assertion failed."
+                                : result.ErrorMessage);
+                        }
+
+                        return Task.CompletedTask;
+                    }));
+            }
 
             return new TestSuiteDescriptor(suiteId, "Comprehensive Legacy Coverage", cases);
         }
@@ -346,43 +367,19 @@ namespace Test.Shared
 
         #region Private-Helpers
 
-        private static async Task RunLegacyCoverageAsync(System.Threading.CancellationToken token)
+        private static string MakeUniqueCaseId(HashSet<string> usedCaseIds, string testName)
         {
-            LegacyCoverageSuite suite = new LegacyCoverageSuite();
-            IReadOnlyList<AutomatedTestResult> results = await suite.RunAsync().ConfigureAwait(false);
+            string baseId = String.IsNullOrEmpty(testName) ? "Unnamed" : testName;
+            string candidate = baseId;
+            int suffix = 2;
 
-            List<AutomatedTestResult> failures = new List<AutomatedTestResult>();
-            for (int i = 0; i < results.Count; i++)
+            while (!usedCaseIds.Add(candidate))
             {
-                if (!results[i].Passed)
-                {
-                    failures.Add(results[i]);
-                }
+                candidate = baseId + " #" + suffix.ToString();
+                suffix++;
             }
 
-            if (failures.Count > 0)
-            {
-                StringBuilder builder = new StringBuilder();
-                builder.Append(failures.Count.ToString());
-                builder.Append(" of ");
-                builder.Append(results.Count.ToString());
-                builder.Append(" comprehensive coverage assertions failed:");
-
-                for (int i = 0; i < failures.Count; i++)
-                {
-                    builder.Append(Environment.NewLine);
-                    builder.Append("  - ");
-                    builder.Append(failures[i].TestName);
-
-                    if (!String.IsNullOrEmpty(failures[i].ErrorMessage))
-                    {
-                        builder.Append(": ");
-                        builder.Append(failures[i].ErrorMessage);
-                    }
-                }
-
-                throw new Exception(builder.ToString());
-            }
+            return candidate;
         }
 
         private static TestSuiteDescriptor NamedSuite(string suiteId, string displayName, IReadOnlyList<SharedNamedTestCase> namedCases)
