@@ -28,5 +28,14 @@ namespace WatsonWebserver.Core.OpenApi
         [JsonPropertyName("examples")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public Dictionary<string, OpenApiExampleMetadata> Examples { get; set; } = null;
+
+        /// <summary>
+        /// Schema describing each item in a sequential (streaming) media type such as
+        /// <c>application/jsonl</c> or <c>text/event-stream</c>. Added in OpenAPI 3.2 and emitted
+        /// only when targeting that version or later.
+        /// </summary>
+        [JsonPropertyName("itemSchema")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public OpenApiSchemaMetadata ItemSchema { get; set; } = null;
     }
 }

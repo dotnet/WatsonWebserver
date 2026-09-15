@@ -15,6 +15,14 @@ namespace WatsonWebserver.Core.OpenApi
         public string Url { get; set; } = null;
 
         /// <summary>
+        /// An optional short name for the server. Added in OpenAPI 3.2 and emitted only when
+        /// targeting that version or later.
+        /// </summary>
+        [JsonPropertyName("name")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string Name { get; set; } = null;
+
+        /// <summary>
         /// A description of the server.
         /// </summary>
         [JsonPropertyName("description")]

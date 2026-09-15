@@ -25,7 +25,7 @@ Watson 7 is a major consumer-facing release:
 - HTTP/3 runtime normalization when QUIC is unavailable
 - Alt-Svc support for advertising HTTP/3 endpoints
 - Shared request and response semantics across protocols
-- Built-in OpenAPI 3.0 document generation and Swagger UI
+- Built-in OpenAPI document generation (3.0, 3.1, or 3.2, selectable; 3.0 by default) and Swagger UI
 - Standardized OpenTelemetry-shaped metrics and traces (added in 7.1) that any collector subscribes to by name; see [Observability and Telemetry](#observability-and-telemetry)
 - Expanded automated coverage through `Test.Automated` and `Test.XUnit`
 
@@ -942,7 +942,10 @@ static async Task DefaultRoute(HttpContextBase ctx)
 
 ## OpenAPI / Swagger
 
-OpenAPI support is built in. No extra package is required beyond `Watson`.
+OpenAPI support is built in. No extra package is required beyond `Watson`. Watson emits OpenAPI 3.0, 3.1, or
+3.2, selected through `OpenApiSettings.Version`; 3.0 is the default so existing documents are unchanged. See
+[OPENAPI.md](OPENAPI.md) for the version matrix, the 3.0-to-3.1 encoding changes, the authentication toggle,
+and validation behavior.
 
 ### Enable OpenAPI
 
@@ -973,6 +976,33 @@ Endpoints:
 
 - OpenAPI JSON: `/openapi.json`
 - Swagger UI: `/swagger`
+
+### Select the OpenAPI version
+
+```csharp
+server.UseOpenApi(openApi =>
+{
+    openApi.Info.Title = "My API";
+    openApi.Version = OpenApiVersionEnum.V3_1;   // V3_0 (default), V3_1, or V3_2
+});
+```
+
+3.1 aligns the Schema Object with JSON Schema 2020-12 (nullable becomes a `"null"` type, binary uses
+`contentMediaType`, examples use an array). 3.2 adds `$self`, the `query` method, streaming `itemSchema`,
+hierarchical tags, and the OAuth2 device flow. [OPENAPI.md](OPENAPI.md) covers the differences in full.
+
+### Serve the docs behind authentication
+
+By default `/openapi.json` and `/swagger` are public. Set `RequireAuthentication` to register them behind your
+configured authentication instead:
+
+```csharp
+server.UseOpenApi(openApi =>
+{
+    openApi.Info.Title = "My API";
+    openApi.RequireAuthentication = true;
+});
+```
 
 ### Document routes
 

@@ -60,11 +60,20 @@
 
             Console.WriteLine();
 
+            // Select the emitted OpenAPI version from the first CLI argument: "3.0" (default),
+            // "3.1", or "3.2". This lets the sample demonstrate each encoding from one binary.
+            OpenApiVersionEnum version = ParseVersion(args);
+            Console.WriteLine($"Emitting OpenAPI version: {version}");
+            Console.WriteLine();
+
             // Configure OpenAPI
             _Server.UseOpenApi(openApi =>
             {
+                openApi.Version = version;
+
                 openApi.Info.Title = "Sample Pet Store API";
                 openApi.Info.Version = "1.0.0";
+                openApi.Info.Summary = "Users and products, documented with Watson's OpenAPI generator.";
                 openApi.Info.Description = "A sample API demonstrating WatsonWebserver OpenAPI support. " +
                     "This API provides endpoints for managing users and products.";
                 openApi.Info.Contact = new OpenApiContact
@@ -73,11 +82,29 @@
                     Email = "support@example.com",
                     Url = "https://example.com/support"
                 };
-                openApi.Info.License = new OpenApiLicense
+
+                // Under 3.1 and later a license may use an SPDX identifier instead of a URL.
+                if (version == OpenApiVersionEnum.V3_0)
                 {
-                    Name = "MIT",
-                    Url = "https://opensource.org/licenses/MIT"
-                };
+                    openApi.Info.License = new OpenApiLicense
+                    {
+                        Name = "MIT",
+                        Url = "https://opensource.org/licenses/MIT"
+                    };
+                }
+                else
+                {
+                    openApi.Info.License = new OpenApiLicense
+                    {
+                        Name = "MIT",
+                        Identifier = "MIT"
+                    };
+                }
+
+                // Serve /openapi.json and /swagger behind authentication when the second CLI
+                // argument is "secure". The default leaves them public.
+                openApi.RequireAuthentication = args != null && args.Length > 1 &&
+                    String.Equals(args[1], "secure", StringComparison.OrdinalIgnoreCase);
 
                 // Add tags for grouping
                 openApi.Tags.Add(new OpenApiTag { Name = "Users", Description = "User management operations" });
@@ -93,6 +120,34 @@
                     Description = "API key for authorization"
                 };
             });
+
+            // When the documentation endpoints are served behind authentication, wire a minimal
+            // API-key check so unauthenticated callers cannot retrieve the document.
+            bool secure = args != null && args.Length > 1 && String.Equals(args[1], "secure", StringComparison.OrdinalIgnoreCase);
+            if (secure)
+            {
+                Console.WriteLine("Documentation endpoints require header 'X-API-Key: secret'.");
+                Console.WriteLine();
+
+                _Server.Routes.AuthenticateApiRequest = (ctx) =>
+                {
+                    string apiKey = ctx.Request.RetrieveHeaderValue("X-API-Key");
+                    if (String.Equals(apiKey, "secret", StringComparison.Ordinal))
+                    {
+                        return Task.FromResult(new AuthResult
+                        {
+                            AuthenticationResult = AuthenticationResultEnum.Success,
+                            AuthorizationResult = AuthorizationResultEnum.Permitted
+                        });
+                    }
+
+                    return Task.FromResult(new AuthResult
+                    {
+                        AuthenticationResult = AuthenticationResultEnum.NotFound,
+                        AuthorizationResult = AuthorizationResultEnum.DeniedImplicit
+                    });
+                };
+            }
 
             // Add documented routes
 
@@ -219,6 +274,21 @@
             Console.ReadLine();
 
             _Server.Stop();
+        }
+
+        private static OpenApiVersionEnum ParseVersion(string[] args)
+        {
+            if (args == null || args.Length < 1) return OpenApiVersionEnum.V3_0;
+
+            switch (args[0])
+            {
+                case "3.1":
+                    return OpenApiVersionEnum.V3_1;
+                case "3.2":
+                    return OpenApiVersionEnum.V3_2;
+                default:
+                    return OpenApiVersionEnum.V3_0;
+            }
         }
 
         private static async Task DefaultRoute(HttpContextBase ctx)

@@ -1,8 +1,10 @@
 ﻿namespace WatsonWebserver.Core.OpenApi
 {
-    using WatsonWebserver.Core.Routing;
     using System;
+    using System.Collections.Generic;
+    using System.Text.Json;
     using System.Threading.Tasks;
+    using WatsonWebserver.Core.Routing;
 
     /// <summary>
     /// Route handler for serving OpenAPI JSON documents.
@@ -44,7 +46,13 @@
                 {
                     ctx.Response.StatusCode = 500;
                     ctx.Response.ContentType = "application/json";
-                    await ctx.Response.Send($"{{\"error\": \"{ex.Message.Replace("\"", "\\\"")}\"}}", ctx.Token).ConfigureAwait(false);
+
+                    Dictionary<string, string> error = new Dictionary<string, string>
+                    {
+                        ["error"] = ex.Message
+                    };
+                    string errorJson = JsonSerializer.Serialize(error);
+                    await ctx.Response.Send(errorJson, ctx.Token).ConfigureAwait(false);
                 }
             };
         }

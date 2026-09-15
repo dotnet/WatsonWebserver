@@ -63,6 +63,11 @@ namespace Test.Shared
                     SharedOpenApiCompositionTests.GetTests()));
 
                 suites.Add(NamedSuite(
+                    "OpenApiEndpoints",
+                    "OpenAPI Endpoints",
+                    SharedOpenApiEndpointTests.GetTests()));
+
+                suites.Add(NamedSuite(
                     "Telemetry",
                     "Telemetry",
                     SharedTelemetryTests.GetTests()));

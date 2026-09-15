@@ -16,6 +16,12 @@ namespace WatsonWebserver.Core.OpenApi
         public string Version { get; set; } = "1.0.0";
 
         /// <summary>
+        /// A short summary of the API. Emitted only when targeting OpenAPI 3.1 or later; ignored
+        /// under OpenAPI 3.0, where the Info object has no summary field.
+        /// </summary>
+        public string Summary { get; set; } = null;
+
+        /// <summary>
         /// A description of the API.
         /// </summary>
         public string Description { get; set; } = null;

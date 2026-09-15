@@ -13,12 +13,15 @@ namespace WatsonWebserver.Core.OpenApi
         /// </summary>
         /// <param name="openApiPath">Path to the OpenAPI JSON document.</param>
         /// <param name="title">Page title. Defaults to "API Documentation".</param>
+        /// <param name="swaggerUiVersion">The swagger-ui-dist version loaded from the public CDN. Defaults to "5.17.14".</param>
         /// <returns>Route handler function.</returns>
-        public static Func<HttpContextBase, Task> Create(string openApiPath, string title = "API Documentation")
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="openApiPath"/> or <paramref name="swaggerUiVersion"/> is null or empty.</exception>
+        public static Func<HttpContextBase, Task> Create(string openApiPath, string title = "API Documentation", string swaggerUiVersion = "5.17.14")
         {
             if (String.IsNullOrEmpty(openApiPath)) throw new ArgumentNullException(nameof(openApiPath));
+            if (String.IsNullOrEmpty(swaggerUiVersion)) throw new ArgumentNullException(nameof(swaggerUiVersion));
 
-            string html = GenerateSwaggerHtml(openApiPath, title);
+            string html = GenerateSwaggerHtml(openApiPath, title, swaggerUiVersion);
 
             return async (ctx) =>
             {
@@ -37,16 +40,19 @@ namespace WatsonWebserver.Core.OpenApi
         /// </summary>
         /// <param name="openApiPath">Path to the OpenAPI JSON document.</param>
         /// <param name="title">Page title.</param>
+        /// <param name="swaggerUiVersion">The swagger-ui-dist version loaded from the public CDN. Defaults to "5.17.14".</param>
         /// <returns>HTML string.</returns>
-        public static string GenerateSwaggerHtml(string openApiPath, string title = "API Documentation")
+        public static string GenerateSwaggerHtml(string openApiPath, string title = "API Documentation", string swaggerUiVersion = "5.17.14")
         {
+            string version = String.IsNullOrEmpty(swaggerUiVersion) ? "5.17.14" : swaggerUiVersion;
+
             return $@"<!DOCTYPE html>
 <html lang=""en"">
 <head>
     <meta charset=""UTF-8"">
     <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
     <title>{EscapeHtml(title)}</title>
-    <link rel=""stylesheet"" href=""https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css"" />
+    <link rel=""stylesheet"" href=""https://unpkg.com/swagger-ui-dist@{version}/swagger-ui.css"" />
     <style>
         html {{
             box-sizing: border-box;
@@ -84,8 +90,8 @@ namespace WatsonWebserver.Core.OpenApi
 </head>
 <body>
     <div id=""swagger-ui""></div>
-    <script src=""https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-bundle.js""></script>
-    <script src=""https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js""></script>
+    <script src=""https://unpkg.com/swagger-ui-dist@{version}/swagger-ui-bundle.js""></script>
+    <script src=""https://unpkg.com/swagger-ui-dist@{version}/swagger-ui-standalone-preset.js""></script>
     <script>
         window.onload = function() {{
             const ui = SwaggerUIBundle({{

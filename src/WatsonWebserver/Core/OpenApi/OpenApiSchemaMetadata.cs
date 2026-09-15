@@ -14,10 +14,29 @@ namespace WatsonWebserver.Core.OpenApi
 
         /// <summary>
         /// The data type of the schema (e.g., "string", "integer", "boolean", "array", "object").
+        /// When <see cref="Types"/> is populated it takes precedence over this single-value form.
         /// </summary>
         [JsonPropertyName("type")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string Type { get; set; } = null;
+
+        /// <summary>
+        /// Multiple JSON Schema types for this schema (for example <c>string</c> and <c>null</c>).
+        /// Valid only when targeting OpenAPI 3.1 or later, where <c>type</c> may be an array;
+        /// supplying it under OpenAPI 3.0 fails document generation. When set, it takes precedence
+        /// over <see cref="Type"/>.
+        /// </summary>
+        [JsonPropertyName("types")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public List<string> Types { get; set; } = null;
+
+        /// <summary>
+        /// A short summary of the schema. Emitted as a sibling of <c>$ref</c> only when targeting
+        /// OpenAPI 3.1 or later, where reference objects may carry a summary.
+        /// </summary>
+        [JsonPropertyName("summary")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string Summary { get; set; } = null;
 
         /// <summary>
         /// The data format (e.g., "int32", "int64", "float", "double", "date", "date-time", "email", "uri").
@@ -105,6 +124,24 @@ namespace WatsonWebserver.Core.OpenApi
         public double? Maximum { get; set; } = null;
 
         /// <summary>
+        /// Exclusive minimum for numeric types. Emitted as a numeric bound under OpenAPI 3.1 and
+        /// later; under OpenAPI 3.0 it is emitted as a <c>minimum</c> value paired with
+        /// <c>exclusiveMinimum: true</c>.
+        /// </summary>
+        [JsonPropertyName("exclusiveMinimum")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public double? ExclusiveMinimum { get; set; } = null;
+
+        /// <summary>
+        /// Exclusive maximum for numeric types. Emitted as a numeric bound under OpenAPI 3.1 and
+        /// later; under OpenAPI 3.0 it is emitted as a <c>maximum</c> value paired with
+        /// <c>exclusiveMaximum: true</c>.
+        /// </summary>
+        [JsonPropertyName("exclusiveMaximum")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public double? ExclusiveMaximum { get; set; } = null;
+
+        /// <summary>
         /// Minimum length for string types.
         /// </summary>
         [JsonPropertyName("minLength")]
@@ -124,6 +161,26 @@ namespace WatsonWebserver.Core.OpenApi
         [JsonPropertyName("pattern")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string Pattern { get; set; } = null;
+
+        /// <summary>
+        /// The media type of the string content (for example <c>application/octet-stream</c>). Part
+        /// of the JSON Schema 2020-12 vocabulary used by OpenAPI 3.1 to describe binary payloads in
+        /// place of the 3.0 <c>format: binary</c> convention. When left null and <see cref="Format"/>
+        /// is <c>binary</c>, the generator supplies <c>application/octet-stream</c> under 3.1 and later.
+        /// </summary>
+        [JsonPropertyName("contentMediaType")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string ContentMediaType { get; set; } = null;
+
+        /// <summary>
+        /// The content encoding of the string content (for example <c>base64</c>). Part of the JSON
+        /// Schema 2020-12 vocabulary used by OpenAPI 3.1 to describe encoded payloads in place of the
+        /// 3.0 <c>format: byte</c> convention. When left null and <see cref="Format"/> is <c>byte</c>,
+        /// the generator supplies <c>base64</c> under 3.1 and later.
+        /// </summary>
+        [JsonPropertyName("contentEncoding")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string ContentEncoding { get; set; } = null;
 
         /// <summary>
         /// Composition: the value must validate against exactly one of the listed schemas.

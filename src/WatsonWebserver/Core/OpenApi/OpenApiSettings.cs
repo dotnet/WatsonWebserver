@@ -1,5 +1,6 @@
 namespace WatsonWebserver.Core.OpenApi
 {
+    using System;
     using System.Collections.Generic;
 
     /// <summary>
@@ -15,6 +16,40 @@ namespace WatsonWebserver.Core.OpenApi
         /// Default is true.
         /// </summary>
         public bool EnableOpenApi { get; set; } = true;
+
+        /// <summary>
+        /// The OpenAPI specification version to emit.
+        /// Default is <see cref="OpenApiVersionEnum.V3_0"/>, which keeps the emitted document
+        /// byte-compatible with earlier Watson releases. Select <see cref="OpenApiVersionEnum.V3_1"/>
+        /// or <see cref="OpenApiVersionEnum.V3_2"/> to opt into the newer encodings and fields.
+        /// </summary>
+        public OpenApiVersionEnum Version { get; set; } = OpenApiVersionEnum.V3_0;
+
+        /// <summary>
+        /// An explicit version string to place in the document's <c>openapi</c> field, overriding
+        /// the default derived from <see cref="Version"/> (<c>3.0.3</c>, <c>3.1.1</c>, or
+        /// <c>3.2.0</c>). Leave null to use the default. Use this only to pin a specific patch
+        /// release; it does not change the encoding rules, which follow <see cref="Version"/>.
+        /// </summary>
+        public string VersionString
+        {
+            get
+            {
+                return _VersionString;
+            }
+            set
+            {
+                _VersionString = String.IsNullOrWhiteSpace(value) ? null : value.Trim();
+            }
+        }
+
+        /// <summary>
+        /// Whether the OpenAPI document and Swagger UI endpoints require authentication.
+        /// When false (the default), the endpoints are registered ahead of authentication and are
+        /// publicly reachable. When true, they are registered behind authentication and unauthenticated
+        /// callers receive the server's standard authentication-failure response instead of the document.
+        /// </summary>
+        public bool RequireAuthentication { get; set; } = false;
 
         /// <summary>
         /// API information.
@@ -49,6 +84,25 @@ namespace WatsonWebserver.Core.OpenApi
         /// Default is true.
         /// </summary>
         public bool EnableSwaggerUi { get; set; } = true;
+
+        /// <summary>
+        /// The version of the swagger-ui-dist assets loaded by the Swagger UI page from the public
+        /// CDN. Default is <c>5.17.14</c>. The Swagger UI page has no offline story: the assets are
+        /// fetched from unpkg.com at page load, so a browser without internet access cannot render it.
+        /// May not be null or empty.
+        /// </summary>
+        public string SwaggerUiVersion
+        {
+            get
+            {
+                return _SwaggerUiVersion;
+            }
+            set
+            {
+                if (String.IsNullOrEmpty(value)) throw new ArgumentNullException(nameof(SwaggerUiVersion));
+                _SwaggerUiVersion = value;
+            }
+        }
 
         /// <summary>
         /// Whether to include routes from PreAuthentication group.
@@ -89,6 +143,42 @@ namespace WatsonWebserver.Core.OpenApi
         /// External documentation reference.
         /// </summary>
         public OpenApiExternalDocs ExternalDocs { get; set; } = null;
+
+        /// <summary>
+        /// Webhooks the API defines, keyed by webhook name. Added in OpenAPI 3.1; supplying webhooks
+        /// while targeting OpenAPI 3.0 fails document generation. When webhooks are present the
+        /// <c>paths</c> object may be omitted from the document.
+        /// </summary>
+        public Dictionary<string, OpenApiWebhookMetadata> Webhooks { get; set; } = new Dictionary<string, OpenApiWebhookMetadata>();
+
+        /// <summary>
+        /// The default JSON Schema dialect (a URI) applied to schemas that do not declare their own.
+        /// Added in OpenAPI 3.1 and emitted only when targeting that version or later.
+        /// </summary>
+        public string JsonSchemaDialect { get; set; } = null;
+
+        /// <summary>
+        /// A URI that identifies this OpenAPI document (the <c>$self</c> field). Added in OpenAPI 3.2
+        /// and emitted only when targeting that version or later.
+        /// </summary>
+        public string Self { get; set; } = null;
+
+        /// <summary>
+        /// Additional path operations that use HTTP methods beyond the fixed OpenAPI set. The outer
+        /// key is the path template, the inner key is the upper-cased method name, and the value is the
+        /// operation metadata. The <c>QUERY</c> method is emitted as the first-class <c>query</c>
+        /// path-item field; every other method is emitted under the path item's
+        /// <c>additionalOperations</c> object. Added in OpenAPI 3.2; supplying entries while targeting
+        /// an earlier version fails document generation.
+        /// </summary>
+        public Dictionary<string, Dictionary<string, OpenApiRouteMetadata>> AdditionalOperations { get; set; } = new Dictionary<string, Dictionary<string, OpenApiRouteMetadata>>();
+
+        #endregion
+
+        #region Private-Members
+
+        private string _VersionString = null;
+        private string _SwaggerUiVersion = "5.17.14";
 
         #endregion
 

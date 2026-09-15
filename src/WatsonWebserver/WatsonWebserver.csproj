@@ -3,9 +3,9 @@
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.1;net8.0;net10.0</TargetFrameworks>
 		<LangVersion>latest</LangVersion>
-		<Version>7.1.1</Version>
+		<Version>7.2.0</Version>
 		<Description>Simple, fast, async C# web server for handling REST requests with unified 7.x protocol architecture targeting .NET Standard 2.1, .NET 8, and .NET 10.</Description>
-		<PackageReleaseNotes>Dependency servicing refresh (no public API changes): IpMatcher 1.0.5 -&gt; 1.0.6, System.Text.Json 10.0.5 -&gt; 10.0.11, and System.Diagnostics.DiagnosticSource 8.0.1 -&gt; 10.0.11, picking up upstream security and reliability fixes.</PackageReleaseNotes>
+		<PackageReleaseNotes>Added opt-in OpenAPI 3.1 and 3.2 document generation selected via OpenApiSettings.Version (3.0 remains the default and is unchanged), an authentication toggle for the /openapi.json and /swagger endpoints, OAuth2/OpenID Connect/mutualTLS security schemes, and generation-time validation. See OPENAPI.md.</PackageReleaseNotes>
 
 		<Authors>Joel Christner</Authors>
 		<Company>Joel Christner</Company>

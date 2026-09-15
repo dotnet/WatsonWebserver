@@ -2,7 +2,19 @@
 
 ## Current Version
 
-`v7.1.1`
+`v7.2.0`
+
+## v7.2.0
+
+- Added opt-in OpenAPI 3.1 and 3.2 document generation selected via `OpenApiSettings.Version`; OpenAPI 3.0 remains the default so existing documents are byte-for-byte unchanged
+- Aligned the 3.1 Schema Object with JSON Schema 2020-12: removed `nullable` in favor of `"null"` type entries (and `anyOf` for nullable `$ref`), replaced `format: binary`/`byte` with `contentMediaType`/`contentEncoding`, and moved schema examples to the `examples` array
+- Added 3.1 document surface: `info.summary`, `license.identifier`, `webhooks` (with optional `paths`), `jsonSchemaDialect`, reference `summary`/`description` siblings, and the `mutualTLS` security scheme
+- Added 3.2 document surface: `$self`, the first-class `query` method with `additionalOperations` for other non-standard methods, streaming `itemSchema`, hierarchical tags (`summary`/`parent`/`kind`), server `name`, and the OAuth2 device authorization flow with `oauth2MetadataUrl`
+- Added `OpenApiSettings.RequireAuthentication` to register `/openapi.json` and `/swagger` behind authentication; the default keeps them public and unchanged
+- Fixed OAuth2 and OpenID Connect security schemes being silently dropped from `components.securitySchemes`
+- Added generation-time validation (`OpenApiValidationException`) for version-incompatible constructs, mutually exclusive license fields, OAuth2 schemes without flows, nullable schemas without a base type, and duplicate `operationId` values
+- Deduplicated the `UseOpenApi` registration path, made the `OpenApiDocumentGenerator` stateless and thread-safe, hardened the OpenAPI error response, emitted HEAD alongside GET for content routes, skipped rather than emitted lossy dynamic-route path templates, and made the Swagger UI asset version configurable via `OpenApiSettings.SwaggerUiVersion`
+- Added positive, negative, and HTTP-level OpenAPI coverage in `Test.Shared` (`SharedOpenApiCompositionTests`, `SharedOpenApiEndpointTests`), wired into all three runners, and added `OPENAPI.md`
 
 ## v7.1.1
 
