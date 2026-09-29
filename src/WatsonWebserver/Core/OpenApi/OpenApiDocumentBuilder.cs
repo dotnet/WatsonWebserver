@@ -18,6 +18,7 @@ namespace WatsonWebserver.Core.OpenApi
 
         private static readonly Regex _ParameterRegex = new Regex(@"\{([^}]+)\}", RegexOptions.Compiled);
         private static readonly Regex _CleanPathRegex = new Regex(@"^[A-Za-z0-9/_\-.{}*]*$", RegexOptions.Compiled);
+        private static readonly Regex _CatchAllRegex = new Regex(@"\{\*([^}]+)\}", RegexOptions.Compiled);
 
         private readonly OpenApiSettings _Settings;
         private readonly OpenApiVersionEnum _Version;
@@ -431,9 +432,11 @@ namespace WatsonWebserver.Core.OpenApi
 
             foreach (ParameterRoute route in group.Parameter.GetAll())
             {
-                string path = NormalizePath(route.Path);
+                // OpenAPI path templates have no catch-all syntax, so {*name} is documented as the path parameter {name}
+                string routePath = _CatchAllRegex.Replace(route.Path, "{$1}");
+                string path = NormalizePath(routePath);
                 string method = route.Method.ToString().ToLower();
-                List<string> pathParams = ExtractPathParameters(route.Path);
+                List<string> pathParams = ExtractPathParameters(routePath);
                 EnsurePath(paths, path)[method] = BuildOperation(route.OpenApiMetadata, method, path, pathParams);
             }
 

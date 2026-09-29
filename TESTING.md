@@ -45,6 +45,13 @@ If you want to inspect the websocket case names first, refer to:
 - `src/Test.Shared/SharedWebSocketTests.cs`
 - `src/Test.Automated/SharedCoreUnitCoverageSuite.cs`
 
+### Routing and UrlMatcher coverage
+
+Parameter and WebSocket route matching is provided by the `UrlMatcher` package. Two groups of suites in `Test.Shared` cover it, and all three runners execute them:
+
+- `CatchAllRouting` (`src/Test.Shared/SharedCatchAllRoutingTests.cs`) exercises catch-all (`{*name}`) routing through Watson: `ParameterRouteManager` and `WebSocketRouteManager` matching, precedence (routes without a catch-all are evaluated before catch-all routes), registration-time rejection of invalid catch-alls, `ParameterRoute` path and method changes, API routes, authenticated routes, `HostBuilder`, OpenAPI output, and end-to-end HTTP and WebSocket requests.
+- `UrlMatcher.*` (`src/Test.Shared/UrlMatching/`) is the UrlMatcher library's own test suite (358 cases), copied from the UrlMatcher repository and compiled against the `UrlMatcher` NuGet package Watson references. When the `UrlMatcher` dependency is updated, refresh these files from the UrlMatcher repository's `src/Test.Shared` (namespaces become `Test.Shared.UrlMatching`, and suite ids are prefixed with `UrlMatcher.`).
+
 ## Test.XUnit
 
 `Test.XUnit` is the CI-oriented xUnit runner. It shares reusable logic through `Test.Shared` and does not invoke `Test.Automated`.

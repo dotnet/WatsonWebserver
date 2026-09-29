@@ -72,6 +72,13 @@ namespace Test.Shared
                     "Telemetry",
                     SharedTelemetryTests.GetTests()));
 
+                suites.Add(NamedSuite(
+                    "CatchAllRouting",
+                    "Catch-All Routing",
+                    SharedCatchAllRoutingTests.GetTests()));
+
+                suites.AddRange(UrlMatching.UrlMatcherSuites.All);
+
                 suites.Add(ApiRoutesSuite());
                 suites.Add(LegacySmokeSuite());
                 suites.Add(Http2SmokeSuite());

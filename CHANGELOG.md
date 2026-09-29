@@ -2,7 +2,23 @@
 
 ## Current Version
 
-`v7.2.0`
+`v7.2.1`
+
+## v7.2.1
+
+- Updated `UrlMatcher` 3.0.2 -> 3.1.0
+- Parameter routes (including API routes registered with `Get`, `Post`, and the other helpers, and `HostBuilder.MapParameterRoute`) and parameterized WebSocket routes now support catch-all segments: `/files/{*path}` matches `/files`, `/files/a`, and `/files/a/b/c.txt`, capturing the raw remainder (`""`, `a`, `a/b/c.txt`) with repeated and trailing slashes kept and nothing decoded
+- Parameter routes without a catch-all are evaluated before catch-all routes (each group in registration order), so `/api/{*rest}` never shadows `/api/users/{id}` regardless of registration order
+- Route patterns are parsed once when a route is added (or when `ParameterRoute.Path`, `ParameterRoute.Method`, or `WebSocketRoute.Path` is set) instead of on every request. An invalid catch-all (not the entire last segment, or more than one) now throws `ArgumentException` at registration, and the route is not added
+- OpenAPI documents a catch-all route `/files/{*path}` as `/files/{path}` with a `path` path parameter
+- UrlMatcher 3.1.0 fix: a failed parameter match no longer leaves values captured before the failing segment
+- Added the `CatchAllRouting` suite (manager, precedence, registration, `HostBuilder`, OpenAPI, and end-to-end HTTP and WebSocket coverage) and the UrlMatcher library's own 358-case suite (`UrlMatcher.*`) to `Test.Shared`, wired into all three runners
+
+### Compatibility notes
+
+- Only route paths that put an asterisk inside braces are affected. `{*name}` was previously an ordinary single-segment parameter named `*name`; it is now a catch-all named `name`. `{*}` was a parameter named `*`; it is now a literal
+- Paths such as `/{*rest}/edit` were previously accepted and now throw `ArgumentException` when the route is added
+- Parameterized WebSocket routes match the normalized request path (lowercased, trailing slash added), so a WebSocket catch-all value is lowercase and ends with `/`
 
 ## v7.2.0
 

@@ -68,6 +68,8 @@ Within a routing group, matching order is:
 3. `Parameter`
 4. `Dynamic`
 
+Parameter and parameterized WebSocket routes are matched by the `UrlMatcher` NuGet package (`{name}` captures one segment, a final `{*name}` catch-all captures the raw remainder). `ParameterRoute` and `WebSocketRoute` parse their pattern into a `UrlPattern` when `Path` (or `ParameterRoute.Method`) is set, so invalid catch-alls throw `ArgumentException` at registration. The route managers evaluate routes without a catch-all first, then catch-all routes, each in registration order. `Test.Shared/UrlMatching/` is a copy of the UrlMatcher library's test suite; refresh it when the `UrlMatcher` dependency version changes.
+
 ### Middleware behavior
 
 `WebserverBase.Middleware` wraps the matched route handler and executes in registration order.

@@ -19,6 +19,7 @@ namespace WatsonWebserver.Core.WebSockets
         /// <summary>
         /// Add a route.
         /// </summary>
+        /// <exception cref="ArgumentException">Thrown when a parameterized path contains an invalid catch-all.  The route is not added.</exception>
         public void Add(string path, Func<HttpContextBase, WebSocketSession, Task> handler, object metadata = null)
         {
             WebSocketRoute route = new WebSocketRoute(path, handler, metadata);
@@ -58,6 +59,8 @@ namespace WatsonWebserver.Core.WebSockets
 
         /// <summary>
         /// Match a request path to a route.
+        /// Static routes are checked first, then parameterized routes without a catch-all, then catch-all routes ({*name}).
+        /// The request path is normalized (lowercased, trailing slash added) before matching, so captured values are lowercase.
         /// </summary>
         public Func<HttpContextBase, WebSocketSession, Task> Match(string path, out NameValueCollection parameters, out WebSocketRoute route)
         {
@@ -73,13 +76,27 @@ namespace WatsonWebserver.Core.WebSockets
                     return route.Handler;
                 }
 
-                for (int i = 0; i < _ParameterRoutes.Count; i++)
+                if (_ParameterRoutes.Count > 0)
                 {
-                    WebSocketRoute candidate = _ParameterRoutes[i];
-                    if (Matcher.Match(normalizedPath, candidate.Path, out parameters))
+                    Matcher matcher = new Matcher(normalizedPath);
+
+                    // routes without a catch-all first, then catch-all routes, each in registration order
+                    for (int pass = 0; pass < 2; pass++)
                     {
-                        route = candidate;
-                        return candidate.Handler;
+                        bool catchAllPass = pass == 1;
+
+                        for (int i = 0; i < _ParameterRoutes.Count; i++)
+                        {
+                            WebSocketRoute candidate = _ParameterRoutes[i];
+                            UrlPattern pattern = candidate.Pattern;
+                            if (pattern == null || pattern.IsCatchAll != catchAllPass) continue;
+
+                            if (matcher.Match(pattern, out parameters))
+                            {
+                                route = candidate;
+                                return candidate.Handler;
+                            }
+                        }
                     }
                 }
             }

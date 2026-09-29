@@ -48,12 +48,14 @@
         /// Add a route.
         /// </summary>
         /// <param name="method">The HTTP method.</param>
-        /// <param name="path">URL path, i.e. /path/to/resource.</param>
+        /// <param name="path">URL path, i.e. /path/to/resource, /users/{id}, or /files/{*path} (catch-all, must be the last segment).</param>
         /// <param name="handler">Method to invoke.</param>
         /// <param name="exceptionHandler">The method that should be called to handle exceptions.</param>
         /// <param name="guid">Globally-unique identifier.</param>
         /// <param name="metadata">User-supplied metadata.</param>
         /// <param name="openApiMetadata">OpenAPI documentation metadata.</param>
+        /// <exception cref="ArgumentNullException">Thrown when path is null or empty, or handler is null.</exception>
+        /// <exception cref="ArgumentException">Thrown when path contains an invalid catch-all (not the entire last segment, or more than one). The route is not added.</exception>
         public void Add(
             HttpMethod method,
             string path,
@@ -174,6 +176,8 @@
 
         /// <summary>
         /// Match a request method and URL to a handler method.
+        /// Routes without a catch-all are evaluated first, in registration order, followed by catch-all routes
+        /// (paths ending in {*name}), in registration order, so a catch-all never shadows a more specific route.
         /// </summary>
         /// <param name="method">The HTTP method.</param>
         /// <param name="path">URL path.</param>
@@ -186,20 +190,25 @@
             vals = null;
             if (String.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
 
-            string consolidatedPath = BuildConsolidatedPath(method, path);
+            Matcher matcher = new Matcher(BuildConsolidatedPath(method, path));
 
             _Lock.EnterReadLock();
             try
             {
-                foreach (KeyValuePair<ParameterRoute, Func<HttpContextBase, Task>> route in _Routes)
+                for (int pass = 0; pass < 2; pass++)
                 {
-                    if (Matcher.Match(
-                        consolidatedPath,
-                        BuildConsolidatedPath(route.Key.Method, route.Key.Path),
-                        out vals))
+                    bool catchAllPass = pass == 1;
+
+                    foreach (KeyValuePair<ParameterRoute, Func<HttpContextBase, Task>> route in _Routes)
                     {
-                        pr = route.Key;
-                        return route.Value;
+                        UrlPattern pattern = route.Key.Pattern;
+                        if (pattern == null || pattern.IsCatchAll != catchAllPass) continue;
+
+                        if (matcher.Match(pattern, out vals))
+                        {
+                            pr = route.Key;
+                            return route.Value;
+                        }
                     }
                 }
             }

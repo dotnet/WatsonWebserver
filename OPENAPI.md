@@ -149,6 +149,10 @@ server.Routes.PreAuthentication.Parameter.Add(
 Reusable schemas live under `OpenApiSettings.Schemas` and are referenced with
 `OpenApiSchemaMetadata.CreateRef("User")`, exactly as before.
 
+OpenAPI path templates have no catch-all syntax, so a catch-all route such as `/files/{*path}` is documented as
+`/files/{path}` with a required `path` path parameter. Describe it with `OpenApiParameterMetadata.Path("path", ...)`
+if you want to note that the value can contain slashes.
+
 ## Swagger UI and offline use
 
 The `/swagger` page loads swagger-ui-dist assets from the unpkg CDN, so it needs internet access at page load;

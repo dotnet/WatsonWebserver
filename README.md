@@ -851,6 +851,33 @@ static async Task DefaultRoute(HttpContextBase ctx)
 }
 ```
 
+### Parameter and catch-all routes
+
+Parameter routes (and API routes registered with `server.Get`, `server.Post`, and the other helpers) use `{name}` to capture one path segment and `{*name}` as the final segment to capture everything that remains.
+
+```csharp
+server.Get("/files/{*path}", async (req) => "File: " + req.Parameters["path"]);
+server.Get("/files/special/{id}", async (req) => "Special: " + req.Parameters["id"]);
+```
+
+| Request | Route | Value |
+|---|---|---|
+| `/files/a/b/c.txt` | `/files/{*path}` | `path` = `a/b/c.txt` |
+| `/files` | `/files/{*path}` | `path` = empty string |
+| `/files/a//b/` | `/files/{*path}` | `path` = `a//b/` (repeated and trailing slashes kept) |
+| `/files/a%2Fb?x=1` | `/files/{*path}` | `path` = `a%2Fb` (not decoded, query excluded) |
+| `/files/special/42` | `/files/special/{id}` | `id` = `42` |
+
+Rules:
+
+- Parameter routes without a catch-all are always evaluated before catch-all routes, so the specific route above wins even though it was registered second. Within each group, routes are evaluated in registration order.
+- Literal segments are case-sensitive, and parameter names are case-insensitive.
+- A catch-all must be the entire last segment. `/{*rest}/edit`, `/{*a}/{*b}`, and `/files/v{*x}` throw `ArgumentException` when the route is added. `{*}` (no name) is a literal.
+- Parameterized WebSocket routes support catch-alls too. WebSocket paths are normalized (lowercased, trailing slash added) before matching, so `/ws/{*path}` receives `rooms/general/` for `/ws/Rooms/General`.
+- OpenAPI documents `/files/{*path}` as `/files/{path}`.
+
+Matching is provided by [UrlMatcher](https://github.com/jchristn/UrlMatcher).
+
 ### Exception handler per route
 
 ```csharp

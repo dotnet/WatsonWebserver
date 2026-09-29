@@ -3,9 +3,9 @@
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.1;net8.0;net10.0</TargetFrameworks>
 		<LangVersion>latest</LangVersion>
-		<Version>7.2.0</Version>
+		<Version>7.2.1</Version>
 		<Description>Simple, fast, async C# web server for handling REST requests with unified 7.x protocol architecture targeting .NET Standard 2.1, .NET 8, and .NET 10.</Description>
-		<PackageReleaseNotes>Added opt-in OpenAPI 3.1 and 3.2 document generation selected via OpenApiSettings.Version (3.0 remains the default and is unchanged), an authentication toggle for the /openapi.json and /swagger endpoints, OAuth2/OpenID Connect/mutualTLS security schemes, and generation-time validation. See OPENAPI.md.</PackageReleaseNotes>
+		<PackageReleaseNotes>UrlMatcher 3.1.0: parameter and WebSocket routes support catch-all segments ({*name}), catch-all routes are evaluated after other parameter routes, and invalid patterns are rejected when a route is added. See CHANGELOG.md.</PackageReleaseNotes>
 
 		<Authors>Joel Christner</Authors>
 		<Company>Joel Christner</Company>
@@ -53,7 +53,7 @@
 		<PackageReference Include="IpMatcher" Version="1.0.6" />
 		<PackageReference Include="RegexMatcher" Version="1.0.9" />
 		<PackageReference Include="Timestamps" Version="1.0.12" />
-		<PackageReference Include="UrlMatcher" Version="3.0.2" />
+		<PackageReference Include="UrlMatcher" Version="3.1.0" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
