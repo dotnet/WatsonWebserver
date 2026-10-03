@@ -12,7 +12,7 @@
 - Fixed access-control denials returning `500` instead of `403`: there was no default 403 page, so sending the denial threw. Added `WebserverConstants.PageContent403` and a default 403 entry in `WebserverPages`, and a status code with no default page now sends an empty body instead of failing
 - Updated `RegexMatcher` 1.0.9 -> 1.1.0 (entries evaluated in guaranteed insertion order, `Get` returns a snapshot, `ValueExists` uses value equality)
 - Updated `System.Text.Json` and `System.Diagnostics.DiagnosticSource` 10.0.11 -> 10.0.12 (`netstandard2.1` target)
-- `Watson.Clients` 7.0.16: updated `Microsoft.Bcl.AsyncInterfaces` 10.0.11 -> 10.0.12 (net462/net48 targets)
+- `Watson.Clients` 7.0.15 -> 7.2.2 (now versioned in lockstep with `Watson`): updated `Microsoft.Bcl.AsyncInterfaces` 10.0.11 -> 10.0.12 (net462/net48 targets)
 - Updated test and tooling dependencies: Touchstone 0.1.12 -> 0.2.0, NUnit 4.6.1 -> 5.0.0, NUnit.Analyzers 4.14.0 -> 4.15.0, NUnit3TestAdapter 6.2.0 -> 6.3.0, Microsoft.NET.Test.Sdk 18.9.0 -> 18.10.1, RestWrapper 3.3.0 -> 3.3.1, Microsoft.Playwright 1.62.0 -> 1.63.0
 - Added the `MatcherDisposal` suite to `Test.Shared` (matcher replacement, sharing, and disposal across all owners, the IpMatcher cache behavior Watson relies on, and end-to-end access-control denial), wired into all three runners
 
