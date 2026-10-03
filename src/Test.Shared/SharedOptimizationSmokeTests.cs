@@ -215,6 +215,74 @@ namespace Test.Shared
         }
 
         /// <summary>
+        /// Verify the context timestamp exposed to handlers records start, messages, and completion.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public static async Task TestContextTimestampMessagesAndCompletionAsync()
+        {
+            TaskCompletionSource<string> completedContext = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            using (LoopbackServerHost host = new LoopbackServerHost(false, false, false, server =>
+            {
+                server.Routes.PostAuthentication.Static.Add(CoreHttpMethod.GET, "/timestamp", async (HttpContextBase context) =>
+                {
+                    string error = null;
+
+                    if (context.Timestamp.Start > DateTime.UtcNow) error = "Timestamp start is in the future.";
+                    else if (context.Timestamp.End != null) error = "Timestamp end was set before the response completed.";
+
+                    if (error == null)
+                    {
+                        for (int i = 0; i < 100; i++) context.Timestamp.AddMessage("message " + i.ToString());
+                        if (context.Timestamp.Messages.Count != 100) error = "Rapid AddMessage calls did not record every message.";
+                    }
+
+                    context.Response.StatusCode = error == null ? 200 : 500;
+                    context.Response.ContentType = "text/plain";
+                    await context.Response.Send(error ?? "ok", context.Token).ConfigureAwait(false);
+                });
+
+                server.Routes.PostRouting = (HttpContextBase context) =>
+                {
+                    if (context.Request.Url.RawWithoutQuery.EndsWith("/timestamp", StringComparison.Ordinal))
+                    {
+                        string completionError = null;
+                        if (context.Timestamp.End == null) completionError = "Timestamp end was not set after the response completed.";
+                        else if (context.Timestamp.TotalMs == null || context.Timestamp.TotalMs < 0) completionError = "Timestamp total milliseconds was not available after completion.";
+                        else if (context.Timestamp.Messages.Count != 100) completionError = "Timestamp messages were not retained through completion.";
+
+                        completedContext.TrySetResult(completionError);
+                    }
+
+                    return Task.CompletedTask;
+                };
+            }))
+            {
+                await host.StartAsync().ConfigureAwait(false);
+
+                using (HttpClient client = CreateHttpClient(new Version(1, 1)))
+                {
+                    HttpResponseMessage response = await client.GetAsync(new Uri(host.BaseAddress, "/timestamp")).ConfigureAwait(false);
+                    string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                    if (!String.Equals(body, "ok", StringComparison.Ordinal))
+                    {
+                        throw new InvalidOperationException("Timestamp route reported: " + body);
+                    }
+                }
+
+                Task completed = await Task.WhenAny(completedContext.Task, Task.Delay(5000)).ConfigureAwait(false);
+                if (!ReferenceEquals(completed, completedContext.Task))
+                {
+                    throw new InvalidOperationException("Timestamp request did not reach post-routing.");
+                }
+
+                string postRoutingError = await completedContext.Task.ConfigureAwait(false);
+                if (postRoutingError != null) throw new InvalidOperationException(postRoutingError);
+            }
+        }
+
+        /// <summary>
         /// Verify HTTP/1.1 keep-alive pooling resets request state between requests.
         /// </summary>
         /// <returns>Task.</returns>

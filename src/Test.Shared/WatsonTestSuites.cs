@@ -296,6 +296,7 @@ namespace Test.Shared
             cases.Add(Case(suiteId, "Serialization :: Default Helper Preserves Pretty And Compact JSON", SharedOptimizationSmokeTests.TestDefaultSerializationHelperAsync));
             cases.Add(Case(suiteId, "HTTP/1.1 :: Cached Response Headers Preserve Dynamic Fields", SharedOptimizationSmokeTests.TestHttp1CachedHeadersAsync));
             cases.Add(Case(suiteId, "HTTP/1.1 :: Context Timing Starts At Request Entry", SharedOptimizationSmokeTests.TestContextTimestampStartsAtRequestEntryAsync));
+            cases.Add(Case(suiteId, "HTTP/1.1 :: Context Timestamp Records Messages", SharedOptimizationSmokeTests.TestContextTimestampMessagesAndCompletionAsync));
             cases.Add(Case(suiteId, "HTTP/1.1 :: Keep-Alive Pooling Resets Request State", SharedOptimizationSmokeTests.TestHttp1KeepAlivePoolingAsync));
             cases.Add(Case(suiteId, "HTTP/1.1 :: Stream Send Preserves Direct Passthrough Body", SharedOptimizationSmokeTests.TestHttp1StreamSendAsync));
             cases.Add(Case(suiteId, "HTTP/2 :: Lazy Header Materialization Stays Coherent", SharedOptimizationSmokeTests.TestHttp2LazyHeaderMaterializationAsync));

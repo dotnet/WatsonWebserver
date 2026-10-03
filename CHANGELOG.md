@@ -2,7 +2,13 @@
 
 ## Current Version
 
-`v7.2.2`
+`v7.2.3`
+
+## v7.2.3
+
+- Updated `Timestamps` 1.0.12 -> 1.0.13 (packaging and test-dependency refresh; public API unchanged)
+- `Watson.Clients` 7.2.2 -> 7.2.3 (versioned in lockstep with `Watson`; no dependency changes)
+- Added the `HTTP/1.1 :: Context Timestamp Records Messages` case to the `OptimizationCoverage` suite, covering the `HttpContextBase.Timestamp` surface backed by `Timestamps`: start set at request entry, rapid `AddMessage` calls all recorded, and `End`/`TotalMs` populated once the response completes
 
 ## v7.2.2
 

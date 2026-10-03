@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.1;net8.0;net10.0</TargetFrameworks>
 		<LangVersion>latest</LangVersion>
-		<Version>7.2.2</Version>
+		<Version>7.2.3</Version>
 		<Description>Simple, fast, async C# web server for handling REST requests with unified 7.x protocol architecture targeting .NET Standard 2.1, .NET 8, and .NET 10.</Description>
 		<PackageReleaseNotes>IpMatcher 1.1.0 (bounded match cache, Remove clears cached matches). AccessControlManager, TelemetrySettings, and WebserverSettings are IDisposable and dispose replaced IP matchers; Webserver.Dispose disposes its settings. Access-control denials return 403 instead of 500. RegexMatcher 1.1.0 and servicing updates. See CHANGELOG.md.</PackageReleaseNotes>
 
@@ -52,7 +52,7 @@
 	<ItemGroup>
 		<PackageReference Include="IpMatcher" Version="1.1.0" />
 		<PackageReference Include="RegexMatcher" Version="1.1.0" />
-		<PackageReference Include="Timestamps" Version="1.0.12" />
+		<PackageReference Include="Timestamps" Version="1.0.13" />
 		<PackageReference Include="UrlMatcher" Version="3.1.0" />
 	</ItemGroup>
 
