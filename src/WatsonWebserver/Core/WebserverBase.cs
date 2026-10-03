@@ -171,7 +171,7 @@
 
         private WebserverEvents _Events = new WebserverEvents();
         private WebserverPages _DefaultPages = new WebserverPages();
-        private WebserverSettings _Settings = new WebserverSettings();
+        private WebserverSettings _Settings = null;
         private WebserverStatistics _Statistics = new WebserverStatistics();
         private WebserverRoutes _Routes = new WebserverRoutes();
         private ISerializationHelper _Serializer = new DefaultSerializationHelper();
@@ -742,6 +742,7 @@
                     }
 
                     ctx.Response.StatusCode = 403;
+                    if (DefaultPages.Pages.TryGetValue(403, out WebserverPage deniedPage)) ctx.Response.ContentType = deniedPage.ContentType;
                     await SendDefaultResponseAsync(ctx, token).ConfigureAwait(false);
                     return;
                 }
@@ -981,7 +982,11 @@
         {
             if (ctx == null) throw new ArgumentNullException(nameof(ctx));
 
-            string content = DefaultPages.Pages[ctx.Response.StatusCode].Content;
+            string content = String.Empty;
+            if (DefaultPages.Pages.TryGetValue(ctx.Response.StatusCode, out WebserverPage page) && page != null)
+            {
+                content = page.Content ?? String.Empty;
+            }
 
             if (ctx.Response.ChunkedTransfer)
             {

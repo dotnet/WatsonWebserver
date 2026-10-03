@@ -933,6 +933,8 @@ server.Settings.AccessControl.Mode = AccessControlMode.DefaultDeny;
 server.Settings.AccessControl.PermitList.Add("192.168.1.0", "255.255.255.0");
 ```
 
+Denied requests receive `403`. Settings own the matchers assigned to them: replacing `DenyList`, `PermitList`, or `Telemetry.TrustedProxies` disposes the previous matcher, and disposing the server disposes its settings. See [WEBSERVER_SETTINGS.md](WEBSERVER_SETTINGS.md#matcher-ownership-and-disposal).
+
 ## HostBuilder
 
 `HostBuilder` offers a fluent setup API over `Webserver`.

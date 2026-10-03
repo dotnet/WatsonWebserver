@@ -729,6 +729,7 @@ Modes:
 Setter behavior:
 
 - assigning `null` replaces it with an empty matcher
+- assigning a different matcher disposes the previous one, unless it is also the `DenyList`
 
 ### `DenyList`
 
@@ -737,6 +738,23 @@ Setter behavior:
 Setter behavior:
 
 - assigning `null` replaces it with an empty matcher
+- assigning a different matcher disposes the previous one, unless it is also the `PermitList`
+
+### Matcher ownership and disposal
+
+Each `IpMatcher.Matcher` keeps a bounded match cache (4096 entries by default) that must be released with
+`Dispose`. Watson owns the matchers assigned to it:
+
+- `AccessControlManager`, `TelemetrySettings`, and `WebserverSettings` implement `IDisposable`
+- replacing a matcher, an `AccessControl` manager, or a `Telemetry` settings object disposes the replaced instance
+- disposing an owner disposes the matchers it holds, and `Webserver.Dispose` disposes its `Settings`
+- a disposed matcher still matches correctly; it only stops caching
+- avoid assigning one `Matcher` instance to more than one owner
+
+Removing an entry with `Remove` clears the matcher's cache, so an address matched through the removed
+network stops matching on the next request.
+
+A denied request receives `403` with the default 403 page from `server.DefaultPages`.
 
 ### `Permit(string ip)`
 
@@ -964,6 +982,11 @@ nearest hop is trusted.
 Default:
 
 - empty `Matcher`
+
+Setter behavior:
+
+- assigning `null` replaces it with an empty matcher
+- assigning a different matcher disposes the previous one (see [Matcher ownership and disposal](#matcher-ownership-and-disposal))
 
 ### `ForwardLimit`
 

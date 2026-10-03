@@ -10,13 +10,16 @@
 
     /// <summary>
     /// Access control manager.  Dictates which connections are permitted or denied.
+    /// The manager owns the matchers assigned to <see cref="DenyList"/> and <see cref="PermitList"/>: a matcher
+    /// that is replaced, or held when the manager is disposed, is disposed to release its match cache.
     /// </summary>
-    public class AccessControlManager
+    public class AccessControlManager : IDisposable
     {
         #region Public-Members
 
         /// <summary>
         /// Matcher to match denied addresses.
+        /// Assigning a different matcher disposes the previous one.
         /// </summary>
         public Matcher DenyList
         {
@@ -27,12 +30,15 @@
             set
             {
                 if (value == null) value = new Matcher();
+                Matcher previous = _DenyList;
                 _DenyList = value;
+                DisposeReplaced(previous, value, _PermitList);
             }
         }
 
         /// <summary>
         /// Matcher to match permitted addresses.
+        /// Assigning a different matcher disposes the previous one.
         /// </summary>
         public Matcher PermitList
         {
@@ -43,7 +49,9 @@
             set
             {
                 if (value == null) value = new Matcher();
+                Matcher previous = _PermitList;
                 _PermitList = value;
+                DisposeReplaced(previous, value, _DenyList);
             }
         }
 
@@ -60,6 +68,7 @@
 
         private Matcher _DenyList = new Matcher();
         private Matcher _PermitList = new Matcher();
+        private bool _Disposed = false;
 
         #endregion
 
@@ -103,9 +112,43 @@
             }
         }
 
+        /// <summary>
+        /// Dispose the deny-list and permit-list matchers, releasing their match caches.
+        /// The matchers continue to evaluate addresses after disposal, without caching.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
         #endregion
 
         #region Private-Methods
+
+        /// <summary>
+        /// Dispose of resources.
+        /// </summary>
+        /// <param name="disposing">True when called from <see cref="Dispose()"/>.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_Disposed) return;
+            _Disposed = true;
+
+            if (disposing)
+            {
+                _DenyList?.Dispose();
+                if (!ReferenceEquals(_PermitList, _DenyList)) _PermitList?.Dispose();
+            }
+        }
+
+        private static void DisposeReplaced(Matcher previous, Matcher current, Matcher sibling)
+        {
+            if (previous == null) return;
+            if (ReferenceEquals(previous, current)) return;
+            if (ReferenceEquals(previous, sibling)) return;
+            previous.Dispose();
+        }
 
         private static bool TryMatch(Matcher matcher, string ip)
         {

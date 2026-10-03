@@ -2,7 +2,24 @@
 
 ## Current Version
 
-`v7.2.1`
+`v7.2.2`
+
+## v7.2.2
+
+- Updated `IpMatcher` 1.0.6 -> 1.1.0. Each matcher now holds a bounded least-recently-used match cache (default 4096 entries), `Remove` clears cached matches so an address matched through a removed network stops matching, and `Matcher` implements `IDisposable`
+- `AccessControlManager`, `TelemetrySettings`, and `WebserverSettings` now implement `IDisposable` and own the IP matchers they hold. Assigning a different `DenyList`, `PermitList`, `TrustedProxies`, `AccessControl`, or `Telemetry` disposes the replaced instance, and disposing the owner disposes its matchers. Without this, a replaced matcher that had produced a subnet match kept its match cache alive for the life of the process
+- `Webserver.Dispose` now disposes its `Settings` (releasing the access-control and trusted-proxy match caches) and keeps the settings instance, instead of replacing it with a newly allocated `WebserverSettings`
+- Fixed access-control denials returning `500` instead of `403`: there was no default 403 page, so sending the denial threw. Added `WebserverConstants.PageContent403` and a default 403 entry in `WebserverPages`, and a status code with no default page now sends an empty body instead of failing
+- Updated `RegexMatcher` 1.0.9 -> 1.1.0 (entries evaluated in guaranteed insertion order, `Get` returns a snapshot, `ValueExists` uses value equality)
+- Updated `System.Text.Json` and `System.Diagnostics.DiagnosticSource` 10.0.11 -> 10.0.12 (`netstandard2.1` target)
+- `Watson.Clients` 7.0.16: updated `Microsoft.Bcl.AsyncInterfaces` 10.0.11 -> 10.0.12 (net462/net48 targets)
+- Updated test and tooling dependencies: Touchstone 0.1.12 -> 0.2.0, NUnit 4.6.1 -> 5.0.0, NUnit.Analyzers 4.14.0 -> 4.15.0, NUnit3TestAdapter 6.2.0 -> 6.3.0, Microsoft.NET.Test.Sdk 18.9.0 -> 18.10.1, RestWrapper 3.3.0 -> 3.3.1, Microsoft.Playwright 1.62.0 -> 1.63.0
+- Added the `MatcherDisposal` suite to `Test.Shared` (matcher replacement, sharing, and disposal across all owners, the IpMatcher cache behavior Watson relies on, and end-to-end access-control denial), wired into all three runners
+
+### Compatibility notes
+
+- A matcher, access control manager, or telemetry settings object assigned to Watson settings is owned by them. If you assign the same `Matcher` to more than one owner, replacing or disposing one owner disposes it for the others too. A disposed matcher still matches correctly; it only stops caching
+- Disposing a `Webserver` disposes the `WebserverSettings` passed to it. Reusing those settings for another server works, but their IP matchers no longer cache matches. Build new settings for each server where match caching matters
 
 ## v7.2.1
 

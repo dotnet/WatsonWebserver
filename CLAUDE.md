@@ -70,6 +70,10 @@ Within a routing group, matching order is:
 
 Parameter and parameterized WebSocket routes are matched by the `UrlMatcher` NuGet package (`{name}` captures one segment, a final `{*name}` catch-all captures the raw remainder). `ParameterRoute` and `WebSocketRoute` parse their pattern into a `UrlPattern` when `Path` (or `ParameterRoute.Method`) is set, so invalid catch-alls throw `ArgumentException` at registration. The route managers evaluate routes without a catch-all first, then catch-all routes, each in registration order. `Test.Shared/UrlMatching/` is a copy of the UrlMatcher library's test suite; refresh it when the `UrlMatcher` dependency version changes.
 
+### Access control and IP matchers
+
+`AccessControlManager` (`DenyList`, `PermitList`) and `TelemetrySettings` (`TrustedProxies`) hold `IpMatcher.Matcher` instances, which own a match cache and are `IDisposable`. The holders, and `WebserverSettings` (`AccessControl`, `Telemetry`), are `IDisposable` and own what is assigned to them: a setter disposes the instance it replaces (unless it is the same instance, or still held by the sibling list), and `Webserver.Dispose` disposes `Settings`. Preserve this when adding new matcher-holding settings. Access-control denials send `403` via `DefaultPages`.
+
 ### Middleware behavior
 
 `WebserverBase.Middleware` wraps the matched route handler and executes in registration order.
@@ -320,7 +324,7 @@ Watson emits standardized telemetry through the BCL (`System.Diagnostics.Metrics
 - The optional Prometheus endpoint (`Settings.Telemetry.Prometheus`) is served on the existing
   listener via interception in `ProcessHttpContextAsync`, so it opens no extra port. It is backed by a
   `MeterListener` in `PrometheusScrapeCollector`.
-- `System.Diagnostics.DiagnosticSource` (10.0.11) is referenced for the `netstandard2.1` target only.
+- `System.Diagnostics.DiagnosticSource` (10.0.12) is referenced for the `netstandard2.1` target only.
 - User-facing usage/consumption guide and metric catalog: `TELEMETRY.md`. The original implementation
   plan and design notes are archived at `archive/TELEMETRY_IMPLEMENTATION_PLAN.md`.
 

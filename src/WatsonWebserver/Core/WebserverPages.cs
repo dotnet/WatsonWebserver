@@ -33,6 +33,7 @@ namespace WatsonWebserver.Core
         private Dictionary<int, WebserverPage> _Pages = new Dictionary<int, WebserverPage>
         {
             { 400, new WebserverPage(WebserverConstants.ContentTypeHtml, WebserverConstants.PageContent400) },
+            { 403, new WebserverPage(WebserverConstants.ContentTypeHtml, WebserverConstants.PageContent403) },
             { 404, new WebserverPage(WebserverConstants.ContentTypeHtml, WebserverConstants.PageContent404) },
             { 500, new WebserverPage(WebserverConstants.ContentTypeHtml, WebserverConstants.PageContent500) }
         };

@@ -45,6 +45,10 @@ If you want to inspect the websocket case names first, refer to:
 - `src/Test.Shared/SharedWebSocketTests.cs`
 - `src/Test.Automated/SharedCoreUnitCoverageSuite.cs`
 
+### Access control and IP matcher coverage
+
+`MatcherDisposal` (`src/Test.Shared/SharedMatcherDisposalTests.cs`) covers IP matcher ownership: replacing `DenyList`, `PermitList`, `TrustedProxies`, `AccessControl`, and `Telemetry` disposes the replaced instance, reassigning the same instance or one still held by the other list does not, and disposing `AccessControlManager`, `TelemetrySettings`, `WebserverSettings`, or `Webserver` disposes the matchers they hold. It also covers the `IpMatcher` cache behavior Watson relies on (subnet matches are cached, `Remove` clears the cache, a disposed matcher still matches without caching) and end-to-end access-control denials (`403` with and without a configured 403 page, and a client denied after its permit entry is removed).
+
 ### Routing and UrlMatcher coverage
 
 Parameter and WebSocket route matching is provided by the `UrlMatcher` package. Two groups of suites in `Test.Shared` cover it, and all three runners execute them:

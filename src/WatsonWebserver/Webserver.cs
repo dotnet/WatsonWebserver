@@ -393,7 +393,7 @@
 #if NET8_0_OR_GREATER
                 _QuicListener = null;
 #endif
-                Settings = null;
+                Settings?.Dispose();
                 DisposeTokenSource();
                 _AcceptConnections = null;
 #if NET8_0_OR_GREATER

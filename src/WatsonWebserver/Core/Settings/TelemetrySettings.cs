@@ -14,8 +14,10 @@ namespace WatsonWebserver.Core.Settings
     /// <remarks>
     /// These settings are read when the server is constructed. Configure them before constructing the
     /// server rather than mutating them while requests are in flight.
+    /// The settings own the matcher assigned to <see cref="TrustedProxies"/>: a matcher that is replaced, or held
+    /// when the settings are disposed, is disposed to release its match cache.
     /// </remarks>
-    public class TelemetrySettings
+    public class TelemetrySettings : IDisposable
     {
         #region Public-Members
 
@@ -146,7 +148,7 @@ namespace WatsonWebserver.Core.Settings
         /// <summary>
         /// Allow-list of proxy addresses permitted to set forwarded headers. Only meaningful when
         /// <see cref="TrustForwardedHeaders"/> is true. When empty, only the immediate socket peer is
-        /// trusted (the safe single-proxy default).
+        /// trusted (the safe single-proxy default). Assigning a different matcher disposes the previous one.
         /// </summary>
         public Matcher TrustedProxies
         {
@@ -157,7 +159,9 @@ namespace WatsonWebserver.Core.Settings
             set
             {
                 if (value == null) value = new Matcher();
+                Matcher previous = _TrustedProxies;
                 _TrustedProxies = value;
+                if (previous != null && !ReferenceEquals(previous, value)) previous.Dispose();
             }
         }
 
@@ -205,6 +209,7 @@ namespace WatsonWebserver.Core.Settings
         private Matcher _TrustedProxies = new Matcher();
         private int _ForwardLimit = 1;
         private TelemetryPrometheusSettings _Prometheus = new TelemetryPrometheusSettings();
+        private bool _Disposed = false;
 
         #endregion
 
@@ -215,6 +220,39 @@ namespace WatsonWebserver.Core.Settings
         /// </summary>
         public TelemetrySettings()
         {
+        }
+
+        #endregion
+
+        #region Public-Methods
+
+        /// <summary>
+        /// Dispose the trusted-proxy matcher, releasing its match cache.
+        /// The matcher continues to evaluate addresses after disposal, without caching.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        #endregion
+
+        #region Private-Methods
+
+        /// <summary>
+        /// Dispose of resources.
+        /// </summary>
+        /// <param name="disposing">True when called from <see cref="Dispose()"/>.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_Disposed) return;
+            _Disposed = true;
+
+            if (disposing)
+            {
+                _TrustedProxies?.Dispose();
+            }
         }
 
         #endregion

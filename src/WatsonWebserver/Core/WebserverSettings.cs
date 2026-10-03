@@ -5,8 +5,11 @@
 
     /// <summary>
     /// Webserver settings.
+    /// The settings own the <see cref="AccessControl"/> and <see cref="Telemetry"/> objects assigned to them, which
+    /// hold IP matchers: an instance that is replaced, or held when the settings are disposed, is disposed.
+    /// A server disposes its settings when it is disposed.
     /// </summary>
-    public class WebserverSettings
+    public class WebserverSettings : IDisposable
     {
         #region Public-Members
 
@@ -139,6 +142,7 @@
 
         /// <summary>
         /// Access control manager, i.e. default mode of operation, permit list, and deny list.
+        /// Assigning a different manager disposes the previous one.
         /// </summary>
         public AccessControlManager AccessControl
         {
@@ -149,7 +153,9 @@
             set
             {
                 if (value == null) throw new ArgumentNullException(nameof(AccessControl));
+                AccessControlManager previous = _AccessControl;
                 _AccessControl = value;
+                if (previous != null && !ReferenceEquals(previous, value)) previous.Dispose();
             }
         }
 
@@ -207,6 +213,7 @@
         /// Telemetry and instrumentation settings.
         /// Controls metric and trace emission, forwarded-header resolution for the client address, and
         /// the optional in-process Prometheus scrape endpoint.
+        /// Assigning a different instance disposes the previous one.
         /// </summary>
         public TelemetrySettings Telemetry
         {
@@ -217,7 +224,9 @@
             set
             {
                 if (value == null) throw new ArgumentNullException(nameof(Telemetry));
+                TelemetrySettings previous = _Telemetry;
                 _Telemetry = value;
+                if (previous != null && !ReferenceEquals(previous, value)) previous.Dispose();
             }
         }
 
@@ -254,6 +263,7 @@
         private WebSocketSettings _WebSockets = new WebSocketSettings();
         private TelemetrySettings _Telemetry = new TelemetrySettings();
         private bool _UseMachineHostname = false;
+        private bool _Disposed = false;
 
         #endregion
 
@@ -289,9 +299,35 @@
 
         #region Public-Methods
 
+        /// <summary>
+        /// Dispose the access control manager and telemetry settings, releasing the match caches of their IP matchers.
+        /// The matchers continue to evaluate addresses after disposal, without caching.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
         #endregion
 
         #region Private-Methods
+
+        /// <summary>
+        /// Dispose of resources.
+        /// </summary>
+        /// <param name="disposing">True when called from <see cref="Dispose()"/>.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_Disposed) return;
+            _Disposed = true;
+
+            if (disposing)
+            {
+                _AccessControl?.Dispose();
+                _Telemetry?.Dispose();
+            }
+        }
 
         #endregion
     }

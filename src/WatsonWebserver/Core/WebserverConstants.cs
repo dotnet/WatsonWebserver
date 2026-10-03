@@ -46,6 +46,20 @@
             "<html>" + Environment.NewLine;
 
         /// <summary>
+        /// HTML content for a 403 response.
+        /// </summary>
+        public static string PageContent403 { get; set; } =
+            "<html>" + Environment.NewLine +
+            "  <head>" + Environment.NewLine +
+            "    <title>Forbidden</title>" + Environment.NewLine +
+            "  </head>" + Environment.NewLine +
+            "  <body>" + Environment.NewLine +
+            "    <h2>Forbidden</h2>" + Environment.NewLine +
+            "    <p>You are not permitted to access this resource.</p>" + Environment.NewLine +
+            "  </body>" + Environment.NewLine +
+            "<html>" + Environment.NewLine;
+
+        /// <summary>
         /// HTML content for a 404 response.
         /// </summary>
         public static string PageContent404 { get; set; } =
