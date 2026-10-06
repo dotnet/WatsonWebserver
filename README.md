@@ -76,6 +76,8 @@ Use `Watson` for server/runtime/extensibility scenarios. Use `Watson.Clients` wh
 
 On `netstandard2.1`, HTTP/3 is gracefully disabled at startup. All other features — routing, API routes, middleware, WebSockets, OpenAPI, health checks, and HTTP/2 — work without restriction.
 
+Native AOT and trimming are supported on .NET 8 and .NET 10 (both `Watson` and `Watson.Clients` are marked `IsAotCompatible`). Applications that don't use AOT need no changes; see [Native AOT and Trimming](#native-aot-and-trimming).
+
 ## Quick Start
 
 ```csharp
@@ -1110,6 +1112,25 @@ server.Routes.PreAuthentication.Static.Add(
 The generated schema emits `oneOf` with `$ref` branches plus a
 `discriminator` block carrying `propertyName` and the optional `mapping`.
 
+## Native AOT and Trimming
+
+Watson supports native AOT and trimming on .NET 8 and .NET 10. The transport, routing, middleware, WebSockets, telemetry, and Watson's own JSON (API errors, health checks, OpenAPI) need no setup. Applications that don't use AOT need no changes either: the default serializer is still reflection-based and produces the same JSON as before.
+
+Under native AOT, reflection-based JSON is disabled, so API routes need source-generated metadata for your own request and response types. Declare them on a `JsonSerializerContext` and hand it to Watson:
+
+```csharp
+[JsonSourceGenerationOptions(UseStringEnumConverter = true)]
+[JsonSerializable(typeof(UserResponse))]
+[JsonSerializable(typeof(CreateUserRequest))]
+internal partial class AppJsonContext : JsonSerializerContext
+{
+}
+
+server.Serializer = new DefaultSerializationHelper(AppJsonContext.Default);
+```
+
+Route code doesn't change. Under AOT, return named types rather than anonymous types, and set `OpenApiSettings.TypeInfoResolver` if you use your own types as OpenAPI example values. A missing type fails with an error that names it and shows the fix. [AOT.md](AOT.md) covers what to register, every difference from a non-AOT application, and how Watson validates AOT.
+
 ## Hostname Handling
 
 `WebserverSettings.UseMachineHostname` controls the host value Watson uses when composing response host metadata.
@@ -1239,6 +1260,7 @@ Automated validation is covered by:
 - `src/Test.RestApi`: interactive server demonstrating all API route features (run and test manually with curl/Postman)
 - `src/Test.WebsocketClient`: interactive websocket client demonstrating `WatsonWebSocketClient`
 - `src/Test.Benchmark`: benchmark harness for cross-target and cross-protocol performance comparisons
+- `src/Test.Aot`: native AOT validation; published as a native executable that exercises Watson and `Watson.Clients` end to end
 
 Recommended commands:
 

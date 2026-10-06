@@ -51,7 +51,7 @@
                     {
                         ["error"] = ex.Message
                     };
-                    string errorJson = JsonSerializer.Serialize(error);
+                    string errorJson = JsonSerializer.Serialize(error, WatsonJsonContext.Default.DictionaryStringString);
                     await ctx.Response.Send(errorJson, ctx.Token).ConfigureAwait(false);
                 }
             };

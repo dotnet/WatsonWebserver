@@ -33,6 +33,11 @@ namespace Test.Shared
                     SharedCoreUnitTests.GetTests()));
 
                 suites.Add(NamedSuite(
+                    "AotSerialization",
+                    "Native AOT Serialization",
+                    SharedAotSerializationTests.GetTests()));
+
+                suites.Add(NamedSuite(
                     "MatcherDisposal",
                     "IP Matcher Disposal",
                     SharedMatcherDisposalTests.GetTests()));

@@ -3,9 +3,9 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.1;net462;net48;net8.0;net10.0</TargetFrameworks>
     <LangVersion>latest</LangVersion>
-    <Version>7.2.3</Version>
+    <Version>7.3.0</Version>
     <Description>Async-first WebSocket client for Watson 7 with whole-message receive semantics, direct ClientWebSocket access, and interop with the Watson webserver WebSocket surface.</Description>
-    <PackageReleaseNotes>Dependency servicing refresh (no public API changes): Microsoft.Bcl.AsyncInterfaces 10.0.11 -&gt; 10.0.12 for the net462/net48 targets.</PackageReleaseNotes>
+    <PackageReleaseNotes>Versioned in lockstep with Watson 7.3.0. Marked IsAotCompatible for net8.0 and net10.0 (no code changes were required; the client has no trim or AOT warnings).</PackageReleaseNotes>
     <Authors>Joel Christner</Authors>
     <Company>Joel Christner</Company>
     <Copyright>(c)2026 Joel Christner</Copyright>
@@ -25,6 +25,11 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\Watson.Clients.xml</DocumentationFile>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <!-- Native AOT and trimming: enables the trim, AOT, and single-file analyzers and marks the assembly trimmable. -->
+  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
+    <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
 
   <ItemGroup>

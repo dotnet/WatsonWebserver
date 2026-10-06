@@ -9,6 +9,10 @@ It also includes a benchmark harness:
 
 - `src/Test.Benchmark`
 
+It also includes a native AOT validation application:
+
+- `src/Test.Aot`
+
 It also includes interactive websocket sample applications:
 
 - `src/Test.WebsocketServer`
@@ -55,6 +59,31 @@ Parameter and WebSocket route matching is provided by the `UrlMatcher` package. 
 
 - `CatchAllRouting` (`src/Test.Shared/SharedCatchAllRoutingTests.cs`) exercises catch-all (`{*name}`) routing through Watson: `ParameterRouteManager` and `WebSocketRouteManager` matching, precedence (routes without a catch-all are evaluated before catch-all routes), registration-time rejection of invalid catch-alls, `ParameterRoute` path and method changes, API routes, authenticated routes, `HostBuilder`, OpenAPI output, and end-to-end HTTP and WebSocket requests.
 - `UrlMatcher.*` (`src/Test.Shared/UrlMatching/`) is the UrlMatcher library's own test suite (358 cases), copied from the UrlMatcher repository and compiled against the `UrlMatcher` NuGet package Watson references. When the `UrlMatcher` dependency is updated, refresh these files from the UrlMatcher repository's `src/Test.Shared` (namespaces become `Test.Shared.UrlMatching`, and suite ids are prefixed with `UrlMatcher.`).
+
+### Native AOT serialization coverage
+
+`AotSerialization` (`src/Test.Shared/SharedAotSerializationTests.cs`) covers the source-generated serialization path used under native AOT, running it without reflection inside the regular test process. It compares `DefaultSerializationHelper(IJsonTypeInfoResolver)` with the reflection-based serializer for API errors, health results, an application type, and exceptions, and the OpenAPI generator with and without reflection for 3.0, 3.1, and 3.2 documents. It also covers the failure messages for unregistered types, enum handling with and without `UseStringEnumConverter`, and end-to-end API routes, typed bodies, structured errors, timeouts, authentication failures, and health checks through a resolver-configured server. The application types and contexts it uses live in `src/Test.Shared/Aot/`.
+
+## Test.Aot
+
+`src/Test.Aot` validates Watson and `Watson.Clients` as a real native AOT executable, which the in-process runners can't do. It is a separate console application, not part of `WatsonTestSuites.All`, because it has to be compiled by the native AOT toolchain.
+
+A regular build runs the trim and AOT analyzers over the application and both packages with warnings as errors:
+
+```powershell
+dotnet build src\Test.Aot\Test.Aot.csproj -c Debug
+```
+
+Publishing produces the native executable, which exits `0` when every check passes. Pass `--require-native` to fail when the executable isn't native:
+
+```powershell
+dotnet publish src\Test.Aot\Test.Aot.csproj -c Release -f net10.0 -r win-x64 -o artifacts\aot
+artifacts\aot\Test.Aot.exe --require-native
+```
+
+Use the runtime identifier for your platform (`linux-x64`, `osx-arm64`, and so on), and repeat with `-f net8.0` to cover both runtimes. Native AOT publishing needs the platform's native toolchain (see [AOT.md](AOT.md#publishing)).
+
+The executable starts HTTP/1.1 and HTTP/2 (h2c) servers configured the way an AOT application configures them and checks, over both protocols: plain, parameter, and catch-all routes, API routes returning application types, typed request bodies, malformed JSON, structured errors, timeouts, authentication failures, health checks, OpenAPI, middleware, chunked responses, server-sent events, the Prometheus endpoint, and the default route. It also checks a WebSocket round trip through `Watson.Clients`, the default serializer's fallback when reflection is disabled, and HTTP/3 runtime detection.
 
 ## Test.XUnit
 
@@ -202,6 +231,13 @@ For local xUnit runs where you want to see each test result and elapsed time:
 
 ```powershell
 dotnet test src\Test.XUnit\Test.XUnit.csproj --no-build -c Debug -f net10.0 --logger "console;verbosity=detailed"
+```
+
+For native AOT validation (see [Test.Aot](#testaot)):
+
+```powershell
+dotnet publish src\Test.Aot\Test.Aot.csproj -c Release -f net10.0 -r win-x64 -o artifacts\aot
+artifacts\aot\Test.Aot.exe --require-native
 ```
 
 For local performance validation:

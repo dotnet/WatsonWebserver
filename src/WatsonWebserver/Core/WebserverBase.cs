@@ -118,7 +118,11 @@
         }
 
         /// <summary>
-        /// JSON serialization helper.
+        /// JSON serialization helper used by API routes, API error responses, and health checks.
+        /// The default is a <see cref="DefaultSerializationHelper"/> that uses reflection-based serialization
+        /// where it is enabled. Native AOT and trimmed applications, where it is disabled, should assign
+        /// <c>new DefaultSerializationHelper(YourJsonContext.Default)</c> with a source-generated
+        /// <c>JsonSerializerContext</c> that declares the application's request and response types.
         /// </summary>
         [JsonIgnore]
         public ISerializationHelper Serializer
@@ -174,7 +178,7 @@
         private WebserverSettings _Settings = null;
         private WebserverStatistics _Statistics = new WebserverStatistics();
         private WebserverRoutes _Routes = new WebserverRoutes();
-        private ISerializationHelper _Serializer = new DefaultSerializationHelper();
+        private ISerializationHelper _Serializer = DefaultSerializationHelper.CreateDefault();
         private MiddlewarePipeline _Middleware = new MiddlewarePipeline();
         private WebSocketConnectionRegistry _WebSocketConnections = new WebSocketConnectionRegistry();
         private WebserverTelemetry _Telemetry = null;

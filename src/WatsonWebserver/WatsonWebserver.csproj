@@ -3,9 +3,9 @@
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.1;net8.0;net10.0</TargetFrameworks>
 		<LangVersion>latest</LangVersion>
-		<Version>7.2.3</Version>
+		<Version>7.3.0</Version>
 		<Description>Simple, fast, async C# web server for handling REST requests with unified 7.x protocol architecture targeting .NET Standard 2.1, .NET 8, and .NET 10.</Description>
-		<PackageReleaseNotes>IpMatcher 1.1.0 (bounded match cache, Remove clears cached matches). AccessControlManager, TelemetrySettings, and WebserverSettings are IDisposable and dispose replaced IP matchers; Webserver.Dispose disposes its settings. Access-control denials return 403 instead of 500. RegexMatcher 1.1.0 and servicing updates. See CHANGELOG.md.</PackageReleaseNotes>
+		<PackageReleaseNotes>Native AOT and trimming support (net8.0 and net10.0): the package is marked IsAotCompatible, Watson's own JSON (API errors, health checks, OpenAPI) uses source-generated metadata, and the new DefaultSerializationHelper(IJsonTypeInfoResolver) constructor accepts a JsonSerializerContext for application types. Non-AOT applications need no changes and produce identical JSON. See CHANGELOG.md.</PackageReleaseNotes>
 
 		<Authors>Joel Christner</Authors>
 		<Company>Joel Christner</Company>
@@ -13,7 +13,7 @@
 		<PackageProjectUrl>https://github.com/dotnet/WatsonWebserver</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/dotnet/WatsonWebserver</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
-		<PackageTags>watson webserver web-server rest restful http http2 http3 quic api async openapi swagger telemetry opentelemetry metrics tracing observability prometheus</PackageTags>
+		<PackageTags>watson webserver web-server rest restful aot nativeaot trimming http http2 http3 quic api async openapi swagger telemetry opentelemetry metrics tracing observability prometheus</PackageTags>
 		<PackageId>Watson</PackageId>
 		<Product>Watson</Product>
 		<PackageLicenseFile>LICENSE.md</PackageLicenseFile>
@@ -25,6 +25,12 @@
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\WatsonWebserver.xml</DocumentationFile>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+	</PropertyGroup>
+
+	<!-- Native AOT and trimming: enables the trim, AOT, and single-file analyzers and marks the assembly trimmable. netstandard2.1 cannot be AOT compiled, so it is excluded. -->
+	<PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
+		<IsAotCompatible>true</IsAotCompatible>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -58,7 +64,6 @@
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
 		<PackageReference Include="System.Text.Json" Version="10.0.12" />
-		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 		<PackageReference Include="System.Diagnostics.DiagnosticSource" Version="10.0.12" />
 	</ItemGroup>
 

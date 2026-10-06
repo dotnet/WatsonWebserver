@@ -20,7 +20,7 @@ namespace WatsonWebserver.Core.OpenApi
         /// The location of the parameter (query, header, path, or cookie).
         /// </summary>
         [JsonPropertyName("in")]
-        [JsonConverter(typeof(JsonStringEnumConverter))]
+        [JsonConverter(typeof(JsonStringEnumConverter<ParameterLocation>))]
         public ParameterLocation In { get; set; } = ParameterLocation.Query;
 
         /// <summary>

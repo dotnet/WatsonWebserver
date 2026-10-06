@@ -2,7 +2,30 @@
 
 ## Current Version
 
-`v7.2.3`
+`v7.3.0`
+
+## v7.3.0
+
+- Native AOT and trimming support on .NET 8 and .NET 10. `Watson` and `Watson.Clients` are marked `IsAotCompatible` for `net8.0` and `net10.0`, and the trim, AOT, and single-file analyzers report no warnings. See [AOT.md](AOT.md)
+- Added `DefaultSerializationHelper(IJsonTypeInfoResolver)`, which serializes through source-generated metadata only. Pass a `JsonSerializerContext` declaring the application's types (`new DefaultSerializationHelper(AppJsonContext.Default)`); Watson's own types are combined in automatically
+- Added `DefaultSerializationHelper.UsesReflection`
+- Added `OpenApiSettings.TypeInfoResolver` for application types used as OpenAPI example, default, or enum values under native AOT
+- Watson's own JSON (`ApiErrorResponse`, timeout, authentication, and deserialization errors, `HealthCheckResult`, the OpenAPI document, and the OpenAPI error response) now uses source-generated metadata, so it works when reflection-based serialization is disabled
+- The default serializer assigned to `WebserverBase.Serializer` uses reflection where reflection-based serialization is enabled (unchanged), and falls back to Watson's source-generated metadata where it is disabled, so Watson's own responses keep working under native AOT. Serializing an application type with no metadata throws an `InvalidOperationException` that names the type and shows the fix; from an API route this is a structured `500`
+- `DefaultSerializationHelper` no longer uses `dynamic`. The reflection-based exception converter writes the same properties as before without the runtime binder, and the `NameValueCollection` converter writes directly to the JSON writer
+- `WebserverStatistics` uses `Enum.GetValues<HttpMethod>()` on .NET 5 and later, and `OpenApiParameterMetadata.In` uses `JsonStringEnumConverter<ParameterLocation>`
+- Removed the `Microsoft.CSharp` dependency from the `netstandard2.1` target (it was only needed for `dynamic`)
+- `WatsonWebserver.csproj` now builds with `TreatWarningsAsErrors`, matching `Watson.Clients`
+- `Watson.Clients` 7.2.3 -> 7.3.0 (versioned in lockstep with `Watson`; marked `IsAotCompatible`, no code changes)
+- Added the `AotSerialization` suite to `Test.Shared` (24 cases, wired into all three runners): the source-generated serialization path without reflection, compared with the reflection-based path for API errors, health results, application types, exceptions, and OpenAPI 3.0, 3.1, and 3.2 documents, plus end-to-end API routes, typed bodies, errors, timeouts, authentication, and health checks over HTTP
+- Added `src/Test.Aot`, a native AOT application published as a native executable for `net8.0` and `net10.0` that exercises routing, API routes, typed bodies, errors, timeouts, authentication, health checks, OpenAPI, middleware, chunked responses, server-sent events, the Prometheus endpoint, and WebSockets through `Watson.Clients`, over HTTP/1.1 and HTTP/2 (h2c)
+
+### Compatibility notes
+
+- Applications that don't use native AOT or trimming need no changes. The default serializer's JSON output, including exceptions, enums, dates, and OpenAPI documents, is byte-for-byte unchanged
+- The parameterless `DefaultSerializationHelper()` constructor is now annotated `[RequiresUnreferencedCode]` and `[RequiresDynamicCode]`. Only projects with the trim or AOT analyzers enabled see warnings where they call it: IL2026 under `PublishTrimmed` or `IsTrimmable`, and IL2026 and IL3050 under `PublishAot` or `IsAotCompatible`; with `TreatWarningsAsErrors` those warnings fail the build, which is the intended prompt to use the resolver constructor
+- `OpenApiDocumentGenerator` no longer serializes with `SerializerOptions` directly; it copies the options on first use and caches the copy. Changes made to the same `SerializerOptions` instance after the first `Generate` call are not observed (previously they threw, because System.Text.Json locks options after first use); assign a new instance instead
+- The `netstandard2.1` target no longer brings in `Microsoft.CSharp` transitively. Projects that used `dynamic` and relied on Watson to supply that package must reference it themselves
 
 ## v7.2.3
 

@@ -18,6 +18,7 @@ This repository no longer uses `http.sys` as its primary server model.
 - `src/Test.XUnit/` - Touchstone xUnit adapter (`Touchstone.XunitAdapter`) over `WatsonTestSuites.All`
 - `src/Test.Nunit/` - Touchstone NUnit adapter (`Touchstone.NunitAdapter`) over `WatsonTestSuites.All`
 - `src/Test.Benchmark/` - benchmark harness for Watson 6, WatsonLite 6, Watson 7, and Kestrel
+- `src/Test.Aot/` - native AOT validation app (published as a native executable; not part of `WatsonTestSuites.All`)
 - `src/Test.*` - interactive/sample and feature-specific console projects
 
 ### Adding or changing tests
@@ -156,18 +157,25 @@ server.Get("/products/{id}", async (req) =>
 
 `WebserverBase.Serializer` controls API-route request/response serialization.
 
-- Default: `DefaultSerializationHelper`
+- Default: `DefaultSerializationHelper.CreateDefault()` (reflection-based where reflection-based JSON is enabled, Watson's source-generated metadata only where it is disabled)
 - Replaceable by user code
-- Used by `ApiRouteHandler` and `ApiResponseProcessor`
+- Used by `ApiRouteHandler`, `ApiResponseProcessor`, and the `AuthenticateApiRequest` denial in `WebserverBase`
 
 ```csharp
+// Reflection-based; annotated [RequiresUnreferencedCode]/[RequiresDynamicCode]
 server.Serializer = new DefaultSerializationHelper();
+
+// Source-generated metadata only; native AOT safe
+server.Serializer = new DefaultSerializationHelper(AppJsonContext.Default);
 ```
 
 If you change API-route serialization behavior, check both:
 
 - `src/WatsonWebserver/Core/Routing/ApiRouteHandler.cs`
 - `src/WatsonWebserver/Core/Routing/ApiResponseProcessor.cs`
+
+The reflection-based output of `DefaultSerializationHelper` is a compatibility contract: keep it byte-for-byte
+stable, and keep the source-generated path equivalent to it (the `AotSerialization` suite compares them).
 
 ### Structured authentication
 
@@ -304,6 +312,24 @@ Important:
 - the repo intentionally handles graceful degradation when QUIC is unavailable
 - Alt-Svc integration is explicit
 
+## Native AOT and trimming
+
+`Watson` and `Watson.Clients` are `IsAotCompatible` on `net8.0` and `net10.0` and build with
+`TreatWarningsAsErrors`, so any trim or AOT analyzer warning fails the build. User-facing guide: `AOT.md`.
+
+- Never introduce reflection, `dynamic`, `Type.GetType(string)` with a non-constant name, `MakeGenericType`, or
+  `Expression.Compile` in library code paths. Do not suppress IL2xxx/IL3xxx warnings to get a build green.
+- Serialize only through `JsonTypeInfo` overloads (`JsonSerializer.Serialize(value, typeInfo)`,
+  `options.GetTypeInfo(type)`), never the `JsonSerializerOptions` or generic-inference overloads.
+- Any new type Watson serializes itself (responses, errors, documents) must be added to
+  `Core/WatsonJsonContext.cs`, along with the runtime types that appear in its `object`-typed members.
+- Reflection-based System.Text.Json components may only be created through `Core/JsonReflectionFallback.cs`,
+  which returns null when `JsonSerializer.IsReflectionEnabledByDefault` is false. That is the only place
+  reflection suppressions are justified.
+- After changing serialization, routing, or transport code, publish `Test.Aot` for both `net8.0` and `net10.0`
+  and run it with `--require-native` (see Testing commands). Add a check to `Test.Aot` for new features that
+  could behave differently under native AOT.
+
 ## Telemetry
 
 Watson emits standardized telemetry through the BCL (`System.Diagnostics.Metrics.Meter` and
@@ -338,6 +364,8 @@ dotnet run --project src\Test.Automated\Test.Automated.csproj -c Debug -f net10.
 dotnet test src\Test.XUnit\Test.XUnit.csproj -c Debug -f net10.0
 dotnet test src\Test.Nunit\Test.Nunit.csproj -c Debug -f net10.0
 dotnet run --project src\Test.Benchmark\Test.Benchmark.csproj -c Debug -f net10.0 -- --targets Watson7 --protocols http1,http2,http3 --scenarios hello,json
+dotnet publish src\Test.Aot\Test.Aot.csproj -c Release -f net10.0 -r <rid> -o artifacts\aot-net10 && artifacts\aot-net10\Test.Aot --require-native
+dotnet publish src\Test.Aot\Test.Aot.csproj -c Release -f net8.0 -r <rid> -o artifacts\aot-net8 && artifacts\aot-net8\Test.Aot --require-native
 ```
 
 All three test runners execute the same shared suite defined in `Test.Shared/WatsonTestSuites.cs`.
@@ -348,12 +376,18 @@ All three test runners execute the same shared suite defined in `Test.Shared/Wat
 
 `Test.Benchmark` is for throughput, latency, and allocation validation, not correctness.
 
+`Test.Aot` is published with native AOT and exits 0 on all-pass. A plain `dotnet build` of it runs the trim and AOT
+analyzers over the app and both packages with warnings as errors.
+
 ## Key files
 
 - `src/WatsonWebserver/Core/WebserverBase.cs`
 - `src/WatsonWebserver/Core/WebserverSettings.cs`
 - `src/WatsonWebserver/Core/Settings/`
 - `src/WatsonWebserver/Core/ApiRequest.cs`
+- `src/WatsonWebserver/Core/DefaultSerializationHelper.cs`
+- `src/WatsonWebserver/Core/WatsonJsonContext.cs`
+- `src/WatsonWebserver/Core/JsonReflectionFallback.cs`
 - `src/WatsonWebserver/Core/RequestParameters.cs`
 - `src/WatsonWebserver/Core/Routing/ApiRouteHandler.cs`
 - `src/WatsonWebserver/Core/Routing/ApiResponseProcessor.cs`
@@ -364,6 +398,8 @@ All three test runners execute the same shared suite defined in `Test.Shared/Wat
 - `src/Test.Shared/WatsonTestSuites.cs`
 - `src/Test.Shared/SharedApiRouteTests.cs`
 - `src/Test.Shared/LegacyCoverageSuite.cs`
+- `src/Test.Shared/SharedAotSerializationTests.cs`
+- `src/Test.Aot/Program.cs`
 - `src/Test.Benchmark/`
 
 ## Coding rules

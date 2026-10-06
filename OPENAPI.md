@@ -160,6 +160,14 @@ a browser with no route to unpkg.com renders a blank page. The pinned version is
 `OpenApiSettings.SwaggerUiVersion` (default `5.17.14`) if you need to move it. Bundling the assets for fully
 offline operation is not something Watson does today.
 
+## Native AOT
+
+The document serializes through source-generated metadata, so `/openapi.json` works under native AOT. Example,
+default, and enum values that are strings, numbers, booleans, or lists and dictionaries of them need no setup.
+If you use one of your own types as an example value, register it on a `JsonSerializerContext` and set
+`OpenApiSettings.TypeInfoResolver` to that context. Without AOT, such values keep using reflection-based
+serialization. [AOT.md](AOT.md) has the details.
+
 ## Verifying it yourself
 
 Point any OpenAPI validator at the generated document to confirm it is well formed under the version you chose.

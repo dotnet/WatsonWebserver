@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!--
+		Native AOT validation for Watson and Watson.Clients. A regular build runs the trim and AOT analyzers
+		(PublishAot enables them) with warnings as errors. Publishing compiles a native executable, which
+		then exercises Watson end to end and exits 0 on success:
+
+		  dotnet publish src/Test.Aot/Test.Aot.csproj -c Release -f net10.0 -r <rid> -o <dir>
+		  <dir>/Test.Aot
+	-->
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+		<IsPackable>false</IsPackable>
+		<PublishAot>true</PublishAot>
+		<TrimmerSingleWarn>false</TrimmerSingleWarn>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<NoWarn>$(NoWarn);CS1591</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\WatsonWebserver\WatsonWebserver.csproj" />
+		<ProjectReference Include="..\Watson.Clients\Watson.Clients.csproj" />
+	</ItemGroup>
+
+</Project>

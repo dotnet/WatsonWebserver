@@ -2,6 +2,7 @@ namespace WatsonWebserver.Core.OpenApi
 {
     using System;
     using System.Collections.Generic;
+    using System.Text.Json.Serialization.Metadata;
 
     /// <summary>
     /// Settings for OpenAPI document generation.
@@ -172,6 +173,16 @@ namespace WatsonWebserver.Core.OpenApi
         /// an earlier version fails document generation.
         /// </summary>
         public Dictionary<string, Dictionary<string, OpenApiRouteMetadata>> AdditionalOperations { get; set; } = new Dictionary<string, Dictionary<string, OpenApiRouteMetadata>>();
+
+        /// <summary>
+        /// Resolver for application types used as OpenAPI example, default, or enum values, typically a
+        /// source-generated <c>JsonSerializerContext</c>. Strings, numbers, booleans, and
+        /// <c>List&lt;object&gt;</c> and <c>Dictionary&lt;string, object&gt;</c> trees of them need no
+        /// resolver. Under native AOT and trimming, where reflection-based serialization is disabled, other
+        /// value types must be declared here. Default is null, which uses reflection-based serialization for
+        /// such values where it is enabled.
+        /// </summary>
+        public IJsonTypeInfoResolver TypeInfoResolver { get; set; } = null;
 
         #endregion
 
