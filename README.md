@@ -768,6 +768,8 @@ private static async Task StreamData(HttpContextBase ctx)
 }
 ```
 
+The final call (`isFinal: true`) may carry data or be empty; either way the response ends with a single terminating chunk.
+
 ### Server-sent events
 
 ```csharp

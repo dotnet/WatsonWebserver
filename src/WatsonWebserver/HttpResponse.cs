@@ -259,7 +259,9 @@
                         if (chunk.Length > 0) memoryStream.Write(chunk, 0, chunk.Length);
                         byte[] crlf = Encoding.UTF8.GetBytes("\r\n");
                         memoryStream.Write(crlf, 0, crlf.Length);
-                        if (isFinal)
+                        // An empty final chunk is already the terminator ("0\r\n\r\n"), so the
+                        // terminating chunk is appended only after a non-empty final chunk.
+                        if (isFinal && chunk.Length > 0)
                         {
                             byte[] finalChunk = Encoding.UTF8.GetBytes("0\r\n\r\n");
                             memoryStream.Write(finalChunk, 0, finalChunk.Length);

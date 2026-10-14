@@ -2,7 +2,18 @@
 
 ## Current Version
 
-`v7.3.0`
+`v7.3.1`
+
+## v7.3.1
+
+- Fixed: on HTTP/1.1, finishing a chunked response with an empty final chunk (`SendChunk(Array.Empty<byte>(), true)`, the documented pattern) wrote the terminating chunk twice, so the response ended in `0\r\n\r\n0\r\n\r\n`. Node.js clients (Postman/Newman, `http`, `undici`) failed with "Expected HTTP/", on connections kept open after the response (chunked responses carry the default `Connection: close` unless the application sets `Connection: keep-alive`) the client read the extra bytes as the start of the next response, and curl reported leftover bytes. An empty final chunk now writes only the terminator, `0\r\n\r\n`
+- Non-empty final chunks, non-final chunks, `Send(...)`, server-sent events, HTTP/2, and HTTP/3 are byte-for-byte unchanged. HTTP/2 and HTTP/3 already ended the stream correctly for an empty final chunk
+- `Watson.Clients` 7.3.0 -> 7.3.1 (versioned in lockstep with `Watson`; no code changes)
+- Added the `ChunkTerminator` suite to `Test.Shared` (6 cases, wired into all three runners): exact HTTP/1.1 wire bytes for an empty final chunk after data, a bodyless `202` with a single empty final chunk, and a non-empty final chunk, connection reuse after an empty final chunk on a response that opts in to keep-alive, and clean HTTP/2 stream completion for empty final chunks
+
+### Compatibility notes
+
+- No public API, setting, or default changes. The only wire change is that the 5 invalid bytes after an HTTP/1.1 response ending with an empty final chunk are no longer sent. Clients that dropped a pooled connection because unexpected data arrived on it can now reuse it
 
 ## v7.3.0
 

@@ -3,9 +3,9 @@
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.1;net8.0;net10.0</TargetFrameworks>
 		<LangVersion>latest</LangVersion>
-		<Version>7.3.0</Version>
+		<Version>7.3.1</Version>
 		<Description>Simple, fast, async C# web server for handling REST requests with unified 7.x protocol architecture targeting .NET Standard 2.1, .NET 8, and .NET 10.</Description>
-		<PackageReleaseNotes>Native AOT and trimming support (net8.0 and net10.0): the package is marked IsAotCompatible, Watson's own JSON (API errors, health checks, OpenAPI) uses source-generated metadata, and the new DefaultSerializationHelper(IJsonTypeInfoResolver) constructor accepts a JsonSerializerContext for application types. Non-AOT applications need no changes and produce identical JSON. See CHANGELOG.md.</PackageReleaseNotes>
+		<PackageReleaseNotes>Fixed: on HTTP/1.1, finishing a chunked response with an empty final chunk (SendChunk(Array.Empty&lt;byte&gt;(), true)) wrote the terminating chunk twice. No API changes. See CHANGELOG.md.</PackageReleaseNotes>
 
 		<Authors>Joel Christner</Authors>
 		<Company>Joel Christner</Company>

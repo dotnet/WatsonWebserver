@@ -87,6 +87,11 @@ namespace Test.Shared
                     "Catch-All Routing",
                     SharedCatchAllRoutingTests.GetTests()));
 
+                suites.Add(NamedSuite(
+                    "ChunkTerminator",
+                    "Chunked Response Terminator",
+                    SharedChunkTerminatorTests.GetTests()));
+
                 suites.AddRange(UrlMatching.UrlMatcherSuites.All);
 
                 suites.Add(ApiRoutesSuite());
