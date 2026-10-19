@@ -1125,6 +1125,14 @@
             if (context == null) throw new ArgumentNullException(nameof(context));
             if (context.Stream == null) throw new ArgumentNullException(nameof(context.Stream));
 
+            // A dedicated h2c listener must validate every preface as HTTP/2.
+            // Protocol probing is only needed when HTTP/1.1 shares this listener.
+            if (!Settings.Protocols.EnableHttp1)
+            {
+                context.Protocol = HttpProtocol.Http2;
+                return context;
+            }
+
             byte[] probeBytes = await ReadProtocolProbeAsync(context.Stream, token).ConfigureAwait(false);
             PrefixBufferedStream bufferedStream = new PrefixBufferedStream(context.Stream, probeBytes);
 

@@ -527,3 +527,56 @@ If forced HTTP/3 navigation fails, the remaining issue is broader browser-to-Wat
 | Status 000 or connection reset | Server crashed | Check server console/logs for exceptions |
 | Correct status but empty body | HEAD request or response not sent | Verify route handler calls `Send()` |
 | Headers missing | Response sent before headers set | Check header ordering in route handler |
+
+## HTTP/2 resilience regressions
+
+`Test.Shared/SharedHttp2ResilienceTests.cs` registers the `Http2Resilience` suite with the CLI, xUnit, and NUnit runners. It uses raw loopback HTTP/2 frames with ten-second deadlines and TLS ALPN checks. Run the full shared suite with:
+
+```sh
+dotnet run --project src/Test.Automated -c Debug -f net10.0 -- --results results.json
+dotnet test src/Test.XUnit -c Debug
+dotnet test src/Test.Nunit -c Debug
+```
+
+Coverage includes phantom PRIORITY streams, extension frames, invalid framing, writer cancellation before and after commit, transport faults, reset isolation over h2c and TLS, default-window byte-array/stream responses, exact connection-credit refunds, HPACK synchronization after resets, bounded reset history, rapid resets, and multiplexing soak tests. `Http2Golden/` fixtures were captured from 7.3.1 for small, multi-frame, CONTINUATION, chunked, trailer, and 4 MB in-window responses. Only the variable Date header value is normalized; frame types, flags, lengths, normalized HPACK bytes, and DATA payload hashes are compared.
+
+The issue #197 standalone repro was run against local 7.3.1 and patched builds over both h2c and TLS. Baseline: A passed and B through F failed. Patched: A through F all passed. Release evidence and HTTP/3 audit details are recorded in the archived issue work order.
+
+HTTP/3 audit gaps are tracked in issue #200 and are outside this HTTP/2 patch. This release does not advertise SETTINGS_NO_RFC7540_PRIORITIES.
+
+### Closed-stream policy and RFC coverage
+
+Watson records the reason for each of the most recent 128 stream closures. DATA on a known normally closed or client-reset stream receives GOAWAY(STREAM_CLOSED). DATA on a half-closed remote stream receives RST_STREAM(STREAM_CLOSED), leaving sibling requests usable. Late frames following a server reset receive minimal processing: DATA includes padding in connection flow-control accounting, and HEADERS update HPACK state before being discarded. Once closure history is evicted, Watson conservatively uses that same minimal processing, rather than risking a connection error for frames still in flight.
+
+[RFC 9113 section 5.1](https://www.rfc-editor.org/rfc/rfc9113.html#section-5.1) permits minimal processing for all closed streams; the stricter response for known normal/client-reset closures is a compatibility policy. The active half-closed remote stream error is required by sections 5.1 and 6.1. There are no timer-based reset exemptions.
+
+Ten additional shared cases cover normal closure, peer reset, half-closed remote state, and stream-zero DATA over h2c and TLS, plus bounded-history classification and HPACK synchronization after eviction. All four previously failing h2spec DATA checks now pass on both transports. h2spec 2.6.0 remains based on RFC 7540: its self-dependent PRIORITY rejection check is not required by RFC 9113, which deprecates those priority semantics. The subsequent protocol-validation fixes and their results are described below; passing this suite does not establish complete HTTP/2 conformance.
+
+### RFC-aware h2spec interpretation
+
+The shared `Http2Resilience` suite includes six explicit RFC 9113 cases for self-dependent priority signals: idle PRIORITY, open-stream PRIORITY, and priority metadata in HEADERS, each over h2c and TLS. Each case requires a correct 200 response, no reset or GOAWAY, connection reuse, and a PING acknowledgment. The idle-stream case also confirms that a priority-only stream does not prevent opening a lower request stream. Existing malformed-PRIORITY and header-block interleaving checks remain enforced.
+
+Keep h2spec 2.6.0's original JUnit report and exit status. To interpret that report for a particular RFC, run:
+
+```sh
+h2spec -h localhost -p 8080 --junit-report artifacts/h2spec-raw.xml
+python3 tools/summarize_h2spec.py artifacts/h2spec-raw.xml --rfc 9113 --output artifacts/h2spec-rfc9113.json
+python3 tools/summarize_h2spec.py artifacts/h2spec-raw.xml --rfc 7540 --output artifacts/h2spec-rfc7540.json
+python3 -m unittest discover -s src/Test.Shared/Http2Conformance -p 'test_*.py' -v
+```
+
+The interpreter requires an explicit RFC profile. For RFC 9113, only these two exact h2spec `http2/5.3.1` checks are classified as not applicable: `Sends PRIORITY frame that depend on itself` and `Sends HEADERS frame that depends on itself`. They test RFC 7540's dependency semantics, which RFC 9113 sections [5.3.2](https://www.rfc-editor.org/rfc/rfc9113.html#section-5.3.2) and [6.3](https://www.rfc-editor.org/rfc/rfc9113.html#section-6.3) do not retain. Both checks remain applicable under the RFC 7540 profile.
+
+The JSON preserves every raw case status and raw total, lists separate applicable totals and not-applicable cases with their rationale, and records the SHA-256 of the untouched input. h2spec sometimes embeds XML-invalid control octets in diagnostic text; these are removed only from an in-memory parsing copy, with the count recorded. The interpreter exits nonzero whenever applicable failures remain. Unrelated failures, similarly named tests, and mandatory priority framing checks remain applicable. A not-applicable test is never counted as a pass.
+
+### HTTP/2 protocol-validation follow-up
+
+The shared resilience suite adds 36 checks for oversized DATA/HEADERS/CONTINUATION (rejecting the frame header without waiting for the payload), invalid SETTINGS acknowledgements, idle-stream control frames, invalid lower stream creation, HPACK table-update placement, stream and connection window overflow, incremental SETTINGS, negative stream windows, GOAWAY draining, and dedicated-listener handshakes. Each wire scenario runs over h2c and TLS. Positive checks preserve valid HPACK updates, sibling requests after a stream overflow, existing responses during draining, and valid dedicated-listener handshakes. The suite now contains 109 cases.
+
+After these fixes, h2spec 2.6.0 was run three times on each transport against dedicated HTTP/2 listeners (`EnableHttp1 = false`). Every raw run reports 144 passed and two failed out of 146. Every RFC 9113 interpretation reports 144 passed, zero failed, and zero skipped out of 144 applicable checks, plus the two legacy dependency checks marked N/A. Raw runs still exit 1; the RFC 9113 interpreter exits 0. Raw XML, logs, profile summaries, and exit statuses are retained under `artifacts/http2-197-conformance/`.
+
+Use a dedicated HTTP/2 listener for the malformed-preface conformance check. On a shared cleartext HTTP/1.1 + h2c listener, arbitrary text such as h2spec's `INVALID CONNECTION PREFACE` is routed to the HTTP/1.1 parser; its HTTP error response is not an HTTP/2 frame, so h2spec reports an unexpected EOF. TLS ALPN and dedicated h2c listeners identify HTTP/2 before validating its preface and return PROTOCOL_ERROR. Do not weaken HTTP/1.1 protocol detection to satisfy that ambiguous shared-listener input.
+
+The existing two 32 KB body-access cases retain their byte-for-byte echo assertions. Their request helper now splits uploads into DATA frames within the server's advertised maximum, with END_STREAM only on the final fragment. Previously those tests sent an invalid single 32 KB frame against a 16 KB limit. Oversized-frame rejection is independently covered by the new negative cases.
+
+Final verification for this follow-up: CLI, xUnit, and NUnit on both .NET 8 and .NET 10 each pass 1,243 tests with zero failures/skips. Fresh native AOT builds each pass 43 checks. Debug/Release builds and API package validation against 7.3.1 pass. The original six-scenario reproducer passes over both transports; Firefox 155 and Chrome 155.0.8059.85 pass repeated browser checks. Final runner logs and the initial two invalid-input failures are preserved alongside the conformance reports.

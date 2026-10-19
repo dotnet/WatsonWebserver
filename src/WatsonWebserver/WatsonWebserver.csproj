@@ -3,9 +3,9 @@
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.1;net8.0;net10.0</TargetFrameworks>
 		<LangVersion>latest</LangVersion>
-		<Version>7.3.1</Version>
+		<Version>7.3.2</Version>
 		<Description>Simple, fast, async C# web server for handling REST requests with unified 7.x protocol architecture targeting .NET Standard 2.1, .NET 8, and .NET 10.</Description>
-		<PackageReleaseNotes>Fixed: on HTTP/1.1, finishing a chunked response with an empty final chunk (SendChunk(Array.Empty&lt;byte&gt;(), true)) wrote the terminating chunk twice. No API changes. See CHANGELOG.md.</PackageReleaseNotes>
+		<PackageReleaseNotes>Fixed HTTP/2 PRIORITY and unknown-frame handling, reset isolation, atomic frame writes, cancellation credit refunds, large-response flow-control stalls, frame validation, incremental SETTINGS windows, HPACK validation, and GOAWAY draining. No public API changes. See CHANGELOG.md.</PackageReleaseNotes>
 
 		<Authors>Joel Christner</Authors>
 		<Company>Joel Christner</Company>

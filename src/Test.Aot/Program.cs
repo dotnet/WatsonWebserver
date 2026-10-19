@@ -202,6 +202,10 @@ namespace Test.Aot
                 body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 Check(label + " :: Chunked response", response.StatusCode == HttpStatusCode.OK && body == "first,last", Describe(response, body));
 
+                response = await client.GetAsync("large").ConfigureAwait(false);
+                byte[] largeBody = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+                Check(label + " :: Large response survives flow-control replenishment", response.StatusCode == HttpStatusCode.OK && largeBody.Length == 200000, "Bytes: " + largeBody.Length);
+
                 response = await client.GetAsync("events").ConfigureAwait(false);
                 body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 Check(label + " :: Server-sent events", response.StatusCode == HttpStatusCode.OK && body.Contains("event: greeting") && body.Contains("data: hello"), Describe(response, body));
@@ -281,6 +285,12 @@ namespace Test.Aot
                 ctx.Response.ChunkedTransfer = true;
                 await ctx.Response.SendChunk(Encoding.UTF8.GetBytes("first,"), false, ctx.Token).ConfigureAwait(false);
                 await ctx.Response.SendChunk(Encoding.UTF8.GetBytes("last"), true, ctx.Token).ConfigureAwait(false);
+            });
+
+            server.Routes.PreAuthentication.Static.Add(WatsonWebserver.Core.HttpMethod.GET, "/large", async (HttpContextBase ctx) =>
+            {
+                ctx.Response.StatusCode = 200;
+                await ctx.Response.Send(new byte[200000], ctx.Token).ConfigureAwait(false);
             });
 
             server.Routes.PreAuthentication.Static.Add(WatsonWebserver.Core.HttpMethod.GET, "/events", async (HttpContextBase ctx) =>

@@ -55,6 +55,8 @@
 
                 if ((current & 0xE0) == 0x20)
                 {
+                    if (headers.Count != 0)
+                        throw new Http2ProtocolException(Http2ErrorCode.CompressionError, "HPACK table size updates must precede header fields.");
                     int updatedSize = DecodeInteger(payload, ref offset, 5);
                     context.UpdateMaxDynamicTableSize(updatedSize);
                     continue;

@@ -76,7 +76,7 @@ namespace WatsonWebserver.Http2
                 _RemoteSettings = handshake.RemoteSettings;
                 _State = Http2ConnectionState.Open;
 
-                using (Http2ConnectionWriter writer = new Http2ConnectionWriter(_Stream, true))
+                using (Http2ConnectionWriter writer = new Http2ConnectionWriter(_Stream, true, token))
                 {
                     _Writer = writer;
                     await writer.WriteSettingsAsync(_Settings.Protocols.Http2, token).ConfigureAwait(false);
@@ -84,8 +84,15 @@ namespace WatsonWebserver.Http2
 
                     while (_State != Http2ConnectionState.Closed && !token.IsCancellationRequested)
                     {
-                        Http2RawFrame frame = await ReadNextFrameAsync(token).ConfigureAwait(false);
-                        await HandleFrameAsync(writer, frame, token).ConfigureAwait(false);
+                        try
+                        {
+                            Http2RawFrame frame = await ReadNextFrameAsync(token).ConfigureAwait(false);
+                            await HandleFrameAsync(writer, frame, token).ConfigureAwait(false);
+                        }
+                        catch (Http2ProtocolException ex)
+                        {
+                            await SendGoAwayAsync(writer, _LastRemoteStreamIdentifier, ex.ErrorCode, ex.Message, token).ConfigureAwait(false);
+                        }
                     }
                 }
             }
@@ -103,6 +110,15 @@ namespace WatsonWebserver.Http2
                 }
 
                 _State = Http2ConnectionState.Closed;
+            }
+            catch (Http2ProtocolException ex)
+            {
+                // Handshake failures occur before the session writer exists.
+                using (Http2ConnectionWriter writer = new Http2ConnectionWriter(_Stream, true, token))
+                {
+                    await writer.WriteSettingsAsync(_Settings.Protocols.Http2, token).ConfigureAwait(false);
+                    await SendGoAwayAsync(writer, _LastRemoteStreamIdentifier, ex.ErrorCode, ex.Message, token).ConfigureAwait(false);
+                }
             }
             catch (EndOfStreamException)
             {
@@ -134,7 +150,7 @@ namespace WatsonWebserver.Http2
 
             try
             {
-                return await Http2FrameSerializer.ReadFrameAsync(_Stream, readTimeoutTokenSource.Token).ConfigureAwait(false);
+                return await ReadBoundedFrameAsync(readTimeoutTokenSource.Token).ConfigureAwait(false);
             }
             finally
             {
@@ -143,6 +159,11 @@ namespace WatsonWebserver.Http2
                     readTimeoutTokenSource.CancelAfter(Timeout.Infinite);
                 }
             }
+        }
+
+        private Task<Http2RawFrame> ReadBoundedFrameAsync(CancellationToken token)
+        {
+            return Http2FrameSerializer.ReadFrameAsync(_Stream, _Settings.Protocols.Http2.MaxFrameSize, token);
         }
 
         private readonly WebserverSettings _Settings;
@@ -157,6 +178,8 @@ namespace WatsonWebserver.Http2
         private readonly string _DestinationIpAddress;
         private readonly object _SessionLock = new object();
         private readonly object _FlowControlLock = new object();
+        private readonly Dictionary<int, Http2StreamWriteGate> _WriteGates = new Dictionary<int, Http2StreamWriteGate>();
+        private readonly Http2ClosedStreamHistory _ClosedStreams = new Http2ClosedStreamHistory();
         private readonly Dictionary<int, Http2StreamStateMachine> _Streams = new Dictionary<int, Http2StreamStateMachine>();
         private readonly Dictionary<int, Http2PendingRequest> _PendingRequests = new Dictionary<int, Http2PendingRequest>();
         private readonly Dictionary<int, Task> _ActiveRequestTasks = new Dictionary<int, Task>();
@@ -205,23 +228,82 @@ namespace WatsonWebserver.Http2
                     HandleRstStreamFrame(frame);
                     break;
                 case Http2FrameType.GoAway:
-                    _State = Http2ConnectionState.Closed;
+                    Http2FrameSerializer.ReadGoAwayFrame(frame);
+                    // Keep reading control frames and completing existing streams. Closing
+                    // immediately can reset TCP while the peer's PING is still in flight.
+                    _State = Http2ConnectionState.Draining;
                     break;
                 case Http2FrameType.WindowUpdate:
                     await HandleWindowUpdateFrameAsync(writer, frame, token).ConfigureAwait(false);
                     break;
+                case Http2FrameType.Priority:
+                    await HandlePriorityFrameAsync(writer, frame, token).ConfigureAwait(false);
+                    break;
+                case Http2FrameType.PushPromise:
+                case Http2FrameType.Continuation:
+                    await SendGoAwayAsync(writer, _LastRemoteStreamIdentifier, Http2ErrorCode.ProtocolError, "Unexpected client PUSH_PROMISE or orphaned CONTINUATION.", token).ConfigureAwait(false);
+                    break;
                 default:
-                    await SendGoAwayAsync(writer, frame.Header.StreamIdentifier, Http2ErrorCode.InternalError, "Unsupported HTTP/2 frame type was received.", token).ConfigureAwait(false);
+                    // RFC 9113 sections 4.1 and 5.5: consume and ignore extension frames.
                     break;
             }
         }
 
+        private async Task HandlePriorityFrameAsync(Http2ConnectionWriter writer, Http2RawFrame frame, CancellationToken token)
+        {
+            if (frame.Header.StreamIdentifier == 0)
+            {
+                await SendGoAwayAsync(writer, _LastRemoteStreamIdentifier, Http2ErrorCode.ProtocolError, "PRIORITY requires a non-zero stream.", token).ConfigureAwait(false);
+            }
+            else if (frame.Payload.Length != 5)
+            {
+                if (TryGetStreamStateMachine(frame.Header.StreamIdentifier, out Http2StreamStateMachine state) && state.State != Http2StreamState.Closed)
+                    await SendRstStreamAsync(writer, frame.Header.StreamIdentifier, Http2ErrorCode.FrameSizeError, token).ConfigureAwait(false);
+                else
+                    await SendGoAwayAsync(writer, _LastRemoteStreamIdentifier, Http2ErrorCode.FrameSizeError, "PRIORITY payload must contain five bytes.", token).ConfigureAwait(false);
+            }
+        }
+
+        private Http2StreamWriteGate GetWriteGate(int streamIdentifier)
+        {
+            lock (_SessionLock) return _WriteGates[streamIdentifier];
+        }
+
         private async Task HandleSettingsFrameAsync(Http2ConnectionWriter writer, Http2RawFrame frame, CancellationToken token)
         {
-            bool isAcknowledgement = (frame.Header.Flags & (byte)Http2FrameFlags.EndStreamOrAck) == (byte)Http2FrameFlags.EndStreamOrAck;
+            // Validate even acknowledgements; ACK payloads and nonzero stream IDs are errors.
+            Http2FrameSerializer.ReadSettingsFrame(frame);
+            bool isAcknowledgement = (frame.Header.Flags & (byte)Http2FrameFlags.EndStreamOrAck) != 0;
             if (isAcknowledgement) return;
 
-            _RemoteSettings = Http2FrameSerializer.ReadSettingsFrame(frame);
+            List<Http2SettingsParameter> parameters = Http2SettingsSerializer.ParseParameters(frame.Payload);
+            foreach (Http2SettingsParameter parameter in parameters)
+            {
+                lock (_FlowControlLock)
+                {
+                    switch (parameter.Identifier)
+                    {
+                        case Http2SettingIdentifier.InitialWindowSize:
+                            int delta = (int)parameter.Value - _RemoteSettings.InitialWindowSize;
+                            List<int> identifiers = new List<int>(_StreamSendWindows.Keys);
+                            foreach (int identifier in identifiers)
+                            {
+                                long updated = (long)_StreamSendWindows[identifier] + delta;
+                                if (updated > Int32.MaxValue)
+                                    throw new Http2ProtocolException(Http2ErrorCode.FlowControlError, "SETTINGS overflows a stream window.");
+                                _StreamSendWindows[identifier] = (int)updated;
+                            }
+                            _RemoteSettings.InitialWindowSize = (int)parameter.Value;
+                            break;
+                        case Http2SettingIdentifier.HeaderTableSize: _RemoteSettings.HeaderTableSize = parameter.Value; break;
+                        case Http2SettingIdentifier.EnablePush: _RemoteSettings.EnablePush = parameter.Value == 1; break;
+                        case Http2SettingIdentifier.MaxConcurrentStreams: _RemoteSettings.MaxConcurrentStreams = parameter.Value; break;
+                        case Http2SettingIdentifier.MaxFrameSize: _RemoteSettings.MaxFrameSize = (int)parameter.Value; break;
+                        case Http2SettingIdentifier.MaxHeaderListSize: _RemoteSettings.MaxHeaderListSize = parameter.Value; break;
+                    }
+                }
+            }
+            SignalSendWindowAvailability();
             await writer.WriteSettingsAcknowledgementAsync(token).ConfigureAwait(false);
         }
 
@@ -233,6 +315,9 @@ namespace WatsonWebserver.Http2
             {
                 Http2WindowUpdateFrame windowUpdateFrame = Http2FrameSerializer.ReadWindowUpdateFrame(frame);
                 bool signalWaiters = false;
+                if (windowUpdateFrame.StreamIdentifier != 0 &&
+                    (windowUpdateFrame.StreamIdentifier > _LastRemoteStreamIdentifier || (windowUpdateFrame.StreamIdentifier & 1) == 0))
+                    throw new Http2ProtocolException(Http2ErrorCode.ProtocolError, "WINDOW_UPDATE received on an idle stream.");
 
                 lock (_FlowControlLock)
                 {
@@ -255,7 +340,10 @@ namespace WatsonWebserver.Http2
             }
             catch (Http2ProtocolException ex)
             {
-                await SendGoAwayAsync(writer, frame.Header.StreamIdentifier, ex.ErrorCode, ex.Message, token).ConfigureAwait(false);
+                if (frame.Header.StreamIdentifier != 0 && ex.ErrorCode == Http2ErrorCode.FlowControlError)
+                    await SendRstStreamAsync(writer, frame.Header.StreamIdentifier, ex.ErrorCode, token).ConfigureAwait(false);
+                else
+                    await SendGoAwayAsync(writer, _LastRemoteStreamIdentifier, ex.ErrorCode, ex.Message, token).ConfigureAwait(false);
             }
         }
 
@@ -278,12 +366,39 @@ namespace WatsonWebserver.Http2
                 return;
             }
 
+            if (frame.Header.StreamIdentifier <= _LastRemoteStreamIdentifier && !TryGetStreamStateMachine(frame.Header.StreamIdentifier, out _))
+            {
+                try
+                {
+                    byte[] discardedHeaders = await ReadHeaderBlockAsync(frame, token).ConfigureAwait(false);
+                    HpackCodec.Decode(discardedHeaders, _HpackDecoderContext);
+                    bool implicitlyClosed;
+                    lock (_SessionLock) implicitlyClosed = _ClosedStreams.IsImplicitlyClosed(frame.Header.StreamIdentifier);
+                    if (implicitlyClosed || !AllowsLateFrames(frame.Header.StreamIdentifier))
+                        await SendGoAwayAsync(writer, _LastRemoteStreamIdentifier,
+                            implicitlyClosed ? Http2ErrorCode.ProtocolError : Http2ErrorCode.StreamClosed,
+                            "Closed stream identifier reused.", token).ConfigureAwait(false);
+                }
+                catch (Http2ProtocolException ex)
+                {
+                    await SendGoAwayAsync(writer, _LastRemoteStreamIdentifier, ex.ErrorCode, ex.Message, token).ConfigureAwait(false);
+                }
+                return;
+            }
+
             bool endStream = (frame.Header.Flags & (byte)Http2FrameFlags.EndStreamOrAck) == (byte)Http2FrameFlags.EndStreamOrAck;
+            bool newStream = !TryGetStreamStateMachine(frame.Header.StreamIdentifier, out _);
             Http2StreamStateMachine stateMachine = GetOrCreateRemoteStream(frame.Header.StreamIdentifier);
 
             try
             {
                 byte[] headerBlock = await ReadHeaderBlockAsync(frame, token).ConfigureAwait(false);
+                if (_State == Http2ConnectionState.Draining && newStream)
+                {
+                    HpackCodec.Decode(headerBlock, _HpackDecoderContext);
+                    await SendRstStreamAsync(writer, frame.Header.StreamIdentifier, Http2ErrorCode.RefusedStream, token).ConfigureAwait(false);
+                    return;
+                }
                 if (TryGetPendingRequest(frame.Header.StreamIdentifier, out Http2PendingRequest pendingRequest))
                 {
                     if (!endStream)
@@ -326,6 +441,23 @@ namespace WatsonWebserver.Http2
         {
             if (!TryGetStreamStateMachine(frame.Header.StreamIdentifier, out Http2StreamStateMachine stateMachine))
             {
+                if (frame.Header.StreamIdentifier > 0 && frame.Header.StreamIdentifier <= _LastRemoteStreamIdentifier)
+                {
+                    if (!AllowsLateFrames(frame.Header.StreamIdentifier))
+                    {
+                        await SendGoAwayAsync(writer, _LastRemoteStreamIdentifier, Http2ErrorCode.StreamClosed, "Received DATA on a closed stream.", token).ConfigureAwait(false);
+                        return;
+                    }
+                    try
+                    {
+                        await DiscardClosedStreamDataAsync(writer, frame, token).ConfigureAwait(false);
+                    }
+                    catch (Http2ProtocolException ex)
+                    {
+                        await SendGoAwayAsync(writer, _LastRemoteStreamIdentifier, ex.ErrorCode, ex.Message, token).ConfigureAwait(false);
+                    }
+                    return;
+                }
                 await SendGoAwayAsync(writer, frame.Header.StreamIdentifier, Http2ErrorCode.ProtocolError, "Received DATA for an unknown or idle stream.", token).ConfigureAwait(false);
                 return;
             }
@@ -335,7 +467,24 @@ namespace WatsonWebserver.Http2
             try
             {
                 ArraySegment<byte> dataPayload = GetDataPayload(frame);
-                ConsumeReceiveWindow(frame.Header.StreamIdentifier, dataPayload.Count);
+                if (stateMachine.State == Http2StreamState.HalfClosedRemote)
+                {
+                    bool reset = await SendRstStreamAsync(writer, frame.Header.StreamIdentifier, Http2ErrorCode.StreamClosed, token, true).ConfigureAwait(false);
+                    if (reset || AllowsLateFrames(frame.Header.StreamIdentifier))
+                        await DiscardClosedStreamDataAsync(writer, frame, token).ConfigureAwait(false);
+                    else
+                        await SendGoAwayAsync(writer, _LastRemoteStreamIdentifier, Http2ErrorCode.StreamClosed, "Received DATA on a closed stream.", token).ConfigureAwait(false);
+                    return;
+                }
+                if (stateMachine.State == Http2StreamState.Closed)
+                {
+                    if (AllowsLateFrames(frame.Header.StreamIdentifier))
+                        await DiscardClosedStreamDataAsync(writer, frame, token).ConfigureAwait(false);
+                    else
+                        await SendGoAwayAsync(writer, _LastRemoteStreamIdentifier, Http2ErrorCode.StreamClosed, "Received DATA on a closed stream.", token).ConfigureAwait(false);
+                    return;
+                }
+                ConsumeReceiveWindow(frame.Header.StreamIdentifier, frame.Payload.Length);
                 stateMachine.ReceiveData(endStream);
 
                 if (!TryGetPendingRequest(frame.Header.StreamIdentifier, out Http2PendingRequest pendingRequest))
@@ -344,10 +493,10 @@ namespace WatsonWebserver.Http2
                     return;
                 }
 
-                if (dataPayload.Count > 0)
+                if (frame.Payload.Length > 0)
                 {
                     pendingRequest.AppendBody(dataPayload.Array, dataPayload.Offset, dataPayload.Count);
-                    await ReplenishReceiveWindowAsync(writer, frame.Header.StreamIdentifier, dataPayload.Count, endStream, token).ConfigureAwait(false);
+                    await ReplenishReceiveWindowAsync(writer, frame.Header.StreamIdentifier, frame.Payload.Length, endStream, token).ConfigureAwait(false);
 
                     if (_Settings.IO.MaxRequestBodySize > 0 && pendingRequest.BodyLength > _Settings.IO.MaxRequestBodySize)
                     {
@@ -373,6 +522,27 @@ namespace WatsonWebserver.Http2
             }
         }
 
+        private bool AllowsLateFrames(int streamIdentifier)
+        {
+            lock (_SessionLock)
+            {
+                if (_Streams.ContainsKey(streamIdentifier)) return false;
+                return _ClosedStreams.AllowsLateFrames(streamIdentifier);
+            }
+        }
+
+        private async Task DiscardClosedStreamDataAsync(Http2ConnectionWriter writer, Http2RawFrame frame, CancellationToken token)
+        {
+            GetDataPayload(frame);
+            lock (_FlowControlLock)
+            {
+                if (frame.Payload.Length > _ConnectionReceiveWindow)
+                    throw new Http2ProtocolException(Http2ErrorCode.FlowControlError, "Closed-stream DATA exceeds connection window.");
+                _ConnectionReceiveWindow -= frame.Payload.Length;
+            }
+            await ReplenishReceiveWindowAsync(writer, frame.Header.StreamIdentifier, frame.Payload.Length, true, token).ConfigureAwait(false);
+        }
+
         private async Task DispatchRequestAsync(Http2ConnectionWriter writer, int streamIdentifier, Http2StreamStateMachine stateMachine, Http2PendingRequest pendingRequest, CancellationToken token)
         {
             if (writer == null) throw new ArgumentNullException(nameof(writer));
@@ -385,37 +555,42 @@ namespace WatsonWebserver.Http2
                 return;
             }
 
-            Task requestTask = ProcessPendingRequestAsync(writer, streamIdentifier, stateMachine, pendingRequest, token);
+            Http2Request request = BuildRequest(pendingRequest);
+            Task requestTask = ProcessPendingRequestAsync(writer, streamIdentifier, stateMachine, request, token);
             RegisterActiveRequestTask(streamIdentifier, requestTask);
             _ = ObserveRequestTaskAsync(streamIdentifier, requestTask);
         }
 
-        private async Task ProcessPendingRequestAsync(Http2ConnectionWriter writer, int streamIdentifier, Http2StreamStateMachine stateMachine, Http2PendingRequest pendingRequest, CancellationToken token)
+        private async Task ProcessPendingRequestAsync(Http2ConnectionWriter writer, int streamIdentifier, Http2StreamStateMachine stateMachine, Http2Request request, CancellationToken token)
         {
             if (writer == null) throw new ArgumentNullException(nameof(writer));
             if (stateMachine == null) throw new ArgumentNullException(nameof(stateMachine));
-            if (pendingRequest == null) throw new ArgumentNullException(nameof(pendingRequest));
+            if (request == null) throw new ArgumentNullException(nameof(request));
 
             Http2Context context = null;
             CancellationTokenSource requestTokenSource = null;
 
             try
             {
-                Http2Request request = BuildRequest(pendingRequest);
-                Http2Response response = new Http2Response(request, _Settings, writer, stateMachine, ReserveSendWindowAsync, streamIdentifier, _RemoteSettings.MaxFrameSize);
+                Http2Response response = new Http2Response(request, _Settings, writer, stateMachine, ReserveSendWindowAsync, streamIdentifier, _RemoteSettings.MaxFrameSize, GetWriteGate(streamIdentifier), TryReserveSendWindow, RefundSendWindow);
                 context = new Http2Context(_Settings, request, response, BuildConnectionMetadata, BuildStreamMetadata);
                 requestTokenSource = CancellationTokenSource.CreateLinkedTokenSource(token);
                 context.TokenSource = requestTokenSource;
                 RegisterActiveRequest(streamIdentifier, context, requestTokenSource);
                 await _ProcessContext(context, requestTokenSource.Token).ConfigureAwait(false);
             }
-            catch (Http2ProtocolException ex)
+            catch (OperationCanceledException)
             {
-                await SendGoAwayAsync(writer, streamIdentifier, ex.ErrorCode, ex.Message, token).ConfigureAwait(false);
+                if (context != null) _MarkRequestTerminated(context, false);
+                await AbandonResponseAsync(Http2ErrorCode.Cancel).ConfigureAwait(false);
             }
-            catch (Http2StreamStateException ex)
+            catch (Http2ProtocolException)
             {
-                await SendGoAwayAsync(writer, streamIdentifier, Http2ErrorCode.ProtocolError, ex.Message, token).ConfigureAwait(false);
+                await AbandonResponseAsync(Http2ErrorCode.InternalError).ConfigureAwait(false);
+            }
+            catch (Http2StreamStateException)
+            {
+                await AbandonResponseAsync(Http2ErrorCode.InternalError).ConfigureAwait(false);
             }
             catch (IOException)
             {
@@ -423,6 +598,7 @@ namespace WatsonWebserver.Http2
                 {
                     _MarkRequestTerminated(context, true);
                 }
+                await AbandonResponseAsync(Http2ErrorCode.InternalError).ConfigureAwait(false);
             }
             catch (ObjectDisposedException)
             {
@@ -450,6 +626,16 @@ namespace WatsonWebserver.Http2
                 {
                     requestTokenSource.Dispose();
                 }
+            }
+
+            async Task AbandonResponseAsync(Http2ErrorCode code)
+            {
+                if (context?.Response.ResponseCompleted == true || GetWriteGate(streamIdentifier).IsTerminal) return;
+                // State may already be closed by an assembled END_STREAM batch that never committed.
+                // ResponseCompleted is set only after the writer finishes the batch.
+                try { await SendRstStreamAsync(writer, streamIdentifier, code, token).ConfigureAwait(false); }
+                catch (IOException) { }
+                catch (ObjectDisposedException) { }
             }
         }
 
@@ -491,7 +677,7 @@ namespace WatsonWebserver.Http2
 
                 while (!endHeaders)
                 {
-                    Http2RawFrame continuationFrame = await Http2FrameSerializer.ReadFrameAsync(_Stream, token).ConfigureAwait(false);
+                    Http2RawFrame continuationFrame = await ReadBoundedFrameAsync(token).ConfigureAwait(false);
                     if (continuationFrame.Header.Type != Http2FrameType.Continuation)
                     {
                         throw new Http2ProtocolException(Http2ErrorCode.ProtocolError, "Expected CONTINUATION frame while reading HTTP/2 header block.");
@@ -755,11 +941,17 @@ namespace WatsonWebserver.Http2
         private void HandleRstStreamFrame(Http2RawFrame frame)
         {
             Http2RstStreamFrame rstStreamFrame = Http2FrameSerializer.ReadRstStreamFrame(frame);
+            if (rstStreamFrame.StreamIdentifier > _LastRemoteStreamIdentifier || (rstStreamFrame.StreamIdentifier & 1) == 0)
+                throw new Http2ProtocolException(Http2ErrorCode.ProtocolError, "RST_STREAM received on an idle stream.");
 
-            if (TryGetStreamStateMachine(rstStreamFrame.StreamIdentifier, out Http2StreamStateMachine stateMachine))
+            lock (_SessionLock)
             {
-                stateMachine.ReceiveReset();
-                RemoveStreamState(rstStreamFrame.StreamIdentifier);
+                if (_Streams.TryGetValue(rstStreamFrame.StreamIdentifier, out Http2StreamStateMachine stateMachine))
+                {
+                    _WriteGates[rstStreamFrame.StreamIdentifier].Terminate();
+                    stateMachine.ReceiveReset();
+                    RemoveStreamState(rstStreamFrame.StreamIdentifier);
+                }
             }
 
             RemovePendingRequest(rstStreamFrame.StreamIdentifier);
@@ -778,6 +970,7 @@ namespace WatsonWebserver.Http2
 
                 Http2StreamStateMachine stateMachine = new Http2StreamStateMachine(streamIdentifier);
                 _Streams.Add(streamIdentifier, stateMachine);
+                _WriteGates.Add(streamIdentifier, new Http2StreamWriteGate());
                 if (streamIdentifier > _LastRemoteStreamIdentifier) _LastRemoteStreamIdentifier = streamIdentifier;
 
                 lock (_FlowControlLock)
@@ -791,21 +984,27 @@ namespace WatsonWebserver.Http2
             }
         }
 
-        private async Task SendRstStreamAsync(Http2ConnectionWriter writer, int streamIdentifier, Http2ErrorCode errorCode, CancellationToken token)
+        private async Task<bool> SendRstStreamAsync(Http2ConnectionWriter writer, int streamIdentifier, Http2ErrorCode errorCode, CancellationToken token, bool requireHalfClosedRemote = false)
         {
+            lock (_SessionLock)
+            {
+                if (requireHalfClosedRemote && (!_Streams.TryGetValue(streamIdentifier, out Http2StreamStateMachine currentState)
+                    || currentState.State != Http2StreamState.HalfClosedRemote)) return false;
+                if (!_WriteGates.TryGetValue(streamIdentifier, out Http2StreamWriteGate gate) || !gate.Terminate()) return false;
+                if (_Streams.TryGetValue(streamIdentifier, out Http2StreamStateMachine stateMachine))
+                {
+                    stateMachine.SendReset();
+                    RemoveStreamState(streamIdentifier, true);
+                }
+            }
+            CancelActiveRequest(streamIdentifier);
             Http2RstStreamFrame rstStreamFrame = new Http2RstStreamFrame();
             rstStreamFrame.StreamIdentifier = streamIdentifier;
             rstStreamFrame.ErrorCode = errorCode;
-            await writer.WriteFrameAsync(Http2FrameSerializer.CreateRstStreamFrame(rstStreamFrame), token).ConfigureAwait(false);
-
-            if (TryGetStreamStateMachine(streamIdentifier, out Http2StreamStateMachine stateMachine))
-            {
-                stateMachine.SendReset();
-                RemoveStreamState(streamIdentifier);
-            }
-
             RemovePendingRequest(streamIdentifier);
             RemoveStreamFlowControlState(streamIdentifier);
+            await writer.WriteFrameAsync(Http2FrameSerializer.CreateRstStreamFrame(rstStreamFrame), token).ConfigureAwait(false);
+            return true;
         }
 
         private async Task SendGoAwayAsync(Http2ConnectionWriter writer, int lastStreamIdentifier, Http2ErrorCode errorCode, string debugText, CancellationToken token)
@@ -819,6 +1018,26 @@ namespace WatsonWebserver.Http2
             _State = Http2ConnectionState.Closed;
         }
 
+        private int TryReserveSendWindow(int streamIdentifier, int maximumLength)
+        {
+            lock (_FlowControlLock)
+            {
+                if (!_StreamSendWindows.TryGetValue(streamIdentifier, out int streamWindow)) return 0;
+                int count = Math.Min(maximumLength, Math.Min(_ConnectionSendWindow, streamWindow));
+                if (count <= 0) return 0;
+                _ConnectionSendWindow -= count;
+                _StreamSendWindows[streamIdentifier] = streamWindow - count;
+                return count;
+            }
+        }
+
+        private void RefundSendWindow(int count)
+        {
+            if (count <= 0) return;
+            lock (_FlowControlLock) _ConnectionSendWindow = AddFlowControlWindow(_ConnectionSendWindow, count);
+            SignalSendWindowAvailability();
+        }
+
         private async Task<int> ReserveSendWindowAsync(int streamIdentifier, int maximumLength, CancellationToken token)
         {
             if (streamIdentifier < 1) throw new ArgumentOutOfRangeException(nameof(streamIdentifier));
@@ -826,6 +1045,7 @@ namespace WatsonWebserver.Http2
 
             while (true)
             {
+                token.ThrowIfCancellationRequested();
                 Task waitTask = null;
 
                 lock (_FlowControlLock)
@@ -944,14 +1164,16 @@ namespace WatsonWebserver.Http2
             }
         }
 
-        private void RemoveStreamState(int streamIdentifier)
+        private void RemoveStreamState(int streamIdentifier, bool locallyReset = false)
         {
             lock (_SessionLock)
             {
-                if (_Streams.ContainsKey(streamIdentifier))
+                if (_Streams.Remove(streamIdentifier))
                 {
-                    _Streams.Remove(streamIdentifier);
+                    _ClosedStreams.Record(streamIdentifier, locallyReset);
                 }
+                if (!_ActiveRequests.ContainsKey(streamIdentifier) && !_ActiveRequestTasks.ContainsKey(streamIdentifier))
+                    _WriteGates.Remove(streamIdentifier);
             }
         }
 
@@ -1269,6 +1491,7 @@ namespace WatsonWebserver.Http2
                     {
                         _ActiveRequestTasks.Remove(streamIdentifier);
                     }
+                    if (!_Streams.ContainsKey(streamIdentifier)) _WriteGates.Remove(streamIdentifier);
                 }
             }
         }
@@ -1308,6 +1531,7 @@ namespace WatsonWebserver.Http2
                     _PendingStreamReceiveWindowUpdates.Remove(streamIdentifier);
                 }
             }
+            SignalSendWindowAvailability();
         }
 
         private void SignalSendWindowAvailability()

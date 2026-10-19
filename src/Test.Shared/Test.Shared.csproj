@@ -14,4 +14,7 @@
     <ProjectReference Include="..\Watson.Clients\Watson.Clients.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Http2Golden/*.txt" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

@@ -83,7 +83,7 @@ artifacts\aot\Test.Aot.exe --require-native
 
 Use the runtime identifier for your platform (`linux-x64`, `osx-arm64`, and so on), and repeat with `-f net8.0` to cover both runtimes. Native AOT publishing needs the platform's native toolchain (see [AOT.md](AOT.md#publishing)).
 
-The executable starts HTTP/1.1 and HTTP/2 (h2c) servers configured the way an AOT application configures them and checks, over both protocols: plain, parameter, and catch-all routes, API routes returning application types, typed request bodies, malformed JSON, structured errors, timeouts, authentication failures, health checks, OpenAPI, middleware, chunked responses, server-sent events, the Prometheus endpoint, and the default route. It also checks a WebSocket round trip through `Watson.Clients`, the default serializer's fallback when reflection is disabled, and HTTP/3 runtime detection.
+The executable starts HTTP/1.1 and HTTP/2 (h2c) servers configured the way an AOT application configures them and checks, over both protocols: plain, parameter, and catch-all routes, API routes returning application types, typed request bodies, malformed JSON, structured errors, timeouts, authentication failures, health checks, OpenAPI, middleware, chunked responses, large responses that replenish flow-control windows, server-sent events, the Prometheus endpoint, and the default route. It also checks a WebSocket round trip through `Watson.Clients`, the default serializer's fallback when reflection is disabled, and HTTP/3 runtime detection.
 
 ## Test.XUnit
 

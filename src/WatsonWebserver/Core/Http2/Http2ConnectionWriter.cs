@@ -8,7 +8,9 @@ namespace WatsonWebserver.Core.Http2
     using System.Threading.Tasks;
 
     /// <summary>
-    /// Serialized HTTP/2 connection writer.
+    /// Serialized HTTP/2 connection writer. Concurrent writes are serialized as complete batches.
+    /// Caller cancellation applies while waiting for the writer; committed writes use the connection
+    /// token and finish whole. A transport failure faults the writer and prevents subsequent writes.
     /// </summary>
     public class Http2ConnectionWriter : IDisposable
     {
@@ -38,13 +40,18 @@ namespace WatsonWebserver.Core.Http2
             if (frame == null) throw new ArgumentNullException(nameof(frame));
             ThrowIfDisposed();
 
-            await _WriteLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+            await AcquireAsync(cancellationToken).ConfigureAwait(false);
 
             try
             {
                 byte[] headerBytes = Http2FrameSerializer.SerializeFrameHeader(frame.Header);
-                await WriteHeaderAndPayloadAsync(headerBytes, frame.Payload, 0, frame.Payload.Length, cancellationToken).ConfigureAwait(false);
-                await _Stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+                await WriteHeaderAndPayloadAsync(headerBytes, frame.Payload, 0, frame.Payload.Length, _ConnectionToken).ConfigureAwait(false);
+                await _Stream.FlushAsync(_ConnectionToken).ConfigureAwait(false);
+            }
+            catch
+            {
+                Fault();
+                throw;
             }
             finally
             {
@@ -71,13 +78,18 @@ namespace WatsonWebserver.Core.Http2
             if (header.Length != count) throw new ArgumentException("HTTP/2 frame header length must match the supplied payload length.", nameof(header));
             ThrowIfDisposed();
 
-            await _WriteLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+            await AcquireAsync(cancellationToken).ConfigureAwait(false);
 
             try
             {
                 byte[] headerBytes = Http2FrameSerializer.SerializeFrameHeader(header);
-                await WriteHeaderAndPayloadAsync(headerBytes, payload, offset, count, cancellationToken).ConfigureAwait(false);
-                await _Stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+                await WriteHeaderAndPayloadAsync(headerBytes, payload, offset, count, _ConnectionToken).ConfigureAwait(false);
+                await _Stream.FlushAsync(_ConnectionToken).ConfigureAwait(false);
+            }
+            catch
+            {
+                Fault();
+                throw;
             }
             finally
             {
@@ -96,7 +108,7 @@ namespace WatsonWebserver.Core.Http2
             if (frames == null) throw new ArgumentNullException(nameof(frames));
             ThrowIfDisposed();
 
-            await _WriteLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+            await AcquireAsync(cancellationToken).ConfigureAwait(false);
 
             try
             {
@@ -106,10 +118,15 @@ namespace WatsonWebserver.Core.Http2
                     if (frame == null) throw new ArgumentNullException(nameof(frames), "HTTP/2 frame collection contains a null entry.");
 
                     byte[] headerBytes = Http2FrameSerializer.SerializeFrameHeader(frame.Header);
-                    await WriteHeaderAndPayloadAsync(headerBytes, frame.Payload, 0, frame.Payload.Length, cancellationToken).ConfigureAwait(false);
+                    await WriteHeaderAndPayloadAsync(headerBytes, frame.Payload, 0, frame.Payload.Length, _ConnectionToken).ConfigureAwait(false);
                 }
 
-                await _Stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+                await _Stream.FlushAsync(_ConnectionToken).ConfigureAwait(false);
+            }
+            catch
+            {
+                Fault();
+                throw;
             }
             finally
             {
@@ -125,11 +142,30 @@ namespace WatsonWebserver.Core.Http2
         /// <returns>ValueTask.</returns>
         public async ValueTask WriteFrameSegmentsAsync(IReadOnlyList<Http2FrameWriteSegment> segments, CancellationToken cancellationToken = default)
         {
+            await WriteFrameSegmentsAsync(segments, null, null, cancellationToken).ConfigureAwait(false);
+        }
+
+        internal async ValueTask WriteFramesAsync(IReadOnlyList<Http2RawFrame> frames, Http2StreamWriteGate gate, Http2WriteReservation reservation, CancellationToken token)
+        {
+            List<Http2FrameWriteSegment> segments = new List<Http2FrameWriteSegment>(frames.Count);
+            for (int i = 0; i < frames.Count; i++)
+                segments.Add(new Http2FrameWriteSegment { Header = frames[i].Header, Payload = frames[i].Payload, Count = frames[i].Payload.Length });
+            await WriteFrameSegmentsAsync(segments, gate, reservation, token).ConfigureAwait(false);
+        }
+
+        internal async ValueTask WriteFrameSegmentsAsync(IReadOnlyList<Http2FrameWriteSegment> segments, Http2StreamWriteGate gate, Http2WriteReservation reservation, CancellationToken cancellationToken)
+        {
             if (segments == null) throw new ArgumentNullException(nameof(segments));
             ThrowIfDisposed();
 
-            await _WriteLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+            await AcquireAsync(cancellationToken).ConfigureAwait(false);
 
+            if (gate != null && !gate.TryCommit())
+            {
+                _WriteLock.Release();
+                throw new Http2WriteNotCommittedException(cancellationToken);
+            }
+            reservation?.Claim();
             try
             {
                 for (int i = 0; i < segments.Count; i++)
@@ -151,13 +187,19 @@ namespace WatsonWebserver.Core.Http2
                     }
 
                     byte[] headerBytes = Http2FrameSerializer.SerializeFrameHeader(segment.Header);
-                    await WriteHeaderAndPayloadAsync(headerBytes, segment.Payload, segment.Offset, segment.Count, cancellationToken).ConfigureAwait(false);
+                    await WriteHeaderAndPayloadAsync(headerBytes, segment.Payload, segment.Offset, segment.Count, _ConnectionToken).ConfigureAwait(false);
                 }
 
-                await _Stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+                await _Stream.FlushAsync(_ConnectionToken).ConfigureAwait(false);
+            }
+            catch
+            {
+                Fault();
+                throw;
             }
             finally
             {
+                gate?.Complete();
                 _WriteLock.Release();
             }
         }
@@ -216,7 +258,7 @@ namespace WatsonWebserver.Core.Http2
             if (_Disposed) return;
 
             _Disposed = true;
-            _WriteLock.Dispose();
+            // Queued or committed writes still own the semaphore until they unwind.
 
             if (!_LeaveOpen)
             {
@@ -230,6 +272,30 @@ namespace WatsonWebserver.Core.Http2
         private readonly bool _LeaveOpen;
         private readonly SemaphoreSlim _WriteLock = new SemaphoreSlim(1, 1);
         private bool _Disposed = false;
+        private int _Faulted;
+        private CancellationToken _ConnectionToken;
+
+        internal Http2ConnectionWriter(Stream stream, bool leaveOpen, CancellationToken connectionToken)
+            : this(stream, leaveOpen)
+        {
+            _ConnectionToken = connectionToken;
+        }
+
+        private async Task AcquireAsync(CancellationToken token)
+        {
+            ThrowIfDisposed();
+            try { await _WriteLock.WaitAsync(token).ConfigureAwait(false); }
+            catch (OperationCanceledException) { throw new Http2WriteNotCommittedException(token); }
+            try { ThrowIfDisposed(); if (token.IsCancellationRequested) throw new Http2WriteNotCommittedException(token); }
+            catch { _WriteLock.Release(); throw; }
+        }
+
+        private void Fault()
+        {
+            Interlocked.Exchange(ref _Faulted, 1);
+            try { _Stream.Dispose(); } catch (Exception) { }
+        }
+
 
         private async ValueTask WriteHeaderAndPayloadAsync(byte[] headerBytes, byte[] payload, int offset, int count, CancellationToken cancellationToken)
         {
@@ -260,12 +326,13 @@ namespace WatsonWebserver.Core.Http2
             await _Stream.WriteAsync(headerBytes, 0, headerBytes.Length, cancellationToken).ConfigureAwait(false);
             if (count > 0)
             {
-                await _Stream.WriteAsync(payload, offset, count, cancellationToken).ConfigureAwait(false);
+                await _Stream.WriteAsync(payload, offset, count, _ConnectionToken).ConfigureAwait(false);
             }
         }
 
         private void ThrowIfDisposed()
         {
+            if (Volatile.Read(ref _Faulted) != 0) throw new IOException("HTTP/2 connection writer is faulted.");
             if (_Disposed) throw new ObjectDisposedException(nameof(Http2ConnectionWriter));
         }
     }

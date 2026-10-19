@@ -73,9 +73,16 @@
         /// <returns>Raw frame.</returns>
         public static async Task<Http2RawFrame> ReadFrameAsync(Stream stream, CancellationToken cancellationToken = default)
         {
+            return await ReadFrameAsync(stream, Http2Constants.MaxMaxFrameSize, cancellationToken).ConfigureAwait(false);
+        }
+
+        internal static async Task<Http2RawFrame> ReadFrameAsync(Stream stream, int maximumFrameSize, CancellationToken cancellationToken)
+        {
             if (stream == null) throw new ArgumentNullException(nameof(stream));
 
             Http2FrameHeader header = await ReadFrameHeaderAsync(stream, cancellationToken).ConfigureAwait(false);
+            if (header.Length > maximumFrameSize)
+                throw new Http2ProtocolException(Http2ErrorCode.FrameSizeError, "Frame exceeds the accepted maximum frame size.");
             byte[] payload = new byte[header.Length];
 #if NET8_0_OR_GREATER
             if (payload.Length > 0) await stream.ReadExactlyAsync(payload, cancellationToken).ConfigureAwait(false);

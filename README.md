@@ -29,6 +29,10 @@ Watson 7 is a major consumer-facing release:
 - Standardized OpenTelemetry-shaped metrics and traces (added in 7.1) that any collector subscribes to by name; see [Observability and Telemetry](#observability-and-telemetry)
 - Expanded automated coverage through `Test.Automated` and `Test.XUnit`
 
+Patch 7.3.2 fixes HTTP/2 interoperability with Firefox: PRIORITY and extension frames are ignored, cancelling a stream preserves sibling requests, and large responses progress with default flow-control windows. A late write to a reset stream throws `OperationCanceledException` and raises `Events.RequestAborted`; it does not invoke the exception callbacks. Known normal/client-reset stream closures retain STREAM_CLOSED errors, while in-flight frames after server resets receive safe connection-level processing. See [HTTP/2 resilience testing](TESTING_HTTP2_HTTP3.md#http2-resilience-regressions).
+
+The patch also tightens HTTP/2 frame-size, SETTINGS, stream-state, flow-control, and HPACK validation. SETTINGS changes update existing stream windows, and GOAWAY drains existing requests while continuing to process control frames.
+
 Refer to [CHANGELOG.md](CHANGELOG.md) for the full release history.
 
 ## Performance

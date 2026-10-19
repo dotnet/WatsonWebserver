@@ -92,6 +92,8 @@ namespace Test.Shared
                     "Chunked Response Terminator",
                     SharedChunkTerminatorTests.GetTests()));
 
+                suites.Add(NamedSuite("Http2Resilience", "HTTP/2 Resilience", SharedHttp2ResilienceTests.GetTests()));
+
                 suites.AddRange(UrlMatching.UrlMatcherSuites.All);
 
                 suites.Add(ApiRoutesSuite());

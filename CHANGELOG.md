@@ -2,7 +2,29 @@
 
 ## Current Version
 
-`v7.3.1`
+`v7.3.2`
+
+## v7.3.2
+
+- Fixed: HTTP/2 PRIORITY, PRIORITY_UPDATE, and unknown frame types no longer close the connection, fixing partially loaded pages and failures in Firefox ([#197](https://github.com/dotnet/WatsonWebserver/issues/197)). Valid PRIORITY frames are ignored without creating streams or advancing the GOAWAY last-stream ID. Malformed PRIORITY receives FRAME_SIZE_ERROR; orphaned CONTINUATION and client PUSH_PROMISE receive PROTOCOL_ERROR
+- Fixed: a client resetting one HTTP/2 stream no longer closes sibling requests. Late response writes throw `OperationCanceledException`, raise `Events.RequestAborted`, and skip `Routes.Exception` and `Events.ExceptionEncountered`
+- Fixed: committed HTTP/2 frame batches finish with the connection token, preventing request cancellation from interrupting a frame or header block. Transport failures fault the writer and prevent subsequent writes. Terminal stream gates prevent queued HEADERS, DATA, or trailers from following a reset, and unwritten reservations refund connection credit exactly once
+- Fixed: late DATA after a server reset is discarded with full connection-window accounting, including padding. Discarded HEADERS are HPACK-decoded to preserve the dynamic table. Recent normal and client-reset closures retain STREAM_CLOSED errors. Closure history is bounded; evicted history uses conservative minimal processing so in-flight DATA and HEADERS after local resets remain safe
+- Fixed: large HTTP/2 byte-array and stream responses no longer deadlock with default 65,535-byte flow-control windows ([#198](https://github.com/dotnet/WatsonWebserver/issues/198)). Available DATA is submitted before waiting for more credit. Small batched responses now reserve flow-control credit too
+- Fixed: inbound frame lengths are checked before payload allocation/read, including initial SETTINGS and CONTINUATION. SETTINGS ACK frames now receive the same payload and stream-ID validation as other SETTINGS
+- Fixed: idle-stream RST_STREAM and WINDOW_UPDATE, invalid lower stream creation, and misplaced HPACK table-size updates now receive the required protocol errors. Stream-window overflow resets only the affected stream
+- Fixed: incremental SETTINGS retain unspecified values and apply initial-window deltas to existing streams, including negative windows and resuming blocked responses
+- Fixed: peer GOAWAY enters draining state so existing responses and control frames can complete. Dedicated h2c listeners validate malformed prefaces as HTTP/2 instead of falling back to HTTP/1.1
+- Added the `Http2Resilience` suite to `Test.Shared`, consumed by all three runners, with raw-frame, TLS, writer cancellation, credit-refund, HPACK, rapid-reset, soak, golden-frame, and explicit RFC 9113 self-dependent PRIORITY/HEADERS coverage. Added an RFC-aware h2spec report interpreter that preserves raw results and keeps applicable failures visible. Native AOT checks now include large responses
+- Corrected the 32 KB HTTP/2 body-access test inputs to split DATA at the advertised frame limit; body-content assertions remain unchanged
+- `Watson.Clients` 7.3.1 -> 7.3.2 (versioned in lockstep; no client code changes)
+- HTTP/3 audit findings are tracked separately in [#200](https://github.com/dotnet/WatsonWebserver/issues/200); ignored-frame/reset rate-limit follow-up is [#199](https://github.com/dotnet/WatsonWebserver/issues/199)
+
+### Compatibility notes
+
+- No public API, dependency, framework, setting, or default changes. Successful in-window HTTP/2 response frame sequences match 7.3.1 after normalizing the Date value. Larger responses can have different DATA boundaries. HTTP/1.1 and HTTP/3 code are unchanged
+- Code catching `Http2StreamStateException` around writes to a peer-reset HTTP/2 stream now sees `OperationCanceledException`. Exception callbacks for those requests are replaced by the abort event
+- Application handler tasks remain counted until they finish, preserving the existing work bound during rapid resets. The optional SETTINGS_NO_RFC7540_PRIORITIES advertisement is deferred
 
 ## v7.3.1
 

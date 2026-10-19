@@ -1099,7 +1099,7 @@ namespace Test.Shared
 
                 using (NetworkStream stream = client.GetStream())
                 {
-                    await PerformHttp2Handshake(stream).ConfigureAwait(false);
+                    Http2Settings serverSettings = await PerformHttp2Handshake(stream).ConfigureAwait(false);
 
                     byte[] headerBytes = BuildHttp2PostHeaders(host.Port, route, payload.Length);
                     Http2RawFrame headersFrame = new Http2RawFrame(
@@ -1114,17 +1114,25 @@ namespace Test.Shared
 
                     await stream.WriteAsync(Http2FrameSerializer.SerializeFrame(headersFrame)).ConfigureAwait(false);
 
-                    Http2RawFrame dataFrame = new Http2RawFrame(
-                        new Http2FrameHeader
-                        {
-                            Length = payload.Length,
-                            Type = Http2FrameType.Data,
-                            Flags = (byte)Http2FrameFlags.EndStreamOrAck,
-                            StreamIdentifier = 1
-                        },
-                        payload);
-
-                    await stream.WriteAsync(Http2FrameSerializer.SerializeFrame(dataFrame)).ConfigureAwait(false);
+                    // A large message is carried by multiple frames, each within the
+                    // server's advertised limit (RFC 9113 section 4.2).
+                    for (int offset = 0; offset < payload.Length;)
+                    {
+                        int count = Math.Min(serverSettings.MaxFrameSize, payload.Length - offset);
+                        byte[] fragment = new byte[count];
+                        Buffer.BlockCopy(payload, offset, fragment, 0, count);
+                        offset += count;
+                        Http2RawFrame dataFrame = new Http2RawFrame(
+                            new Http2FrameHeader
+                            {
+                                Length = count,
+                                Type = Http2FrameType.Data,
+                                Flags = offset == payload.Length ? (byte)Http2FrameFlags.EndStreamOrAck : (byte)0,
+                                StreamIdentifier = 1
+                            },
+                            fragment);
+                        await stream.WriteAsync(Http2FrameSerializer.SerializeFrame(dataFrame)).ConfigureAwait(false);
+                    }
                     await stream.FlushAsync().ConfigureAwait(false);
 
                     Http2ResponseEnvelope response = await Http2SharedTestUtilities.ReadResponseAsync(stream).ConfigureAwait(false);
@@ -1134,7 +1142,7 @@ namespace Test.Shared
             }
         }
 
-        private static async Task PerformHttp2Handshake(NetworkStream stream)
+        private static async Task<Http2Settings> PerformHttp2Handshake(NetworkStream stream)
         {
             Http2RawFrame serverSettings = await Http2SharedTestUtilities.PerformClientHandshakeAsync(stream).ConfigureAwait(false);
             Http2RawFrame serverAcknowledgement = await Http2FrameSerializer.ReadFrameAsync(stream, CancellationToken.None).ConfigureAwait(false);
@@ -1142,6 +1150,7 @@ namespace Test.Shared
             {
                 throw new InvalidOperationException("Expected HTTP/2 handshake frames.");
             }
+            return Http2FrameSerializer.ReadSettingsFrame(serverSettings);
         }
 
         private static byte[] BuildHttp2PostHeaders(int port, string path, int contentLength)

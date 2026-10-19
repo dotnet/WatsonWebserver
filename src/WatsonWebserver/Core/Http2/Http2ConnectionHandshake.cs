@@ -22,7 +22,7 @@
 
             await Http2ConnectionPreface.ReadAndValidateClientPrefaceAsync(stream, cancellationToken).ConfigureAwait(false);
 
-            Http2RawFrame firstFrame = await Http2FrameSerializer.ReadFrameAsync(stream, cancellationToken).ConfigureAwait(false);
+            Http2RawFrame firstFrame = await Http2FrameSerializer.ReadFrameAsync(stream, Http2Constants.DefaultMaxFrameSize, cancellationToken).ConfigureAwait(false);
             if (firstFrame.Header.Type != Http2FrameType.Settings)
             {
                 throw new Http2ProtocolException(Http2ErrorCode.ProtocolError, "The first frame after the client preface must be a SETTINGS frame.");

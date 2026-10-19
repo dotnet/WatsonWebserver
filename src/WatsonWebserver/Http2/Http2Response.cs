@@ -78,9 +78,13 @@ namespace WatsonWebserver.Http2
         private readonly Func<int, int, CancellationToken, Task<int>> _ReserveSendWindowAsync;
         private readonly int _StreamIdentifier;
         private readonly int _PeerMaxFrameSize;
+        private Http2StreamWriteGate _WriteGate = new Http2StreamWriteGate();
+        private Func<int, int, int> _TryReserveSendWindow;
+        private Action<int> _RefundSendWindow;
         private MemoryStream _Data = null;
         private byte[] _DataAsBytes = null;
         private bool _HeadersSent = false;
+        private bool _WriteFailed;
         private static readonly object _DateHeaderSync = new object();
         private static long _CachedDateHeaderSecond = -1;
         private static string _CachedDateHeaderValue = null;
@@ -134,6 +138,17 @@ namespace WatsonWebserver.Http2
             ProtocolVersion = "HTTP/2";
         }
 
+        internal Http2Response(HttpRequestBase request, WebserverSettings settings, Http2ConnectionWriter writer,
+            Http2StreamStateMachine stateMachine, Func<int, int, CancellationToken, Task<int>> reserveSendWindowAsync,
+            int streamIdentifier, int peerMaxFrameSize, Http2StreamWriteGate gate,
+            Func<int, int, int> tryReserveSendWindow, Action<int> refundSendWindow)
+            : this(request, settings, writer, stateMachine, reserveSendWindowAsync, streamIdentifier, peerMaxFrameSize)
+        {
+            _WriteGate = gate;
+            _TryReserveSendWindow = tryReserveSendWindow;
+            _RefundSendWindow = refundSendWindow;
+        }
+
         #endregion
 
         #region Public-Methods
@@ -141,6 +156,7 @@ namespace WatsonWebserver.Http2
         /// <inheritdoc />
         public override Task<bool> Send(CancellationToken token = default)
         {
+            ThrowIfTerminal(token);
             if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer semantics. Use SendChunk() instead.");
             return SendInternalAsync(Array.Empty<byte>(), true, token);
         }
@@ -148,6 +164,7 @@ namespace WatsonWebserver.Http2
         /// <inheritdoc />
         public override Task<bool> Send(long contentLength, CancellationToken token = default)
         {
+            ThrowIfTerminal(token);
             if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer semantics. Use SendChunk() instead.");
             if (contentLength < 0) throw new ArgumentOutOfRangeException(nameof(contentLength));
             ContentLength = contentLength;
@@ -157,6 +174,7 @@ namespace WatsonWebserver.Http2
         /// <inheritdoc />
         public override Task<bool> Send(string data, CancellationToken token = default)
         {
+            ThrowIfTerminal(token);
             if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer semantics. Use SendChunk() instead.");
             byte[] payload = String.IsNullOrEmpty(data) ? Array.Empty<byte>() : Encoding.UTF8.GetBytes(data);
             return SendInternalAsync(payload, true, token);
@@ -165,6 +183,7 @@ namespace WatsonWebserver.Http2
         /// <inheritdoc />
         public override Task<bool> Send(byte[] data, CancellationToken token = default)
         {
+            ThrowIfTerminal(token);
             if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer semantics. Use SendChunk() instead.");
             byte[] payload = data ?? Array.Empty<byte>();
             return SendInternalAsync(payload, true, token);
@@ -173,6 +192,7 @@ namespace WatsonWebserver.Http2
         /// <inheritdoc />
         public override async Task<bool> Send(long contentLength, Stream stream, CancellationToken token = default)
         {
+            ThrowIfTerminal(token);
             if (ChunkedTransfer) throw new IOException("Response is configured to use chunked transfer semantics. Use SendChunk() instead.");
             if (contentLength < 0) throw new ArgumentOutOfRangeException(nameof(contentLength));
             if (stream == null) throw new ArgumentNullException(nameof(stream));
@@ -206,6 +226,7 @@ namespace WatsonWebserver.Http2
         /// <inheritdoc />
         public override async Task<bool> SendChunk(byte[] chunk, bool isFinal, CancellationToken token = default)
         {
+            ThrowIfTerminal(token);
             if (!ChunkedTransfer) throw new IOException("Response is not configured to use chunked transfer semantics. Set ChunkedTransfer to true first.");
 
             byte[] payload = chunk ?? Array.Empty<byte>();
@@ -240,6 +261,7 @@ namespace WatsonWebserver.Http2
         /// <inheritdoc />
         public override async Task<bool> SendEvent(ServerSentEvent sse, bool isFinal, CancellationToken token = default)
         {
+            ThrowIfTerminal(token);
             if (!ServerSentEvents) throw new IOException("Response is not configured to use server-sent events. Set ServerSentEvents to true first.");
             if (sse == null) throw new ArgumentNullException(nameof(sse));
 
@@ -299,6 +321,7 @@ namespace WatsonWebserver.Http2
 
         private async Task<bool> SendInternalAsync(byte[] payload, bool endStream, CancellationToken token)
         {
+            ThrowIfTerminal(token);
             byte[] responsePayload = payload ?? Array.Empty<byte>();
             bool sendBody = !HttpMethod.HEAD.Equals(_Request.Method) && responsePayload.Length > 0;
             bool sendTrailers = HasTrailers();
@@ -348,28 +371,42 @@ namespace WatsonWebserver.Http2
             List<Http2RawFrame> frames = new List<Http2RawFrame>(sendBody ? 2 : 1);
             frames.Add(headerFrames[0]);
 
-            _StateMachine.SendHeaders(!sendBody);
-
-            if (sendBody)
+            Http2WriteReservation reservation = new Http2WriteReservation();
+            try
             {
-                Http2RawFrame dataFrame = new Http2RawFrame(
-                    new Http2FrameHeader
+                int reserved = 0;
+                if (sendBody)
+                {
+                    reserved = await _ReserveSendWindowAsync(_StreamIdentifier, payload.Length, token).ConfigureAwait(false);
+                    reservation.Add(reserved);
+                    ThrowIfTerminal(token);
+                    if (reserved < 1) throw new IOException("Unable to reserve HTTP/2 send window.");
+                }
+                ApplyState(() => _StateMachine.SendHeaders(!sendBody), token);
+                if (sendBody)
+                {
+                    byte[] firstPayload = payload;
+                    if (reserved != payload.Length)
                     {
-                        Length = payload.Length,
-                        Type = Http2FrameType.Data,
-                        Flags = (byte)Http2FrameFlags.EndStreamOrAck,
-                        StreamIdentifier = _StreamIdentifier
-                    },
-                    payload);
-
-                frames.Add(dataFrame);
-                _StateMachine.SendData(true);
+                        firstPayload = new byte[reserved];
+                        Buffer.BlockCopy(payload, 0, firstPayload, 0, reserved);
+                    }
+                    bool complete = reserved == payload.Length;
+                    frames.Add(new Http2RawFrame(new Http2FrameHeader
+                    {
+                        Length = reserved, Type = Http2FrameType.Data,
+                        Flags = complete ? (byte)1 : (byte)0, StreamIdentifier = _StreamIdentifier
+                    }, firstPayload));
+                    ApplyState(() => _StateMachine.SendData(complete), token);
+                }
+                MarkResponseStarted();
+                await WriteFramesAsync(frames, reservation, token).ConfigureAwait(false);
+                _HeadersSent = true;
+                if (sendBody && reserved < payload.Length)
+                    await WriteDataSliceAsync(payload, reserved, payload.Length - reserved, true, token).ConfigureAwait(false);
+                return true;
             }
-
-            MarkResponseStarted();
-            await _Writer.WriteFramesAsync(frames, token).ConfigureAwait(false);
-            _HeadersSent = true;
-            return true;
+            finally { Refund(reservation); }
         }
 
         private async Task<bool> SendStreamInternalAsync(long contentLength, Stream stream, CancellationToken token)
@@ -385,7 +422,13 @@ namespace WatsonWebserver.Http2
 
             if (sendBody)
             {
-                await WriteDataFramesFromStreamAsync(stream, contentLength, !sendTrailers, token).ConfigureAwait(false);
+                try { await WriteDataFramesFromStreamAsync(stream, contentLength, !sendTrailers, token).ConfigureAwait(false); }
+                catch (Exception ex)
+                {
+                    _WriteFailed = true;
+                    MarkTransportFailure(ex);
+                    throw;
+                }
             }
 
             if (sendTrailers)
@@ -404,11 +447,8 @@ namespace WatsonWebserver.Http2
             byte[] encodedHeaders = HpackCodec.Encode(trailerHeaders);
             List<Http2RawFrame> trailerFrames = BuildHeaderFrames(encodedHeaders, true);
 
-            _StateMachine.SendHeaders(true);
-            for (int i = 0; i < trailerFrames.Count; i++)
-            {
-                await _Writer.WriteFrameAsync(trailerFrames[i], token).ConfigureAwait(false);
-            }
+            ApplyState(() => _StateMachine.SendHeaders(true), token);
+            await WriteFramesAsync(trailerFrames, null, token).ConfigureAwait(false);
         }
 
         private async Task AppendDataAsync(byte[] payload, CancellationToken token)
@@ -453,17 +493,15 @@ namespace WatsonWebserver.Http2
 
         private async Task WriteHeadersAsync(bool endStream, CancellationToken token)
         {
+            ThrowIfTerminal(token);
             if (_HeadersSent) return;
 
             byte[] encodedHeaders = BuildEncodedResponseHeaders();
             List<Http2RawFrame> headerFrames = BuildHeaderFrames(encodedHeaders, endStream);
 
-            _StateMachine.SendHeaders(endStream);
+            ApplyState(() => _StateMachine.SendHeaders(endStream), token);
             MarkResponseStarted();
-            for (int i = 0; i < headerFrames.Count; i++)
-            {
-                await _Writer.WriteFrameAsync(headerFrames[i], token).ConfigureAwait(false);
-            }
+            await WriteFramesAsync(headerFrames, null, token).ConfigureAwait(false);
             _HeadersSent = true;
         }
 
@@ -480,68 +518,89 @@ namespace WatsonWebserver.Http2
 
         private async Task WriteDataFramesAsync(byte[] payload, bool endStream, CancellationToken token)
         {
-            if (payload == null) throw new ArgumentNullException(nameof(payload));
+            await WriteDataSliceAsync(payload, 0, payload.Length, endStream, token).ConfigureAwait(false);
+        }
 
-            int maxFrameSize = _PeerMaxFrameSize;
-            int offset = 0;
-            List<Http2FrameWriteSegment> segments = null;
-
-            if (payload.Length < 1)
+        private async Task WriteDataSliceAsync(byte[] payload, int offset, int count, bool endStream, CancellationToken token)
+        {
+            ThrowIfTerminal(token);
+            int end = offset + count;
+            if (count == 0)
             {
-                if (endStream)
+                if (!endStream) return;
+                ApplyState(() => _StateMachine.SendData(true), token);
+                await WriteFramesAsync(new[] { new Http2RawFrame(new Http2FrameHeader
                 {
-                    Http2RawFrame emptyDataFrame = new Http2RawFrame(
-                        new Http2FrameHeader
-                        {
-                            Length = 0,
-                            Type = Http2FrameType.Data,
-                            Flags = (byte)Http2FrameFlags.EndStreamOrAck,
-                            StreamIdentifier = _StreamIdentifier
-                        },
-                        Array.Empty<byte>());
-
-                    _StateMachine.SendData(true);
-                    await _Writer.WriteFrameAsync(emptyDataFrame, token).ConfigureAwait(false);
-                }
-
+                    Type = Http2FrameType.Data, Flags = 1, StreamIdentifier = _StreamIdentifier
+                }, Array.Empty<byte>()) }, null, token).ConfigureAwait(false);
                 return;
             }
-
-            while (offset < payload.Length)
+            while (offset < end)
             {
-                int desiredBytes = Math.Min(maxFrameSize, payload.Length - offset);
-                int bytesToSend = await _ReserveSendWindowAsync(_StreamIdentifier, desiredBytes, token).ConfigureAwait(false);
-                if (bytesToSend < 1)
+                Http2WriteReservation reservation = new Http2WriteReservation();
+                List<Http2FrameWriteSegment> segments = new List<Http2FrameWriteSegment>();
+                try
                 {
-                    throw new IOException("Unable to reserve HTTP/2 flow-control window for response data.");
+                    while (offset < end)
+                    {
+                        ThrowIfTerminal(token);
+                        int desired = Math.Min(_PeerMaxFrameSize, end - offset);
+                        int reserved = segments.Count == 0
+                            ? await _ReserveSendWindowAsync(_StreamIdentifier, desired, token).ConfigureAwait(false)
+                            : (_TryReserveSendWindow?.Invoke(_StreamIdentifier, desired) ?? 0);
+                        if (reserved <= 0)
+                        {
+                            if (segments.Count > 0) break;
+                            ThrowIfTerminal(token);
+                            throw new IOException("Unable to reserve HTTP/2 send window.");
+                        }
+                        reservation.Add(reserved);
+                        bool final = endStream && offset + reserved == end;
+                        ApplyState(() => _StateMachine.SendData(final), token);
+                        segments.Add(new Http2FrameWriteSegment
+                        {
+                            Header = new Http2FrameHeader { Type = Http2FrameType.Data, Length = reserved,
+                                Flags = final ? (byte)1 : (byte)0, StreamIdentifier = _StreamIdentifier },
+                            Payload = payload, Offset = offset, Count = reserved
+                        });
+                        offset += reserved;
+                    }
+                    await _Writer.WriteFrameSegmentsAsync(segments, _WriteGate, reservation, token).ConfigureAwait(false);
                 }
-
-                bool finalFrame = (offset + bytesToSend) >= payload.Length;
-                bool currentEndStream = endStream && finalFrame;
-                Http2FrameHeader dataHeader = new Http2FrameHeader
-                {
-                    Length = bytesToSend,
-                    Type = Http2FrameType.Data,
-                    Flags = currentEndStream ? (byte)Http2FrameFlags.EndStreamOrAck : (byte)Http2FrameFlags.None,
-                    StreamIdentifier = _StreamIdentifier
-                };
-
-                _StateMachine.SendData(currentEndStream);
-                if (segments == null) segments = new List<Http2FrameWriteSegment>();
-                segments.Add(new Http2FrameWriteSegment
-                {
-                    Header = dataHeader,
-                    Payload = payload,
-                    Offset = offset,
-                    Count = bytesToSend
-                });
-                offset += bytesToSend;
+                catch (Http2WriteNotCommittedException ex) { MarkTransportFailure(ex); throw; }
+                finally { Refund(reservation); }
             }
+        }
 
-            if (segments != null && segments.Count > 0)
+        private void ThrowIfTerminal(CancellationToken token)
+        {
+            if (!_WriteGate.IsTerminal)
             {
-                await _Writer.WriteFrameSegmentsAsync(segments, token).ConfigureAwait(false);
+                if (_WriteFailed) throw new IOException("HTTP/2 response source failed; response has been abandoned.");
+                return;
             }
+            OperationCanceledException exception = new OperationCanceledException("HTTP/2 stream has been reset.", token);
+            MarkTransportFailure(exception);
+            throw exception;
+        }
+
+        private void ApplyState(Action action, CancellationToken token)
+        {
+            ThrowIfTerminal(token);
+            try { action(); }
+            catch (Http2StreamStateException) when (_WriteGate.IsTerminal) { ThrowIfTerminal(token); throw; }
+        }
+
+        private async Task WriteFramesAsync(IReadOnlyList<Http2RawFrame> frames, Http2WriteReservation reservation, CancellationToken token)
+        {
+            try { await _Writer.WriteFramesAsync(frames, _WriteGate, reservation, token).ConfigureAwait(false); }
+            catch (Http2WriteNotCommittedException ex) { MarkTransportFailure(ex); throw; }
+        }
+
+        private void Refund(Http2WriteReservation reservation)
+        {
+            int count = reservation.Claim();
+            if (count > 0) _RefundSendWindow?.Invoke(count);
         }
 
         private async Task WriteDataFramesFromStreamAsync(Stream stream, long contentLength, bool endStream, CancellationToken token)
@@ -552,7 +611,6 @@ namespace WatsonWebserver.Http2
             int bufferSize = Math.Min(_PeerMaxFrameSize, 65536);
             byte[] buffer = ArrayPool<byte>.Shared.Rent(bufferSize);
             long bytesRemaining = contentLength;
-            long totalBytesSent = 0;
 
             try
             {
@@ -568,44 +626,7 @@ namespace WatsonWebserver.Http2
                     _DataAsBytes = null;
                     _Data.Write(buffer, 0, bytesRead);
 
-                    int offset = 0;
-                    List<Http2FrameWriteSegment> segments = null;
-                    while (offset < bytesRead)
-                    {
-                        int desiredFrameBytes = Math.Min(_PeerMaxFrameSize, bytesRead - offset);
-                        int bytesToSend = await _ReserveSendWindowAsync(_StreamIdentifier, desiredFrameBytes, token).ConfigureAwait(false);
-                        if (bytesToSend < 1)
-                        {
-                            throw new IOException("Unable to reserve HTTP/2 flow-control window for response data.");
-                        }
-
-                        bool currentEndStream = endStream && (totalBytesSent + bytesToSend) >= contentLength;
-                        Http2FrameHeader dataHeader = new Http2FrameHeader
-                        {
-                            Length = bytesToSend,
-                            Type = Http2FrameType.Data,
-                            Flags = currentEndStream ? (byte)Http2FrameFlags.EndStreamOrAck : (byte)0,
-                            StreamIdentifier = _StreamIdentifier
-                        };
-
-                        _StateMachine.SendData(currentEndStream);
-                        if (segments == null) segments = new List<Http2FrameWriteSegment>();
-                        segments.Add(new Http2FrameWriteSegment
-                        {
-                            Header = dataHeader,
-                            Payload = buffer,
-                            Offset = offset,
-                            Count = bytesToSend
-                        });
-                        offset += bytesToSend;
-                        totalBytesSent += bytesToSend;
-                    }
-
-                    if (segments != null && segments.Count > 0)
-                    {
-                        await _Writer.WriteFrameSegmentsAsync(segments, token).ConfigureAwait(false);
-                    }
-
+                    await WriteDataSliceAsync(buffer, 0, bytesRead, endStream && bytesRead == bytesRemaining, token).ConfigureAwait(false);
                     bytesRemaining -= bytesRead;
                 }
             }
